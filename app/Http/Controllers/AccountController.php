@@ -359,7 +359,8 @@ class AccountController extends Controller
             ->where('company_id', $cid)
             ->where('type', 'cash')
             ->when($userBranchId, fn($q) => $q->where('branch_id', $userBranchId))
-            ->orderByDesc('balance')
+            ->orderByRaw("CASE WHEN LOWER(name) LIKE '%cash on hand%' OR LOWER(name) LIKE '%cash in hand%' THEN 0 ELSE 1 END")
+            ->orderBy('id')
             ->first();
 
         $cashBalance = (float) ($cashAccount->balance ?? 0);

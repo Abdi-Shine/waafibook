@@ -33,7 +33,7 @@
                 {{ $companyCurrency }} {{ number_format($cashBalance, $cashBalance == (int) $cashBalance ? 0 : 2) }}
             </span>
         </div>
-        <button @click="openAdjustModal()" class="flex items-center gap-2 px-5 py-2.5 bg-red-500 text-white font-bold rounded-full hover:bg-red-600 transition-all shadow-sm text-[13px]">
+        <button @click="openAdjustModal()" class="flex items-center gap-2 px-5 py-2.5 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-all shadow-sm text-[13px]">
             <i class="bi bi-sliders"></i> Adjust Cash
         </button>
     </div>
