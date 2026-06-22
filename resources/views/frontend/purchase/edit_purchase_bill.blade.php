@@ -674,8 +674,12 @@ $(document).ready(function() {
         recalcAll();
     });
 
-    // Add first row
-    addItemRow();
+    // Add a starter row only if the pre-fill block (a separate, earlier-running
+    // $(document).ready callback) hasn't already populated this bill's real
+    // items — otherwise this unconditionally added a second, blank row.
+    if (document.getElementById('itemsTbody').children.length === 0) {
+        addItemRow();
+    }
 
     // Summary listeners
     document.getElementById('discountInput').addEventListener('input', function() {
