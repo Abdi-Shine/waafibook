@@ -585,7 +585,17 @@ $(document).ready(function() {
         (function() {
             const lastRow = document.querySelector('#itemsTbody tr:last-child');
             const rn = lastRow.dataset.row;
-            $(lastRow).find('.item-select').val('{{ $item->product_id }}').trigger('change');
+            const itemSelect = lastRow.querySelector('.item-select');
+            const pid = {{ $item->product_id ?? 'null' }};
+            const pname = {!! json_encode($item->product_name) !!};
+            if (pid) {
+                $(itemSelect).val(String(pid)).trigger('change');
+            } else if (pname) {
+                // Legacy item never linked to a real product — show its stored
+                // name as a synthetic option instead of leaving the row blank.
+                const syntheticOpt = new Option(pname, pname, true, true);
+                $(itemSelect).append(syntheticOpt).val(pname).trigger('change');
+            }
             lastRow.querySelector('.qty-input').value = '{{ $item->quantity }}';
             lastRow.querySelector('.price-input').value = '{{ $item->unit_price }}';
             lastRow.querySelector('.code-input').value = {!! json_encode($item->product_code) !!};

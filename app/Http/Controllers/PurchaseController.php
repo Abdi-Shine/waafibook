@@ -408,9 +408,28 @@ class PurchaseController extends Controller
             // 4. Create new items and update stock
             if ($request->items) {
                 foreach ($request->items as $item) {
+                    $productId = $item['product_id'] ?? null;
+
+                    // Same gap as storeBill(): a free-typed item name with no
+                    // matching product would otherwise be saved with product_id
+                    // null and silently skip price/stock updates below.
+                    if (!is_numeric($productId) && !empty($item['product_name'])) {
+                        $matchedProduct = Product::query()->where('product_name', $item['product_name'])->first();
+                        if (!$matchedProduct) {
+                            $matchedProduct = Product::query()->create([
+                                'product_name'   => $item['product_name'],
+                                'product_code'   => $item['product_code'] ?? null,
+                                'unit'           => $item['unit'] ?? 'Piece',
+                                'purchase_price' => $item['unit_price'] ?? 0,
+                                'selling_price'  => $item['unit_price'] ?? 0,
+                            ]);
+                        }
+                        $productId = $matchedProduct->id;
+                    }
+
                     PurchaseBillItem::query()->create([
                         'purchase_bill_id'  => $bill->id,
-                        'product_id'        => (isset($item['product_id']) && is_numeric($item['product_id'])) ? $item['product_id'] : null,
+                        'product_id'        => is_numeric($productId) ? $productId : null,
                         'product_name'      => $item['product_name'] ?? 'Product',
                         'product_code'      => $item['product_code'] ?? null,
                         'quantity'          => $item['quantity'],
@@ -420,9 +439,16 @@ class PurchaseController extends Controller
                         'total_amount'      => $item['total_amount'],
                     ]);
 
-                    if (isset($item['product_id']) && is_numeric($item['product_id'])) {
+                    if (is_numeric($productId)) {
+                        /** @var Product|null $product */
+                        $product = Product::query()->find($productId);
+                        if ($product) {
+                            $product->purchase_price = $item['unit_price'];
+                            $product->save();
+                        }
+
                         $stock = ProductStock::query()->firstOrNew([
-                            'product_id' => $item['product_id'],
+                            'product_id' => $productId,
                             'branch_id' => $request->branch_id,
                         ]);
                         $stock->quantity = ($stock->exists ? $stock->quantity : 0) + ($item['quantity'] ?? 0);
