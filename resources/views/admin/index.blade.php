@@ -23,80 +23,83 @@
             </div>
 
             <!-- Top 4 KPI Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 uppercase tracking-wider">
-                <!-- Net Profit (Revenue - Expenses) -->
+            @php
+                $formatKpi = fn($value) => ($value < 0 ? '-$' : '$') . number_format(abs($value), 2);
+            @endphp
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <!-- Cash on Hand (Assets) -->
                 <div class="kpi-card">
-                    <div class="flex items-start justify-between">
-                        <div>
-                            <div class="kpi-title">CASH ON HAND</div>
-                            <div class="flex items-center gap-1 mb-2">
-                                <i class="bi bi-wallet2 text-accent text-xs"></i>
-                                <span class="text-accent text-[11px] font-bold">FOR BRANCH</span>
+                    <div class="w-full">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="kpi-icon-box bg-accent/10">
+                                <i class="bi bi-wallet2 text-accent text-lg"></i>
                             </div>
-                            <div class="kpi-value">$ {{ number_format($stats['cash_on_hand'], 2) }}</div>
-                            <a href="{{ route('sales.invoice.create') }}" class="kpi-link hover:text-accent transition-colors">SEE LEDGER</a>
+                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-wider">
+                                <i class="bi bi-diagram-3 text-[9px]"></i> For Branch
+                            </span>
                         </div>
-                        <div class="kpi-icon-box bg-accent/10">
-                            <i class="bi bi-wallet2 text-accent text-lg"></i>
-                        </div>
+                        <div class="kpi-title uppercase tracking-wider">Cash on Hand</div>
+                        <div class="kpi-value {{ $stats['cash_on_hand'] < 0 ? 'text-red-500' : '' }}">{{ $formatKpi($stats['cash_on_hand']) }}</div>
+                        <a href="{{ route('sales.invoice.create') }}" class="kpi-link hover:text-accent">
+                            See Ledger <i class="bi bi-arrow-right text-[10px]"></i>
+                        </a>
                     </div>
                 </div>
 
                 <!-- Account Payable -->
                 <div class="kpi-card">
-                    <div class="flex items-start justify-between">
-                        <div>
-                            <div class="kpi-title">ACCOUNT PAYABLE</div>
-                            <div class="flex items-center gap-1 mb-2">
-                                <i class="bi bi-wallet2 text-primary text-xs"></i>
-                                <span class="text-primary text-[11px] font-bold">FOR SUPPLIERS</span>
+                    <div class="w-full">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="kpi-icon-box bg-primary/10">
+                                <i class="bi bi-credit-card text-primary text-lg"></i>
                             </div>
-                            <div class="kpi-value">$ {{ number_format($stats['liabilities'], 2) }}</div>
-                            <a href="{{ route('supplier.index') }}" class="kpi-link hover:text-primary transition-colors">SEE
-                                ACCOUNTS</a>
+                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">
+                                <i class="bi bi-truck text-[9px]"></i> For Suppliers
+                            </span>
                         </div>
-                        <div class="kpi-icon-box bg-primary/10">
-                            <i class="bi bi-credit-card text-primary text-lg"></i>
-                        </div>
+                        <div class="kpi-title uppercase tracking-wider">Account Payable</div>
+                        <div class="kpi-value">{{ $formatKpi($stats['liabilities']) }}</div>
+                        <a href="{{ route('supplier.index') }}" class="kpi-link hover:text-primary">
+                            See Accounts <i class="bi bi-arrow-right text-[10px]"></i>
+                        </a>
                     </div>
                 </div>
 
                 <!-- Account Receivable -->
                 <div class="kpi-card">
-                    <div class="flex items-start justify-between">
-                        <div>
-                            <div class="kpi-title">ACCOUNT RECEIVABLE</div>
-                            <div class="flex items-center gap-1 mb-2">
-                                <i class="bi bi-bank text-accent text-xs"></i>
-                                <span class="text-accent text-[11px] font-bold">FOR CUSTOMERS</span>
+                    <div class="w-full">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="kpi-icon-box bg-accent/10">
+                                <i class="bi bi-bank text-accent text-lg"></i>
                             </div>
-                            <div class="kpi-value">$ {{ number_format($stats['accounts_receivable'], 2) }}</div>
-                            <a href="{{ route('customer.index') }}"
-                                class="kpi-link hover:text-accent transition-colors">SEE ACCOUNTS</a>
+                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-wider">
+                                <i class="bi bi-people text-[9px]"></i> For Customers
+                            </span>
                         </div>
-                        <div class="kpi-icon-box bg-accent/10">
-                            <i class="bi bi-bank text-accent text-lg"></i>
-                        </div>
+                        <div class="kpi-title uppercase tracking-wider">Account Receivable</div>
+                        <div class="kpi-value">{{ $formatKpi($stats['accounts_receivable']) }}</div>
+                        <a href="{{ route('customer.index') }}" class="kpi-link hover:text-accent">
+                            See Accounts <i class="bi bi-arrow-right text-[10px]"></i>
+                        </a>
                     </div>
                 </div>
 
                 <!-- Stock Values -->
                 <div class="kpi-card">
-                    <div class="flex items-start justify-between">
-                        <div>
-                            <div class="kpi-title">STOCK VALUES</div>
-                            <div class="flex items-center gap-1 mb-2">
-                                <i class="bi bi-box-seam text-primary text-xs"></i>
-                                <span class="text-primary text-[11px] font-bold">FOR BRANCH</span>
+                    <div class="w-full">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="kpi-icon-box bg-primary/10">
+                                <i class="bi bi-box-seam text-primary text-lg"></i>
                             </div>
-                            <div class="kpi-value">$ {{ number_format($stats['stock_value'], 2) }}</div>
-                            <a href="{{ route('product.index') }}" class="kpi-link hover:text-primary transition-colors">SEE
-                                STOCK</a>
+                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">
+                                <i class="bi bi-diagram-3 text-[9px]"></i> For Branch
+                            </span>
                         </div>
-                        <div class="kpi-icon-box bg-primary/10">
-                            <i class="bi bi-box-seam text-primary text-lg"></i>
-                        </div>
+                        <div class="kpi-title uppercase tracking-wider">Stock Values</div>
+                        <div class="kpi-value">{{ $formatKpi($stats['stock_value']) }}</div>
+                        <a href="{{ route('product.index') }}" class="kpi-link hover:text-primary">
+                            See Stock <i class="bi bi-arrow-right text-[10px]"></i>
+                        </a>
                     </div>
                 </div>
             </div>
