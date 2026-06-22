@@ -608,9 +608,23 @@ class PurchaseController extends Controller
             
             $branch_id = $request->branch_id ?: null;
 
+            // The form suggests a bill number once on page load; if it's gone stale
+            // (e.g. a browser back-button resubmission, or another bill was created
+            // in the meantime) and already exists for this company, self-heal by
+            // assigning the next available number instead of failing the whole bill.
+            $billNumber = $request->purchase_no;
+            $cidForNumber = Auth::user()->company_id;
+            if (PurchaseBill::query()->where('company_id', $cidForNumber)->where('bill_number', $billNumber)->exists()) {
+                $lastBill = PurchaseBill::query()->where('company_id', $cidForNumber)
+                    ->where('bill_number', 'like', 'PB-%')
+                    ->latest('id')->first();
+                $nextId = $lastBill ? ((int) str_replace('PB-' . date('Y') . '-', '', $lastBill->bill_number) + 1) : 1;
+                $billNumber = 'PB-' . date('Y') . '-' . str_pad($nextId, 5, '0', STR_PAD_LEFT);
+            }
+
             // 1. Create Purchase Bill record
             $bill = PurchaseBill::query()->create([
-                'bill_number'       => $request->purchase_no,
+                'bill_number'       => $billNumber,
                 'supplier_invoice_no' => $request->supplier_invoice_no,
                 'supplier_id'       => $request->supplier_id,
                 'branch_id'         => $branch_id,
@@ -663,7 +677,7 @@ class PurchaseController extends Controller
             $journal = JournalEntry::query()->create([
                 'entry_number' => $entry_no,
                 'date'         => $request->purchase_date,
-                'reference'    => $request->purchase_no,
+                'reference'    => $billNumber,
                 'description'  => 'Purchase Bill from ' . $supplier->name . ($request->supplier_invoice_no ? ' (Inv: ' . $request->supplier_invoice_no . ')' : ''),
                 'total_amount' => $total_amount,
                 'status'       => 'posted',
@@ -677,7 +691,7 @@ class PurchaseController extends Controller
                     'journal_entry_id' => $journal->id,
                     'account_id'       => $inventoryAccount->id,
                     'company_id'       => $cid,
-                    'description'      => 'Stock value increase (' . $request->purchase_no . ')',
+                    'description'      => 'Stock value increase (' . $billNumber . ')',
                     'debit'            => $subtotal,
                     'credit'           => 0,
                 ]);
@@ -688,7 +702,7 @@ class PurchaseController extends Controller
                     'journal_entry_id' => $journal->id,
                     'account_id'       => $inventoryAccount->id,
                     'company_id'       => $cid,
-                    'description'      => 'VAT on purchase (' . $request->purchase_no . ')',
+                    'description'      => 'VAT on purchase (' . $billNumber . ')',
                     'debit'            => (float) $vat,
                     'credit'           => 0,
                 ]);
@@ -710,14 +724,14 @@ class PurchaseController extends Controller
             // Supplier Payment (immediate)
             if ($paid_amount > 0) {
                 $payment = SupplierPayment::query()->create([
-                    'voucher_no'      => 'PAY-' . $request->purchase_no,
+                    'voucher_no'      => 'PAY-' . $billNumber,
                     'payment_date'    => $request->purchase_date,
                     'supplier_id'     => $supplier->id,
                     'bank_account_id' => $request->payment_account_id ?: null,
                     'payment_method'  => 'Cash',
                     'amount'          => $paid_amount,
-                    'reference'       => 'PAY-' . $request->purchase_no,
-                    'notes'           => 'Immediate payment for ' . $request->purchase_no,
+                    'reference'       => 'PAY-' . $billNumber,
+                    'notes'           => 'Immediate payment for ' . $billNumber,
                     'status'          => 'completed',
                     'created_by'      => Auth::id(),
                 ]);
@@ -738,7 +752,7 @@ class PurchaseController extends Controller
                     $payJournal = JournalEntry::query()->create([
                         'entry_number' => 'EN-PAY-' . date('Y') . '-' . str_pad($nextEId + 1, 6, '0', STR_PAD_LEFT),
                         'date'         => $request->purchase_date,
-                        'reference'    => 'PAY-' . $request->purchase_no,
+                        'reference'    => 'PAY-' . $billNumber,
                         'description'  => 'Payment to ' . $supplier->name,
                         'total_amount' => $paid_amount,
                         'status'       => 'posted',
