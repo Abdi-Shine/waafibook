@@ -585,27 +585,47 @@ $(document).ready(function() {
         (function() {
             const lastRow = document.querySelector('#itemsTbody tr:last-child');
             const rn = lastRow.dataset.row;
-            const itemSelect = lastRow.querySelector('.item-select');
-            const pid = {{ $item->product_id ?? 'null' }};
-            const pname = {!! json_encode($item->product_name) !!};
-            if (pid) {
-                $(itemSelect).val(String(pid)).trigger('change');
-            } else if (pname) {
-                // Legacy item never linked to a real product — show its stored
-                // name as a synthetic option instead of leaving the row blank.
-                const syntheticOpt = new Option(pname, pname, true, true);
-                $(itemSelect).append(syntheticOpt).val(pname).trigger('change');
-            }
+
+            // Set the plain fields first and unconditionally, so a problem
+            // selecting the item below can never block these from loading.
             lastRow.querySelector('.qty-input').value = '{{ $item->quantity }}';
             lastRow.querySelector('.price-input').value = '{{ $item->unit_price }}';
             lastRow.querySelector('.code-input').value = {!! json_encode($item->product_code) !!};
             lastRow.querySelector('.unit-input').value = '{{ $item->unit }}';
-            
+
             const discInput = lastRow.querySelector('.row-disc-input');
             if (discInput) {
                 discInput.value = '{{ $item->discount ?? 0 }}';
             }
-            
+
+            try {
+                const itemSelect = lastRow.querySelector('.item-select');
+                const pid = {{ $item->product_id ?? 'null' }};
+                const pname = {!! json_encode($item->product_name) !!};
+                if (pid) {
+                    $(itemSelect).val(String(pid)).trigger('change');
+                } else if (pname) {
+                    // Legacy item never linked to a real product — show its
+                    // stored name as a synthetic option instead of leaving
+                    // the row blank.
+                    const syntheticOpt = new Option(pname, pname, true, true);
+                    itemSelect.appendChild(syntheticOpt);
+                    $(itemSelect).val(pname).trigger('change');
+                }
+            } catch (e) {
+                console.error('Could not pre-select item for row', rn, e);
+            }
+
+            // Re-apply price/unit/code in case selecting the item above
+            // overwrote them from the product's current catalog values.
+            lastRow.querySelector('.qty-input').value = '{{ $item->quantity }}';
+            lastRow.querySelector('.price-input').value = '{{ $item->unit_price }}';
+            lastRow.querySelector('.code-input').value = {!! json_encode($item->product_code) !!};
+            lastRow.querySelector('.unit-input').value = '{{ $item->unit }}';
+            if (discInput) {
+                discInput.value = '{{ $item->discount ?? 0 }}';
+            }
+
             calcRow(rn);
         })();
     @endforeach
