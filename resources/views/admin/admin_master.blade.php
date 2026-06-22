@@ -148,7 +148,81 @@
             });
         }
 
+        // Shared admin-only + password-confirmed delete flow for every "delete record" action in the app.
+        window.deleteRecordWithPassword = function (url, label, options = {}) {
+            const popupClass = {
+                popup: 'rounded-[1.5rem]',
+                confirmButton: 'rounded-[0.5rem] px-6 py-2 text-xs font-bold uppercase tracking-widest',
+                cancelButton: 'rounded-[0.5rem] px-6 py-2 text-xs font-bold uppercase tracking-widest'
+            };
 
+            Swal.fire({
+                title: options.title || ('Delete ' + label + '?'),
+                text: options.text || ('Are you sure you want to delete ' + label + '? This action cannot be undone.'),
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#004161',
+                cancelButtonColor: '#99CC33',
+                confirmButtonText: 'Yes, delete it!',
+                customClass: popupClass
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+
+                Swal.fire({
+                    title: 'Confirm Your Password',
+                    text: 'Enter your password to authorize this deletion.',
+                    input: 'password',
+                    inputPlaceholder: 'Password',
+                    inputAttributes: { autocapitalize: 'off', autocomplete: 'current-password' },
+                    showCancelButton: true,
+                    confirmButtonColor: '#004161',
+                    cancelButtonColor: '#99CC33',
+                    confirmButtonText: 'Confirm & Delete',
+                    customClass: popupClass,
+                    preConfirm: (password) => {
+                        if (!password) {
+                            Swal.showValidationMessage('Password is required.');
+                            return false;
+                        }
+                        return fetch(url, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify({ password })
+                        }).then(async (response) => {
+                            const data = await response.json().catch(() => ({}));
+                            if (!response.ok) {
+                                throw new Error(data.message || 'Something went wrong.');
+                            }
+                            return data;
+                        }).catch((error) => {
+                            Swal.showValidationMessage(error.message);
+                            return false;
+                        });
+                    },
+                    allowOutsideClick: () => !Swal.isLoading()
+                }).then((result2) => {
+                    if (result2.isConfirmed) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Deleted',
+                            text: label + ' has been deleted.',
+                            confirmButtonColor: '#004161',
+                            customClass: popupClass
+                        }).then(() => {
+                            if (options.onSuccess) {
+                                options.onSuccess();
+                            } else {
+                                window.location.reload();
+                            }
+                        });
+                    }
+                });
+            });
+        };
     </script>
 </body>
 </html>

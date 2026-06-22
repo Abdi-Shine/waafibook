@@ -565,24 +565,10 @@ function expenseManagement() {
         },
 
         confirmDelete(url) {
-            Swal.fire({
+            deleteRecordWithPassword(url, 'this expense', {
                 title: 'Delete Expense?',
-                text: "Are you sure? This will also remove the associated journal entry. This action cannot be undone.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#004161',
-                cancelButtonColor: '#99CC33',
-                confirmButtonText: 'Yes, delete it!',
-                customClass: {
-                    popup: 'rounded-[1.5rem]',
-                    confirmButton: 'rounded-[0.5rem] px-6 py-2 text-xs font-bold uppercase tracking-widest',
-                    cancelButton: 'rounded-[0.5rem] px-6 py-2 text-xs font-bold uppercase tracking-widest'
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = url;
-                }
-            })
+                text: 'Are you sure? This will also remove the associated journal entry. This action cannot be undone.'
+            });
         },
 
         init() {}

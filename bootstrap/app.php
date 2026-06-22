@@ -25,10 +25,11 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'permission'   => \App\Http\Middleware\CheckPermission::class,
-            'role'         => \App\Http\Middleware\CheckRole::class,
-            'tenant.owns'  => \App\Http\Middleware\EnsureTenantOwnership::class,
-            'super.admin'  => \App\Http\Middleware\EnsureSuperAdmin::class,
+            'permission'      => \App\Http\Middleware\CheckPermission::class,
+            'role'            => \App\Http\Middleware\CheckRole::class,
+            'tenant.owns'     => \App\Http\Middleware\EnsureTenantOwnership::class,
+            'super.admin'     => \App\Http\Middleware\EnsureSuperAdmin::class,
+            'delete.password' => \App\Http\Middleware\RequireDeletePassword::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

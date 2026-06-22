@@ -40,7 +40,7 @@
                         </div>
                         <div class="kpi-title uppercase tracking-wider">Cash on Hand</div>
                         <div class="kpi-value {{ $stats['cash_on_hand'] < 0 ? 'text-red-500' : '' }}">{{ $formatKpi($stats['cash_on_hand']) }}</div>
-                        <a href="{{ route('sales.invoice.create') }}" class="kpi-link hover:text-accent">
+                        <a href="{{ route('sales.invoice.view') }}" class="kpi-link hover:text-accent">
                             See Ledger <i class="bi bi-arrow-right text-[10px]"></i>
                         </a>
                     </div>

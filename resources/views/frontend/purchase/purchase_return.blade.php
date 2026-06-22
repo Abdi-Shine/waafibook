@@ -130,15 +130,6 @@
         }
     },
 
-    executeDelete(id) {
-        let form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/purchase/returns/${id}`;
-        form.innerHTML = `<input type='hidden' name='_token' value='{{ csrf_token() }}'><input type='hidden' name='_method' value='DELETE'>`;
-        document.body.appendChild(form);
-        form.submit();
-    },
-
     get filteredReturns() {
         return this.returns.filter(r => {
             const matchesSearch = r.return_number.toLowerCase().includes(this.searchTerm.toLowerCase()) || 
@@ -223,23 +214,9 @@
     },
 
     confirmDelete(id, code) {
-        Swal.fire({
+        deleteRecordWithPassword(`/purchase/returns/${id}`, code, {
             title: 'Delete Return Record?',
-            text: `Are you sure you want to delete ${code}? This action is irreversible.`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#004161',
-            cancelButtonColor: '#99CC33',
-            confirmButtonText: 'Yes, delete it!',
-            customClass: {
-                popup: 'rounded-[1.5rem]',
-                confirmButton: 'rounded-[0.5rem] px-6 py-2 text-xs font-bold uppercase tracking-widest',
-                cancelButton: 'rounded-[0.5rem] px-6 py-2 text-xs font-bold uppercase tracking-widest'
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                this.executeDelete(id);
-            }
+            text: `Are you sure you want to delete ${code}? This action is irreversible.`
         });
     }
 }">

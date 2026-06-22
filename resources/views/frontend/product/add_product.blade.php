@@ -105,16 +105,9 @@
             }
 
             this.savedProduct = data.product;
-            this.productData = {
-                id: '', product_name: '', product_code: '', category_id: '',
-                unit: 'Piece', purchase_price: '', selling_price: '',
-                stock_products: '', description: '', account_code: '', branch_id: '',
-                product_type: 'product'
-            };
-            form.reset();
-            this.$refs.previewImg.src = '';
-            this.$refs.previewPlaceholder.classList.remove('hidden');
-            this.$refs.previewImg.classList.add('hidden');
+            setTimeout(() => {
+                window.location.href = window.location.pathname + '?action=create';
+            }, 900);
         } catch (e) {
             Swal.fire({ icon: 'error', title: 'Network error', text: 'Could not save product. Please try again.' });
         } finally {
@@ -155,22 +148,9 @@
     },
 
     confirmDelete(id, name) {
-        Swal.fire({
+        deleteRecordWithPassword('{{ url('/products/delete') }}/' + id, name, {
             title: 'Delete Product?',
-            text: `Are you sure you want to delete ${name}? This action cannot be undone.`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#004161',
-            cancelButtonColor: '#aadb40',
-            confirmButtonText: 'Yes, delete it!',
-            customClass: {
-                popup: 'rounded-[1.5rem]',
-                confirmButton: 'rounded-full px-6 py-2 text-xs font-bold uppercase tracking-widest'
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = '{{ url('/products/delete') }}/' + id;
-            }
+            text: `Are you sure you want to delete ${name}? This action cannot be undone.`
         });
     },
 

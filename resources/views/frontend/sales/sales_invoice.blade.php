@@ -293,24 +293,9 @@
 
 <script>
 function confirmDelete(id) {
-    Swal.fire({
+    deleteRecordWithPassword('{{ url('/sales/invoices') }}/' + id, 'this invoice', {
         title: 'Delete Invoice?',
-        text: 'Are you sure you want to delete this invoice? This action will reverse customer balances and cannot be undone.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#004161',
-        cancelButtonColor: '#99CC33',
-        confirmButtonText: 'Yes, delete it!',
-        cancelButtonText: 'Cancel',
-        customClass: {
-            popup: 'rounded-[1.5rem]',
-            confirmButton: 'rounded-[0.5rem] px-6 py-2 text-xs font-bold uppercase tracking-widest',
-            cancelButton: 'rounded-[0.5rem] px-6 py-2 text-xs font-bold uppercase tracking-widest'
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            document.getElementById('delete-form-' + id).submit();
-        }
+        text: 'Are you sure you want to delete this invoice? This action will reverse customer balances and cannot be undone.'
     });
 }
 

@@ -45,22 +45,9 @@
     },
 
     confirmDelete(id, num) {
-        Swal.fire({
+        deleteRecordWithPassword('{{ url('/journal-entries') }}/' + id, num, {
             title: 'Delete Journal Entry?',
-            text: `Are you sure you want to delete ${num}?`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#004161',
-            cancelButtonColor: '#99CC33',
-            confirmButtonText: 'Yes, delete it!',
-            customClass: {
-                popup: 'rounded-[1.5rem]',
-                confirmButton: 'rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-widest'
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                document.getElementById('delete-form-' + id).submit();
-            }
+            text: `Are you sure you want to delete ${num}?`
         });
     }
 }" x-cloak>

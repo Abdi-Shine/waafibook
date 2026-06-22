@@ -454,24 +454,9 @@
 
 <script>
     function confirmDeletePayment(url) {
-        Swal.fire({
+        deleteRecordWithPassword(url, 'this payment voucher', {
             title: 'Delete Payment Voucher?',
-            text: 'This action is irreversible and will reverse the journal entries.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#004161',
-            cancelButtonColor: '#99CC33',
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'Cancel',
-            customClass: {
-                popup: 'rounded-[1.5rem]',
-                confirmButton: 'rounded-[0.5rem] px-6 py-2 text-xs font-bold uppercase tracking-widest',
-                cancelButton: 'rounded-[0.5rem] px-6 py-2 text-xs font-bold uppercase tracking-widest'
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = url;
-            }
+            text: 'This action is irreversible and will reverse the journal entries.'
         });
     }
 </script>

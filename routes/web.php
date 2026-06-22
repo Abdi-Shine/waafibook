@@ -151,12 +151,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/company/update', [App\Http\Controllers\CompanyController::class, 'updateCompany'])->name('company.update');
         Route::post('/branch/create', [App\Http\Controllers\CompanyController::class, 'storeBranch'])->name('branch.store');
         Route::put('/branch/update/{id}', [App\Http\Controllers\CompanyController::class, 'updateBranch'])->name('branch.update')->middleware('tenant.owns:branches');
-        Route::delete('/branch/delete/{id}', [App\Http\Controllers\CompanyController::class, 'destroyBranch'])->name('branch.delete')->middleware('tenant.owns:branches');
+        Route::delete('/branch/delete/{id}', [App\Http\Controllers\CompanyController::class, 'destroyBranch'])->name('branch.delete')->middleware(['tenant.owns:branches', 'permission:System Admin,delete', 'delete.password']);
         Route::get('/capital-deposit', [App\Http\Controllers\CapitalDepositController::class, 'index'])->name('capital-deposit');
         Route::post('/capital-deposit', [App\Http\Controllers\CapitalDepositController::class, 'store'])->name('capital-deposit.store');
         Route::post('/shareholder/store', [App\Http\Controllers\CapitalDepositController::class, 'storeShareholder'])->name('shareholder.store');
         Route::put('/shareholder/update/{id}', [App\Http\Controllers\CapitalDepositController::class, 'updateShareholder'])->name('shareholder.update')->middleware('tenant.owns:shareholders');
-        Route::delete('/shareholder/delete/{id}', [App\Http\Controllers\CapitalDepositController::class, 'destroyShareholder'])->name('shareholder.delete')->middleware('tenant.owns:shareholders');
+        Route::delete('/shareholder/delete/{id}', [App\Http\Controllers\CapitalDepositController::class, 'destroyShareholder'])->name('shareholder.delete')->middleware(['tenant.owns:shareholders', 'permission:System Admin,delete', 'delete.password']);
         Route::get('/shareholder/{id}/statement', [App\Http\Controllers\CapitalDepositController::class, 'statement'])->name('shareholder.statement')->middleware('tenant.owns:shareholders');
 
         // Employee CRUD routes
@@ -166,18 +166,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/employees/create', [App\Http\Controllers\EmployeeController::class, 'create'])->name('employee.create');
         Route::post('/employees', [App\Http\Controllers\EmployeeController::class, 'store'])->name('employee.store');
         Route::put('/employees/{id}', [App\Http\Controllers\EmployeeController::class, 'update'])->name('employee.update')->middleware('tenant.owns:employees');
-        Route::delete('/employees/{id}', [App\Http\Controllers\EmployeeController::class, 'destroy'])->name('employee.destroy')->middleware('tenant.owns:employees');
+        Route::delete('/employees/{id}', [App\Http\Controllers\EmployeeController::class, 'destroy'])->name('employee.destroy')->middleware(['tenant.owns:employees', 'permission:System Admin,delete', 'delete.password']);
 
         // Role Management Routes
         Route::get('/roles', [App\Http\Controllers\RoleController::class, 'index'])->name('role.index');
         Route::post('/roles', [App\Http\Controllers\RoleController::class, 'store'])->name('role.store');
         Route::put('/roles/{id}', [App\Http\Controllers\RoleController::class, 'update'])->name('role.update')->middleware('tenant.owns:roles');
-        Route::delete('/roles/{id}', [App\Http\Controllers\RoleController::class, 'destroy'])->name('role.destroy')->middleware('tenant.owns:roles');
+        Route::delete('/roles/{id}', [App\Http\Controllers\RoleController::class, 'destroy'])->name('role.destroy')->middleware(['tenant.owns:roles', 'permission:System Admin,delete', 'delete.password']);
 
         Route::get('/backup-restore', [App\Http\Controllers\CompanyController::class, 'backupRestore'])->name('backup-restore');
         Route::post('/backup/create', [App\Http\Controllers\CompanyController::class, 'createBackup'])->name('backup.create');
         Route::get('/backup/download/{id}', [App\Http\Controllers\CompanyController::class, 'downloadBackup'])->name('backup.download')->middleware('tenant.owns:backups');
-        Route::delete('/backup/delete/{id}', [App\Http\Controllers\CompanyController::class, 'deleteBackup'])->name('backup.delete')->middleware('tenant.owns:backups');
+        Route::delete('/backup/delete/{id}', [App\Http\Controllers\CompanyController::class, 'deleteBackup'])->name('backup.delete')->middleware(['tenant.owns:backups', 'permission:System Admin,delete', 'delete.password']);
         Route::post('/backup/restore/{id}', [App\Http\Controllers\CompanyController::class, 'restoreBackup'])->name('backup.restore')->middleware('tenant.owns:backups');
         Route::post('/backup/gmail', [App\Http\Controllers\CompanyController::class, 'backupToGmail'])->name('backup.gmail');
         Route::post('/backup/settings', [App\Http\Controllers\CompanyController::class, 'updateBackupSettings'])->name('backup.settings.update');
@@ -201,14 +201,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/account-management/adjustment', [App\Http\Controllers\BankTransactionController::class, 'storeAdjustment'])->name('bank.transaction.adjustment');
         Route::post('/accounts', [App\Http\Controllers\AccountController::class, 'store'])->name('account.store');
         Route::put('/accounts/{id}', [App\Http\Controllers\AccountController::class, 'update'])->name('account.update')->middleware('tenant.owns:chart_of_accounts');
-        Route::delete('/accounts/{id}', [App\Http\Controllers\AccountController::class, 'destroy'])->name('account.destroy')->middleware('tenant.owns:chart_of_accounts');
+        Route::delete('/accounts/{id}', [App\Http\Controllers\AccountController::class, 'destroy'])->name('account.destroy')->middleware(['tenant.owns:chart_of_accounts', 'permission:Accounting,delete', 'delete.password']);
         Route::patch('/accounts/{id}/toggle-status', [App\Http\Controllers\AccountController::class, 'toggleStatus'])->name('account.toggle-status')->middleware('tenant.owns:chart_of_accounts');
         Route::post('/accounts/recalculate-balances', [App\Http\Controllers\AccountController::class, 'recalculateBalances'])->name('account.recalculate-balances');
 
         // Journal Entry Routes
         Route::get('/journal-entries', [App\Http\Controllers\JournalEntryController::class, 'index'])->name('journal.index');
         Route::post('/journal-entries', [App\Http\Controllers\JournalEntryController::class, 'store'])->name('journal.store');
-        Route::delete('/journal-entries/{id}', [App\Http\Controllers\JournalEntryController::class, 'destroy'])->name('journal.destroy')->middleware('tenant.owns:journal_entries');
+        Route::delete('/journal-entries/{id}', [App\Http\Controllers\JournalEntryController::class, 'destroy'])->name('journal.destroy')->middleware(['tenant.owns:journal_entries', 'permission:Accounting,delete', 'delete.password']);
     });
 
     // Parties
@@ -224,7 +224,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/customers', [App\Http\Controllers\CustomerController::class, 'store'])->name('customer.store');
         Route::post('/customers/import', [App\Http\Controllers\CustomerController::class, 'import'])->name('customer.import');
         Route::put('/customers/{id}', [App\Http\Controllers\CustomerController::class, 'update'])->name('customer.update')->middleware('tenant.owns:customers');
-        Route::delete('/customers/{id}', [App\Http\Controllers\CustomerController::class, 'destroy'])->name('customer.destroy')->middleware('tenant.owns:customers');
+        Route::delete('/customers/{id}', [App\Http\Controllers\CustomerController::class, 'destroy'])->name('customer.destroy')->middleware(['tenant.owns:customers', 'permission:Parties,delete', 'delete.password']);
 
         Route::get('/suppliers', [App\Http\Controllers\SupplierController::class, 'index'])->name('supplier.index');
         Route::get('/suppliers/export', [App\Http\Controllers\SupplierController::class, 'export'])->name('supplier.export');
@@ -234,7 +234,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/suppliers', [App\Http\Controllers\SupplierController::class, 'store'])->name('supplier.store');
         Route::post('/suppliers/import', [App\Http\Controllers\SupplierController::class, 'import'])->name('supplier.import');
         Route::put('/suppliers/{id}', [App\Http\Controllers\SupplierController::class, 'update'])->name('supplier.update')->middleware('tenant.owns:suppliers');
-        Route::delete('/suppliers/{id}', [App\Http\Controllers\SupplierController::class, 'destroy'])->name('supplier.destroy')->middleware('tenant.owns:suppliers');
+        Route::delete('/suppliers/{id}', [App\Http\Controllers\SupplierController::class, 'destroy'])->name('supplier.destroy')->middleware(['tenant.owns:suppliers', 'permission:Parties,delete', 'delete.password']);
     });
 
     // Product
@@ -245,7 +245,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/products/import', [App\Http\Controllers\ProductController::class, 'import'])->name('product.import');
         Route::post('/products/store', [App\Http\Controllers\ProductController::class, 'store'])->name('product.store');
         Route::put('/products/update/{id}', [App\Http\Controllers\ProductController::class, 'update'])->name('product.update')->middleware('tenant.owns:products');
-        Route::get('/products/delete/{id}', [App\Http\Controllers\ProductController::class, 'destroy'])->name('product.delete')->middleware('tenant.owns:products');
+        Route::delete('/products/delete/{id}', [App\Http\Controllers\ProductController::class, 'destroy'])->name('product.delete')->middleware(['tenant.owns:products', 'permission:Product,delete', 'delete.password']);
         Route::get('/products/ledger', [App\Http\Controllers\ProductController::class, 'ledgerView'])->name('product.ledger');
         Route::get('/products/{id}/ledger-data', [App\Http\Controllers\ProductController::class, 'ledgerData'])->name('product.ledger-data')->middleware('tenant.owns:products');
         Route::post('/products/update-status/{id}', [App\Http\Controllers\ProductController::class, 'updateStatus'])->name('product.update-status')->middleware('tenant.owns:products');
@@ -259,7 +259,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/categories', [App\Http\Controllers\CategoryController::class, 'index'])->name('category.index');
         Route::post('/categories/store', [App\Http\Controllers\CategoryController::class, 'store'])->name('category.store');
         Route::put('/categories/update/{id}', [App\Http\Controllers\CategoryController::class, 'update'])->name('category.update');
-        Route::get('/categories/delete/{id}', [App\Http\Controllers\CategoryController::class, 'destroy'])->name('category.delete');
+        Route::delete('/categories/delete/{id}', [App\Http\Controllers\CategoryController::class, 'destroy'])->name('category.delete')->middleware(['permission:Product,delete', 'delete.password']);
     });
 
     // Purchase
@@ -271,7 +271,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/purchase/orders/{id}/print', [App\Http\Controllers\PurchaseController::class, 'printOrder'])->name('purchase.order.print')->middleware('tenant.owns:purchase_orders');
         Route::get('/purchase/orders/{id}/download', [App\Http\Controllers\PurchaseController::class, 'downloadOrderPdf'])->name('purchase.order.download')->middleware('tenant.owns:purchase_orders');
         Route::put('/purchase/orders/{id}', [App\Http\Controllers\PurchaseController::class, 'update'])->name('purchase.order.update')->middleware('tenant.owns:purchase_orders');
-        Route::delete('/purchase/orders/{id}', [App\Http\Controllers\PurchaseController::class, 'destroy'])->name('purchase.order.delete')->middleware('tenant.owns:purchase_orders');
+        Route::delete('/purchase/orders/{id}', [App\Http\Controllers\PurchaseController::class, 'destroy'])->name('purchase.order.delete')->middleware(['tenant.owns:purchase_orders', 'permission:Purchase,delete', 'delete.password']);
         Route::post('/purchase/orders/update-status/{id}', [App\Http\Controllers\PurchaseController::class, 'updateStatus'])->name('purchase.order.update-status')->middleware('tenant.owns:purchase_orders');
         Route::post('/purchase/orders/email/{id}', [App\Http\Controllers\PurchaseController::class, 'emailOrder'])->name('purchase.order.email')->middleware('tenant.owns:purchase_orders');
 
@@ -283,7 +283,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/purchase/bills/{id}/edit', [App\Http\Controllers\PurchaseController::class, 'editBill'])->name('purchase.bill.edit')->middleware('tenant.owns:purchase_bills');
         Route::post('/purchase/bills/update/{id}', [App\Http\Controllers\PurchaseController::class, 'updateBill'])->name('purchase.bill.update')->middleware('tenant.owns:purchase_bills');
         Route::get('/purchase/bills/{id}', [App\Http\Controllers\PurchaseController::class, 'showBill'])->name('purchase.bill.show')->middleware('tenant.owns:purchase_bills');
-        Route::delete('/purchase/bills/{id}', [App\Http\Controllers\PurchaseController::class, 'destroyBill'])->name('purchase.bill.delete')->middleware('tenant.owns:purchase_bills');
+        Route::delete('/purchase/bills/{id}', [App\Http\Controllers\PurchaseController::class, 'destroyBill'])->name('purchase.bill.delete')->middleware(['tenant.owns:purchase_bills', 'permission:Purchase,delete', 'delete.password']);
         Route::get('/purchase/bills', [App\Http\Controllers\PurchaseController::class, 'billIndex'])->name('purchase.bill');
         Route::get('/purchase/view', [App\Http\Controllers\PurchaseController::class, 'billIndex'])->name('purchase.view');
         Route::get('/purchase/expense', [App\Http\Controllers\PurchaseController::class, 'expense'])->name('purchase.expense');
@@ -291,10 +291,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/purchase/expense/{id}/view', [App\Http\Controllers\PurchaseController::class, 'viewExpense'])->name('purchase.expense.view')->middleware('tenant.owns:purchase_expenses');
         Route::get('/purchase/expense/{id}/pdf', [App\Http\Controllers\PurchaseController::class, 'downloadExpensePdf'])->name('purchase.expense.pdf')->middleware('tenant.owns:purchase_expenses');
         Route::put('/purchase/expense/{id}', [App\Http\Controllers\PurchaseController::class, 'updateExpense'])->name('purchase.expense.update')->middleware('tenant.owns:purchase_expenses');
-        Route::delete('/purchase/expense/{id}', [App\Http\Controllers\PurchaseController::class, 'destroyExpense'])->name('purchase.expense.destroy')->middleware('tenant.owns:purchase_expenses');
+        Route::delete('/purchase/expense/{id}', [App\Http\Controllers\PurchaseController::class, 'destroyExpense'])->name('purchase.expense.destroy')->middleware(['tenant.owns:purchase_expenses', 'permission:Purchase,delete', 'delete.password']);
         Route::get('/purchase/returns', [App\Http\Controllers\PurchaseController::class, 'returns'])->name('purchase.returns');
         Route::post('/purchase/returns', [App\Http\Controllers\PurchaseController::class, 'storeReturn'])->name('purchase.return.store');
-        Route::delete('/purchase/returns/{id}', [App\Http\Controllers\PurchaseController::class, 'destroyReturn'])->name('purchase.return.delete')->middleware('tenant.owns:purchase_returns');
+        Route::delete('/purchase/returns/{id}', [App\Http\Controllers\PurchaseController::class, 'destroyReturn'])->name('purchase.return.delete')->middleware(['tenant.owns:purchase_returns', 'permission:Purchase,delete', 'delete.password']);
         Route::get('/purchase/returns/{id}/view', [App\Http\Controllers\PurchaseController::class, 'viewReturn'])->name('purchase.return.view')->middleware('tenant.owns:purchase_returns');
         Route::get('/purchase/returns/{id}/pdf', [App\Http\Controllers\PurchaseController::class, 'downloadReturnPdf'])->name('purchase.return.pdf')->middleware('tenant.owns:purchase_returns');
         Route::put('/purchase/returns/{id}', [App\Http\Controllers\PurchaseController::class, 'updateReturn'])->name('purchase.return.update')->middleware('tenant.owns:purchase_returns');
@@ -304,7 +304,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/payment-out/store', [App\Http\Controllers\PaymentOutController::class, 'store'])->name('payment_out.store');
         Route::get('/payment-out/view/{id}', [App\Http\Controllers\PaymentOutController::class, 'view'])->name('payment_out.view')->middleware('tenant.owns:supplier_payments');
         Route::get('/payment-out/download/{id}', [App\Http\Controllers\PaymentOutController::class, 'download'])->name('payment_out.download')->middleware('tenant.owns:supplier_payments');
-        Route::get('/payment-out/delete/{id}', [App\Http\Controllers\PaymentOutController::class, 'delete'])->name('payment_out.delete')->middleware('tenant.owns:supplier_payments');
+        Route::delete('/payment-out/delete/{id}', [App\Http\Controllers\PaymentOutController::class, 'delete'])->name('payment_out.delete')->middleware(['tenant.owns:supplier_payments', 'permission:Purchase,delete', 'delete.password']);
         Route::post('/payment-out/update-status/{id}', [App\Http\Controllers\PaymentOutController::class, 'updateStatus'])->name('payment_out.update-status')->middleware('tenant.owns:supplier_payments');
     });
 
@@ -317,7 +317,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/sales/invoices/{id}', [App\Http\Controllers\SalesController::class, 'show'])->name('sales.invoice.show')->middleware('tenant.owns:sales_orders');
         Route::get('/sales/invoices/{id}/edit', [App\Http\Controllers\SalesController::class, 'edit'])->name('sales.invoice.edit')->middleware('tenant.owns:sales_orders');
         Route::put('/sales/invoices/{id}', [App\Http\Controllers\SalesController::class, 'update'])->name('sales.invoice.update')->middleware('tenant.owns:sales_orders');
-        Route::delete('/sales/invoices/{id}', [App\Http\Controllers\SalesController::class, 'destroy'])->name('sales.invoice.delete')->middleware('tenant.owns:sales_orders');
+        Route::delete('/sales/invoices/{id}', [App\Http\Controllers\SalesController::class, 'destroy'])->name('sales.invoice.delete')->middleware(['tenant.owns:sales_orders', 'permission:Sales & POS,delete', 'delete.password']);
         Route::get('/sales/invoices/{id}/pdf', [App\Http\Controllers\SalesController::class, 'pdf'])->name('sales.invoice.pdf')->middleware('tenant.owns:sales_orders');
         Route::post('/sales/invoices/{id}/status', [App\Http\Controllers\SalesController::class, 'updateStatus'])->name('sales.invoice.update-status')->middleware('tenant.owns:sales_orders');
         Route::get('/sales/pos', [App\Http\Controllers\SalesController::class, 'pos'])->name('sales.pos.view');
@@ -328,13 +328,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/payment-in/store', [App\Http\Controllers\PaymentInController::class, 'store'])->name('payment_in.store');
         Route::get('/payment-in/view/{id}', [App\Http\Controllers\PaymentInController::class, 'view'])->name('payment_in.view')->middleware('tenant.owns:payment_ins');
         Route::get('/payment-in/download/{id}', [App\Http\Controllers\PaymentInController::class, 'download'])->name('payment_in.download')->middleware('tenant.owns:payment_ins');
-        Route::get('/payment-in/delete/{id}', [App\Http\Controllers\PaymentInController::class, 'delete'])->name('payment_in.delete')->middleware('tenant.owns:payment_ins');
+        Route::delete('/payment-in/delete/{id}', [App\Http\Controllers\PaymentInController::class, 'delete'])->name('payment_in.delete')->middleware(['tenant.owns:payment_ins', 'permission:Sales & POS,delete', 'delete.password']);
         Route::post('/payment-in/update-status/{id}', [App\Http\Controllers\PaymentInController::class, 'updateStatus'])->name('payment_in.update-status')->middleware('tenant.owns:payment_ins');
 
         // Sales Return / Credit Note
         Route::get('/sales-return', [App\Http\Controllers\SalesReturnController::class, 'viewSalesReturn'])->name('sales.return.view');
         Route::post('/sales-return', [App\Http\Controllers\SalesReturnController::class, 'store'])->name('sales.return.store');
-        Route::delete('/sales-return/{id}', [App\Http\Controllers\SalesReturnController::class, 'destroy'])->name('sales.return.destroy')->middleware('tenant.owns:sales_returns');
+        Route::delete('/sales-return/{id}', [App\Http\Controllers\SalesReturnController::class, 'destroy'])->name('sales.return.destroy')->middleware(['tenant.owns:sales_returns', 'permission:Sales & POS,delete', 'delete.password']);
     });
 
     // Branches
@@ -347,7 +347,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/branch-transfer/store', [App\Http\Controllers\CompanyController::class, 'branchTransferStore'])->name('branch-transfer.store');
     Route::get('/branch-transfer/check-stock', [App\Http\Controllers\CompanyController::class, 'getBranchStock'])->name('branch-transfer.check-stock');
     Route::post('/branch-transfer/action/{id}', [App\Http\Controllers\CompanyController::class, 'branchTransferAction'])->name('branch-transfer.action')->middleware('tenant.owns:branch_transfers');
-    Route::delete('/branch-transfer/delete/{id}', [App\Http\Controllers\CompanyController::class, 'branchTransferDestroy'])->name('branch-transfer.delete')->middleware('tenant.owns:branch_transfers');
+    Route::delete('/branch-transfer/delete/{id}', [App\Http\Controllers\CompanyController::class, 'branchTransferDestroy'])->name('branch-transfer.delete')->middleware(['tenant.owns:branch_transfers', 'permission:Branch & Store,delete', 'delete.password']);
 
     // Expenses
     Route::middleware('permission:Expenses')->group(function () {
@@ -358,12 +358,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/payroll/view/{id}', [App\Http\Controllers\PayrollController::class, 'show'])->name('payroll.show')->middleware('tenant.owns:payrolls');
         Route::put('/payroll/approve/{id}', [App\Http\Controllers\PayrollController::class, 'approve'])->name('payroll.approve')->middleware('tenant.owns:payrolls');
         Route::put('/payroll/pay/{id}', [App\Http\Controllers\PayrollController::class, 'markAsPaid'])->name('payroll.pay')->middleware('tenant.owns:payrolls');
-        Route::delete('/payroll/delete/{id}', [App\Http\Controllers\PayrollController::class, 'destroy'])->name('payroll.delete')->middleware('tenant.owns:payrolls');
+        Route::delete('/payroll/delete/{id}', [App\Http\Controllers\PayrollController::class, 'destroy'])->name('payroll.delete')->middleware(['tenant.owns:payrolls', 'permission:Expenses,delete', 'delete.password']);
         Route::post('/payroll/repost/{id}', [App\Http\Controllers\PayrollController::class, 'repostJournal'])->name('payroll.repost')->middleware('tenant.owns:payrolls');
         Route::post('/expenses/store', [App\Http\Controllers\ExpenseController::class, 'store'])->name('expenses.store');
         Route::get('/expenses/edit/{id}', [App\Http\Controllers\ExpenseController::class, 'edit'])->name('expenses.edit')->middleware('tenant.owns:expenses');
         Route::post('/expenses/update/{id}', [App\Http\Controllers\ExpenseController::class, 'update'])->name('expenses.update')->middleware('tenant.owns:expenses');
-        Route::get('/expenses/delete/{id}', [App\Http\Controllers\ExpenseController::class, 'destroy'])->name('expenses.delete')->middleware('tenant.owns:expenses');
+        Route::delete('/expenses/delete/{id}', [App\Http\Controllers\ExpenseController::class, 'destroy'])->name('expenses.delete')->middleware(['tenant.owns:expenses', 'permission:Expenses,delete', 'delete.password']);
         Route::get('/expenses/receipt/{id}', [App\Http\Controllers\ExpenseController::class, 'receipt'])->name('expenses.receipt')->middleware('tenant.owns:expenses');
 
         // Loans
@@ -371,7 +371,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/loans/store', [App\Http\Controllers\LoanController::class, 'storeLoan'])->name('loan.store');
         Route::put('/loans/update/{id}', [App\Http\Controllers\LoanController::class, 'updateLoan'])->name('loan.update');
         Route::post('/loans/status/{id}', [App\Http\Controllers\LoanController::class, 'changeStatus'])->name('loan.status.update');
-        Route::delete('/loans/delete/{id}', [App\Http\Controllers\LoanController::class, 'deleteLoan'])->name('loan.delete');
+        Route::delete('/loans/delete/{id}', [App\Http\Controllers\LoanController::class, 'deleteLoan'])->name('loan.delete')->middleware(['permission:Expenses,delete', 'delete.password']);
         Route::get('/loans/payslip/{id}', [App\Http\Controllers\LoanController::class, 'loanPayslip'])->name('loan.payslip');
     });
 

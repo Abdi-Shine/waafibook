@@ -34,6 +34,12 @@
                 amount_balance: 0
             },
 
+            init() {
+                if ('{{ request('reopen_create') }}' === '1') {
+                    this.openCreateModal();
+                }
+            },
+
             openCreateModal() {
                 this.editMode = false;
                 this.savedSupplier = null;
@@ -74,11 +80,9 @@
                     }
 
                     this.savedSupplier = data;
-                    this.supplierData = {
-                        id: '', name: '', email: '', phone: '',
-                        supplier_type: 'individual', address: '', account_id: '', amount_balance: 0
-                    };
-                    form.reset();
+                    setTimeout(() => {
+                        window.location.href = window.location.pathname + '?reopen_create=1';
+                    }, 900);
                 } catch (e) {
                     Swal.fire({ icon: 'error', title: 'Network error', text: 'Could not save supplier. Please try again.' });
                 } finally {
@@ -100,23 +104,9 @@
             },
 
             confirmDelete(id, name) {
-                Swal.fire({
+                deleteRecordWithPassword('{{ url('/suppliers') }}/' + id, name, {
                     title: 'Delete Supplier?',
-                    text: `Are you sure you want to delete ${name}? This action cannot be undone.`,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#004161',
-                    cancelButtonColor: '#99CC33',
-                    confirmButtonText: 'Yes, delete it!',
-                    customClass: {
-                        popup: 'rounded-[1.5rem]',
-                        confirmButton: 'rounded-[0.5rem] px-6 py-2 text-xs font-bold uppercase tracking-widest',
-                        cancelButton: 'rounded-[0.5rem] px-6 py-2 text-xs font-bold uppercase tracking-widest'
-                    }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        document.getElementById('delete-form-' + id).submit();
-                    }
+                    text: `Are you sure you want to delete ${name}? This action cannot be undone.`
                 });
             }
         }">

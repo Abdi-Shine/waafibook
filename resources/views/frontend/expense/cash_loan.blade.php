@@ -545,29 +545,9 @@
             },
 
             confirmDelete(id) {
-                Swal.fire({
+                deleteRecordWithPassword('/loans/delete/' + id, 'this loan record', {
                     title: 'Delete Loan Record?',
-                    text: "This action will permanently remove this loan request. It cannot be undone.",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#f43f5e',
-                    cancelButtonColor: '#99CC33',
-                    confirmButtonText: 'Yes, delete it!',
-                    customClass: {
-                        popup: 'rounded-[1.25rem]',
-                        title: 'font-bold text-primary-dark',
-                        confirmButton: 'rounded-lg px-6 py-2.5 text-xs font-bold uppercase tracking-wider',
-                        cancelButton: 'rounded-lg px-6 py-2.5 text-xs font-bold uppercase tracking-wider'
-                    }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        let form = document.createElement('form');
-                        form.method = 'POST';
-                        form.action = '/loans/delete/' + id;
-                        form.innerHTML = `@csrf` + `@method('DELETE')`;
-                        document.body.appendChild(form);
-                        form.submit();
-                    }
+                    text: 'This action will permanently remove this loan request. It cannot be undone.'
                 });
             }
         }));

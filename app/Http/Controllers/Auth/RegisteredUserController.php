@@ -155,6 +155,20 @@ class RegisteredUserController extends Controller
         // Seed full chart of accounts using the same service as the seeder
         app(\App\Services\ChartOfAccountsService::class)->seedForCompany($company->id, $hqBranch->id);
 
+        // Create an Employee record for the registering admin so they appear in Employee Management
+        \App\Models\Employee::withoutGlobalScopes()->create([
+            'company_id'  => $company->id,
+            'user_id'     => $user->id,
+            'employee_id' => 'EMP-' . date('Y') . '-001',
+            'full_name'   => $user->name,
+            'email'       => $user->email,
+            'company'     => $company->name,
+            'designation' => 'Administrator',
+            'department'  => 'Management',
+            'branch'      => $hqBranch->name,
+            'status'      => 'active',
+        ]);
+
         // Do NOT auto-login — user must open their email and click the login button.
         return redirect()->route('login')
             ->with('status', 'Account created! Please check your email for your login credentials.');

@@ -63,25 +63,9 @@
     },
 
     confirmDelete(id, name) {
-        Swal.fire({
+        deleteRecordWithPassword('{{ url('/roles') }}/' + id, name, {
             title: 'Delete Role?',
-            text: `Are you sure you want to delete the '${name}' role? This action cannot be undone.`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#004161',
-            cancelButtonColor: '#aadb40',
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'Cancel',
-            background: '#ffffff',
-            customClass: {
-                popup: 'rounded-[2rem]',
-                confirmButton: 'rounded-xl px-6 py-3 font-bold uppercase text-[10px] tracking-widest',
-                cancelButton: 'rounded-xl px-6 py-3 font-bold uppercase text-[10px] tracking-widest'
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                document.getElementById('delete-form-' + id).submit();
-            }
+            text: `Are you sure you want to delete the '${name}' role? This action cannot be undone.`
         });
     },
 

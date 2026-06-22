@@ -215,9 +215,9 @@
                                     <a href="{{ route('customer.statement', $item->customer_id) }}" class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary border border-indigo-100 hover:bg-primary/10 hover:text-white transition-all shadow-sm" title="Statement">
                                         <i class="bi bi-file-earmark-person"></i>
                                     </a>
-                                    <a href="{{ route('payment_in.delete', $item->id) }}" class="btn-action-delete delete-confirm" title="Delete Records">
+                                    <button type="button" onclick="confirmDeletePaymentIn('{{ route('payment_in.delete', $item->id) }}', '{{ $item->receipt_no }}')" class="btn-action-delete" title="Delete Records">
                                         <i class="bi bi-trash"></i>
-                                    </a>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -474,6 +474,13 @@
                 });
             });
         });
+
+        function confirmDeletePaymentIn(url, receiptNo) {
+            deleteRecordWithPassword(url, receiptNo, {
+                title: 'Delete Payment Record?',
+                text: `Are you sure you want to delete payment ${receiptNo}? This action cannot be undone.`
+            });
+        }
 
         function sendWhatsAppPayment(receiptNo, customer, phone, date, amount, symbol) {
             let message = `*PAYMENT RECEIPT*\n\n`;

@@ -611,20 +611,9 @@ document.addEventListener('alpine:init', () => {
 
 
         confirmDelete(id, name) {
-            Swal.fire({
+            deleteRecordWithPassword('{{ url('/accounts') }}/' + id, name, {
                 title: 'Delete Account?',
-                text: `Are you sure you want to delete '${name}'?`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, delete it!',
-                cancelButtonText: 'Cancel',
-                confirmButtonColor: '#004161',
-                cancelButtonColor: '#99CC33'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    let deleteForm = document.getElementById('delete-form-' + id);
-                    if (deleteForm) deleteForm.submit();
-                }
+                text: `Are you sure you want to delete '${name}'?`
             });
         },
 

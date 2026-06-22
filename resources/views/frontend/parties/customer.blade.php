@@ -37,6 +37,12 @@
                     amount_balance: 0
                 },
 
+                init() {
+                    if ('{{ request('reopen_create') }}' === '1') {
+                        this.openCreateModal();
+                    }
+                },
+
                 openCreateModal() {
                     this.editMode = false;
                     this.savedCustomer = null;
@@ -77,11 +83,9 @@
                         }
 
                         this.savedCustomer = data.customer;
-                        this.customerData = {
-                            id: '', name: '', email: '', phone: '',
-                            customer_type: 'individual', address: '', account_id: '', amount_balance: 0
-                        };
-                        form.reset();
+                        setTimeout(() => {
+                            window.location.href = window.location.pathname + '?reopen_create=1';
+                        }, 900);
                     } catch (e) {
                         Swal.fire({ icon: 'error', title: 'Network error', text: 'Could not save customer. Please try again.' });
                     } finally {
@@ -104,23 +108,9 @@
                 },
 
                 confirmDelete(id, name) {
-                    Swal.fire({
+                    deleteRecordWithPassword('{{ url('/customers') }}/' + id, name, {
                         title: 'Delete Customer?',
-                        text: `Are you sure you want to delete ${name}? This action cannot be undone.`,
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#004161',
-                        cancelButtonColor: '#99CC33',
-                        confirmButtonText: 'Yes, delete it!',
-                        customClass: {
-                            popup: 'rounded-[1.5rem]',
-                            confirmButton: 'rounded-[0.5rem] px-6 py-2 text-xs font-bold uppercase tracking-widest',
-                            cancelButton: 'rounded-[0.5rem] px-6 py-2 text-xs font-bold uppercase tracking-widest'
-                        }
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            document.getElementById('delete-form-' + id).submit();
-                        }
+                        text: `Are you sure you want to delete ${name}? This action cannot be undone.`
                     });
                 }
             }">

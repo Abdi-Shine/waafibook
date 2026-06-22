@@ -60,24 +60,9 @@
         },
 
         confirmDelete(id, name) {
-            Swal.fire({
+            deleteRecordWithPassword('/categories/delete/' + id, name, {
                 title: 'Delete Category?',
-                text: `Are you sure you want to delete '${name}'?`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, delete it!',
-                cancelButtonText: 'Cancel',
-                confirmButtonColor: '#004161',
-                cancelButtonColor: '#99CC33',
-                customClass: {
-                    popup: 'rounded-[1.5rem]',
-                    confirmButton: 'rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-widest',
-                    cancelButton: 'rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-widest'
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = '/categories/delete/' + id;
-                }
+                text: `Are you sure you want to delete '${name}'?`
             });
         }
     }">

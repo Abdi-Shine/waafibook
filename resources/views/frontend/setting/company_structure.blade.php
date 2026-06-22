@@ -277,18 +277,11 @@ document.addEventListener('keydown', function(e) {
 });
 
 function confirmDelete(formId, title, text) {
-    Swal.fire({
+    const form = document.getElementById(formId);
+    const label = (title || 'this record').replace(/^Delete\s+/i, '').replace(/\?$/, '');
+    deleteRecordWithPassword(form.action, label, {
         title: title || 'Are you sure?',
-        text: text || "You won't be able to revert this!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#e11d48', // rose
-        confirmButtonText: 'Yes, delete it!',
-        cancelButtonText: 'Cancel'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            document.getElementById(formId).submit();
-        }
+        text: text || "You won't be able to revert this!"
     });
 }
 </script>

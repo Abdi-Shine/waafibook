@@ -43,23 +43,9 @@
     },
 
     confirmDelete(id, name) {
-        Swal.fire({
+        deleteRecordWithPassword('{{ url('/branch/delete') }}/' + id, name, {
             title: 'Delete Branch?',
-            text: `Are you sure you want to delete the ${name} branch? This will affect linked data.`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#004161',
-            cancelButtonColor: '#99CC33',
-            confirmButtonText: 'Yes, delete it!',
-            customClass: {
-                popup: 'rounded-[1.5rem]',
-                confirmButton: 'rounded-[0.5rem] px-6 py-2 text-xs font-bold uppercase tracking-widest',
-                cancelButton: 'rounded-[0.5rem] px-6 py-2 text-xs font-bold uppercase tracking-widest'
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                document.getElementById('delete-form-' + id).submit();
-            }
+            text: `Are you sure you want to delete the ${name} branch? This will affect linked data.`
         });
     }
 }">
