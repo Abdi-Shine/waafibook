@@ -374,11 +374,12 @@ class AccountController extends Controller
                         'name'      => $name,
                         'date'      => $item->entry->date ? $item->entry->date->format('d/m/Y') : '-',
                         'sort_date' => $item->entry->date ? $item->entry->date->timestamp : 0,
+                        'sort_id'   => $item->id,
                         'amount'    => (float) ($item->debit > 0 ? $item->debit : $item->credit),
                         'direction' => $item->debit > 0 ? 'in' : 'out',
                     ];
                 })
-                ->sortByDesc('sort_date')
+                ->sortByDesc(fn($t) => [$t['sort_date'], $t['sort_id']])
                 ->values();
         }
 
