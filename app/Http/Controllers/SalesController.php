@@ -154,6 +154,7 @@ class SalesController extends Controller
                   ->orWhere('name', 'like', '%Cash%');
             })
             ->where('type', '!=', 'parent')
+            ->where('name', 'not like', '%Petty%')
             ->when($userBranchId, fn($q) => $q->where('branch_id', $userBranchId))
             ->orderByRaw("CASE WHEN LOWER(name) LIKE '%cash on hand%' OR LOWER(name) LIKE '%cash in hand%' THEN 0 ELSE 1 END")
             ->orderBy('id')
