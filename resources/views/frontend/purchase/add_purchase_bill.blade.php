@@ -1097,6 +1097,11 @@
                     contentType: 'application/json',
                     data: JSON.stringify(data),
                     success: function (res) {
+                        if (res.status !== 'success') {
+                            btns.forEach(b => b.disabled = false);
+                            toastError(res.message || 'Failed to record bill.');
+                            return;
+                        }
                         Swal.fire({ icon: 'success', title: 'Bill Recorded!', text: 'Stock updated successfully.', confirmButtonColor: '#004161' })
                             .then(() => window.location.href = R_LIST);
                     },
