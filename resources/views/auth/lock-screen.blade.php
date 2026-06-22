@@ -30,7 +30,9 @@
             <!-- Header -->
             <div class="auth-header-gradient auth-header-border p-5 pb-8 text-center text-white">
                 <div class="auth-logo flex justify-center mb-4">
-                    @include('partials.logo_svg', ['width' => 45, 'height' => 45])
+                    <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-xl overflow-hidden">
+                        <img src="{{ asset('upload/horntechlogo/horntech_logo.jpg') }}" class="w-full h-full object-contain" alt="Horntech LTD Logo">
+                    </div>
                 </div>
                 <h1 class="auth-title">Horntech LTD</h1>
             </div>

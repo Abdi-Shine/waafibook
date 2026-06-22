@@ -172,22 +172,5 @@
     </div>
     @endif
 
-    {{-- CTA Banner --}}
-    <div class="rounded-[1.2rem] p-8 text-center"
-         style="background: linear-gradient(135deg, #004161 0%, #002d47 100%);">
-        <h3 class="text-white text-[20px] font-black mb-2">Not sure which plan is right for you?</h3>
-        <p class="text-white/80 text-[13px] mb-5">Schedule a free demo and our team will help you choose the best option for your business.</p>
-        <div class="flex justify-center gap-3 flex-wrap">
-            <a href="{{ route('demo.request') }}"
-               class="px-6 py-3 bg-white text-primary-dark font-bold rounded-[0.6rem] text-[13px] hover:bg-accent transition-all">
-                <i class="bi bi-calendar-check me-2"></i>Request a Demo
-            </a>
-            <a href="{{ route('landing') }}"
-               class="px-6 py-3 border-2 border-white text-white font-bold rounded-[0.6rem] text-[13px] hover:bg-white hover:text-primary-dark transition-all">
-                <i class="bi bi-arrow-left me-2"></i>Back to Home
-            </a>
-        </div>
-    </div>
-
 </div>
 @endsection

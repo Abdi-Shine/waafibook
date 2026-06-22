@@ -1,4 +1,4 @@
-@extends('admin.admin_master')
+@extends('admin.blank_master')
 @section('page_title', 'New Sales Invoice')
 @section('admin')
 
@@ -62,18 +62,15 @@
     <form id="invoiceForm" autocomplete="off">
         @csrf
 
-        {{-- ── Top Row: Customer Info + Invoice Details ──────────────────────── --}}
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-
-            {{-- Left column (spans 2) --}}
-            <div class="lg:col-span-2 space-y-4">
+        {{-- ── Top Row: Customer Info ─────────────────────────────────────────── --}}
+        <div class="space-y-4 mb-4">
 
                 {{-- Customer Information --}}
                 <div id="customerSection" class="bg-white rounded-[1rem] border border-gray-100 shadow-sm p-6 transition-opacity duration-300">
                     <p class="text-[11px] font-bold text-primary-dark uppercase tracking-wider mb-6 pb-2 border-b border-gray-100">
                         Customer &amp; Sale Info
                     </p>
-                    <div class="grid grid-cols-2 gap-x-6 gap-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
 
                         {{-- Left: Customer select + Balance + Add New --}}
                         <div class="space-y-1.5">
@@ -113,6 +110,19 @@
                                    class="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
                         </div>
 
+                        {{-- Invoice Number --}}
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Invoice Number</label>
+                            <div class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-bold text-primary-dark">{{ $invoiceNo }}</div>
+                        </div>
+
+                        {{-- Invoice Date --}}
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Invoice Date</label>
+                            <input type="date" id="invoiceDateCredit" name="invoice_date" value="{{ date('Y-m-d') }}"
+                                   class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                        </div>
+
                         {{-- Hidden branch & account (auto from user's assigned branch) --}}
                         <input type="hidden" name="branch_id" id="branchSelect" value="{{ auth()->user()->getAssignedBranchId() ?? ($branches->first()->id ?? '') }}">
                         <input type="hidden" name="payment_account_id" id="paymentAccountSelect" value="">
@@ -125,7 +135,7 @@
                     <p class="text-[11px] font-bold text-primary-dark uppercase tracking-wider mb-6 pb-2 border-b border-gray-100">
                         Walk-in Customer Details
                     </p>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
                         <div class="space-y-1.5">
                             <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Billing Name (Optional)</label>
                             <input type="text" id="cashBillingName" name="cash_billing_name" placeholder="Enter name"
@@ -137,9 +147,13 @@
                                    class="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
                         </div>
                         <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Address</label>
-                            <input type="text" id="cashAddress" name="cash_address" placeholder="Enter address"
-                                   class="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Invoice Number</label>
+                            <div class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-bold text-primary-dark">{{ $invoiceNo }}</div>
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Invoice Date</label>
+                            <input type="date" id="invoiceDateCash" name="invoice_date_cash" value="{{ date('Y-m-d') }}"
+                                   class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
                         </div>
                     </div>
 
@@ -148,22 +162,6 @@
                     <input type="hidden" name="payment_account_id_cash" id="paymentAccountSelectCash" value="">
                 </div>
 
-            </div>
-
-            {{-- Invoice Number + Date (Right column) --}}
-            <div class="bg-white rounded-[1rem] border border-gray-100 shadow-sm p-6 mb-6">
-                <p class="text-[11px] font-bold text-primary-dark uppercase tracking-wider mb-6 pb-2 border-b border-gray-100">
-                    Invoice Details
-                </p>
-                <div class="mb-4">
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Invoice Number</label>
-                    <div class="text-[20px] font-black text-primary-dark tracking-tight">{{ $invoiceNo }}</div>
-                    <input type="hidden" name="invoice_no" value="{{ $invoiceNo }}">
-                </div>
-                <input type="hidden" name="invoice_date" value="{{ date('Y-m-d') }}">
-                <input type="hidden" name="due_date" id="dueDateInput">
-                <input type="hidden" name="payment_method" id="paymentMethodInput" value="Cash">
-            </div>
         </div>
 
         {{-- ── Items Table ─────────────────────────────────────────────────────── --}}
@@ -490,7 +488,9 @@ $(document).ready(function() {
         recalcAll();
     });
 
-    // Add first row
+    // Add 3 rows by default
+    addItemRow();
+    addItemRow();
     addItemRow();
 
     // Set default Walk-in Customer name for Cash mode (default)
@@ -854,7 +854,9 @@ const items = [];
     if (!valid) return null;
     if (!isDraft && items.length === 0) { toastError('Please add at least one product.'); return null; }
 
-    const invDateEl = document.querySelector('input[name="invoice_date"]');
+    const invDateEl = isCredit
+        ? document.getElementById('invoiceDateCredit')
+        : document.getElementById('invoiceDateCash');
     const payMethEl = document.getElementById('paymentMethodInput');
     const notesEl   = document.querySelector('textarea[name="notes"]');
     let notes = notesEl ? notesEl.value : '';
@@ -863,12 +865,10 @@ const items = [];
     if (!isCredit) {
         const cashName = document.getElementById('cashBillingName').value.trim();
         const cashPhone = document.getElementById('cashPhone').value.trim();
-        const cashAddr = document.getElementById('cashAddress').value.trim();
 
         let details = [];
         if (cashName) details.push("Name: " + cashName);
         if (cashPhone) details.push("Phone: " + cashPhone);
-        if (cashAddr) details.push("Address: " + cashAddr);
 
         if (details.length > 0) {
             notes = " WALK-IN DETAILS: \n" + details.join(" | ") + "\n----------------\n" + notes;

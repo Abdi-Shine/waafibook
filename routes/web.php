@@ -12,11 +12,26 @@ Route::post('/demo', [\App\Http\Controllers\DemoRequestController::class, 'store
 Route::get('/terms', function() { return view('terms'); })->name('terms');
 Route::get('/privacy', function() { return view('privacy'); })->name('privacy');
 
+// Public, signed link so a customer can open an invoice PDF (e.g. from WhatsApp) without logging in.
+Route::get('/invoice/{id}/view', [App\Http\Controllers\SalesController::class, 'publicPdf'])
+    ->name('sales.invoice.public-pdf')
+    ->middleware('signed');
+
+// Public, signed link so a customer can open their statement PDF (e.g. from WhatsApp) without logging in.
+Route::get('/statement/{id}/view', [App\Http\Controllers\CustomerController::class, 'publicStatement'])
+    ->name('customer.statement.public-pdf')
+    ->middleware('signed');
+
+// Public, signed link so a supplier can open their statement PDF (e.g. from WhatsApp) without logging in.
+Route::get('/supplier-statement/{id}/view', [App\Http\Controllers\SupplierController::class, 'publicStatement'])
+    ->name('supplier.statement.public-pdf')
+    ->middleware('signed');
+
 Route::get('/dashboard', function () {
     $accounts = \App\Models\Account::all();
 
     $assets = $accounts->where('category', 'assets')->sum('balance');
-    $liabilities = $accounts->where('category', 'liabilities')->sum('balance');
+    $liabilities = \App\Models\Supplier::sum('amount_balance');
     $baseEquity = $accounts->where('category', 'equity')->sum('balance');
     $revenue = $accounts->where('category', 'revenue')->sum('balance');
     $expenses = $accounts->where('category', 'expenses')->sum('balance');
@@ -31,7 +46,7 @@ Route::get('/dashboard', function () {
         return $stock->quantity * ($stock->product->purchase_price ?? 0);
     });
 
-    $accountsReceivable = \App\Models\SalesOrder::sum('due_amount');
+    $accountsReceivable = \App\Models\Customer::sum('amount_balance');
 
     $stats = [
         'assets' => $assets,
@@ -198,6 +213,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Parties
     Route::middleware('permission:Parties')->group(function () {
+        Route::get('/parties/ledger', [App\Http\Controllers\PartiesController::class, 'ledgerView'])->name('parties.ledger');
+        Route::get('/parties/{type}/{id}/ledger-data', [App\Http\Controllers\PartiesController::class, 'ledgerData'])->name('parties.ledger-data');
+
         Route::get('/customers', [App\Http\Controllers\CustomerController::class, 'index'])->name('customer.index');
         Route::get('/customers/export', [App\Http\Controllers\CustomerController::class, 'export'])->name('customer.export');
         Route::get('/customers/{id}/statement', [App\Http\Controllers\CustomerController::class, 'statement'])->name('customer.statement')->middleware('tenant.owns:customers');
@@ -228,6 +246,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/products/store', [App\Http\Controllers\ProductController::class, 'store'])->name('product.store');
         Route::put('/products/update/{id}', [App\Http\Controllers\ProductController::class, 'update'])->name('product.update')->middleware('tenant.owns:products');
         Route::get('/products/delete/{id}', [App\Http\Controllers\ProductController::class, 'destroy'])->name('product.delete')->middleware('tenant.owns:products');
+        Route::get('/products/ledger', [App\Http\Controllers\ProductController::class, 'ledgerView'])->name('product.ledger');
+        Route::get('/products/{id}/ledger-data', [App\Http\Controllers\ProductController::class, 'ledgerData'])->name('product.ledger-data')->middleware('tenant.owns:products');
         Route::post('/products/update-status/{id}', [App\Http\Controllers\ProductController::class, 'updateStatus'])->name('product.update-status')->middleware('tenant.owns:products');
         Route::post('/products/quick-store', [App\Http\Controllers\ProductController::class, 'quickStore'])->name('product.quick.store');
         Route::get('/products/low-stock', [App\Http\Controllers\ProductController::class, 'lowStockView'])->name('low-stock.view');

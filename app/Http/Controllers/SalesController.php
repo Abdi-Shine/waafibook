@@ -110,7 +110,7 @@ class SalesController extends Controller
         /** @var Company|null $company */
         $company    = Company::find(auth()->user()->company_id);
 
-        $invoiceNo = 'INV-' . date('Y') . '-' . str_pad(SalesOrder::query()->count() + 1, 5, '0', STR_PAD_LEFT);
+        $invoiceNo = 'INV-' . str_pad(SalesOrder::query()->count() + 1, 5, '0', STR_PAD_LEFT);
 
         $accounts = Account::query()
             ->whereIn('type', ['cash', 'bank'])
@@ -146,13 +146,12 @@ class SalesController extends Controller
         /** @var Company|null $company */
         $company    = Company::find(auth()->user()->company_id);
 
-        $invoiceNo = 'INV-' . date('Y') . '-' . str_pad(SalesOrder::query()->count() + 1, 5, '0', STR_PAD_LEFT);
+        $invoiceNo = 'INV-' . str_pad(SalesOrder::query()->count() + 1, 5, '0', STR_PAD_LEFT);
 
         $accounts = Account::query()
             ->where(function($q) {
-                $q->whereIn('type', ['cash', 'bank'])
-                  ->orWhere('name', 'like', '%Cash%')
-                  ->orWhere('name', 'like', '%Bank%');
+                $q->where('type', 'cash')
+                  ->orWhere('name', 'like', '%Cash%');
             })
             ->where('type', '!=', 'parent')
             ->when($userBranchId, fn($q) => $q->where('branch_id', $userBranchId))
@@ -295,8 +294,7 @@ class SalesController extends Controller
                 $status = 'partial';
             }
 
-            // Unique invoice number using uniqid suffix to prevent duplicate key on same day
-            $invoiceNo = 'INV-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -5));
+            $invoiceNo = 'INV-' . str_pad(SalesOrder::query()->count() + 1, 5, '0', STR_PAD_LEFT);
 
             // Resolve payment account — JS sends correct ID for both cash and credit mode
             $paymentAccountId = $request->payment_account_id ?: null;
@@ -597,6 +595,21 @@ class SalesController extends Controller
         $order   = SalesOrder::query()->with('customer', 'items')->findOrFail($id);
         /** @var Company|null $company */
         $company = Company::find(auth()->user()->company_id);
+
+        $pdf = Pdf::loadView('frontend.sales.sales_invoice_pdf', compact('order', 'company'))
+                  ->setPaper('a4', 'portrait');
+
+        return $pdf->stream('Invoice_' . $order->invoice_no . '.pdf');
+    }
+
+    // Public, signed-URL version so the PDF can be opened by a customer (e.g. via WhatsApp)
+    // without needing to log in. The signature prevents guessing/enumerating other invoices.
+    public function publicPdf($id)
+    {
+        /** @var SalesOrder|null $order */
+        $order   = SalesOrder::withoutGlobalScopes()->with('customer', 'items')->findOrFail($id);
+        /** @var Company|null $company */
+        $company = Company::find($order->company_id);
 
         $pdf = Pdf::loadView('frontend.sales.sales_invoice_pdf', compact('order', 'company'))
                   ->setPaper('a4', 'portrait');

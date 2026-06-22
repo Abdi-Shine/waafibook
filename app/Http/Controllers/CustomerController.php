@@ -53,7 +53,7 @@ class CustomerController extends Controller
             'amount_balance' => 'nullable|numeric',
         ]);
 
-        DB::transaction(function () use ($validated) {
+        $customer = DB::transaction(function () use ($validated) {
             $account = Account::query()->where('name', 'like', '%Receivable%')->first();
             if ($account) {
                 $validated['account_id']   = $account->id;
@@ -68,8 +68,12 @@ class CustomerController extends Controller
             $lastCode = Customer::query()->max('id') ?? 0;
             $validated['customer_code'] = 'CUS-' . date('Y') . '-' . str_pad($lastCode + 1, 3, '0', STR_PAD_LEFT);
 
-            Customer::query()->create($validated);
+            return Customer::query()->create($validated);
         });
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'customer' => $customer]);
+        }
 
         return redirect()->back()->with('success', 'Customer created successfully');
     }
@@ -210,6 +214,34 @@ class CustomerController extends Controller
         $fileName = 'Statement_' . $customer->name . '_' . date('Y-m-d') . '.pdf';
 
         return $pdf->download($fileName);
+    }
+
+    // Public, signed-URL version so the statement can be opened by a customer (e.g. via WhatsApp)
+    // without needing to log in. The signature prevents guessing/enumerating other customers' statements.
+    public function publicStatement($id)
+    {
+        $customer = Customer::withoutGlobalScopes()->findOrFail($id);
+
+        if (method_exists($customer, 'orders')) {
+            $customer->load('orders');
+        } else {
+            $customer->setRelation('orders', collect());
+        }
+
+        if (method_exists($customer, 'payments')) {
+            $customer->load('payments');
+        } else {
+            $customer->setRelation('payments', collect());
+        }
+
+        $company_profile = Company::find($customer->company_id);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('frontend.parties.pdf_customer_statement', [
+            'customer' => $customer,
+            'company_profile' => $company_profile
+        ]);
+
+        return $pdf->stream('Statement_' . $customer->name . '_' . date('Y-m-d') . '.pdf');
     }
 
     public function emailStatement($id)

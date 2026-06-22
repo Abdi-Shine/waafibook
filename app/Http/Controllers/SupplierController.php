@@ -243,6 +243,33 @@ class SupplierController extends Controller
         return $pdf->download('Statement_'.$supplier->name.'_'.date('Y-m-d').'.pdf');
     }
 
+    // Public, signed-URL version so the statement can be opened by a supplier (e.g. via WhatsApp)
+    // without needing to log in. The signature prevents guessing/enumerating other suppliers' statements.
+    public function publicStatement($id)
+    {
+        $supplier = Supplier::withoutGlobalScopes()->findOrFail($id);
+
+        if (method_exists($supplier, 'purchases')) {
+            $supplier->load('purchases');
+        } else {
+            $supplier->setRelation('purchases', collect());
+        }
+        if (method_exists($supplier, 'payments')) {
+            $supplier->load('payments');
+        } else {
+            $supplier->setRelation('payments', collect());
+        }
+
+        $company_profile = Company::find($supplier->company_id);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('frontend.parties.pdf_supplier_statement', [
+            'supplier' => $supplier,
+            'company_profile' => $company_profile
+        ]);
+
+        return $pdf->stream('Statement_'.$supplier->name.'_'.date('Y-m-d').'.pdf');
+    }
+
     public function emailStatement($id)
     {
         return response()->json([

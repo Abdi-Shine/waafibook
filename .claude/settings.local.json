@@ -53,7 +53,9 @@
       "Bash(find /d/Horntech/resources/views -name \"*.blade.php\" -exec grep -l \"store\" {} \\\\;)",
       "Bash(grep -l \"store_id\" /d/Horntech/resources/views/frontend/purchase/*.blade.php)",
       "Bash(ls d:\\\\Horntech\\\\app\\\\Models\\\\Store* d:\\\\Horntech\\\\app\\\\Models\\\\StoreTransfer*)",
-      "Bash(xargs -I{} basename {})"
+      "Bash(xargs -I{} basename {})",
+      "Bash(grep -n 'protected $table\\\\|table =' d:/Horntech/app/Models/Account.php)",
+      "Bash(git add:*)"
     ]
   }
 }

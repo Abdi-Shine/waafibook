@@ -283,6 +283,11 @@
                hover:bg-primary hover:text-white
                transition-all duration-200 flex items-center justify-center text-sm cursor-pointer;
     }
+    .btn-action-whatsapp {
+        @apply w-8 h-8 rounded-lg bg-green-100 text-green-600
+               hover:bg-green-500 hover:text-white
+               transition-all duration-200 flex items-center justify-center text-sm cursor-pointer;
+    }
 
     .btn-premium-primary {
         @apply flex items-center gap-2 px-6 py-2.5 bg-primary text-white font-bold rounded-lg
@@ -353,7 +358,7 @@
     .pos-container {
         display: grid;
         grid-template-columns: 1fr 420px;
-        height: calc(100vh - 80px);
+        height: 100vh;
         background: theme('colors.background');
         overflow: hidden;
     }

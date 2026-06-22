@@ -128,8 +128,11 @@
                         @php
                             $bAccs = $branch->accounts;
                             $bCash = $bAccs->whereIn('type', ['bank', 'cash'])->sum('balance');
-                            $bReceivables = $bAccs->where('category', 'assets')->filter(fn($a) => str_contains(strtolower($a->name), 'receivable'))->sum('balance');
-                            $bPayables = $bAccs->where('category', 'liabilities')->filter(fn($a) => str_contains(strtolower($a->name), 'payable'))->sum('balance');
+                            // Customers/suppliers aren't tracked per branch, so when there's a single
+                            // branch its row can safely show the real company-wide totals; with
+                            // multiple branches this falls back to the (less precise) ledger figures.
+                            $bReceivables = $branches->count() === 1 ? $receivables : $bAccs->where('category', 'assets')->filter(fn($a) => str_contains(strtolower($a->name), 'receivable'))->sum('balance');
+                            $bPayables = $branches->count() === 1 ? $payables : $bAccs->where('category', 'liabilities')->filter(fn($a) => str_contains(strtolower($a->name), 'payable'))->sum('balance');
                             $bExpenses = $bAccs->where('category', 'expenses')->sum('balance');
                             $bPurchases = $bAccs->where('name', 'like', '%Purchase%')->sum('balance'); // Fallback to name search for purchases
                             $bSales = $bAccs->where('category', 'revenue')->sum('balance');
@@ -179,8 +182,8 @@
                         <tr>
                             <td colspan="2" class="px-5 py-5 text-sm uppercase">Total All Branches</td>
                             <td class="px-5 py-5 text-right font-black">{{ $companyCurrency }} {{ number_format($grandCash, 2) }}</td>
-                            <td class="px-5 py-5 text-right font-black text-primary">{{ number_format($grandReceivables, 2) }}</td>
-                            <td class="px-5 py-5 text-right font-black text-primary">{{ number_format($grandPayables, 2) }}</td>
+                            <td class="px-5 py-5 text-right font-black text-primary">{{ number_format($receivables, 2) }}</td>
+                            <td class="px-5 py-5 text-right font-black text-primary">{{ number_format($payables, 2) }}</td>
                             <td class="px-5 py-5 text-right font-black text-primary">{{ number_format($grandExpenses, 2) }}</td>
                             <td class="px-5 py-5 text-right font-black">{{ number_format($grandPurchases, 2) }}</td>
                             <td class="px-5 py-5 text-right font-black text-accent">{{ number_format($grandSales, 2) }}</td>

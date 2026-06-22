@@ -1,4 +1,4 @@
-﻿@extends('admin.admin_master')
+﻿@extends('admin.blank_master')
 @section('page_title', 'New Purchase Bill')
 @section('admin')
 
@@ -39,16 +39,16 @@
         <form id="invoiceForm" autocomplete="off">
             @csrf
 
-            {{-- ── Top Row: Customer Info + Invoice Details ──────────────────────── --}}
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+            {{-- ── Top Row: Customer Info ─────────────────────────────────────────── --}}
+            <div class="mb-4">
 
                 {{-- Supplier Information --}}
-                <div class="lg:col-span-2 bg-white rounded-[1rem] border border-gray-100 shadow-sm p-6 mb-6">
+                <div class="bg-white rounded-[1rem] border border-gray-100 shadow-sm p-6 mb-6">
                     <p
                         class="text-[11px] font-bold text-primary-dark uppercase tracking-wider mb-6 pb-2 border-b border-gray-100">
                         Supplier & Logistics
                     </p>
-                    <div class="grid grid-cols-2 gap-x-6 gap-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
 
                         {{-- Left: Supplier select --}}
                         <div class="space-y-1.5">
@@ -88,6 +88,19 @@
                                 class="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
                         </div>
 
+                        {{-- Right: Bill Number --}}
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Bill Number</label>
+                            <div class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-bold text-primary-dark">{{ $purchase_no }}</div>
+                        </div>
+
+                        {{-- Bill Date --}}
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Bill Date</label>
+                            <input type="date" id="purchaseDateInput" name="purchase_date" value="{{ date('Y-m-d') }}"
+                                   class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                        </div>
+
                         {{-- Hidden branch & account (auto from user's assigned branch) --}}
                         <input type="hidden" id="locationType" value="branch">
                         <input type="hidden" id="locationItem" value="branch_{{ auth()->user()->getAssignedBranchId() ?? ($branches->first()->id ?? '') }}">
@@ -95,26 +108,11 @@
 
                     </div>
                     <input type="hidden" name="purchase_type" id="purchase_type" value="Purchase">
-                </div>
 
-
-                {{-- Bill Number + Date --}}
-                <div class="bg-white rounded-[1rem] border border-gray-100 shadow-sm p-6 mb-6">
-                    <p
-                        class="text-[11px] font-bold text-primary-dark uppercase tracking-wider mb-6 pb-2 border-b border-gray-100">
-                        Bill Details
-                    </p>
-                    <div class="mb-4">
-                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Bill Number</label>
-                        <div class="text-[20px] font-black text-primary-dark tracking-tight">{{ $purchase_no }}</div>
-                        <input type="hidden" name="purchase_no" value="{{ $purchase_no }}">
-                    </div>
-                    <input type="hidden" name="purchase_date" value="{{ date('Y-m-d') }}">
+                    {{-- Hidden bill metadata --}}
+                    <input type="hidden" name="purchase_no" value="{{ $purchase_no }}">
                     <input type="hidden" name="supplier_invoice_no" value="{{ $voucher_no ?? '' }}">
                     <input type="hidden" id="targetLocationItem" value="branch_{{ auth()->user()->getAssignedBranchId() ?? ($branches->first()->id ?? '') }}">
-
-
-                    {{-- Hidden inputs for backend --}}
                     <input type="hidden" name="branch_id" id="branch_id">
                 </div>
             </div>
@@ -693,7 +691,9 @@
                     }
                 })();
 
-                // Add first row
+                // Add 3 rows by default
+                addItemRow();
+                addItemRow();
                 addItemRow();
 
                 // Summary listeners

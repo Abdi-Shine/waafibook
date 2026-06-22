@@ -20,6 +20,9 @@
                 statusFilter: '',
                 typeFilter: '',
                 editMode: false,
+                saving: false,
+                savedCustomer: null,
+                formErrors: {},
                 customerData: {
                     id: '',
                     customer_code: '',
@@ -36,6 +39,8 @@
 
                 openCreateModal() {
                     this.editMode = false;
+                    this.savedCustomer = null;
+                    this.formErrors = {};
                     this.customerData = {
                         id: '',
                         name: '',
@@ -50,6 +55,40 @@
                     document.getElementById('customerForm').reset();
                 },
 
+                async submitCustomer() {
+                    this.saving = true;
+                    this.formErrors = {};
+                    try {
+                        const form = document.getElementById('customerForm');
+                        const response = await fetch('/customers', {
+                            method: 'POST',
+                            headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').content },
+                            body: new FormData(form)
+                        });
+                        const data = await response.json();
+
+                        if (response.status === 422) {
+                            this.formErrors = data.errors || {};
+                            return;
+                        }
+                        if (!response.ok) {
+                            Swal.fire({ icon: 'error', title: 'Something went wrong', text: data.message || 'Please try again.' });
+                            return;
+                        }
+
+                        this.savedCustomer = data.customer;
+                        this.customerData = {
+                            id: '', name: '', email: '', phone: '',
+                            customer_type: 'individual', address: '', account_id: '', amount_balance: 0
+                        };
+                        form.reset();
+                    } catch (e) {
+                        Swal.fire({ icon: 'error', title: 'Network error', text: 'Could not save customer. Please try again.' });
+                    } finally {
+                        this.saving = false;
+                    }
+                },
+
                 openImportModal() {
                     this.activeModal = 'import-modal';
                     document.getElementById('importForm').reset();
@@ -57,6 +96,8 @@
 
                 openEditModal(customer) {
                     this.editMode = true;
+                    this.savedCustomer = null;
+                    this.formErrors = {};
                     this.customerData = { ...customer };
 
                     this.activeModal = 'customer-modal';
@@ -258,9 +299,15 @@
                                 </td>
                                 <td class="px-5 py-4">
                                     <div class="flex items-center justify-center gap-1.5">
-                                        <a href="{{ route('customer.statement', $customer->id) }}" class="btn-action-view" title="View Statement">
+                                        <a href="{{ route('parties.ledger', ['type' => 'customer', 'id' => $customer->id]) }}" class="btn-action-view" title="View Ledger">
                                             <i class="bi bi-eye"></i>
                                         </a>
+                                        @if($customer->phone)
+                                            <button onclick="sendWhatsAppStatement('{{ addslashes($customer->name) }}', '{{ $customer->phone }}', '{{ $symbol }} {{ number_format($customer->amount_balance, 2) }}', '{{ \App\Support\PublicUrl::temporarySigned('customer.statement.public-pdf', now()->addDays(7), ['id' => $customer->id]) }}')"
+                                                class="btn-action-whatsapp" title="Send Statement on WhatsApp">
+                                                <i class="bi bi-whatsapp"></i>
+                                            </button>
+                                        @endif
                                         <button @click="openEditModal(@js($customer))" class="btn-action-edit" title="Edit Customer">
                                             <i class="bi bi-pencil-square"></i>
                                         </button>
@@ -337,7 +384,7 @@
             x-transition:leave-end="opacity-0 scale-95"
             class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
 
-            <div class="bg-white rounded-[1.25rem] w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col relative" @click.away="activeModal = null">
+            <div class="bg-white rounded-[1.25rem] w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col relative">
 
                 <!-- Modal Header -->
                 <div class="px-6 py-6 bg-primary relative overflow-hidden shrink-0">
@@ -359,7 +406,19 @@
 
                 <!-- Modal Body -->
                 <div class="px-6 py-6 overflow-y-auto custom-scrollbar flex-grow bg-white">
-                    <form id="customerForm" :action="editMode ? '/customers/' + customerData.id : '/customers'" method="POST">
+
+                    <!-- Saved Confirmation Banner -->
+                    <div x-show="savedCustomer" x-cloak x-transition
+                         class="mb-5 flex items-start gap-3 bg-accent/10 border border-accent/30 rounded-xl px-4 py-3">
+                        <i class="bi bi-check-circle-fill text-accent text-lg mt-0.5"></i>
+                        <div class="text-[13px]">
+                            <p class="font-bold text-primary-dark">Your Customer have been saved. Thank you!</p>
+                            <p class="text-text-secondary mt-0.5" x-text="savedCustomer?.name"></p>
+                        </div>
+                    </div>
+
+                    <form id="customerForm" :action="editMode ? '/customers/' + customerData.id : '/customers'" method="POST"
+                          @submit="if (!editMode) { $event.preventDefault(); submitCustomer(); }">
                         @csrf
                         <template x-if="editMode">
                             <input type="hidden" name="_method" value="PUT">
@@ -371,9 +430,11 @@
                                     <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Full Name <span class="text-primary">*</span></label>
                                     <div class="relative">
                                         <input type="text" name="name" x-model="customerData.name" required placeholder="Enter full name"
-                                            class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                                            :class="formErrors.name ? 'border-red-400' : 'border-gray-200'"
+                                            class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
                                         <i class="bi bi-person absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
                                     </div>
+                                    <p x-show="formErrors.name" x-text="formErrors.name?.[0]" class="text-red-500 font-bold text-[11px]"></p>
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Customer Type <span class="text-primary">*</span></label>
@@ -392,17 +453,21 @@
                                     <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Email Address</label>
                                     <div class="relative">
                                         <input type="email" name="email" x-model="customerData.email" placeholder="customer@example.com"
-                                            class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                                            :class="formErrors.email ? 'border-red-400' : 'border-gray-200'"
+                                            class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
                                         <i class="bi bi-envelope absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
                                     </div>
+                                    <p x-show="formErrors.email" x-text="formErrors.email?.[0]" class="text-red-500 font-bold text-[11px]"></p>
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Phone Number <span class="text-primary">*</span></label>
                                     <div class="relative">
                                         <input type="text" name="phone" x-model="customerData.phone" required placeholder="+966 5X XXX XXXX"
-                                            class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                                            :class="formErrors.phone ? 'border-red-400' : 'border-gray-200'"
+                                            class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
                                         <i class="bi bi-telephone absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
                                     </div>
+                                    <p x-show="formErrors.phone" x-text="formErrors.phone?.[0]" class="text-red-500 font-bold text-[11px]"></p>
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5 pt-4 border-t border-gray-100">
@@ -432,9 +497,9 @@
                     <button type="button" @click="activeModal = null" class="btn-premium-accent">
                         Cancel
                     </button>
-                    <button type="submit" form="customerForm" class="btn-premium-primary">
-                        <i class="bi bi-check2-circle"></i>
-                        <span x-text="editMode ? 'Update Customer' : 'Save Customer'"></span>
+                    <button type="submit" form="customerForm" :disabled="saving" class="btn-premium-primary" :class="saving ? 'opacity-60 cursor-not-allowed' : ''">
+                        <i class="bi" :class="saving ? 'bi-arrow-repeat animate-spin' : 'bi-check2-circle'"></i>
+                        <span x-text="saving ? 'Saving...' : (editMode ? 'Update Customer' : 'Save & New')"></span>
                     </button>
                 </div>
             </div>
@@ -506,4 +571,15 @@
             </div>
         </div>
     </div>
+
+@push('scripts')
+<script>
+function sendWhatsAppStatement(customerName, phone, balance, pdfUrl) {
+    const message = pdfUrl;
+    const cleanPhone = phone.replace(/\D/g, '');
+    const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+}
+</script>
+@endpush
 @endsection

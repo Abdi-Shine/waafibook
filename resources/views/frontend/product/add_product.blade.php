@@ -20,6 +20,9 @@
     init() {
         this.$watch('categoryFilter', () => this.applyServerFilters());
         this.$watch('statusFilter', () => this.applyServerFilters());
+        if ('{{ request('action') }}' === 'create') {
+            this.openCreateModal();
+        }
     },
 
     applyServerFilters() {
@@ -36,6 +39,9 @@
     },
     isImporting: false,
     isSavingCategory: false,
+    saving: false,
+    savedProduct: null,
+    formErrors: {},
     categoryData: {
         name: '',
         description: ''
@@ -57,6 +63,8 @@
 
     openCreateModal() {
         this.editMode = false;
+        this.savedProduct = null;
+        this.formErrors = {};
         this.productData = {
             id: '', product_name: '', product_code: '', category_id: '',
             unit: 'Piece', purchase_price: '', selling_price: '',
@@ -72,9 +80,53 @@
         });
     },
 
+    async submitProduct() {
+        this.saving = true;
+        this.formErrors = {};
+        try {
+            const form = document.getElementById('productForm');
+            const response = await fetch('{{ route('product.store') }}', {
+                method: 'POST',
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').content },
+                body: new FormData(form)
+            });
+            const data = await response.json();
+
+            if (response.status === 422) {
+                this.formErrors = data.errors || {};
+                if (data.message && !data.errors) {
+                    Swal.fire({ icon: 'error', title: 'Something went wrong', text: data.message });
+                }
+                return;
+            }
+            if (!response.ok) {
+                Swal.fire({ icon: 'error', title: 'Something went wrong', text: data.message || 'Please try again.' });
+                return;
+            }
+
+            this.savedProduct = data.product;
+            this.productData = {
+                id: '', product_name: '', product_code: '', category_id: '',
+                unit: 'Piece', purchase_price: '', selling_price: '',
+                stock_products: '', description: '', account_code: '', branch_id: '',
+                product_type: 'product'
+            };
+            form.reset();
+            this.$refs.previewImg.src = '';
+            this.$refs.previewPlaceholder.classList.remove('hidden');
+            this.$refs.previewImg.classList.add('hidden');
+        } catch (e) {
+            Swal.fire({ icon: 'error', title: 'Network error', text: 'Could not save product. Please try again.' });
+        } finally {
+            this.saving = false;
+        }
+    },
+
     openEditModal(product) {
         this.editMode = true;
-        this.productData = { 
+        this.savedProduct = null;
+        this.formErrors = {};
+        this.productData = {
             id: product.id,
             product_name: product.product_name,
             product_code: product.product_code,
@@ -387,9 +439,9 @@
                         </td>
                         <td class="px-5 py-4 text-right">
                             <div class="flex items-center justify-end gap-1.5 transition-opacity">
-                                <button class="btn-action-view" title="View Details">
+                                <a href="{{ route('product.ledger', ['product_id' => $product->id]) }}" class="btn-action-edit" title="View Transactions">
                                     <i class="bi bi-eye"></i>
-                                </button>
+                                </a>
                                 <button @click="openEditModal(@js($product))" class="btn-action-edit" title="Edit Product">
                                     <i class="bi bi-pencil"></i>
                                 </button>
@@ -469,8 +521,8 @@
         x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
         
-        <div class="bg-white rounded-[1.25rem] w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col relative" @click.away="activeModal = null">
-            
+        <div class="bg-white rounded-[1.25rem] w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col relative">
+
             <div class="px-6 py-6 bg-primary relative overflow-hidden shrink-0">
                 <div class="flex items-center justify-between relative z-10">
                     <div class="flex items-center gap-4 text-white">
@@ -482,7 +534,7 @@
                             <p class="text-xs text-primary font-medium mt-0.5">Fill in the required product details below</p>
                         </div>
                     </div>
-                    
+
                     <button @click="activeModal = null" class="w-8 h-8 bg-white/10 border border-white/10 text-white rounded-lg hover:bg-white/20 transition-all flex items-center justify-center shadow-sm">
                         <i class="bi bi-x-lg text-xs"></i>
                     </button>
@@ -490,7 +542,19 @@
             </div>
 
             <div class="px-6 py-6 overflow-y-auto custom-scrollbar flex-grow bg-white">
-                <form id="productForm" :action="editMode ? '{{ url('/products/update') }}/' + productData.id : '{{ route('product.store') }}'" method="POST" enctype="multipart/form-data">
+
+                <!-- Saved Confirmation Banner -->
+                <div x-show="savedProduct" x-cloak x-transition
+                     class="mb-5 flex items-start gap-3 bg-accent/10 border border-accent/30 rounded-xl px-4 py-3">
+                    <i class="bi bi-check-circle-fill text-accent text-lg mt-0.5"></i>
+                    <div class="text-[13px]">
+                        <p class="font-bold text-primary-dark">Your product have been saved. Thank you!</p>
+                        <p class="text-text-secondary mt-0.5" x-text="savedProduct?.product_name"></p>
+                    </div>
+                </div>
+
+                <form id="productForm" :action="editMode ? '{{ url('/products/update') }}/' + productData.id : '{{ route('product.store') }}'" method="POST" enctype="multipart/form-data"
+                      @submit="if (!editMode) { $event.preventDefault(); submitProduct(); }">
                     @csrf
                     <template x-if="editMode">
                         @method('PUT')
@@ -511,19 +575,22 @@
                                     <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Product Name <span class="text-primary">*</span></label>
                                     <div class="relative group">
                                         <input type="text" name="product_name" x-model="productData.product_name" required placeholder="Enter product name"
-                                            class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                                            :class="formErrors.product_name ? 'border-red-400' : 'border-gray-200'"
+                                            class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
                                         <i class="bi bi-tag absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
                                     </div>
+                                    <p x-show="formErrors.product_name" x-text="formErrors.product_name?.[0]" class="text-red-500 font-bold text-[11px]"></p>
                                 </div>
 
                                 <input type="hidden" name="product_code" x-model="productData.product_code">
 
                                 <div class="space-y-1.5 flex flex-col justify-end">
-                                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Category <span class="text-primary">*</span></label>
+                                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Category</label>
                                     <div class="relative flex items-center gap-2">
                                         <div class="relative flex-1 group">
-                                            <select name="category_id" x-model="productData.category_id" required
-                                                class="w-full pl-4 pr-8 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none">
+                                            <select name="category_id" x-model="productData.category_id"
+                                                :class="formErrors.category_id ? 'border-red-400' : 'border-gray-200'"
+                                                class="w-full pl-4 pr-8 py-2.5 bg-gray-50 border rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none">
                                                 <option value="">Select Category</option>
                                                 <template x-for="cat in categories" :key="cat.id">
                                                     <option :value="cat.id" x-text="cat.name"></option>
@@ -536,6 +603,7 @@
                                             <i class="bi bi-plus-lg group-hover:scale-110 transition-transform text-sm font-bold"></i>
                                         </button>
                                     </div>
+                                    <p x-show="formErrors.category_id" x-text="formErrors.category_id?.[0]" class="text-red-500 font-bold text-[11px]"></p>
                                 </div>
                                 <!-- Product Image Upload -->
                             <div class="w-64 shrink-0">
@@ -587,9 +655,11 @@
                                     <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Selling Price <span class="text-primary">*</span></label>
                                     <div class="relative group">
                                         <input type="number" step="0.01" name="selling_price" x-model="productData.selling_price" required placeholder="0.00"
-                                            class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all !text-accent">
+                                            :class="formErrors.selling_price ? 'border-red-400' : 'border-gray-200'"
+                                            class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all !text-accent">
                                         <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 !text-accent font-bold text-[13px]">{{ $symbol }}</span>
                                     </div>
+                                    <p x-show="formErrors.selling_price" x-text="formErrors.selling_price?.[0]" class="text-red-500 font-bold text-[11px]"></p>
                                 </div>
 
                                 <div class="space-y-1.5" x-show="productData.product_type === 'product' && !editMode" x-transition>
@@ -623,10 +693,11 @@
                     class="px-6 py-2.5 bg-accent text-primary font-bold rounded-lg hover:bg-accent/90 transition-all text-[13px] uppercase tracking-wide shadow-sm min-w-[120px]">
                     Cancel
                 </button>
-                <button type="submit" form="productForm" 
-                    class="px-6 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-all text-[13px] uppercase tracking-wide shadow-sm flex items-center justify-center gap-2 min-w-[150px]">
-                    <i class="bi bi-check2-circle text-base"></i>
-                    <span x-text="editMode ? 'Update Product' : 'Save Product'"></span>
+                <button type="submit" form="productForm" :disabled="saving"
+                    class="px-6 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-all text-[13px] uppercase tracking-wide shadow-sm flex items-center justify-center gap-2 min-w-[150px]"
+                    :class="saving ? 'opacity-60 cursor-not-allowed' : ''">
+                    <i class="bi" :class="saving ? 'bi-arrow-repeat animate-spin' : 'bi-check2-circle'"></i>
+                    <span x-text="saving ? 'Saving...' : (editMode ? 'Update Product' : 'Save & New ')"></span>
                 </button>
             </div>
         </div>

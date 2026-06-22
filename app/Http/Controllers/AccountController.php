@@ -80,12 +80,17 @@ class AccountController extends Controller
     {
         $cid = auth()->user()->company_id;
 
+        $this->syncBalances();
+
         $branches    = Branch::with(['accounts' => fn ($q) => $q->orderBy('code')])->get();
         $allAccounts = Account::query()->where('company_id', $cid)->get();
 
         $totalCash      = $allAccounts->whereIn('type', ['bank', 'cash'])->sum('balance');
-        $receivables    = $allAccounts->where('category', 'assets')->filter(fn ($a) => str_contains(strtolower($a->name), 'receivable'))->sum('balance');
-        $payables       = $allAccounts->where('category', 'liabilities')->filter(fn ($a) => str_contains(strtolower($a->name), 'payable'))->sum('balance');
+        // Receivables/Payables are tracked per customer/supplier (kept in sync across
+        // opening balances, sales/purchases, payments and returns) — not on the ledger
+        // account's balance, which only reflects posted journal entries.
+        $receivables    = \App\Models\Customer::sum('amount_balance');
+        $payables       = \App\Models\Supplier::sum('amount_balance');
         $activeBranches = Branch::query()->where('is_active', 1)->count();
         $companyCurrency = $this->currencySymbol();
 

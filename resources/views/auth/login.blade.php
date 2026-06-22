@@ -8,38 +8,12 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-
-    <style>
-        .tab-switcher {
-            display: flex;
-            background: rgba(255,255,255,0.12);
-            border-radius: 10px;
-            padding: 4px;
-            margin-bottom: 1.5rem;
-        }
-        .tab-btn {
-            flex: 1;
-            border: none;
-            background: transparent;
-            border-radius: 7px;
-            padding: .55rem .5rem;
-            font-size: .875rem;
-            font-weight: 600;
-            color: rgba(255,255,255,0.6);
-            cursor: pointer;
-            transition: background .2s, color .2s, box-shadow .2s;
-        }
-        .tab-btn.active {
-            background: #fff;
-            color: #004161;
-            box-shadow: 0 1px 6px rgba(0,0,0,.18);
-        }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="auth-page-bg">
 @php
     $company = \App\Models\Company::first();
-    $activeTab = ($errors->has('company_name') || $errors->has('name') || session('register_attempted')) ? 'register' : 'login';
+    $activeTab = ($errors->has('company_name') || $errors->has('industry') || session('register_attempted')) ? 'register' : 'login';
 @endphp
 
 <div class="auth-container max-w-[450px] w-full animate-fadeIn">
@@ -60,12 +34,6 @@
             </div>
             <h1 class="text-2xl font-black tracking-tighter mb-0">{{ $company->name ?? 'Horntech LTD' }}</h1>
             <p class="text-white/60 text-sm mt-1 mb-3">Accounting SaaS for modern teams</p>
-
-            <!-- Tab Switcher -->
-            <div class="tab-switcher">
-                <button class="tab-btn {{ $activeTab === 'login' ? 'active' : '' }}" id="tab-signin" onclick="switchTab('login')">Sign In</button>
-                <button class="tab-btn {{ $activeTab === 'register' ? 'active' : '' }}" id="tab-register" onclick="switchTab('register')">Create Account</button>
-            </div>
         </div>
 
         <!-- Body -->
@@ -124,6 +92,10 @@
                         <i class="bi bi-box-arrow-in-right mr-2"></i>Sign In
                     </button>
                 </form>
+
+                <p class="text-center text-primary opacity-50 text-sm mt-4 mb-0">
+                    &copy; {{ date('Y') }} {{ $company->name ?? 'Horntech LTD' }}. All rights reserved. <a href="#" class="link-auth" onclick="switchTab('register'); return false;">Sign up</a>
+                </p>
             </div>
 
             <!-- ── Create Account Form ── -->
@@ -132,7 +104,7 @@
                     @csrf
 
                     <div class="mb-4">
-                        <label class="block text-[11px] font-black text-primary uppercase tracking-wider mb-1.5">Company Name</label>
+                        <label class="block text-[11px] font-black text-primary uppercase tracking-wider mb-1.5">Company Name <span class="text-red-500">*</span></label>
                         <div class="relative">
                             <i class="bi bi-building input-icon"></i>
                             <input type="text" name="company_name"
@@ -146,12 +118,25 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="block text-[11px] font-black text-primary uppercase tracking-wider mb-1.5">Your Name</label>
+                        <label class="block text-[11px] font-black text-primary uppercase tracking-wider mb-1.5">Country</label>
+                        <div class="relative">
+                            <i class="bi bi-globe input-icon"></i>
+                            <select name="country" class="form-control">
+                                <option value="">Select country</option>
+                                @foreach(['Djibouti','Ethiopia','Kenya','Somalia','Tanzania','Uganda', 'Rwanda', 'Burundi', 'South Sudan', 'Sudan', 'Eritrea', 'Other'] as $c)
+                                    <option value="{{ $c }}" {{ old('country') === $c ? 'selected' : '' }}>{{ $c }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-[11px] font-black text-primary uppercase tracking-wider mb-1.5">Full Name <span class="text-red-500">*</span></label>
                         <div class="relative">
                             <i class="bi bi-person input-icon"></i>
                             <input type="text" name="name"
                                    class="form-control @error('name') border-red-400 @enderror"
-                                   placeholder="Enter your name"
+                                   placeholder="Enter your full name"
                                    value="{{ old('name') }}" required autocomplete="name">
                         </div>
                         @error('name')
@@ -160,12 +145,12 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="block text-[11px] font-black text-primary uppercase tracking-wider mb-1.5">Email</label>
+                        <label class="block text-[11px] font-black text-primary uppercase tracking-wider mb-1.5">Email Address <span class="text-red-500">*</span></label>
                         <div class="relative">
                             <i class="bi bi-envelope input-icon"></i>
                             <input type="email" name="email"
                                    class="form-control @error('email') border-red-400 @enderror"
-                                   placeholder="you@gmail.com"
+                                   placeholder="admin@company.com"
                                    value="{{ old('email') }}" required autocomplete="username">
                         </div>
                         @error('email')
@@ -174,46 +159,52 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="block text-[11px] font-black text-primary uppercase tracking-wider mb-1.5">Password</label>
+                        <label class="block text-[11px] font-black text-primary uppercase tracking-wider mb-1.5">Password <span class="text-red-500">*</span></label>
                         <div class="relative">
                             <i class="bi bi-lock input-icon"></i>
                             <input type="password" name="password" id="reg-password"
                                    class="form-control @error('password') border-red-400 @enderror"
-                                   placeholder="••••••••" required autocomplete="new-password">
+                                   placeholder="Create password" required autocomplete="new-password">
                             <button type="button" class="password-toggle" onclick="togglePassword('reg-password', 'regToggleIcon')">
                                 <i class="bi bi-eye" id="regToggleIcon"></i>
                             </button>
                         </div>
+                        <p class="text-primary opacity-40 mt-1.5 text-[0.7rem]">Min. 8 characters with uppercase, lowercase and numbers</p>
                         @error('password')
                             <p class="text-red-500 font-bold mt-1.5 uppercase text-[0.7rem]">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <input type="hidden" name="password_confirmation" id="reg-password-confirm">
+                    <div class="mb-4">
+                        <label class="block text-[11px] font-black text-primary uppercase tracking-wider mb-1.5">Confirm Password <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <i class="bi bi-lock-fill input-icon"></i>
+                            <input type="password" name="password_confirmation" id="reg-password-confirm"
+                                   class="form-control" placeholder="Confirm password" required autocomplete="new-password">
+                            <button type="button" class="password-toggle" onclick="togglePassword('reg-password-confirm', 'regConfirmToggleIcon')">
+                                <i class="bi bi-eye" id="regConfirmToggleIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-2 mb-4">
+                        <input id="terms" type="checkbox" class="w-4 h-4 mt-0.5 rounded border-gray-300 cursor-pointer accent-primary" required>
+                        <label for="terms" class="text-sm font-semibold text-primary opacity-60 cursor-pointer">
+                            I agree to the <a href="{{ route('terms') }}" target="_blank" class="link-auth">Terms of Service</a> and <a href="{{ route('privacy') }}" target="_blank" class="link-auth">Privacy Policy</a>
+                        </label>
+                    </div>
 
                     <button type="submit" class="btn-auth">
-                        <i class="bi bi-rocket-takeoff mr-2"></i>Create Account &amp; Start
+                        <i class="bi bi-rocket-takeoff mr-2"></i>Create Account
                     </button>
+                    <p class="text-center text-primary opacity-40 text-[0.75rem] mt-2 mb-0">14-day free trial &bull; No credit card required</p>
                 </form>
-            </div>
 
-        </div>
-
-        <!-- Footer -->
-        <div class="auth-footer py-2 px-5 text-center">
-            <div id="footer-login" style="{{ $activeTab === 'register' ? 'display:none' : '' }}">
-                <p class="text-primary opacity-40 m-0 text-[0.75rem]">
-                    &copy; {{ date('Y') }} {{ $company->name ?? 'Horntech LTD' }}. All rights reserved.
+                <p class="text-center text-primary opacity-50 text-sm mt-4 mb-0">
+                    Already have an account? <a href="#" class="link-auth" onclick="switchTab('login'); return false;">Sign in</a>
                 </p>
             </div>
-            <div id="footer-register" style="{{ $activeTab === 'login' ? 'display:none' : '' }}">
-                <p class="text-primary opacity-50 m-0 text-[0.75rem]">
-                    25 chart of accounts will be seeded automatically on registration.
-                </p>
-            </div>
-            <a href="{{ route('host.login') }}" class="text-[0.7rem] text-gray-400 hover:text-primary mt-1 inline-block transition-colors">
-                <i class="bi bi-shield-lock me-1"></i>Admin Portal
-            </a>
+
         </div>
 
     </div>
@@ -224,10 +215,6 @@
         const isLogin = tab === 'login';
         document.getElementById('form-login').style.display    = isLogin ? '' : 'none';
         document.getElementById('form-register').style.display = isLogin ? 'none' : '';
-        document.getElementById('footer-login').style.display    = isLogin ? '' : 'none';
-        document.getElementById('footer-register').style.display = isLogin ? 'none' : '';
-        document.getElementById('tab-signin').classList.toggle('active', isLogin);
-        document.getElementById('tab-register').classList.toggle('active', !isLogin);
     }
 
     function togglePassword(inputId, iconId) {
@@ -242,9 +229,18 @@
         }
     }
 
-    // Mirror password into hidden confirmation field
-    document.getElementById('reg-password').addEventListener('input', function () {
-        document.getElementById('reg-password-confirm').value = this.value;
+    document.getElementById('registerForm').addEventListener('submit', function (e) {
+        const p = document.getElementById('reg-password').value;
+        const c = document.getElementById('reg-password-confirm').value;
+        if (p !== c) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'error',
+                title: 'Passwords do not match',
+                text: 'Please make sure both password fields are identical.',
+                confirmButtonColor: '#004161',
+            });
+        }
     });
 </script>
 </body>

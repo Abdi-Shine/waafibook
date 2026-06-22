@@ -4,6 +4,24 @@
     <main class="min-h-screen pb-12 bg-background">
         <!-- CONTENT -->
         <div class="p-4 md:p-8 content-wrapper mx-auto">
+            <!-- Quick Actions -->
+            <div class="flex items-center justify-end gap-4 mb-6">
+                <div class="flex items-center gap-3">
+                    <a href="{{ route('sales.invoice.create') }}"
+                        class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-accent text-white text-sm font-bold hover:opacity-90 transition-opacity">
+                        <i class="bi bi-plus-lg"></i> Add Sale
+                    </a>
+                    <a href="{{ route('purchase.bill.create') }}"
+                        class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-white text-sm font-bold hover:opacity-90 transition-opacity">
+                        <i class="bi bi-plus-lg"></i> Add Purchase
+                    </a>
+                    <a href="{{ route('sales.pos.view') }}"
+                        class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary-dark text-white text-sm font-bold hover:opacity-90 transition-opacity">
+                        <i class="bi bi-display"></i> POS Terminal
+                    </a>
+                </div>
+            </div>
+
             <!-- Top 4 KPI Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 uppercase tracking-wider">
                 <!-- Net Profit (Revenue - Expenses) -->
@@ -17,7 +35,7 @@
                                 <span class="text-accent text-[11px] font-bold">FOR BRANCH</span>
                             </div>
                             <div class="kpi-value">$ {{ number_format($stats['cash_on_hand'], 2) }}</div>
-                            <a href="{{ route('account.index') }}" class="kpi-link hover:text-accent transition-colors">SEE LEDGER</a>
+                            <a href="{{ route('sales.invoice.create') }}" class="kpi-link hover:text-accent transition-colors">SEE LEDGER</a>
                         </div>
                         <div class="kpi-icon-box bg-accent/10">
                             <i class="bi bi-wallet2 text-accent text-lg"></i>
@@ -35,7 +53,7 @@
                                 <span class="text-primary text-[11px] font-bold">FOR SUPPLIERS</span>
                             </div>
                             <div class="kpi-value">$ {{ number_format($stats['liabilities'], 2) }}</div>
-                            <a href="{{ route('account.index') }}" class="kpi-link hover:text-primary transition-colors">SEE
+                            <a href="{{ route('supplier.index') }}" class="kpi-link hover:text-primary transition-colors">SEE
                                 ACCOUNTS</a>
                         </div>
                         <div class="kpi-icon-box bg-primary/10">
@@ -54,7 +72,7 @@
                                 <span class="text-accent text-[11px] font-bold">FOR CUSTOMERS</span>
                             </div>
                             <div class="kpi-value">$ {{ number_format($stats['accounts_receivable'], 2) }}</div>
-                            <a href="{{ route('sales.invoice.view') }}"
+                            <a href="{{ route('customer.index') }}"
                                 class="kpi-link hover:text-accent transition-colors">SEE ACCOUNTS</a>
                         </div>
                         <div class="kpi-icon-box bg-accent/10">

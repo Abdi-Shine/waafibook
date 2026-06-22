@@ -100,7 +100,7 @@ class ProductController extends Controller
         $request->validate([
             'product_name'  => 'required|string|max:255',
             'product_code'  => 'nullable|string|unique:products,product_code',
-            'category_id'   => 'required|exists:categories,id',
+            'category_id'   => 'nullable|exists:categories,id',
             'selling_price' => 'required|numeric|min:0',
             'purchase_price'=> 'nullable|numeric|min:0',
             'stock_products'=> 'nullable|numeric|min:0',
@@ -155,12 +155,22 @@ class ProductController extends Controller
 
             AuditLog::log('Products', "Created new product: {$product->product_name}", 'CREATE');
 
+            if ($request->wantsJson()) {
+                return response()->json(['success' => true, 'product' => $product]);
+            }
+
             return redirect()->back()->with('success', 'Product added and inventory recorded.');
             });
         } catch (\RuntimeException $e) {
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+            }
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         } catch (\Exception $e) {
             Log::error('Product creation failed: ' . $e->getMessage());
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Product could not be saved. Please try again.'], 422);
+            }
             return redirect()->back()->withInput()->with('error', 'Product could not be saved. Please try again.');
         }
     }
@@ -265,7 +275,7 @@ class ProductController extends Controller
         $request->validate([
             'product_name'  => 'required|string|max:255',
             'product_code'  => 'required|string|unique:products,product_code,' . $id,
-            'category_id'   => 'required|exists:categories,id',
+            'category_id'   => 'nullable|exists:categories,id',
             'selling_price' => 'required|numeric|min:0',
             'branch_id'    => 'nullable|exists:branches,id',
             'product_type' => 'required|in:product,service',
@@ -318,6 +328,121 @@ class ProductController extends Controller
         AuditLog::log('Products', "Deleted product: {$product->product_name}", 'DELETE', 'warning');
 
         return redirect()->back()->with('success', 'Product deleted successfully.');
+    }
+
+    public function ledgerView(Request $request)
+    {
+        $userBranchId = Auth::user()->getAssignedBranchId();
+
+        $products = Product::query()
+            ->withSum(['stocks' => function($q) use ($userBranchId) {
+                if ($userBranchId) $q->where('branch_id', $userBranchId);
+            }], 'quantity')
+            ->orderBy('product_name')
+            ->get();
+
+        $selectedId = $request->input('product_id', $products->first()->id ?? null);
+        $ledger = $selectedId ? $this->buildLedgerData($selectedId) : null;
+
+        return view('frontend.product.ledger', compact('products', 'selectedId', 'ledger'));
+    }
+
+    public function ledgerData($id)
+    {
+        return response()->json($this->buildLedgerData($id));
+    }
+
+    private function buildLedgerData($id)
+    {
+        /** @var Product $product */
+        $product = Product::query()->findOrFail($id);
+        $userBranchId = Auth::user()->getAssignedBranchId();
+
+        $statusLabels = ['paid' => 'Paid', 'partial' => 'Partial', 'pending' => 'Unpaid', 'completed' => 'Paid'];
+
+        $sales = \App\Models\SalesOrderItem::query()
+            ->where('product_id', $id)
+            ->with(['order.customer'])
+            ->whereHas('order', function($q) use ($userBranchId) {
+                if ($userBranchId) $q->where('branch_id', $userBranchId);
+            })
+            ->get()
+            ->map(function($item) use ($statusLabels) {
+                $order = $item->order;
+                return [
+                    'type'       => 'Sale',
+                    'type_color' => 'bg-emerald-500',
+                    'ref'        => $order->id ?? null,
+                    'name'       => $order->customer->name ?? 'Walk-in Customer',
+                    'date'       => $order->invoice_date ? $order->invoice_date->format('d/m/Y') : '-',
+                    'sort_date'  => $order->invoice_date ? $order->invoice_date->timestamp : 0,
+                    'quantity'   => $item->quantity,
+                    'price'      => $item->unit_price,
+                    'status'     => $statusLabels[$order->status ?? ''] ?? ucfirst($order->status ?? ''),
+                ];
+            });
+
+        $purchases = \App\Models\PurchaseBillItem::query()
+            ->where('product_id', $id)
+            ->with(['bill.supplier'])
+            ->whereHas('bill', function($q) use ($userBranchId) {
+                if ($userBranchId) $q->where('branch_id', $userBranchId);
+            })
+            ->get()
+            ->map(function($item) use ($statusLabels) {
+                $bill = $item->bill;
+                $billDate = $bill->bill_date ? \Illuminate\Support\Carbon::parse($bill->bill_date) : null;
+                return [
+                    'type'       => 'Purchase Order',
+                    'type_color' => 'bg-orange-500',
+                    'ref'        => $bill->id ?? null,
+                    'name'       => $bill->supplier->name ?? '-',
+                    'date'       => $billDate ? $billDate->format('d/m/Y') : '-',
+                    'sort_date'  => $billDate ? $billDate->timestamp : 0,
+                    'quantity'   => $item->quantity,
+                    'price'      => $item->unit_price,
+                    'status'     => $statusLabels[$bill->status ?? ''] ?? ucfirst($bill->status ?? ''),
+                ];
+            });
+
+        $openingEntries = JournalEntry::query()
+            ->where('reference', $product->product_code)
+            ->where('description', 'like', 'Initial stock for%')
+            ->get()
+            ->map(function($entry) use ($product) {
+                return [
+                    'type'       => 'Opening Stock',
+                    'type_color' => 'bg-gray-800',
+                    'ref'        => null,
+                    'name'       => 'Opening Stock',
+                    'date'       => $entry->date ? $entry->date->format('d/m/Y') : '-',
+                    'sort_date'  => $entry->date ? $entry->date->timestamp : 0,
+                    'quantity'   => $product->purchase_price > 0 ? round($entry->total_amount / $product->purchase_price, 2) : 0,
+                    'price'      => (float) $product->purchase_price,
+                    'status'     => ucfirst($entry->status ?? 'Posted'),
+                ];
+            });
+
+        $transactions = $sales->concat($purchases)->concat($openingEntries)
+            ->sortByDesc('sort_date')
+            ->values();
+
+        $stockQuantity = (float) $product->stocks()
+            ->when($userBranchId, fn($q) => $q->where('branch_id', $userBranchId))
+            ->sum('quantity');
+
+        return [
+            'product' => [
+                'id'             => $product->id,
+                'name'           => $product->product_name,
+                'unit'           => $product->unit ?? 'pcs',
+                'selling_price'  => (float) $product->selling_price,
+                'purchase_price' => (float) $product->purchase_price,
+                'stock_quantity' => $stockQuantity,
+                'stock_value'    => $stockQuantity * (float) $product->purchase_price,
+            ],
+            'transactions' => $transactions,
+        ];
     }
 
     public function updateStatus(Request $request, $id)

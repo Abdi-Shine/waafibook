@@ -219,7 +219,7 @@
                                     <a href="{{ route('sales.invoice.show', $order->id) }}" class="btn-action-view" title="View Detail">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <button onclick="sendWhatsAppInvoice('{{ $order->invoice_no }}', '{{ addslashes($order->customer->name ?? 'Walk-in Customer') }}', '{{ $order->customer->phone ?? '' }}', '{{ $symbol }} {{ number_format($order->total_amount, 2) }}', '{{ route('sales.invoice.pdf', $order->id) }}')" 
+                                    <button onclick="sendWhatsAppInvoice('{{ $order->invoice_no }}', '{{ addslashes($order->customer->name ?? 'Walk-in Customer') }}', '{{ $order->customer->phone ?? '' }}', '{{ $symbol }} {{ number_format($order->total_amount, 2) }}', '{{ \App\Support\PublicUrl::temporarySigned('sales.invoice.public-pdf', now()->addDays(7), ['id' => $order->id]) }}')"
                                             class="w-8 h-8 rounded-lg bg-accent/10 text-accent hover:bg-accent hover:text-white transition-all duration-200 flex items-center justify-center text-sm shadow-sm" title="Send WhatsApp">
                                         <i class="bi bi-whatsapp"></i>
                                     </button>

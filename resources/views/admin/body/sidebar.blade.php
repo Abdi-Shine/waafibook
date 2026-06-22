@@ -16,23 +16,15 @@
    }"
     class="fixed top-0 left-0 w-[260px] h-screen bg-primary z-50 transition-transform duration-300 lg:translate-x-0 -translate-x-full overflow-y-auto shadow-2xl border-r border-white/5">
 
-    <!-- Brand -->
+    <!-- Brand (fixed: always the software owner, never the tenant's own company) -->
     <div class="sticky top-0 bg-primary/95 backdrop-blur-sm z-10 px-6 py-6 border-b border-white/10">
         <div class="flex items-center gap-3">
-            @if($company && $company->logo)
-                <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
-                    <img src="{{ asset($company->logo) }}" class="w-full h-full object-contain" alt="Logo">
-                </div>
-            @else
-                <div class="w-10 h-10 bg-accent rounded-xl flex items-center justify-center shadow-lg shadow-accent/20">
-                    <i class="bi bi-grid-1x2-fill text-primary text-xl"></i>
-                </div>
-            @endif
+            <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
+                <img src="{{ asset('upload/horntechlogo/horntech_logo.jpg') }}" class="w-full h-full object-contain" alt="Horntech LTD Logo">
+            </div>
             <div>
-                <h4 class="text-white text-lg font-bold tracking-tight">{{ $company->name ?? 'Horntech LTD' }}</h4>
-                <p class="text-accent text-[10px] font-bold uppercase tracking-widest">
-                    {{ $company->industry ?? 'Enterprise POS' }}
-                </p>
+                <h4 class="text-white text-lg font-bold tracking-tight">Horntech LTD</h4>
+                <p class="text-accent text-[10px] font-bold uppercase tracking-widest">Enterprise POS</p>
             </div>
         </div>
     </div>
@@ -116,9 +108,6 @@
                         class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('product.index') ? 'text-white bg-white/5' : '' }}">
                         <i class="bi bi-plus text-lg"></i> Product List
                     </a>
-                    <a href="{{ route('category.index') }}"
-                        class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('category.index') ? 'text-white bg-white/5' : '' }}"><i
-                            class="bi bi-plus text-lg"></i> Categories</a>
                     <a href="{{ route('low-stock.view') }}"
                         class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200"><i
                             class="bi bi-plus text-lg"></i> Low Stock Alerts</a>

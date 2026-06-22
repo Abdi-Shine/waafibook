@@ -29,9 +29,9 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
 
         {{-- Total Stock Value --}}
-        <div class="bg-white rounded-2xl p-6 border border-brand-border shadow-sm kpi-card-hover border-l-4 border-l-secondary">
+        <div class="bg-white rounded-2xl p-6 border border-brand-border shadow-sm kpi-card-hover border-l-4 border-l-accent">
             <div class="flex justify-between items-start mb-4">
-                <div class="w-10 h-10 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary">
+                <div class="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center text-accent">
                     <i class="bi bi-stack text-xl"></i>
                 </div>
             </div>
@@ -117,7 +117,7 @@
         {{-- Stock Value by Category --}}
         <div class="bg-white rounded-2xl border border-brand-border shadow-sm p-6">
             <div class="flex items-center gap-2 mb-6">
-                <div class="w-1.5 h-5 bg-secondary rounded-full"></div>
+                <div class="w-1.5 h-5 bg-accent rounded-full"></div>
                 <h3 class="text-[13px] font-black text-primary-dark uppercase tracking-wider">Inventory Concentration by Category</h3>
             </div>
             <div class="h-[280px]">
