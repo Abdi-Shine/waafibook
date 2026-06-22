@@ -59,7 +59,11 @@ class PaymentInController extends Controller
         $customers = Customer::query()->orderBy('name')->get();
         /** @var Company|null $company */
         $company = Company::find(auth()->user()->company_id);
-        $bankAccounts = Account::query()->whereIn('type', ['bank', 'cash'])->where('is_active', 1)->get();
+        $bankAccounts = Account::query()
+            ->where('type', 'cash')
+            ->where(fn($q) => $q->where('name', 'like', '%Cash on Hand%')->orWhere('name', 'like', '%Cash in Hand%'))
+            ->where('is_active', 1)
+            ->get();
 
         $suggestedInvoiceNo = 'INV-' . date('Ymd') . '-' . str_pad(PaymentIn::query()->count() + 1, 4, '0', STR_PAD_LEFT);
 
