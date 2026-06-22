@@ -823,70 +823,19 @@ function addItemRow() {
         placeholder: 'Search and Select Item',
         width: '100%',
         dropdownAutoWidth: true,
-        templateResult: formatProductResult,
         language: {
             noResults: function() {
                 return `<div class="p-2 text-center text-gray-400">No items found matching search</div>`;
             }
-        },
-        escapeMarkup: function(markup) { return markup; }
+        }
     }).on('select2:select', function() {
         onItemChange(this, n);
     }).on('select2:open', function() {
         window._lastOpenedSelect2 = this;
-        
-        // Inject sticky header & Add Item button to the dropdown container
-        setTimeout(() => {
-            const container = $('.select2-container--open .select2-dropdown');
-            if (container.length && !container.find('.s2-header-row').length) {
-                container.find('.select2-results').prepend(`
-                    <div class="s2-header-row">
-                        <div class="s2-add-btn" onmousedown="openAddProductModal()">
-                            <i class="bi bi-plus-circle-fill"></i> Add Item
-                        </div>
-                        <div class="s2-header-cols">
-                            <span class="product-res-col-sale">SALE PRICE</span>
-                            <span class="product-res-col-purchase">PURCHASE PRICE</span>
-                            <span class="product-res-col-stock">STOCK</span>
-                        </div>
-                    </div>
-                `);
-            }
-        }, 10);
     });
 
     renumberRows();
     recalcAll();
-}
-
-/* ─────────────────────────── SELECT2 FORMATTING ── */
-function formatProductResult(p) {
-    if (!p.id) return p.text;
-    const prod = PRODUCTS.find(x => x.id == p.id);
-    if (!prod) return p.text;
-
-    return $(`
-        <div class="product-res">
-            <div class="product-res-info">
-                <div class="product-res-name">${prod.name}</div>
-                <div class="product-res-code">${prod.code || ''}</div>
-            </div>
-            <div class="product-res-meta">
-                <div class="product-res-col product-res-col-sale">
-                    <div class="product-res-label">SALE PRICE</div>
-                    <div class="product-res-val">${prod.selling_price.toLocaleString()}</div>
-                </div>
-                <div class="product-res-col product-res-col-purchase">
-                    <div class="product-res-label">PURCHASE PRICE</div>
-                    <div class="product-res-val">${prod.purchase_price.toLocaleString()}</div>
-                </div>
-                <div class="product-res-col product-res-col-stock">
-                    <div class="product-res-label">STOCK</div>
-                    <div class="product-res-val product-res-stock ${prod.stock <= 0 ? 'low' : ''}">${prod.stock}</div>
-                </div>
-            </div>
-        </div>
-    `);
 }
 
 /* ─────────────────────────── ITEM CHANGE ────────── */
