@@ -7,9 +7,14 @@ use App\Models\JournalItem;
 use App\Models\Branch;
 use App\Models\Account;
 use App\Models\Company;
+use App\Models\SalesOrder;
+use App\Models\PurchaseBill;
+use App\Models\PaymentIn;
+use App\Models\SupplierPayment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 
 class AccountController extends Controller
 {
@@ -340,6 +345,99 @@ class AccountController extends Controller
         }
 
         return view('frontend.account.ledger', compact('accounts', 'selectedAccount', 'items'));
+    }
+
+    public function cashInHand(Request $request)
+    {
+        $cid = auth()->user()->company_id;
+        $userBranchId = Auth::user()->getAssignedBranchId();
+        /** @var Company|null $company */
+        $company = Company::find($cid);
+        $companyCurrency = $company->currency ?? '$';
+
+        $cashAccount = Account::query()
+            ->where('company_id', $cid)
+            ->where('type', 'cash')
+            ->when($userBranchId, fn($q) => $q->where('branch_id', $userBranchId))
+            ->orderByDesc('balance')
+            ->first();
+
+        $cashBalance = (float) ($cashAccount->balance ?? 0);
+        $transactions = collect();
+
+        if ($cashAccount) {
+            $sales = SalesOrder::query()
+                ->where('payment_account_id', $cashAccount->id)
+                ->with('customer')
+                ->get()
+                ->map(fn($o) => [
+                    'type'      => 'Sale',
+                    'name'      => $o->customer->name ?? 'Cash Sale',
+                    'date'      => $o->invoice_date ? $o->invoice_date->format('d/m/Y') : '-',
+                    'sort_date' => $o->invoice_date ? $o->invoice_date->timestamp : 0,
+                    'amount'    => (float) $o->paid_amount,
+                    'direction' => 'in',
+                ]);
+
+            $purchases = PurchaseBill::query()
+                ->where('payment_account_id', $cashAccount->id)
+                ->with('supplier')
+                ->get()
+                ->map(fn($b) => [
+                    'type'      => 'Purchase',
+                    'name'      => $b->supplier->name ?? '-',
+                    'date'      => $b->bill_date ? Carbon::parse($b->bill_date)->format('d/m/Y') : '-',
+                    'sort_date' => $b->bill_date ? Carbon::parse($b->bill_date)->timestamp : 0,
+                    'amount'    => (float) $b->paid_amount,
+                    'direction' => 'out',
+                ]);
+
+            $paymentsIn = PaymentIn::query()
+                ->where('bank_account_id', $cashAccount->id)
+                ->with('customer')
+                ->get()
+                ->map(fn($p) => [
+                    'type'      => 'Payment-In',
+                    'name'      => $p->customer->name ?? '-',
+                    'date'      => $p->payment_date ? Carbon::parse($p->payment_date)->format('d/m/Y') : '-',
+                    'sort_date' => $p->payment_date ? Carbon::parse($p->payment_date)->timestamp : 0,
+                    'amount'    => (float) $p->amount,
+                    'direction' => 'in',
+                ]);
+
+            $paymentsOut = SupplierPayment::query()
+                ->where('bank_account_id', $cashAccount->id)
+                ->with('supplier')
+                ->get()
+                ->map(fn($p) => [
+                    'type'      => 'Payment-Out',
+                    'name'      => $p->supplier->name ?? '-',
+                    'date'      => $p->payment_date ? Carbon::parse($p->payment_date)->format('d/m/Y') : '-',
+                    'sort_date' => $p->payment_date ? Carbon::parse($p->payment_date)->timestamp : 0,
+                    'amount'    => (float) $p->amount,
+                    'direction' => 'out',
+                ]);
+
+            $adjustments = JournalItem::query()
+                ->where('account_id', $cashAccount->id)
+                ->whereHas('entry', fn($q) => $q->where('reference', 'like', 'ADJ-%'))
+                ->with('entry')
+                ->get()
+                ->map(fn($item) => [
+                    'type'      => 'Adjustment',
+                    'name'      => $item->entry->description ?? 'Balance Adjustment',
+                    'date'      => $item->entry->date ? $item->entry->date->format('d/m/Y') : '-',
+                    'sort_date' => $item->entry->date ? $item->entry->date->timestamp : 0,
+                    'amount'    => (float) ($item->debit > 0 ? $item->debit : $item->credit),
+                    'direction' => $item->debit > 0 ? 'in' : 'out',
+                ]);
+
+            $transactions = $sales->concat($purchases)->concat($paymentsIn)->concat($paymentsOut)->concat($adjustments)
+                ->sortByDesc('sort_date')
+                ->values();
+        }
+
+        return view('frontend.account.cash_on_hand', compact('cashAccount', 'cashBalance', 'transactions', 'companyCurrency'));
     }
 
     public function trialBalance()

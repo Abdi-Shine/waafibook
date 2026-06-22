@@ -194,6 +194,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/accounts/trial-balance', [App\Http\Controllers\AccountController::class, 'trialBalance'])->name('account.trial-balance');
         Route::get('/accounts/bank', [App\Http\Controllers\AccountController::class, 'bank'])->name('local_bank_account.index');
         Route::get('/cash-management', [App\Http\Controllers\AccountController::class, 'cashManagement'])->name('cash_management.index');
+        Route::get('/cash-in-hand', [App\Http\Controllers\AccountController::class, 'cashInHand'])->name('cash_in_hand.index');
         Route::get('/account-management', [App\Http\Controllers\BankTransactionController::class, 'index'])->name('account_management.index');
         Route::post('/account-management/deposit', [App\Http\Controllers\BankTransactionController::class, 'storeDeposit'])->name('bank.transaction.deposit');
         Route::post('/account-management/withdraw', [App\Http\Controllers\BankTransactionController::class, 'storeWithdrawal'])->name('bank.transaction.withdraw');

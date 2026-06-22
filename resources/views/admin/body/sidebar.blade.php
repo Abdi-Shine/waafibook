@@ -234,6 +234,9 @@
                     <a href="{{ route('cash_management.index') }}"
                         class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200"><i
                             class="bi bi-plus text-lg"></i> Cash Management</a>
+                    <a href="{{ route('cash_in_hand.index') }}"
+                        class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200"><i
+                            class="bi bi-plus text-lg"></i> Cash In Hand</a>
                     <a href="{{ route('journal.index') }}"
                         class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200"><i
                             class="bi bi-plus text-lg"></i> Journal Entry</a>
