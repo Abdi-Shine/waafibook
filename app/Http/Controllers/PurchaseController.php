@@ -754,10 +754,31 @@ class PurchaseController extends Controller
             $purchase_type = $request->purchase_type ?? 'Purchase';
             if ($request->items && $purchase_type !== 'Return') {
                 foreach ($request->items as $item) {
-                    if (isset($item['product_id']) && is_numeric($item['product_id'])) {
+                    $productId = $item['product_id'] ?? null;
+
+                    // Item was typed as a free-text name instead of picked from the
+                    // existing-product dropdown — match it by name, or create it,
+                    // so its price/stock still get updated below instead of being
+                    // silently lost (matches what the "new tag" UI implies it does).
+                    if (!is_numeric($productId) && !empty($item['product_name'])) {
+                        $matchedProduct = Product::query()->where('product_name', $item['product_name'])->first();
+                        if (!$matchedProduct) {
+                            $matchedProduct = Product::query()->create([
+                                'product_name'   => $item['product_name'],
+                                'product_code'   => $item['product_code'] ?? null,
+                                'unit'           => $item['unit'] ?? 'Piece',
+                                'purchase_price' => $item['unit_price'] ?? 0,
+                                'selling_price'  => $item['unit_price'] ?? 0,
+                            ]);
+                        }
+                        $productId = $matchedProduct->id;
+                        $item['product_id'] = $productId;
+                    }
+
+                    if (is_numeric($productId)) {
                         // 1. Update purchase price on Product table (AVCO or latest)
                         /** @var Product|null $product */
-                        $product = Product::query()->find($item['product_id']);
+                        $product = Product::query()->find($productId);
                         if ($product) {
                             $costingMethod = Company::find(auth()->user()->company_id)?->costing_method ?? 'FIFO';
                             if ($costingMethod === 'AVCO') {
