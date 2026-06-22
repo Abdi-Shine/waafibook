@@ -15,7 +15,7 @@
             showModal: false,
             customerName: 'SELECT CUSTOMER',
             customerBalance: '0.00',
-            paymentMethod: 'SELECT ACCOUNT',
+            paymentMethod: '{{ $bankAccounts->first() ? strtoupper($bankAccounts->first()->name . ' (' . $bankAccounts->first()->type . ')') : 'SELECT ACCOUNT' }}',
             paymentAmount: '',
             paymentDate: '{{ date('Y-m-d') }}'
         }">
@@ -361,9 +361,8 @@
                                         <select name="bank_account_id" required
                                                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer"
                                                 @change="paymentMethod = $event.target.options[$event.target.selectedIndex].text.toUpperCase()">
-                                            <option value="">Select Account...</option>
                                             @foreach($bankAccounts as $acc)
-                                                <option value="{{ $acc->id }}">{{ $acc->name }} ({{ ucfirst($acc->type) }})</option>
+                                                <option value="{{ $acc->id }}" {{ $loop->first ? 'selected' : '' }}>{{ $acc->name }} ({{ ucfirst($acc->type) }})</option>
                                             @endforeach
                                         </select>
                                     </div>

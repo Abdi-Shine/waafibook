@@ -11,7 +11,7 @@
     showModal: false,
     supplierName: 'SELECT SUPPLIER',
     supplierBalance: '0.00',
-    paymentMethod: 'SELECT ACCOUNT',
+    paymentMethod: '{{ $bankAccounts->first() ? strtoupper($bankAccounts->first()->code . ' - ' . $bankAccounts->first()->name) : 'SELECT ACCOUNT' }}',
     paymentAmount: '',
     paymentDate: '{{ date('Y-m-d') }}',
     reference: '{{ $suggestedVoucherNo }}'
@@ -362,9 +362,8 @@
                                         <select name="bank_account_id" required
                                             class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer"
                                             @change="paymentMethod = $event.target.options[$event.target.selectedIndex].text.toUpperCase()">
-                                            <option value="">Select Account...</option>
                                             @foreach($bankAccounts as $account)
-                                                <option value="{{ $account->id }}">{{ $account->code }} - {{ $account->name }}</option>
+                                                <option value="{{ $account->id }}" {{ $loop->first ? 'selected' : '' }}>{{ $account->code }} - {{ $account->name }}</option>
                                             @endforeach
                                         </select>
                                         <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-[10px]"></i>
