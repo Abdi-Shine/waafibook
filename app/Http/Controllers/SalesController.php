@@ -155,10 +155,14 @@ class SalesController extends Controller
             })
             ->where('type', '!=', 'parent')
             ->when($userBranchId, fn($q) => $q->where('branch_id', $userBranchId))
+            ->orderByRaw("CASE WHEN LOWER(name) LIKE '%cash on hand%' OR LOWER(name) LIKE '%cash in hand%' THEN 0 ELSE 1 END")
+            ->orderBy('id')
             ->get();
 
+        $defaultPaymentAccountId = $accounts->first()->id ?? null;
+
         return view('frontend.sales.sales_pos', compact(
-            'customers', 'products', 'categories', 'branches', 'company', 'invoiceNo', 'accounts'
+            'customers', 'products', 'categories', 'branches', 'company', 'invoiceNo', 'accounts', 'defaultPaymentAccountId'
         ));
     }
 

@@ -52,7 +52,7 @@
                     </select>
                     <select class="customer-input" id="account_id">
                         @foreach($accounts as $account)
-                            <option value="{{ $account->id }}" {{ str_contains(strtolower($account->name), 'cash') ? 'selected' : '' }}>{{ $account->name }}</option>
+                            <option value="{{ $account->id }}" {{ $account->id == $defaultPaymentAccountId ? 'selected' : '' }}>{{ $account->name }}</option>
                         @endforeach
                     </select>
                 </div>
