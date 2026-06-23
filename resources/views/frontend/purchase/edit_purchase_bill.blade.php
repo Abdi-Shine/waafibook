@@ -592,55 +592,20 @@ $(document).ready(function() {
     // Pre-fill Account
     $('#paymentAccountSelect').val('{{ $bill->payment_account_id }}');
     
-    // Pre-fill items
+    // Pre-fill items — pass each item's data straight into addItemRow() so
+    // the correct option is already selected in the markup before Select2
+    // initializes (see addItemRow's comment for why that matters).
     @foreach($bill->items as $item)
-        addItemRow();
-        (function() {
-            const lastRow = document.querySelector('#itemsTbody tr:last-child');
-            const rn = lastRow.dataset.row;
-
-            // Set the plain fields first and unconditionally, so a problem
-            // selecting the item below can never block these from loading.
-            lastRow.querySelector('.qty-input').value = '{{ $item->quantity }}';
-            lastRow.querySelector('.price-input').value = '{{ $item->unit_price }}';
-            lastRow.querySelector('.code-input').value = {!! json_encode($item->product_code) !!};
-            lastRow.querySelector('.unit-input').value = '{{ $item->unit }}';
-
-            const discInput = lastRow.querySelector('.row-disc-input');
-            if (discInput) {
-                discInput.value = '{{ $item->discount ?? 0 }}';
-            }
-
-            try {
-                const itemSelect = lastRow.querySelector('.item-select');
-                const pid = {{ $item->product_id ?? 'null' }};
-                const pname = {!! json_encode($item->product_name) !!};
-                if (pid) {
-                    $(itemSelect).val(String(pid)).trigger('change');
-                } else if (pname) {
-                    // Legacy item never linked to a real product — show its
-                    // stored name as a synthetic option instead of leaving
-                    // the row blank.
-                    const syntheticOpt = new Option(pname, pname, true, true);
-                    itemSelect.appendChild(syntheticOpt);
-                    $(itemSelect).val(pname).trigger('change');
-                }
-            } catch (e) {
-                console.error('Could not pre-select item for row', rn, e);
-            }
-
-            // Re-apply price/unit/code in case selecting the item above
-            // overwrote them from the product's current catalog values.
-            lastRow.querySelector('.qty-input').value = '{{ $item->quantity }}';
-            lastRow.querySelector('.price-input').value = '{{ $item->unit_price }}';
-            lastRow.querySelector('.code-input').value = {!! json_encode($item->product_code) !!};
-            lastRow.querySelector('.unit-input').value = '{{ $item->unit }}';
-            if (discInput) {
-                discInput.value = '{{ $item->discount ?? 0 }}';
-            }
-
-            calcRow(rn);
-        })();
+        addItemRow({
+            pid: {{ $item->product_id ?? 'null' }},
+            pname: {!! json_encode($item->product_name) !!},
+            qty: {{ $item->quantity ?? 1 }},
+            price: {{ $item->unit_price ?? 0 }},
+            code: {!! json_encode($item->product_code ?? '') !!},
+            unit: {!! json_encode($item->unit ?? '') !!},
+            discount: {{ $item->discount ?? 0 }}
+        });
+        calcRow(rowCounter);
     @endforeach
     
     // Pre-fill Summary extras
@@ -752,12 +717,27 @@ function buildItemOptions(catId) {
 }
 
 /* ─────────────────────────── ADD ROW ────────────── */
-function addItemRow() {
+function addItemRow(prefill = null) {
     rowCounter++;
     const n = rowCounter;
     const tr = document.createElement('tr');
     tr.className = 'item-row';
     tr.dataset.row = n;
+
+    // Mark the matching option (or inject a synthetic one for legacy items
+    // never linked to a real product) as selected directly in the markup,
+    // BEFORE Select2 initializes on this row — Select2 reads whatever the
+    // native <select> already has selected at init time, which is the only
+    // reliable way to pre-select a value (setting it afterward via
+    // .val().trigger('change') is not consistently picked up).
+    let itemOptionsHtml = buildItemOptions('ALL');
+    if (prefill && prefill.pid) {
+        const pidStr = String(prefill.pid);
+        itemOptionsHtml = itemOptionsHtml.replace(`value="${pidStr}"`, `value="${pidStr}" selected`);
+    } else if (prefill && prefill.pname) {
+        const escapedName = prefill.pname.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+        itemOptionsHtml += `<option value="${escapedName}" selected>${escapedName}</option>`;
+    }
 
     tr.innerHTML = `
         <td class="px-4 py-3 text-[11px] font-black text-gray-400 text-center border-r border-gray-100 row-num">${n}</td>
@@ -770,13 +750,13 @@ function addItemRow() {
         {{-- Item Select --}}
         <td class="px-2 py-1 border-r border-gray-100">
             <select class="item-select" data-row="${n}">
-                ${buildItemOptions('ALL')}
+                ${itemOptionsHtml}
             </select>
         </td>
 
         {{-- Optional: Code --}}
         <td class="px-2 py-1 border-r border-gray-100 hidden col-code text-center">
-            <input type="text" class="tbl-clean-input code-input" placeholder="Code">
+            <input type="text" class="tbl-clean-input code-input" placeholder="Code" value="${prefill && prefill.code ? prefill.code : ''}">
         </td>
 
         {{-- Optional: Description --}}
@@ -786,30 +766,30 @@ function addItemRow() {
 
         {{-- Qty --}}
         <td class="px-2 py-1 border-r border-gray-100 text-center">
-            <input type="number" class="tbl-clean-input qty-input" value="1" min="1" step="1" oninput="this.value = this.value.replace(/[^0-9]/g, ''); calcRow(${n})">
+            <input type="number" class="tbl-clean-input qty-input" value="${prefill && prefill.qty ? prefill.qty : 1}" min="1" step="1" oninput="this.value = this.value.replace(/[^0-9]/g, ''); calcRow(${n})">
         </td>
 
         {{-- Unit --}}
         <td class="px-4 py-1 border-r border-gray-100 text-center">
             <select class="unit-select-clean unit-input">
-                <option value="">NONE</option>
-                <option value="Piece">Piece</option>
-                <option value="Box">Box</option>
-                <option value="Kg">Kg</option>
-                <option value="Litre">Litre</option>
-                <option value="Set">Set</option>
+                <option value="" ${!prefill || !prefill.unit ? 'selected' : ''}>NONE</option>
+                <option value="Piece" ${prefill && prefill.unit === 'Piece' ? 'selected' : ''}>Piece</option>
+                <option value="Box" ${prefill && prefill.unit === 'Box' ? 'selected' : ''}>Box</option>
+                <option value="Kg" ${prefill && prefill.unit === 'Kg' ? 'selected' : ''}>Kg</option>
+                <option value="Litre" ${prefill && prefill.unit === 'Litre' ? 'selected' : ''}>Litre</option>
+                <option value="Set" ${prefill && prefill.unit === 'Set' ? 'selected' : ''}>Set</option>
             </select>
         </td>
 
         {{-- Purchase Price --}}
         <td class="px-2 py-1 border-r border-gray-100 text-center">
-            <input type="number" class="tbl-clean-input price-input" value="0" min="0" step="0.01" oninput="calcRow(${n})">
+            <input type="number" class="tbl-clean-input price-input" value="${prefill && prefill.price !== undefined ? prefill.price : 0}" min="0" step="0.01" oninput="calcRow(${n})">
         </td>
 
         {{-- Optional: Discount --}}
         <td class="px-2 py-1 border-r border-gray-100 hidden col-disc text-center">
             <div class="flex items-center gap-1 justify-center">
-                <input type="number" class="tbl-clean-input row-disc-input row-disc-input-w" value="0" min="0" step="0.01" oninput="calcRow(${n})">
+                <input type="number" class="tbl-clean-input row-disc-input row-disc-input-w" value="${prefill && prefill.discount !== undefined ? prefill.discount : 0}" min="0" step="0.01" oninput="calcRow(${n})">
                 <button type="button" class="text-[10px] font-black text-primary row-disc-toggle" onclick="toggleRowDisc(this, ${n})">Amt</button>
             </div>
         </td>
@@ -831,75 +811,27 @@ function addItemRow() {
 
     document.getElementById('itemsTbody').appendChild(tr);
 
-    // Init Select2 for item select
+    // Init Select2 for item select. The correct option (or synthetic
+    // option for a legacy item with no linked product) was already marked
+    // selected directly in the markup above, so Select2 picks it up
+    // automatically at init time — no post-init .val()/.trigger() needed.
     $(tr).find('.item-select').select2({
         placeholder: 'Search and Select Item',
         width: '100%',
         dropdownAutoWidth: true,
-        templateResult: formatProductResult,
         language: {
             noResults: function() {
                 return `<div class="p-2 text-center text-gray-400">No items found matching search</div>`;
             }
-        },
-        escapeMarkup: function(markup) { return markup; }
+        }
     }).on('select2:select', function() {
         onItemChange(this, n);
     }).on('select2:open', function() {
         window._lastOpenedSelect2 = this;
-        
-        // Inject sticky header & Add Item button to the dropdown container
-        setTimeout(() => {
-            const container = $('.select2-container--open .select2-dropdown');
-            if (container.length && !container.find('.s2-header-row').length) {
-                container.find('.select2-results').prepend(`
-                    <div class="s2-header-row">
-                        <div class="s2-add-btn" onmousedown="openAddProductModal()">
-                            <i class="bi bi-plus-circle-fill"></i> Add Item
-                        </div>
-                        <div class="s2-header-cols">
-                            <span class="product-res-col-sale">SALE PRICE</span>
-                            <span class="product-res-col-purchase">PURCHASE PRICE</span>
-                            <span class="product-res-col-stock">STOCK</span>
-                        </div>
-                    </div>
-                `);
-            }
-        }, 10);
     });
 
     renumberRows();
     recalcAll();
-}
-
-/* ─────────────────────────── SELECT2 FORMATTING ── */
-function formatProductResult(p) {
-    if (!p.id) return p.text;
-    const prod = PRODUCTS.find(x => x.id == p.id);
-    if (!prod) return p.text;
-
-    return $(`
-        <div class="product-res">
-            <div class="product-res-info">
-                <div class="product-res-name">${prod.name}</div>
-                <div class="product-res-code">${prod.code || ''}</div>
-            </div>
-            <div class="product-res-meta">
-                <div class="product-res-col product-res-col-sale">
-                    <div class="product-res-label">SALE PRICE</div>
-                    <div class="product-res-val">${prod.selling_price.toLocaleString()}</div>
-                </div>
-                <div class="product-res-col product-res-col-purchase">
-                    <div class="product-res-label">PURCHASE PRICE</div>
-                    <div class="product-res-val">${prod.purchase_price.toLocaleString()}</div>
-                </div>
-                <div class="product-res-col product-res-col-stock">
-                    <div class="product-res-label">STOCK</div>
-                    <div class="product-res-val product-res-stock ${prod.stock <= 0 ? 'low' : ''}">${prod.stock}</div>
-                </div>
-            </div>
-        </div>
-    `);
 }
 
 /* ─────────────────────────── ITEM CHANGE ────────── */
