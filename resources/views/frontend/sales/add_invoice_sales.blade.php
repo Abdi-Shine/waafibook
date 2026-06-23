@@ -297,19 +297,19 @@
                     <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Invoice Summary</span>
                 </div>
 
-                {{-- Subtotal row --}}
-                <div class="flex justify-between items-center py-2 border-b border-gray-100">
-                    <span class="text-[12px] text-gray-500 font-medium">Subtotal</span>
-                    <span class="text-[13px] font-bold text-gray-700" id="subtotalDisplay">{{ $curr }} 0.00</span>
-                </div>
-
-                {{-- Discount --}}
-                <div class="flex items-center justify-between py-2 border-b border-gray-100 gap-3">
-                    <span class="text-[12px] text-gray-500 font-medium shrink-0">Discount</span>
-                    <div class="relative w-36">
-                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-gray-400">{{ $curr }}</span>
-                        <input type="number" id="discountInput" name="discount" value="0" min="0" step="0.01"
-                               class="w-full pl-8 pr-3 py-1 border border-gray-200 rounded-lg text-[12px] font-bold text-right text-primary-dark focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all">
+                {{-- Subtotal + Discount --}}
+                <div class="grid grid-cols-2 gap-3 items-end py-2 border-b border-gray-100">
+                    <div>
+                        <span class="block text-[12px] text-gray-500 font-medium mb-1">Subtotal</span>
+                        <span class="text-[13px] font-bold text-gray-700" id="subtotalDisplay">{{ $curr }} 0.00</span>
+                    </div>
+                    <div>
+                        <span class="block text-[12px] text-gray-500 font-medium mb-1">Discount</span>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-gray-400">{{ $curr }}</span>
+                            <input type="number" id="discountInput" name="discount" value="0" min="0" step="0.01"
+                                   class="w-full pl-8 pr-3 py-1 border border-gray-200 rounded-lg text-[12px] font-bold text-right text-primary-dark focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all">
+                        </div>
                     </div>
                 </div>
 
@@ -333,12 +333,8 @@
                     <span class="text-[20px] font-black text-accent" id="grandTotalDisplay">{{ $curr }} 0.00</span>
                 </div>
 
-                {{-- Balance rows --}}
+                {{-- Balance row --}}
                 <div class="mt-3 space-y-1 px-1" id="totalBalanceWrapper">
-                    <div class="flex justify-between text-[11px] pt-1">
-                        <span class="text-gray-400">Balance Due (this invoice)</span>
-                        <span class="font-bold text-primary" id="balanceDueDisplay">{{ $curr }} 0.00</span>
-                    </div>
                     <div class="flex justify-between text-[11px] bg-primary/8 rounded-lg px-3 py-2 mt-1">
                         <span class="font-black text-primary-dark">Total Customer Balance</span>
                         <span class="font-black text-primary" id="totalCustomerBalDisplay">{{ $curr }} 0.00</span>
@@ -794,7 +790,6 @@ function recalcAll() {
     document.getElementById('grandTotalDisplay').textContent = CURR + ' ' + grandTotal.toFixed(2);
     document.getElementById('grandTotalVal').value           = grandTotal.toFixed(2);
     document.getElementById('taxVal').value                  = taxAmt.toFixed(2);
-    document.getElementById('balanceDueDisplay').textContent = balanceDue.toFixed(2);
 
     // Total customer balance = previous balance + balance due on this invoice
     const prevBal      = parseFloat(window._customerPrevBalance) || 0;

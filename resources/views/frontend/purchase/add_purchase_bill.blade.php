@@ -262,28 +262,30 @@
                         Invoice Summary
                     </p>
 
-                    {{-- Discount --}}
-                    <div class="mb-3">
-                        <label class="block text-[10px] font-black text-primary-dark uppercase tracking-wider mb-1">Amount
-                            Discount </label>
-                        <div class="relative">
-                            <span
-                                class="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-gray-400">{{ $curr }}</span>
-                            <input type="number" name="discount_amount" id="discountAmountInput" value="0" min="0"
-                                step="0.01"
-                                class="w-full pl-7 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-[12px] font-semibold text-primary-dark focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all text-right">
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        {{-- Discount --}}
+                        <div>
+                            <label class="block text-[10px] font-black text-primary-dark uppercase tracking-wider mb-1">Amount
+                                Discount </label>
+                            <div class="relative">
+                                <span
+                                    class="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-gray-400">{{ $curr }}</span>
+                                <input type="number" name="discount_amount" id="discountAmountInput" value="0" min="0"
+                                    step="0.01"
+                                    class="w-full pl-7 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-[12px] font-semibold text-primary-dark focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all text-right">
+                            </div>
                         </div>
-                    </div>
 
-                    {{-- Paid Amount --}}
-                    <div class="mb-3">
-                        <label class="block text-[10px] font-black text-primary-dark uppercase tracking-wider mb-1">Amount
-                            Paid</label>
-                        <div class="relative">
-                            <span
-                                class="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-gray-400">{{ $curr }}</span>
-                            <input type="number" name="paid_amount" id="paidAmountInput" value="0" min="0" step="0.01"
-                                class="w-full pl-7 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-[12px] font-semibold text-primary-dark focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all text-right">
+                        {{-- Paid Amount --}}
+                        <div>
+                            <label class="block text-[10px] font-black text-primary-dark uppercase tracking-wider mb-1">Amount
+                                Paid</label>
+                            <div class="relative">
+                                <span
+                                    class="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-gray-400">{{ $curr }}</span>
+                                <input type="number" name="paid_amount" id="paidAmountInput" value="0" min="0" step="0.01"
+                                    class="w-full pl-7 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-[12px] font-semibold text-primary-dark focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all text-right">
+                            </div>
                         </div>
                     </div>
 
@@ -327,7 +329,7 @@
                 <div class="flex gap-2 flex-wrap">
                     <button type="button" onclick="submitForm('save')" class="btn-premium-primary">
                         <i class="bi bi-check2-circle"></i>
-                        <span>Record Bill</span>
+                        <span>Save & New</span>
                     </button>
                 </div>
             </div>

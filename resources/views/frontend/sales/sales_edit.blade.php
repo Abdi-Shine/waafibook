@@ -17,25 +17,43 @@
     ];
     $sym  = '$'; // Force Dollar
     $curr = '$'; // Force Dollar
+
+    // Cash/walk-in sales (see add_invoice_sales.blade.php) have no customer_id —
+    // the name/phone the cashier typed is instead prepended into `notes` as a
+    // "WALK-IN DETAILS" block. Pull it back out here so it can be shown in the
+    // Customer/Phone fields instead of leaving them blank.
+    $walkinName = null;
+    $walkinPhone = null;
+    $walkinBlock = '';
+    $cleanNotes = $order->notes;
+    if (!$order->customer_id && $order->notes && preg_match('/^\s*WALK-IN DETAILS:\s*\n(.*?)\n-+\n?/s', $order->notes, $m)) {
+        $walkinBlock = $m[0];
+        foreach (explode('|', $m[1]) as $part) {
+            $part = trim($part);
+            if (str_starts_with($part, 'Name:'))  $walkinName  = trim(substr($part, 5));
+            if (str_starts_with($part, 'Phone:')) $walkinPhone = trim(substr($part, 6));
+        }
+        $cleanNotes = trim(substr($order->notes, strlen($walkinBlock)));
+    }
 @endphp
 
 <div class="px-4 py-6 md:px-8 bg-gray-50 min-h-screen">
 
     {{-- Page Heading --}}
-    <div class="mb-5">
-        <div class="flex items-center gap-3 mb-1">
-            <div class="w-9 h-9 bg-accent/20 border-2 border-accent rounded-lg flex items-center justify-center shrink-0">
-                <i class="bi bi-pencil-square text-primary-dark text-base"></i>
+    <div class="mb-5 flex items-start justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-3 mb-1">
+                <div class="w-9 h-9 bg-accent/20 border-2 border-accent rounded-lg flex items-center justify-center shrink-0">
+                    <i class="bi bi-pencil-square text-primary-dark text-base"></i>
+                </div>
+                <h1 class="text-xl font-black text-primary-dark tracking-tight">Edit Invoice</h1>
             </div>
-            <h1 class="text-xl font-black text-primary-dark tracking-tight">Edit Invoice</h1>
         </div>
-        <nav class="text-[11px] font-semibold text-gray-400 ml-12">
-            <a href="#" class="hover:text-primary transition-colors">Dashboard</a>
-            <span class="mx-1">/</span>
-            <a href="{{ route('sales.invoice.view') }}" class="hover:text-primary transition-colors">Sales</a>
-            <span class="mx-1">/</span>
-            <span class="text-accent font-bold">Edit — {{ $order->invoice_no }}</span>
-        </nav>
+        <a href="{{ route('sales.invoice.view') }}"
+           class="flex items-center gap-2 px-5 py-2.5 bg-accent text-primary font-semibold rounded-[0.5rem] hover:bg-accent/90 transition-all shadow-sm text-sm group normal-case shrink-0">
+            <i class="bi bi-arrow-left group-hover:-translate-x-0.5 transition-transform duration-300"></i>
+            <span>Back to Sales</span>
+        </a>
     </div>
 
     <form id="editForm" autocomplete="off">
@@ -43,52 +61,55 @@
         @method('PUT')
 
         {{-- Top Row --}}
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-
-            {{-- Customer Information --}}
-            <div class="lg:col-span-2 bg-white border border-gray-200 rounded-lg p-5">
-                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 pb-2 border-b border-gray-100">Customer Information</p>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Customer</label>
-                        <select id="customerSelect" name="customer_id" class="w-full" required>
-                            <option value="">Search by Name/Phone #</option>
-                            @foreach($customers as $c)
-                                <option value="{{ $c->id }}"
-                                        data-phone="{{ $c->phone }}"
-                                        data-balance="{{ $c->amount_balance ?? 0 }}"
-                                        {{ $order->customer_id == $c->id ? 'selected' : '' }}>
-                                    {{ $c->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Phone No.</label>
-                        <input type="text" id="customerPhone" readonly
-                               value="{{ $order->customer->phone ?? '' }}"
-                               class="w-full border border-gray-200 rounded px-3 py-1.5 text-[12px] font-medium text-gray-600 bg-gray-50 focus:outline-none focus:border-primary">
-                    </div>
+        <div class="bg-white border border-gray-200 rounded-lg p-5 mb-4">
+            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 pb-2 border-b border-gray-100">Customer Information</p>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Customer</label>
+                    <select id="customerSelect" name="customer_id" class="w-full">
+                        <option value="">Search by Name/Phone #</option>
+                        @if($walkinName)
+                            {{-- Select2 always shows the placeholder text for an
+                                 option with value="", even if it's selected — so
+                                 this needs a distinct sentinel value instead. --}}
+                            <option value="walkin" data-phone="{{ $walkinPhone }}" selected>Walk-in: {{ $walkinName }}</option>
+                        @endif
+                        @foreach($customers as $c)
+                            <option value="{{ $c->id }}"
+                                    data-phone="{{ $c->phone }}"
+                                    data-balance="{{ $c->amount_balance ?? 0 }}"
+                                    {{ $order->customer_id == $c->id ? 'selected' : '' }}>
+                                {{ $c->name }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
-                <div id="balanceBadge" class="{{ ($order->customer->amount_balance ?? 0) > 0 ? 'flex' : 'hidden' }} mt-3 items-center gap-2 text-[11px] font-bold text-primary bg-primary/10 border border-primary/20 rounded-lg px-3 py-2">
-                    <i class="bi bi-exclamation-triangle-fill"></i>
-                    <span>Outstanding balance: <span id="balanceVal">{{ number_format($order->customer->amount_balance ?? 0, 2) }}</span> {{ $curr }}</span>
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Phone No.</label>
+                    <input type="text" id="customerPhone" readonly
+                           value="{{ $order->customer->phone ?? $walkinPhone ?? '' }}"
+                           class="w-full border border-gray-200 rounded px-3 py-1.5 text-[12px] font-medium text-gray-600 bg-gray-50 focus:outline-none focus:border-primary">
                 </div>
-            </div>
-
-            {{-- Invoice Details --}}
-            <div class="bg-white border border-gray-200 rounded-lg p-5">
-                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 pb-2 border-b border-gray-100">Invoice Details</p>
-                <div class="mb-2">
+                <input type="hidden" id="walkinBlockOriginal" value="{{ $walkinBlock }}">
+                <div>
                     <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Invoice Number</label>
                     <div class="text-lg font-black text-primary tracking-tight">{{ $order->invoice_no }}</div>
                 </div>
-                {{-- Hidden inputs — not displayed, submitted with form --}}
-                <input type="hidden" name="invoice_no"     value="{{ $order->invoice_no }}">
-                <input type="hidden" name="invoice_date"   value="{{ \Carbon\Carbon::parse($order->invoice_date)->format('Y-m-d') }}">
-                <input type="hidden" name="branch_id"      value="{{ $order->branch_id }}">
-                <input type="hidden" name="payment_method" value="{{ $order->payment_method }}">
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Invoice Date</label>
+                    <input type="date" id="invoiceDateInput" name="invoice_date"
+                           value="{{ \Carbon\Carbon::parse($order->invoice_date)->format('Y-m-d') }}"
+                           class="w-full border border-gray-200 rounded px-3 py-1.5 text-[12px] font-medium text-gray-700 focus:outline-none focus:border-primary">
+                </div>
             </div>
+            <div id="balanceBadge" class="{{ ($order->customer->amount_balance ?? 0) > 0 ? 'flex' : 'hidden' }} mt-3 items-center gap-2 text-[11px] font-bold text-primary bg-primary/10 border border-primary/20 rounded-lg px-3 py-2">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span>Outstanding balance: <span id="balanceVal">{{ number_format($order->customer->amount_balance ?? 0, 2) }}</span> {{ $curr }}</span>
+            </div>
+            {{-- Hidden inputs — not displayed, submitted with form --}}
+            <input type="hidden" name="invoice_no"     value="{{ $order->invoice_no }}">
+            <input type="hidden" name="branch_id"      value="{{ $order->branch_id }}">
+            <input type="hidden" name="payment_method" value="{{ $order->payment_method }}">
         </div>
 
         {{-- Items Table --}}
@@ -98,15 +119,10 @@
                     <thead>
                         <tr class="bg-gray-50 border-b border-gray-200">
                             <th class="px-3 py-3 text-[10px] font-black text-gray-500 uppercase tracking-wider w-8 text-center">#</th>
-                            <th class="px-3 py-3 text-[10px] font-black text-gray-500 uppercase tracking-wider min-w-[110px]">Category</th>
                             <th class="px-3 py-3 text-[10px] font-black text-gray-500 uppercase tracking-wider min-w-[140px]">Item</th>
-                            <th class="px-3 py-3 text-[10px] font-black text-gray-500 uppercase tracking-wider min-w-[120px]">Description</th>
                             <th class="px-3 py-3 text-[10px] font-black text-gray-500 uppercase tracking-wider w-20 text-center">Qty</th>
                             <th class="px-3 py-3 text-[10px] font-black text-gray-500 uppercase tracking-wider w-24">Unit</th>
                             <th class="px-3 py-3 text-[10px] font-black text-gray-500 uppercase tracking-wider w-24 text-right">Price/Unit</th>
-                            <th class="px-3 py-3 text-[10px] font-black text-gray-500 uppercase tracking-wider text-center min-w-[130px]">
-                                Discount<br><span class="font-normal normal-case text-gray-400">Amt / %</span>
-                            </th>
                             <th class="px-3 py-3 text-[10px] font-black text-gray-500 uppercase tracking-wider w-28 text-right">Amount</th>
                             <th class="w-16"></th>
                         </tr>
@@ -114,16 +130,16 @@
                     <tbody id="itemsTbody"></tbody>
                     <tfoot>
                         <tr class="border-t-2 border-gray-200 bg-gray-50">
-                            <td colspan="4" class="px-4 py-3 text-[11px] font-black text-gray-500 uppercase text-right">Total</td>
+                            <td colspan="2" class="px-4 py-3 text-[11px] font-black text-gray-500 uppercase text-right">Total</td>
                             <td class="px-3 py-3 text-center"><span class="text-[13px] font-black text-primary" id="footerQty">0</span></td>
-                            <td colspan="3"></td>
+                            <td colspan="2"></td>
                             <td class="px-3 py-3 text-right"><span class="text-[14px] font-black text-accent" id="footerAmount">{{ $sym }} 0.00</span></td>
                             <td></td>
                         </tr>
                     </tfoot>
                 </table>
             </div>
-            <div class="border-t border-dashed border-gray-200 py-3 text-center">
+            <div class="border-t border-dashed border-gray-200 py-3 px-4 text-left">
                 <button type="button" onclick="addItemRow()"
                         class="inline-flex items-center gap-2 text-[12px] font-bold text-primary border border-dashed border-primary/30 rounded-lg px-8 py-1.5 hover:bg-primary hover:text-white hover:border-primary transition-all duration-200">
                     <i class="bi bi-plus-circle text-sm"></i> ADD ROW
@@ -141,7 +157,7 @@
                     <span class="text-[11px] font-bold text-primary-dark uppercase tracking-wider">Notes / Terms &amp; Conditions</span>
                 </div>
                 <textarea name="notes" rows="6" placeholder="Enter any additional notes, terms, or conditions..."
-                          class="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all resize-none">{{ $order->notes }}</textarea>
+                          class="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all resize-none">{{ $cleanNotes }}</textarea>
             </div>
 
             {{-- Invoice Summary --}}
@@ -157,25 +173,26 @@
                     <span class="text-[13px] font-bold text-gray-700" id="subtotalDisplay">{{ $curr }} {{ number_format($order->subtotal, 2) }}</span>
                 </div>
 
-                {{-- Discount --}}
-                <div class="flex items-center justify-between py-2 border-b border-gray-100 gap-3">
-                    <span class="text-[12px] text-gray-500 font-medium shrink-0">Discount</span>
-                    <div class="relative w-40">
-                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-gray-400">{{ $curr }}</span>
-                        <input type="number" id="discountInput" name="discount" value="{{ round($order->discount ?? 0) }}" min="0" step="0.01"
-                               class="w-full pl-7 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-[12px] font-semibold text-primary-dark focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all text-right">
+                {{-- Discount + Amount Paid --}}
+                <div class="grid grid-cols-2 gap-3 py-2 border-b border-gray-100">
+                    <div>
+                        <label class="block text-[12px] text-gray-500 font-medium mb-1">Discount</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-gray-400">{{ $curr }}</span>
+                            <input type="number" id="discountInput" name="discount" value="{{ round($order->discount ?? 0) }}" min="0" step="0.01"
+                                   class="w-full pl-7 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-[12px] font-semibold text-primary-dark focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all text-right">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[12px] text-gray-500 font-medium mb-1">Amount Paid</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-gray-400">{{ $curr }}</span>
+                            <input type="number" name="paid_amount" id="paidAmountInput" value="{{ $order->paid_amount ?? 0 }}" min="0" step="0.01"
+                                   class="w-full pl-7 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-[12px] font-semibold text-primary-dark focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all text-right">
+                        </div>
                     </div>
                 </div>
-
-                {{-- Amount Paid --}}
-                <div class="flex items-center justify-between py-2 border-b border-gray-100 gap-3">
-                    <span class="text-[12px] text-gray-500 font-medium shrink-0">Amount Paid</span>
-                    <div class="relative w-40">
-                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-gray-400">{{ $curr }}</span>
-                        <input type="number" name="paid_amount" id="paidAmountInput" value="{{ $order->paid_amount ?? 0 }}" min="0" step="0.01"
-                               class="w-full pl-7 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-[12px] font-semibold text-primary-dark focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all text-right">
-                    </div>
-                </div>
+                <input type="hidden" id="discountPercent" value="0">
 
                 <input type="hidden" name="tax" id="taxVal" value="0">
                 <input type="hidden" name="total_amount" id="grandTotalVal" value="{{ $order->total_amount }}">
@@ -186,12 +203,8 @@
                     <span class="text-[15px] font-black text-accent" id="grandTotalDisplay">{{ $curr }} {{ number_format($order->total_amount, 2) }}</span>
                 </div>
 
-                {{-- Balance rows --}}
+                {{-- Balance row --}}
                 <div class="flex justify-between items-center px-1 py-2 mt-2 border-t border-gray-100">
-                    <span class="text-[10px] text-gray-400 font-medium">Balance Due (this invoice)</span>
-                    <span class="font-bold text-primary text-[12px]" id="balanceDueDisplay">{{ $curr }} {{ number_format($order->due_amount, 2) }}</span>
-                </div>
-                <div class="flex justify-between items-center px-1 py-2 border-t border-gray-100">
                     <span class="text-[10px] font-black text-gray-400 uppercase tracking-wider">Total Customer Balance</span>
                     <span class="font-black text-primary-dark text-[12px]" id="totalCustomerBalDisplay">{{ $curr }} 0.00</span>
                 </div>
@@ -213,16 +226,76 @@
     </form>
 </div>
 
+{{-- Add Product Modal --}}
+<div id="addProductModal"
+    class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm hidden modal-overlay">
+    <div class="bg-white rounded-[1.25rem] w-full max-w-4xl max-h-[100vh] overflow-hidden shadow-2xl flex flex-col relative modal-slide-up">
+        <div class="px-6 py-6 bg-primary relative overflow-hidden shrink-0">
+            <div class="flex items-center justify-between relative z-10">
+                <div class="flex items-center gap-4 text-white">
+                    <div class="w-12 h-12 bg-white/10 border border-white/10 rounded-xl flex items-center justify-center text-xl shadow-inner backdrop-blur-md">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <h2 class="text-xl font-bold tracking-tight uppercase">Add New Product</h2>
+                        <p class="text-xs text-white/60 font-medium mt-0.5">Quickly add an item</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeAddProductModal()"
+                    class="w-8 h-8 bg-white/10 border border-white/10 text-white rounded-lg hover:bg-white/20 transition-all flex items-center justify-center shadow-sm">
+                    <i class="bi bi-x-lg text-xs"></i>
+                </button>
+            </div>
+        </div>
+        <div class="px-6 py-6 overflow-y-auto custom-scrollbar flex-grow bg-white space-y-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Product Name <span class="text-primary">*</span></label>
+                    <input type="text" id="newProductName" placeholder="Enter product name"
+                        class="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Category <span class="text-primary">*</span></label>
+                    <select id="newProductCategory"
+                        class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+                        <option value="">Select Category</option>
+                        @foreach($categories as $cat)
+                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Selling Price</label>
+                    <input type="number" id="newProductSellingPrice" placeholder="0.00" value="0" min="0" step="0.01"
+                        class="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                </div>
+            </div>
+        </div>
+        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/80 flex items-center justify-between">
+            <button type="button" onclick="closeAddProductModal()" class="btn-premium-accent">
+                Cancel
+            </button>
+            <button type="button" onclick="saveNewProduct()" id="saveProductBtn" class="btn-premium-primary">
+                <i class="bi bi-check2-circle"></i>
+                <span>Save Product</span>
+            </button>
+        </div>
+    </div>
+</div>
+
 {{-- JSON data for JS --}}
 <script id="productData" type="application/json">
 {!! json_encode($products->map(fn($p) => [
-    'id'          => $p->id,
-    'name'        => $p->product_name,
-    'code'        => $p->product_code ?? '',
-    'price'       => (float) $p->selling_price,
-    'unit'        => $p->unit ?? 'Piece',
-    'stock'       => (int) ($p->stocks_sum_quantity ?? 0),
-    'category_id' => $p->category_id,
+    'id'             => $p->id,
+    'name'           => $p->product_name,
+    'code'           => $p->product_code ?? '',
+    'price'          => (float) $p->selling_price,
+    'purchase_price' => (float) $p->purchase_price,
+    'unit'           => $p->unit ?? 'Piece',
+    'stock'          => (int) ($p->stocks_sum_quantity ?? 0),
+    'category_id'    => $p->category_id,
 ])) !!}
 </script>
 <script id="categoryData" type="application/json">
@@ -250,6 +323,13 @@ const CURR       = @json($curr);
 const CSRF       = @json(csrf_token());
 const R_UPDATE   = @json(route('sales.invoice.update', $order->id));
 const R_LIST     = @json(route('sales.invoice.view'));
+const R_QUICK_PROD = @json(route('product.quick.store'));
+// This order's currently saved due amount is already baked into its
+// customer's stored balance, so the live preview must back it out before
+// adding the edited due amount back in — otherwise editing the invoice
+// double-counts it (see PurchaseController::updateBill's $balanceDiff for
+// the equivalent fix on the purchase bill side).
+const ORDER_OLD_DUE = @json((float) ($order->due_amount ?? 0));
 const PRODUCTS   = JSON.parse(document.getElementById('productData').textContent);
 const CATEGORIES = JSON.parse(document.getElementById('categoryData').textContent);
 const EXISTING   = JSON.parse(document.getElementById('existingItems').textContent);
@@ -275,10 +355,11 @@ $(document).ready(function () {
             recalcAll();
         });
 
-    // Set initial customer balance
-    window._customerPrevBalance = parseFloat(
+    // Set initial customer balance — back out this order's own old due
+    // amount since it's already included in the customer's stored balance.
+    window._customerPrevBalance = (parseFloat(
         $('#customerSelect').find(':selected').data('balance')
-    ) || 0;
+    ) || 0) - ORDER_OLD_DUE;
 
     // Load existing items
     EXISTING.forEach(item => addItemRow(item));
@@ -326,19 +407,13 @@ function calculateCurrentSubtotal() {
     return subtotal;
 }
 
-/* ── Category / Item option builders ── */
-function buildCategoryOptions() {
-    let html = `<option value="ALL">ALL</option>`;
-    CATEGORIES.forEach(c => { html += `<option value="${c.id}">${c.name}</option>`; });
-    return html;
-}
-
+/* ── Item option builder ── */
 function buildItemOptions(catId) {
     let html = `<option value="">Select Item</option>`;
     PRODUCTS.forEach(p => {
         if (!catId || catId === 'ALL' || p.category_id == catId) {
             html += `<option value="${p.id}"
-                data-price="${p.price}" data-code="${p.code}"
+                data-price="${p.price}" data-purchase-price="${p.purchase_price}" data-code="${p.code}"
                 data-unit="${p.unit}" data-stock="${p.stock}"
                 data-catid="${p.category_id}">${p.name}</option>`;
         }
@@ -357,22 +432,14 @@ function addItemRow(prefill) {
     tr.innerHTML = `
         <td class="px-3 py-2 text-[11px] font-bold text-gray-400 text-center">${n}</td>
         <td class="px-2 py-2">
-            <select class="tbl-input tbl-select cat-select">
-                ${buildCategoryOptions()}
-            </select>
-        </td>
-        <td class="px-2 py-2">
             <select class="tbl-input tbl-select item-select" data-row="${n}">
                 ${buildItemOptions('ALL')}
             </select>
         </td>
         <td class="px-2 py-2">
-            <input type="text" class="tbl-input desc-input" placeholder="Add description">
-        </td>
-        <td class="px-2 py-2">
-            <input type="number" class="tbl-input qty-input text-center"
-                   value="${prefill ? prefill.quantity : 1}" min="0.01" step="1"
-                   class="tbl-qty-w" oninput="calcRow(${n})">
+            <input type="number" class="tbl-input qty-input text-center tbl-qty-w"
+                   value="${prefill ? prefill.quantity : 1}" min="1" step="1"
+                   oninput="this.value = this.value.replace(/[^0-9]/g, ''); calcRow(${n})">
         </td>
         <td class="px-2 py-2">
             <select class="tbl-input tbl-select unit-input tbl-unit-w">
@@ -386,20 +453,14 @@ function addItemRow(prefill) {
                    value="${prefill ? prefill.unit_price : 0}" min="0" step="0.01"
                    oninput="calcRow(${n})">
         </td>
-        <td class="px-2 py-2">
-            <div class="flex items-center gap-1">
-                <input type="number" class="tbl-input row-disc-input text-right"
-                       value="${prefill ? prefill.discount : 0}" min="0" step="0.01"
-                       class="tbl-disc-w" oninput="calcRow(${n})">
-                <button type="button" class="disc-toggle row-disc-toggle text-[10px]"
-                        onclick="toggleRowDisc(this, ${n})">Amt</button>
-            </div>
-        </td>
         <td class="px-2 py-2 text-right">
             <span class="text-[13px] font-black text-[#5a9a22] row-amount"
                   data-val="${prefill ? prefill.total_price : 0}">
                 ${CURR} ${prefill ? prefill.total_price.toFixed(2) : '0.00'}
             </span>
+            {{-- Carries forward any discount already saved on this line item;
+                 there's no UI to edit it here, it just keeps existing totals correct. --}}
+            <input type="hidden" class="row-disc-input" value="${prefill ? prefill.discount : 0}">
         </td>
         <td class="px-2 py-2">
             <div class="flex items-center justify-center gap-1">
@@ -413,7 +474,7 @@ function addItemRow(prefill) {
 
     document.getElementById('itemsTbody').appendChild(tr);
 
-    $(tr).find('.cat-select, .item-select').select2({ placeholder:'', width:'100%', minimumResultsForSearch:5 });
+    initItemSelect2(tr.querySelector('.item-select'), n);
 
     // If pre-filling, select the matching product option
     if (prefill && prefill.product_id) {
@@ -424,23 +485,74 @@ function addItemRow(prefill) {
     }
 
     $(tr).find('.item-select').on('select2:select', function () { onItemChange(this, n); });
-    $(tr).find('.cat-select').on('select2:select',  function () { onCategoryChange(this, n); });
 
     renumberRows();
 }
 
-/* ── Category / Item change handlers ── */
-function onCategoryChange(sel, rn) {
-    const catId   = $(sel).val();
-    const row     = document.querySelector(`tr[data-row="${rn}"]`);
-    const itemSel = row.querySelector('.item-select');
-    $(itemSel).select2('destroy');
-    itemSel.innerHTML = buildItemOptions(catId);
-    $(itemSel).select2({ placeholder:'', width:'100%', minimumResultsForSearch:5 });
-    $(itemSel).on('select2:select', function () { onItemChange(this, rn); });
-    calcRow(rn);
+/* ── Item Select2 init (search dropdown w/ price/stock columns + Add Item) ── */
+function initItemSelect2(itemSel, rn) {
+    $(itemSel).select2({
+        placeholder: 'Search and Select Item',
+        width: '100%',
+        dropdownAutoWidth: true,
+        templateResult: formatProductResult,
+        language: {
+            noResults: function () {
+                return `<div class="p-2 text-center text-gray-400">No items found matching search</div>`;
+            }
+        },
+        escapeMarkup: function (markup) { return markup; }
+    }).on('select2:open', function () {
+        setTimeout(() => {
+            const container = $('.select2-container--open .select2-dropdown');
+            if (container.length && !container.find('.s2-header-row').length) {
+                container.find('.select2-results').prepend(`
+                    <div class="s2-header-row">
+                        <div class="s2-add-btn" onmousedown="openAddProductModal(${rn})">
+                            <i class="bi bi-plus-circle-fill"></i> Add Item
+                        </div>
+                        <div class="s2-header-cols">
+                            <span class="product-res-col-sale">SALE PRICE</span>
+                            <span class="product-res-col-purchase">PURCHASE PRICE</span>
+                            <span class="product-res-col-stock">STOCK</span>
+                        </div>
+                    </div>
+                `);
+            }
+        }, 10);
+    });
 }
 
+function formatProductResult(p) {
+    if (!p.id) return p.text;
+    const prod = PRODUCTS.find(x => x.id == p.id);
+    if (!prod) return p.text;
+
+    return $(`
+        <div class="product-res">
+            <div class="product-res-info">
+                <div class="product-res-name">${prod.name}</div>
+                <div class="product-res-code">${prod.code || ''}</div>
+            </div>
+            <div class="product-res-meta">
+                <div class="product-res-col product-res-col-sale">
+                    <div class="product-res-label">SALE PRICE</div>
+                    <div class="product-res-val">${prod.price.toLocaleString()}</div>
+                </div>
+                <div class="product-res-col product-res-col-purchase">
+                    <div class="product-res-label">PURCHASE PRICE</div>
+                    <div class="product-res-val">${prod.purchase_price.toLocaleString()}</div>
+                </div>
+                <div class="product-res-col product-res-col-stock">
+                    <div class="product-res-label">STOCK</div>
+                    <div class="product-res-val product-res-stock ${prod.stock <= 0 ? 'low' : ''}">${prod.stock}</div>
+                </div>
+            </div>
+        </div>
+    `);
+}
+
+/* ── Item change handler ── */
 function onItemChange(sel, rn) {
     const opt = $(sel).find(':selected');
     if (!opt.val()) return;
@@ -473,10 +585,10 @@ function calcRow(rn) {
     if (!row) return;
     const qty   = parseFloat(row.querySelector('.qty-input').value)      || 0;
     const price = parseFloat(row.querySelector('.price-input').value)    || 0;
-    const disc  = parseFloat(row.querySelector('.row-disc-input').value) || 0;
-    const isPct = row.querySelector('.row-disc-toggle').classList.contains('active');
+    // Discount has no UI here; this hidden field only carries forward
+    // whatever was already saved on the line (see addItemRow's comment).
+    const discAmt  = parseFloat(row.querySelector('.row-disc-input').value) || 0;
     const gross    = qty * price;
-    const discAmt  = isPct ? (gross * disc / 100) : disc;
     const rowTotal = Math.max(0, gross - discAmt);
     const span     = row.querySelector('.row-amount');
     span.textContent  = CURR + ' ' + rowTotal.toFixed(2);
@@ -522,26 +634,21 @@ function recalcAll() {
     document.getElementById('grandTotalDisplay').textContent = CURR + ' ' + grandTotal.toFixed(2);
     document.getElementById('grandTotalVal').value           = grandTotal.toFixed(2);
     document.getElementById('taxVal').value                  = taxAmt.toFixed(2);
-    document.getElementById('balanceDueDisplay').textContent = CURR + ' ' + balanceDue.toFixed(2);
     document.getElementById('totalCustomerBalDisplay').textContent = CURR + ' ' + totalCust.toFixed(2);
 
     document.getElementById('footerQty').textContent    = totalQty % 1 === 0 ? totalQty : totalQty.toFixed(2);
     document.getElementById('footerAmount').textContent = SYM + ' ' + subtotal.toFixed(2);
 }
 
-/* ── Discount mode toggle ── */
-
-
-function toggleRowDisc(btn, rn) {
-    const isActive = btn.classList.toggle('active');
-    btn.textContent = isActive ? '%' : 'Amt';
-    calcRow(rn);
-}
-
 /* ── Submit update ── */
 function submitUpdate() {
-    const customerId = document.getElementById('customerSelect').value;
-    if (!customerId) { toastError('Please select a customer.'); return; }
+    // customer_id is intentionally optional — cash/walk-in sales (see
+    // add_invoice_sales.blade.php) have no linked Customer record; their
+    // name/phone live in the notes' WALK-IN DETAILS block instead. "walkin"
+    // is just a placeholder-display sentinel (see the <option> comment
+    // above), not a real customer id.
+    const rawCustomerId = document.getElementById('customerSelect').value;
+    const customerId = rawCustomerId === 'walkin' ? '' : rawCustomerId;
 
     const items = [];
     let valid = true;
@@ -551,10 +658,8 @@ function submitUpdate() {
         if (!itemSel.value) return;
         if (qty <= 0) { toastError('Quantity must be greater than 0.'); valid = false; return; }
         const opt     = $(itemSel).find(':selected');
-        const isPct   = row.querySelector('.row-disc-toggle').classList.contains('active');
-        const disc    = parseFloat(row.querySelector('.row-disc-input').value) || 0;
+        const discAmt = parseFloat(row.querySelector('.row-disc-input').value) || 0;
         const price   = parseFloat(row.querySelector('.price-input').value) || 0;
-        const discAmt = isPct ? (qty * price * disc / 100) : disc;
         items.push({
             product_id:   itemSel.value,
             product_name: opt.text().split('(')[0].trim(),
@@ -570,18 +675,26 @@ function submitUpdate() {
     if (!valid) return;
     if (items.length === 0) { toastError('Please add at least one product.'); return; }
 
+    // Re-attach the walk-in name/phone block in front of the user's notes so
+    // it isn't lost on save when this is still a customer-less cash sale.
+    let notes = document.querySelector('textarea[name="notes"]').value;
+    if (!customerId) {
+        const walkinBlock = document.getElementById('walkinBlockOriginal')?.value || '';
+        if (walkinBlock) notes = walkinBlock + notes;
+    }
+
     const data = {
         _token:         CSRF,
         _method:        'PUT',
-        customer_id:    customerId,
-        branch_id:      document.getElementById('branchSelect').value,
+        customer_id:    customerId || null,
+        branch_id:      document.querySelector('input[name="branch_id"]').value,
         invoice_date:   document.querySelector('input[name="invoice_date"]').value,
-        payment_method: document.getElementById('paymentMethodSelect').value,
+        payment_method: document.querySelector('input[name="payment_method"]').value,
         discount:       parseFloat(document.getElementById('discountInput').value) || 0,
         tax:            0,
         total_amount:   parseFloat(document.getElementById('grandTotalVal').value) || 0,
         paid_amount:    parseFloat(document.getElementById('paidAmountInput').value) || 0,
-        notes:          document.querySelector('textarea[name="notes"]').value,
+        notes,
         items,
     };
 
@@ -609,6 +722,10 @@ function submitUpdate() {
 }
 
 /* ── Toast helpers ── */
+function toastSuccess(msg) {
+    Swal.mixin({ toast:true, position:'top-end', showConfirmButton:false, timer:3000 })
+        .fire({ icon:'success', title:msg });
+}
 function toastError(msg) {
     Swal.mixin({ toast:true, position:'top-end', showConfirmButton:false, timer:4500 })
         .fire({ icon:'error', title:msg });
@@ -616,6 +733,81 @@ function toastError(msg) {
 function toastWarn(msg) {
     Swal.mixin({ toast:true, position:'top-end', showConfirmButton:false, timer:3000 })
         .fire({ icon:'warning', title:msg });
+}
+
+/* ── Add Product Modal ── */
+function openAddProductModal() {
+    $('.item-select').select2('close');
+    document.getElementById('addProductModal').classList.remove('hidden');
+    document.getElementById('newProductName').focus();
+}
+
+function closeAddProductModal() {
+    document.getElementById('addProductModal').classList.add('hidden');
+    document.getElementById('newProductName').value = '';
+    document.getElementById('newProductCategory').selectedIndex = 0;
+    document.getElementById('newProductSellingPrice').value = '0';
+}
+
+function saveNewProduct() {
+    const name   = document.getElementById('newProductName').value.trim();
+    const catId  = document.getElementById('newProductCategory').value;
+    const sPrice = parseFloat(document.getElementById('newProductSellingPrice').value) || 0;
+
+    if (!name) { toastError('Product name is required.'); return; }
+    if (!catId) { toastError('Category is required.'); return; }
+
+    const btn = document.getElementById('saveProductBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split mr-1 animate-spin"></i> Saving…';
+
+    $.ajax({
+        url: R_QUICK_PROD,
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+        data: { product_name: name, category_id: catId, selling_price: sPrice },
+        success: function (res) {
+            toastSuccess('New product added successfully.');
+
+            // The quick-store endpoint returns `selling_price`, but PRODUCTS
+            // (and formatProductResult) key off `price` — normalize before
+            // pushing so the new product renders correctly in the dropdown.
+            const newProd = {
+                id: res.product.id,
+                name: res.product.name,
+                code: res.product.code,
+                price: res.product.selling_price,
+                purchase_price: res.product.purchase_price,
+                unit: res.product.unit,
+                stock: res.product.stock,
+                category_id: res.product.category_id,
+            };
+            PRODUCTS.push(newProd);
+
+            // Update all existing item selects
+            document.querySelectorAll('.item-select').forEach(sel => {
+                const newOption = new Option(newProd.name, newProd.id, false, false);
+                const $opt = $(newOption);
+                $opt.attr('data-price', newProd.price);
+                $opt.attr('data-purchase-price', newProd.purchase_price);
+                $opt.attr('data-code', newProd.code);
+                $opt.attr('data-unit', newProd.unit);
+                $opt.attr('data-stock', newProd.stock);
+                $opt.attr('data-catid', newProd.category_id);
+                $(sel).append($opt);
+            });
+
+            closeAddProductModal();
+        },
+        error: function (xhr) {
+            const errs = xhr.responseJSON?.errors;
+            toastError(errs ? Object.values(errs).flat().join(' | ') : 'Failed to save product.');
+        },
+        complete: function () {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check2-circle"></i><span>Save Product</span>';
+        }
+    });
 }
 </script>
 @endpush

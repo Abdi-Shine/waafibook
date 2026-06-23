@@ -217,26 +217,28 @@
                     Invoice Summary
                 </p>
 
-                {{-- Discount --}}
-                <div class="mb-3">
-                    <label class="block text-[10px] font-black text-primary-dark uppercase tracking-wider mb-1">Discount</label>
-                    <div class="relative">
-                        <input type="number" id="discountInput" name="discount" value="0" min="0" step="1" placeholder="0"
-                               class="w-full pl-3 pr-10 py-2 bg-white border border-gray-200 rounded-lg text-[12px] font-semibold text-primary-dark focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all text-right">
-                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-gray-400">($)</span>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    {{-- Discount --}}
+                    <div>
+                        <label class="block text-[10px] font-black text-primary-dark uppercase tracking-wider mb-1">Discount</label>
+                        <div class="relative">
+                            <input type="number" id="discountInput" name="discount" value="0" min="0" step="1" placeholder="0"
+                                   class="w-full pl-3 pr-10 py-2 bg-white border border-gray-200 rounded-lg text-[12px] font-semibold text-primary-dark focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all text-right">
+                            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-gray-400">($)</span>
+                        </div>
+                    </div>
+
+                    {{-- Paid Amount --}}
+                    <div>
+                        <label class="block text-[10px] font-black text-primary-dark uppercase tracking-wider mb-1">Amount Paid</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-gray-400">{{ $curr }}</span>
+                            <input type="number" name="paid_amount" id="paidAmountInput" value="0" min="0" step="0.01"
+                                   class="w-full pl-7 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-[12px] font-semibold text-primary-dark focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all text-right">
+                        </div>
                     </div>
                 </div>
                 <input type="hidden" id="discountPercent" value="0">
-
-                {{-- Paid Amount --}}
-                <div class="mb-3">
-                    <label class="block text-[10px] font-black text-primary-dark uppercase tracking-wider mb-1">Amount Paid</label>
-                    <div class="relative">
-                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-gray-400">{{ $curr }}</span>
-                        <input type="number" name="paid_amount" id="paidAmountInput" value="0" min="0" step="0.01"
-                               class="w-full pl-7 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-[12px] font-semibold text-primary-dark focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all text-right">
-                    </div>
-                </div>
 
                 {{-- Hidden due date --}}
                 <input type="hidden" name="expected_delivery" id="dueDateInput">
@@ -264,7 +266,6 @@
                     </div>
                 </div>
             </div>
-        </div>
 
         {{-- ── Action Buttons ───────────────────────────────────────────────────── --}}
         <div class="bg-white rounded-[1rem] border border-gray-100 shadow-sm px-6 py-5 flex flex-wrap items-center justify-between">
@@ -337,6 +338,68 @@
     </div>
 </div>
 
+{{-- ── Add Product Modal ─────────────────────────────────────────────────────── --}}
+<div id="addProductModal"
+    class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm hidden modal-overlay">
+    <div class="bg-white rounded-[1.25rem] w-full max-w-4xl max-h-[100vh] overflow-hidden shadow-2xl flex flex-col relative modal-slide-up">
+        {{-- Header --}}
+        <div class="px-6 py-6 bg-primary relative overflow-hidden shrink-0">
+            <div class="flex items-center justify-between relative z-10">
+                <div class="flex items-center gap-4 text-white">
+                    <div class="w-12 h-12 bg-white/10 border border-white/10 rounded-xl flex items-center justify-center text-xl shadow-inner backdrop-blur-md">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <h2 class="text-xl font-bold tracking-tight uppercase">Add New Product</h2>
+                        <p class="text-xs text-white/60 font-medium mt-0.5">Quickly add an item</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeAddProductModal()"
+                    class="w-8 h-8 bg-white/10 border border-white/10 text-white rounded-lg hover:bg-white/20 transition-all flex items-center justify-center shadow-sm">
+                    <i class="bi bi-x-lg text-xs"></i>
+                </button>
+            </div>
+        </div>
+        {{-- Body --}}
+        <div class="px-6 py-6 overflow-y-auto custom-scrollbar flex-grow bg-white space-y-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Product Name <span class="text-primary">*</span></label>
+                    <input type="text" id="newProductName" placeholder="Enter product name"
+                        class="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Category <span class="text-primary">*</span></label>
+                    <select id="newProductCategory"
+                        class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+                        <option value="">Select Category</option>
+                        @foreach($categories as $cat)
+                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Selling Price</label>
+                    <input type="number" id="newProductSellingPrice" placeholder="0.00" value="0" min="0" step="0.01"
+                        class="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                </div>
+            </div>
+        </div>
+        {{-- Footer --}}
+        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/80 flex items-center justify-between">
+            <button type="button" onclick="closeAddProductModal()" class="btn-premium-accent">
+                Cancel
+            </button>
+            <button type="button" onclick="saveNewProduct()" id="saveProductBtn" class="btn-premium-primary">
+                <i class="bi bi-check2-circle"></i>
+                <span>Save Product</span>
+            </button>
+        </div>
+    </div>
+</div>
+
 {{-- ─────────────────────────────────────────────────── --}}
 {{-- Product/Category data for JS                        --}}
 {{-- ─────────────────────────────────────────────────── --}}
@@ -378,82 +441,18 @@ const locationData = {
 };
 
 function handleLocationTypeChange() {
-    const type = document.getElementById('locationType').value;
-    const select = document.getElementById('locationItem');
-    select.innerHTML = `<option value="">Select Branch</option>`;
-    locationData[type].forEach(item => {
-        const opt = document.createElement('option');
-        opt.value = item.value;
-        opt.textContent = item.label;
-        opt.dataset.branch = item.branchId;
-        select.appendChild(opt);
-    });
     handleLocationItemChange();
 }
 
 function handleLocationItemChange() {
+    // locationItem and paymentAccountSelect are both hidden <input> elements
+    // on this page (not <select>s), so the branch id is derived from
+    // locationItem's "branch_<id>" value directly, and there is no account
+    // dropdown here to filter/auto-select.
     const val = document.getElementById('locationItem').value;
-    const itemSelect = document.getElementById('locationItem');
-    const selectedOption = itemSelect.options[itemSelect.selectedIndex];
-    
-    const branchId = selectedOption ? (selectedOption.dataset.branch || '') : '';
+    const branchId = val.startsWith('branch_') ? val.slice('branch_'.length) : '';
 
     document.getElementById('branch_id').value = branchId;
-
-    // Filter Account Name
-    const accountSelect = document.getElementById('paymentAccountSelect');
-    if (!accountSelect) return;
-
-    // Clear selection initially
-    accountSelect.value = "";
-
-    const options = accountSelect.options;
-    let visibleCount = 0;
-    let autoSelectValue = "";
-
-    // Check if there are ANY accounts explicitly linked to this branch
-    let hasLinkedAccounts = false;
-    if (branchId) {
-        for (let i = 0; i < options.length; i++) {
-            if (options[i].getAttribute('data-branch') == branchId) {
-                hasLinkedAccounts = true;
-                break;
-            }
-        }
-    }
-
-    for (let i = 0; i < options.length; i++) {
-        const opt = options[i];
-        if (opt.value === "") continue;
-
-        const optionBranchId = opt.getAttribute('data-branch');
-
-        if (!branchId) {
-            opt.style.display = 'block';
-            visibleCount++;
-            autoSelectValue = opt.value;
-        } else {
-            // Priority: Filter by Branch
-            if (optionBranchId == branchId) {
-                opt.style.display = 'block';
-                visibleCount++;
-                autoSelectValue = opt.value;
-            } else if (hasLinkedAccounts) {
-                opt.style.display = 'none';
-            } else if (!optionBranchId || optionBranchId == "null" || optionBranchId == "") {
-                opt.style.display = 'block';
-                visibleCount++;
-                autoSelectValue = opt.value;
-            } else {
-                opt.style.display = 'none';
-            }
-        }
-    }
-
-    // Connect automatic: If only one account matches this location, select it!
-    if (visibleCount === 1) {
-        accountSelect.value = autoSelectValue;
-    }
 }
 
 function handleTargetLocationTypeChange() {
@@ -473,47 +472,7 @@ function handleTargetLocationItemChange() {
     // Logic for usage of target location can be added here if needed
 }
 
-// Global listener for Account select to sync back to branch
 $(document).ready(function() {
-    $('#paymentAccountSelect').on('change', function() {
-        const selectedOpt = this.options[this.selectedIndex];
-        const branchId = selectedOpt ? selectedOpt.getAttribute('data-branch') : '';
-        
-        if (branchId && branchId !== 'null' && branchId !== '') {
-            const currentBranchId = document.getElementById('branch_id').value;
-            if (currentBranchId != branchId) {
-                // Force location to Branch type
-                const locType = document.getElementById('locationType');
-                if (locType.value !== 'branch') {
-                    locType.value = 'branch';
-                    handleLocationTypeChange();
-                }
-                
-                // Select the branch
-                const locItem = document.getElementById('locationItem');
-                locItem.value = 'branch_' + branchId;
-                
-                // Trigger change without clearing the account we just picked
-                const val = locItem.value;
-                const opt = locItem.options[locItem.selectedIndex];
-                document.getElementById('branch_id').value = branchId;
-                
-                // Re-filter accounts but don't clear value
-                const options = document.getElementById('paymentAccountSelect').options;
-                for (let i = 0; i < options.length; i++) {
-                    const o = options[i];
-                    if (o.value === "") continue;
-                    const oBranchId = o.getAttribute('data-branch');
-                    if (oBranchId == branchId) {
-                        o.style.display = 'block';
-                    } else {
-                        o.style.display = 'none';
-                    }
-                }
-            }
-        }
-    });
-
     // --- PRE-FILL DATA ---
     // Pre-fill Supplier
     $('#supplierSelect').val('{{ $bill->supplier_id }}').trigger('change');
@@ -527,7 +486,14 @@ $(document).ready(function() {
     if (partyBalanceDisplay) {
         const supplierBal = parseFloat({{ $bill->supplier->amount_balance ?? 0 }}) || 0;
         partyBalanceDisplay.textContent = supplierBal.toLocaleString('en', {minimumFractionDigits:0, maximumFractionDigits:2});
-        window._customerPrevBalance = supplierBal;
+
+        // The supplier's stored balance already includes this bill's current
+        // (pre-edit) net impact, which the backend reverts before applying
+        // the edited total (see PurchaseController::updateBill's $balanceDiff
+        // logic) — so the live preview must subtract that same old impact,
+        // otherwise editing the bill double-counts it.
+        const oldNetImpact = parseFloat({{ ($bill->total_amount ?? 0) - ($bill->paid_amount ?? 0) }}) || 0;
+        window._customerPrevBalance = supplierBal - oldNetImpact;
     }
 
     // Pre-fill Location
@@ -667,10 +633,11 @@ function addItemRow(prefill = null) {
             <input type="text" class="tbl-clean-input cat-input" placeholder="Category">
         </td>
 
-        {{-- Item Name (plain text) --}}
+        {{-- Item Select --}}
         <td class="px-2 py-1 border-r border-gray-100">
-            <input type="text" class="tbl-clean-input item-select" data-row="${n}"
-                   placeholder="Enter item name" value="${prefill && prefill.pname ? prefill.pname.replace(/"/g, '&quot;') : ''}">
+            <select class="item-select" data-row="${n}">
+                ${buildItemOptions(prefill)}
+            </select>
         </td>
 
         {{-- Optional: Code --}}
@@ -730,18 +697,146 @@ function addItemRow(prefill = null) {
 
     document.getElementById('itemsTbody').appendChild(tr);
 
+    // Init Select2 for item select
+    $(tr).find('.item-select').select2({
+        placeholder: 'Search and Select Item',
+        width: '100%',
+        dropdownAutoWidth: true,
+        templateResult: formatProductResult,
+        language: {
+            noResults: function() {
+                return `<div class="p-2 text-center text-gray-400">No items found matching search</div>`;
+            }
+        },
+        escapeMarkup: function(markup) { return markup; }
+    }).on('select2:select', function() {
+        onItemChange(this, n);
+    }).on('select2:open', function() {
+        window._lastOpenedSelect2 = this;
+
+        // Inject sticky header & Add Item button to the dropdown container
+        setTimeout(() => {
+            const container = $('.select2-container--open .select2-dropdown');
+            if (container.length && !container.find('.s2-header-row').length) {
+                container.find('.select2-results').prepend(`
+                    <div class="s2-header-row">
+                        <div class="s2-add-btn" onmousedown="openAddProductModal()">
+                            <i class="bi bi-plus-circle-fill"></i> Add Item
+                        </div>
+                        <div class="s2-header-cols">
+                            <span class="product-res-col-sale">SALE PRICE</span>
+                            <span class="product-res-col-purchase">PURCHASE PRICE</span>
+                            <span class="product-res-col-stock">STOCK</span>
+                        </div>
+                    </div>
+                `);
+            }
+        }, 10);
+    });
+
     renumberRows();
     recalcAll();
 }
 
+/* ─────────────────────────── SELECT2 OPTIONS/FORMATTING ── */
+function buildItemOptions(prefill) {
+    let html = `<option value="">Select Item</option>`;
+    let matched = false;
+    PRODUCTS.forEach(p => {
+        const isSelected = !!(prefill && prefill.pid && p.id == prefill.pid);
+        if (isSelected) matched = true;
+        html += `<option value="${p.id}" ${isSelected ? 'selected' : ''}
+                        data-selling-price="${p.selling_price}"
+                        data-purchase-price="${p.purchase_price}"
+                        data-code="${p.code}"
+                        data-unit="${p.unit}"
+                        data-stock="${p.stock}"
+                        data-catid="${p.category_id}">${p.name}</option>`;
+    });
+    // Older bills may have a typed product name that never matched a catalog
+    // product (saved before product_id was tracked) — inject it as an extra
+    // selected option so Select2 shows it correctly from the very first
+    // render, instead of a post-init .val() call (which doesn't stick).
+    if (prefill && prefill.pname && !matched) {
+        const safeName = prefill.pname.replace(/"/g, '&quot;');
+        html += `<option value="legacy_${rowCounter}" selected
+                        data-purchase-price="${prefill.price ?? 0}"
+                        data-code="${prefill.code ?? ''}"
+                        data-unit="${prefill.unit ?? ''}">${safeName}</option>`;
+    }
+    return html;
+}
+
+function formatProductResult(p) {
+    if (!p.id) return p.text;
+    const prod = PRODUCTS.find(x => x.id == p.id);
+    if (!prod) return p.text;
+
+    return $(`
+        <div class="product-res">
+            <div class="product-res-info">
+                <div class="product-res-name">${prod.name}</div>
+                <div class="product-res-code">${prod.code || ''}</div>
+            </div>
+            <div class="product-res-meta">
+                <div class="product-res-col product-res-col-sale">
+                    <div class="product-res-label">SALE PRICE</div>
+                    <div class="product-res-val">${prod.selling_price.toLocaleString()}</div>
+                </div>
+                <div class="product-res-col product-res-col-purchase">
+                    <div class="product-res-label">PURCHASE PRICE</div>
+                    <div class="product-res-val">${prod.purchase_price.toLocaleString()}</div>
+                </div>
+                <div class="product-res-col product-res-col-stock">
+                    <div class="product-res-label">STOCK</div>
+                    <div class="product-res-val product-res-stock ${prod.stock <= 0 ? 'low' : ''}">${prod.stock}</div>
+                </div>
+            </div>
+        </div>
+    `);
+}
+
+/* ─────────────────────────── ITEM CHANGE ────────── */
+function onItemChange(sel, rn) {
+    const opt = $(sel).find(':selected');
+    if (!opt.val()) return;
+    const row = document.querySelector(`tr[data-row="${rn}"]`);
+
+    const pPrice = opt.attr('data-purchase-price') || 0;
+    const unit   = opt.attr('data-unit') || '';
+    const code   = opt.attr('data-code') || '';
+
+    row.querySelector('.price-input').value = pPrice;
+    row.querySelector('.code-input').value  = code;
+
+    const unitSel = row.querySelector('.unit-input');
+    if (unit) {
+        for (let o of unitSel.options) {
+            if (o.value.toLowerCase() === unit.toLowerCase()) { o.selected = true; break; }
+        }
+    } else {
+        unitSel.selectedIndex = 0; // Default to NONE
+    }
+
+    calcRow(rn);
+}
+
 function removeBillRow(btn) {
     const rows = document.querySelectorAll('#itemsTbody .item-row');
-    if (rows.length <= 1) { 
+    if (rows.length <= 1) {
         toastWarn('At least one row is required.'); 
         return; 
     }
     const row = btn.closest('tr');
     if (!row) return;
+
+    // Safely destroy Select2 if it exists
+    try {
+        const sel = $(row).find('.item-select');
+        if (sel.data('select2')) {
+            sel.select2('destroy');
+        }
+    } catch (e) { console.warn('Select2 destroy failed', e); }
 
     row.remove();
     renumberRows();
@@ -852,8 +947,9 @@ function collectFormData(isDraft = false) {
     document.querySelectorAll('#itemsTbody .item-row').forEach(row => {
         const itemSel = row.querySelector('.item-select');
         const qty     = parseFloat(row.querySelector('.qty-input').value) || 0;
-        const itemName = itemSel.value.trim();
-        if (!itemName) return; // skip blank rows
+        if (!itemSel.value) return; // skip blank rows
+
+        const opt = $(itemSel).find(':selected');
         if (!isDraft && qty <= 0) { toastError('Quantity must be greater than 0.'); valid = false; return; }
 
         const isPct   = row.querySelector('.row-disc-toggle').classList.contains('active');
@@ -861,12 +957,16 @@ function collectFormData(isDraft = false) {
         const price   = parseFloat(row.querySelector('.price-input').value) || 0;
         const discAmt = isPct ? (qty * price * disc / 100) : disc;
 
-        // The backend resolves/creates the product by name when no numeric
-        // id is supplied, so a plain typed name is always sent as-is here.
+        // An existing catalog product has a numeric id; a legacy/typed name
+        // (see buildItemOptions) has a non-numeric placeholder value, so the
+        // backend resolves/creates the product by name instead.
+        const pid   = itemSel.value;
+        const isNew = isNaN(pid);
+
         items.push({
-            product_id:    null,
-            product_name:  itemName,
-            product_code:  row.querySelector('.code-input').value || null,
+            product_id:    isNew ? null : pid,
+            product_name:  opt.text().split('(')[0].trim(),
+            product_code:  row.querySelector('.code-input').value || opt.attr('data-code') || null,
             unit:          row.querySelector('.unit-input').value || 'Piece',
             quantity:      qty,
             unit_price:    price,
@@ -1010,6 +1110,70 @@ function saveNewSupplier() {
         complete: function() {
             btn.disabled = false;
             btn.innerHTML = '<i class="bi bi-check-lg mr-1"></i> Save Supplier';
+        }
+    });
+}
+
+/* ─────────────────────────── ADD PRODUCT MODAL ────── */
+function openAddProductModal() {
+    // Close select2 dropdown if open
+    $('.item-select').select2('close');
+    document.getElementById('addProductModal').classList.remove('hidden');
+    document.getElementById('newProductName').focus();
+}
+
+function closeAddProductModal() {
+    document.getElementById('addProductModal').classList.add('hidden');
+    document.getElementById('newProductName').value = '';
+    document.getElementById('newProductCategory').selectedIndex = 0;
+    document.getElementById('newProductSellingPrice').value = '0';
+}
+
+function saveNewProduct() {
+    const name    = document.getElementById('newProductName').value.trim();
+    const catId   = document.getElementById('newProductCategory').value;
+    const sPrice  = parseFloat(document.getElementById('newProductSellingPrice').value) || 0;
+
+    if (!name) { toastError('Product name is required.'); return; }
+    if (!catId) { toastError('Category is required.'); return; }
+
+    const btn = document.getElementById('saveProductBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split mr-1 animate-spin"></i> Saving…';
+
+    $.ajax({
+        url: R_QUICK_PROD,
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+        data: { product_name: name, category_id: catId, selling_price: sPrice },
+        success: function(res) {
+            toastSuccess('New product added successfully.');
+
+            // Push to local PRODUCTS array so new rows can use it
+            PRODUCTS.push(res.product);
+
+            // Update all existing item selects
+            document.querySelectorAll('.item-select').forEach(sel => {
+                const newOption = new Option(res.product.name, res.product.id, false, false);
+                const $opt = $(newOption);
+                $opt.attr('data-selling-price', res.product.selling_price);
+                $opt.attr('data-purchase-price', res.product.purchase_price);
+                $opt.attr('data-code', res.product.code);
+                $opt.attr('data-unit', res.product.unit);
+                $opt.attr('data-stock', res.product.stock);
+                $opt.attr('data-catid', res.product.category_id);
+                $(sel).append($opt);
+            });
+
+            closeAddProductModal();
+        },
+        error: function(xhr) {
+            const errs = xhr.responseJSON?.errors;
+            toastError(errs ? Object.values(errs).flat().join(' | ') : 'Failed to save product.');
+        },
+        complete: function() {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check2-circle"></i><span>Save Product</span>';
         }
     });
 }
