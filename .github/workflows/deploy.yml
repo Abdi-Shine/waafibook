@@ -80,3 +80,13 @@ jobs:
             chmod -R 755 public
 
             echo "=== Deployment Complete ==="
+
+      # ── 7. Bust PHP-FPM's opcode cache ─────────────────────────────────────
+      # On shared hosting, opcache often doesn't revalidate file timestamps
+      # promptly, so FPM workers can keep serving pre-deploy bytecode for a
+      # while after rsync + artisan caching above. Hit a standalone endpoint
+      # (outside the Laravel bootstrap) that resets it on the same workers
+      # serving real requests.
+      - name: Reset OPcache
+        run: |
+          curl -fsS "https://ims.thehorntech.com/opcache-clear.php?token=horntech-deploy-cache-bust-7f3a91" || true
