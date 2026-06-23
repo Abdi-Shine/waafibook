@@ -568,7 +568,19 @@ $(document).ready(function() {
     // --- PRE-FILL DATA ---
     // Pre-fill Supplier
     $('#supplierSelect').val('{{ $bill->supplier_id }}').trigger('change');
-    
+
+    // The phone/balance display only updates via the supplierSelect 'change'
+    // handler attached in a later $(document).ready block, which isn't
+    // registered yet when the trigger('change') above fires — so set them
+    // directly here from the bill's own supplier instead of relying on it.
+    document.getElementById('billingName').value = {!! json_encode($bill->supplier->phone ?? '') !!};
+    const partyBalanceDisplay = document.getElementById('partyBalanceDisplay');
+    if (partyBalanceDisplay) {
+        const supplierBal = parseFloat({{ $bill->supplier->amount_balance ?? 0 }}) || 0;
+        partyBalanceDisplay.textContent = supplierBal.toLocaleString('en', {minimumFractionDigits:0, maximumFractionDigits:2});
+        window._customerPrevBalance = supplierBal;
+    }
+
     // Pre-fill Location
     const locType = 'branch';
     const locItem = '{{ "branch_".$bill->branch_id }}';
