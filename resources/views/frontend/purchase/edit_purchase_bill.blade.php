@@ -37,15 +37,15 @@
     <form id="invoiceForm" autocomplete="off" method="POST" action="{{ route('purchase.bill.update', $bill->id) }}">
         @csrf
 
-        {{-- ── Top Row: Customer Info + Invoice Details ──────────────────────── --}}
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+        {{-- ── Top Row: Customer Info ─────────────────────────────────────────── --}}
+        <div class="mb-4">
 
             {{-- Supplier Information --}}
-            <div class="lg:col-span-2 bg-white rounded-[1rem] border border-gray-100 shadow-sm p-6 mb-6">
+            <div class="bg-white rounded-[1rem] border border-gray-100 shadow-sm p-6 mb-6">
                 <p class="text-[11px] font-bold text-primary-dark uppercase tracking-wider mb-6 pb-2 border-b border-gray-100">
                     Supplier & Logistics
                 </p>
-                <div class="grid grid-cols-2 gap-x-6 gap-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
 
                     {{-- Left: Supplier select --}}
                     <div class="space-y-1.5">
@@ -82,6 +82,21 @@
                             class="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
                     </div>
 
+                    {{-- Bill Number (read-only) --}}
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Bill Number</label>
+                        <div class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-bold text-primary-dark">{{ $bill->bill_number }}</div>
+                        <input type="hidden" name="purchase_no" value="{{ $bill->bill_number }}">
+                    </div>
+
+                    {{-- Bill Date --}}
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Bill Date</label>
+                        <input type="date" id="purchaseDateInput" name="purchase_date"
+                               value="{{ \Carbon\Carbon::parse($bill->bill_date)->format('Y-m-d') }}"
+                               class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                    </div>
+
                     {{-- Hidden branch & account --}}
                     <input type="hidden" id="locationType" value="branch">
                     <input type="hidden" id="locationItem" value="branch_{{ $bill->branch_id }}">
@@ -89,24 +104,10 @@
 
                 </div>
                 <input type="hidden" name="purchase_type" id="purchase_type" value="Purchase">
-            </div>
 
-
-            {{-- Bill Number + Date --}}
-            <div class="bg-white rounded-[1rem] border border-gray-100 shadow-sm p-6 mb-6">
-                <p class="text-[11px] font-bold text-primary-dark uppercase tracking-wider mb-6 pb-2 border-b border-gray-100">
-                    Bill Details
-                </p>
-                <div class="mb-4">
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Bill Number</label>
-                    <div class="text-[20px] font-black text-primary-dark tracking-tight">{{ $bill->bill_number }}</div>
-                    <input type="hidden" name="purchase_no" value="{{ $bill->bill_number }}">
-                </div>
-                <input type="hidden" name="purchase_date" value="{{ \Carbon\Carbon::parse($bill->bill_date)->format('Y-m-d') }}">
+                {{-- Hidden bill metadata --}}
                 <input type="hidden" name="supplier_invoice_no" value="{{ $bill->supplier_invoice_no }}">
                 <input type="hidden" id="targetLocationItem" value="branch_{{ $bill->branch_id }}">
-
-                {{-- Hidden inputs for backend --}}
                 <input type="hidden" name="branch_id" id="branch_id">
             </div>
         </div>
@@ -823,19 +824,70 @@ function addItemRow() {
         placeholder: 'Search and Select Item',
         width: '100%',
         dropdownAutoWidth: true,
+        templateResult: formatProductResult,
         language: {
             noResults: function() {
                 return `<div class="p-2 text-center text-gray-400">No items found matching search</div>`;
             }
-        }
+        },
+        escapeMarkup: function(markup) { return markup; }
     }).on('select2:select', function() {
         onItemChange(this, n);
     }).on('select2:open', function() {
         window._lastOpenedSelect2 = this;
+        
+        // Inject sticky header & Add Item button to the dropdown container
+        setTimeout(() => {
+            const container = $('.select2-container--open .select2-dropdown');
+            if (container.length && !container.find('.s2-header-row').length) {
+                container.find('.select2-results').prepend(`
+                    <div class="s2-header-row">
+                        <div class="s2-add-btn" onmousedown="openAddProductModal()">
+                            <i class="bi bi-plus-circle-fill"></i> Add Item
+                        </div>
+                        <div class="s2-header-cols">
+                            <span class="product-res-col-sale">SALE PRICE</span>
+                            <span class="product-res-col-purchase">PURCHASE PRICE</span>
+                            <span class="product-res-col-stock">STOCK</span>
+                        </div>
+                    </div>
+                `);
+            }
+        }, 10);
     });
 
     renumberRows();
     recalcAll();
+}
+
+/* ─────────────────────────── SELECT2 FORMATTING ── */
+function formatProductResult(p) {
+    if (!p.id) return p.text;
+    const prod = PRODUCTS.find(x => x.id == p.id);
+    if (!prod) return p.text;
+
+    return $(`
+        <div class="product-res">
+            <div class="product-res-info">
+                <div class="product-res-name">${prod.name}</div>
+                <div class="product-res-code">${prod.code || ''}</div>
+            </div>
+            <div class="product-res-meta">
+                <div class="product-res-col product-res-col-sale">
+                    <div class="product-res-label">SALE PRICE</div>
+                    <div class="product-res-val">${prod.selling_price.toLocaleString()}</div>
+                </div>
+                <div class="product-res-col product-res-col-purchase">
+                    <div class="product-res-label">PURCHASE PRICE</div>
+                    <div class="product-res-val">${prod.purchase_price.toLocaleString()}</div>
+                </div>
+                <div class="product-res-col product-res-col-stock">
+                    <div class="product-res-label">STOCK</div>
+                    <div class="product-res-val product-res-stock ${prod.stock <= 0 ? 'low' : ''}">${prod.stock}</div>
+                </div>
+            </div>
+        </div>
+    `);
 }
 
 /* ─────────────────────────── ITEM CHANGE ────────── */
