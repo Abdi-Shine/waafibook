@@ -337,57 +337,6 @@
     </div>
 </div>
 
-{{-- ── Add Product Modal ──────────────────────────────────────────────────────── --}}
-<div id="addProductModal"
-     class="fixed inset-0 z-50 flex items-center justify-center hidden modal-overlay">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[100vh] overflow-hidden modal-slide-up">
-        {{-- Header --}}
-        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 modal-header-primary">
-            <div class="flex items-center gap-2">
-                <i class="bi bi-box-seam text-white text-base"></i>
-                <h3 class="text-[15px] font-black text-white">Add New Product</h3>
-            </div>
-            <button type="button" onclick="closeAddProductModal()"
-                    class="w-7 h-7 rounded-full bg-white/20 text-white hover:bg-white/30 flex items-center justify-center transition-all">
-                <i class="bi bi-x text-base"></i>
-            </button>
-        </div>
-        {{-- Body --}}
-        <div class="px-6 py-5 space-y-4">
-            <div>
-                <label class="text-[11px] font-bold text-gray-600 block mb-1.5">Product Name <span class="text-primary">*</span></label>
-                <input type="text" id="newProductName" placeholder="Enter product name"
-                       class="w-full border border-gray-200 rounded-lg px-3 py-2 text-[13px] font-medium text-gray-700 focus:outline-none focus:border-primary">
-            </div>
-            <div>
-                <label class="text-[11px] font-bold text-gray-600 block mb-1.5">Category <span class="text-primary">*</span></label>
-                <select id="newProductCategory" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-[13px] font-medium text-gray-700 focus:outline-none focus:border-primary">
-                    <option value="">Select Category</option>
-                    @foreach($categories as $cat)
-                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label class="text-[11px] font-bold text-gray-600 block mb-1.5">Selling Price</label>
-                <input type="number" id="newProductSellingPrice" placeholder="0.00" value="0" min="0" step="0.01"
-                       class="w-full border border-gray-200 rounded-lg px-3 py-2 text-[13px] font-medium text-gray-700 focus:outline-none focus:border-primary">
-            </div>
-        </div>
-        {{-- Footer --}}
-        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
-            <button type="button" onclick="closeAddProductModal()"
-                    class="px-4 py-2 bg-white border border-gray-200 text-gray-600 font-semibold rounded-lg text-[12px] hover:bg-gray-100 transition-all">
-                Cancel
-            </button>
-            <button type="button" onclick="saveNewProduct()" id="saveProductBtn"
-                    class="btn-premium-primary">
-                <i class="bi bi-check-lg mr-1"></i> Save Product
-            </button>
-        </div>
-    </div>
-</div>
-
 {{-- ─────────────────────────────────────────────────── --}}
 {{-- Product/Category data for JS                        --}}
 {{-- ─────────────────────────────────────────────────── --}}
@@ -702,20 +651,6 @@ function calculateCurrentSubtotal() {
     return subtotal;
 }
 
-function buildItemOptions(catId) {
-    let html = `<option value="">Select Item</option>`;
-    PRODUCTS.forEach(p => {
-        html += `<option value="${p.id}"
-            data-selling-price="${p.selling_price}"
-            data-purchase-price="${p.purchase_price}"
-            data-code="${p.code}"
-            data-unit="${p.unit}"
-            data-stock="${p.stock}"
-            data-catid="${p.category_id}">${p.name}</option>`;
-    });
-    return html;
-}
-
 /* ─────────────────────────── ADD ROW ────────────── */
 function addItemRow(prefill = null) {
     rowCounter++;
@@ -723,21 +658,6 @@ function addItemRow(prefill = null) {
     const tr = document.createElement('tr');
     tr.className = 'item-row';
     tr.dataset.row = n;
-
-    // Mark the matching option (or inject a synthetic one for legacy items
-    // never linked to a real product) as selected directly in the markup,
-    // BEFORE Select2 initializes on this row — Select2 reads whatever the
-    // native <select> already has selected at init time, which is the only
-    // reliable way to pre-select a value (setting it afterward via
-    // .val().trigger('change') is not consistently picked up).
-    let itemOptionsHtml = buildItemOptions('ALL');
-    if (prefill && prefill.pid) {
-        const pidStr = String(prefill.pid);
-        itemOptionsHtml = itemOptionsHtml.replace(`value="${pidStr}"`, `value="${pidStr}" selected`);
-    } else if (prefill && prefill.pname) {
-        const escapedName = prefill.pname.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-        itemOptionsHtml += `<option value="${escapedName}" selected>${escapedName}</option>`;
-    }
 
     tr.innerHTML = `
         <td class="px-4 py-3 text-[11px] font-black text-gray-400 text-center border-r border-gray-100 row-num">${n}</td>
@@ -747,11 +667,10 @@ function addItemRow(prefill = null) {
             <input type="text" class="tbl-clean-input cat-input" placeholder="Category">
         </td>
 
-        {{-- Item Select --}}
+        {{-- Item Name (plain text) --}}
         <td class="px-2 py-1 border-r border-gray-100">
-            <select class="item-select" data-row="${n}">
-                ${itemOptionsHtml}
-            </select>
+            <input type="text" class="tbl-clean-input item-select" data-row="${n}"
+                   placeholder="Enter item name" value="${prefill && prefill.pname ? prefill.pname.replace(/"/g, '&quot;') : ''}">
         </td>
 
         {{-- Optional: Code --}}
@@ -811,53 +730,8 @@ function addItemRow(prefill = null) {
 
     document.getElementById('itemsTbody').appendChild(tr);
 
-    // Init Select2 for item select. The correct option (or synthetic
-    // option for a legacy item with no linked product) was already marked
-    // selected directly in the markup above, so Select2 picks it up
-    // automatically at init time — no post-init .val()/.trigger() needed.
-    $(tr).find('.item-select').select2({
-        placeholder: 'Search and Select Item',
-        width: '100%',
-        dropdownAutoWidth: true,
-        language: {
-            noResults: function() {
-                return `<div class="p-2 text-center text-gray-400">No items found matching search</div>`;
-            }
-        }
-    }).on('select2:select', function() {
-        onItemChange(this, n);
-    }).on('select2:open', function() {
-        window._lastOpenedSelect2 = this;
-    });
-
     renumberRows();
     recalcAll();
-}
-
-/* ─────────────────────────── ITEM CHANGE ────────── */
-function onItemChange(sel, rn) {
-    const opt   = $(sel).find(':selected');
-    if (!opt.val()) return;
-    const row   = document.querySelector(`tr[data-row="${rn}"]`);
-
-    const pPrice = opt.attr('data-purchase-price') || 0;
-    const unit   = opt.attr('data-unit') || '';
-    const code   = opt.attr('data-code') || '';
-
-    row.querySelector('.price-input').value = pPrice;
-    row.querySelector('.code-input').value  = code;
-    
-    // Set unit
-    const unitSel = row.querySelector('.unit-input');
-    if (unit) {
-        for (let o of unitSel.options) { 
-            if (o.value.toLowerCase() === unit.toLowerCase()) { o.selected = true; break; } 
-        }
-    } else {
-        unitSel.selectedIndex = 0; // Default to NONE
-    }
-
-    calcRow(rn);
 }
 
 function removeBillRow(btn) {
@@ -868,14 +742,6 @@ function removeBillRow(btn) {
     }
     const row = btn.closest('tr');
     if (!row) return;
-
-    // Safely destroy Select2 if it exists
-    try {
-        const sel = $(row).find('.item-select');
-        if (sel.data('select2')) {
-            sel.select2('destroy');
-        }
-    } catch(e) { console.warn('Select2 destroy failed', e); }
 
     row.remove();
     renumberRows();
@@ -986,24 +852,21 @@ function collectFormData(isDraft = false) {
     document.querySelectorAll('#itemsTbody .item-row').forEach(row => {
         const itemSel = row.querySelector('.item-select');
         const qty     = parseFloat(row.querySelector('.qty-input').value) || 0;
-        if (!itemSel.value) return; // skip blank rows
+        const itemName = itemSel.value.trim();
+        if (!itemName) return; // skip blank rows
         if (!isDraft && qty <= 0) { toastError('Quantity must be greater than 0.'); valid = false; return; }
 
-        const opt     = $(itemSel).find(':selected');
         const isPct   = row.querySelector('.row-disc-toggle').classList.contains('active');
         const disc    = parseFloat(row.querySelector('.row-disc-input').value) || 0;
         const price   = parseFloat(row.querySelector('.price-input').value) || 0;
         const discAmt = isPct ? (qty * price * disc / 100) : disc;
-        
-        // If it's an existing product, it will have a numeric ID. 
-        // If it's a new tag, Select2 sets value = text.
-        const pid     = itemSel.value;
-        const isNew   = isNaN(pid); 
 
+        // The backend resolves/creates the product by name when no numeric
+        // id is supplied, so a plain typed name is always sent as-is here.
         items.push({
-            product_id:    isNew ? null : pid,
-            product_name:  opt.text().split('(')[0].trim(),
-            product_code:  row.querySelector('.code-input').value || opt.attr('data-code') || null,
+            product_id:    null,
+            product_name:  itemName,
+            product_code:  row.querySelector('.code-input').value || null,
             unit:          row.querySelector('.unit-input').value || 'Piece',
             quantity:      qty,
             unit_price:    price,
@@ -1147,75 +1010,6 @@ function saveNewSupplier() {
         complete: function() {
             btn.disabled = false;
             btn.innerHTML = '<i class="bi bi-check-lg mr-1"></i> Save Supplier';
-        }
-    });
-}
-
-/* ─────────────────────────── ADD PRODUCT MODAL ────── */
-function openAddProductModal() {
-    // Close select2 dropdown if open
-    $('.item-select').select2('close');
-    document.getElementById('addProductModal').classList.remove('hidden');
-    document.getElementById('newProductName').focus();
-}
-
-function closeAddProductModal() {
-    document.getElementById('addProductModal').classList.add('hidden');
-    document.getElementById('newProductName').value = '';
-    document.getElementById('newProductCategory').selectedIndex = 0;
-    document.getElementById('newProductSellingPrice').value = '0';
-}
-
-function saveNewProduct() {
-    const name  = document.getElementById('newProductName').value.trim();
-    const catId = document.getElementById('newProductCategory').value;
-    const sPrice = parseFloat(document.getElementById('newProductSellingPrice').value) || 0;
-
-    if (!name) { toastError('Product name is required.'); return; }
-    if (!catId) { toastError('Category is required.'); return; }
-
-    const btn = document.getElementById('saveProductBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="bi bi-hourglass-split mr-1 animate-spin"></i> Saving…';
-
-    $.ajax({
-        url: R_QUICK_PROD,
-        method: 'POST',
-        headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
-        data: { product_name: name, category_id: catId, selling_price: sPrice },
-        success: function(res) {
-            toastSuccess('New product added successfully.');
-            
-            // Push to local PRODUCTS array so new rows can use it
-            PRODUCTS.push(res.product);
-
-            // Update all existing item selects
-            document.querySelectorAll('.item-select').forEach(sel => {
-                const newOption = new Option(res.product.name, res.product.id, false, false);
-                const $opt = $(newOption);
-                $opt.attr('data-selling-price', res.product.selling_price);
-                $opt.attr('data-purchase-price', res.product.purchase_price);
-                $opt.attr('data-code', res.product.code);
-                $opt.attr('data-unit', res.product.unit);
-                $opt.attr('data-stock', res.product.stock);
-                $opt.attr('data-catid', res.product.category_id);
-                $(sel).append($opt);
-            });
-            
-            // Auto-select in the dropdown that was actually being used
-            if (window._lastOpenedSelect2) {
-                $(window._lastOpenedSelect2).val(res.product.id).trigger('change');
-            }
-            
-            closeAddProductModal();
-        },
-        error: function(xhr) {
-            const errs = xhr.responseJSON?.errors;
-            toastError(errs ? Object.values(errs).flat().join(' | ') : 'Failed to save product.');
-        },
-        complete: function() {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-check-lg mr-1"></i> Save Product';
         }
     });
 }
