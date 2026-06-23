@@ -695,10 +695,12 @@ class PurchaseController extends Controller
             $payableAccount = Account::query()->where('company_id', $cid)->where('code', '2110')->first()
                            ?: Account::query()->where('company_id', $cid)->where('name', 'like', '%Accounts Payable%')->first();
 
-            /** @var JournalEntry|null $lastEntry */
-            $lastEntry = JournalEntry::query()->latest('id')->first();
-            $nextEId = $lastEntry ? ($lastEntry->id + 1) : 1;
-            $entry_no = 'EN-PB-' . date('Y') . '-' . str_pad($nextEId, 6, '0', STR_PAD_LEFT);
+            // Derived from the bill's own (globally unique) primary key rather
+            // than "last journal entry id + 1" — the latter races under
+            // concurrent requests and can collide across companies sharing
+            // this database, causing a journal_entries_entry_number_unique
+            // violation (e.g. two companies' first bill both computing "1").
+            $entry_no = 'EN-PB-' . date('Y') . '-' . str_pad($bill->id, 6, '0', STR_PAD_LEFT);
 
             $journal = JournalEntry::query()->create([
                 'entry_number' => $entry_no,
@@ -776,7 +778,7 @@ class PurchaseController extends Controller
 
                 if ($payableAccount && $cashAccount) {
                     $payJournal = JournalEntry::query()->create([
-                        'entry_number' => 'EN-PAY-' . date('Y') . '-' . str_pad($nextEId + 1, 6, '0', STR_PAD_LEFT),
+                        'entry_number' => 'EN-PAY-' . date('Y') . '-' . str_pad($payment->id, 6, '0', STR_PAD_LEFT),
                         'date'         => $request->purchase_date,
                         'reference'    => 'PAY-' . $billNumber,
                         'description'  => 'Payment to ' . $supplier->name,
@@ -927,11 +929,10 @@ class PurchaseController extends Controller
                 'created_by' => Auth::id(),
             ]);
 
-            // 2. Create Journal Entry (Debit Note Logic)
-            /** @var JournalEntry|null $lastEntry */
-            $lastEntry = JournalEntry::query()->latest('id')->first();
-            $nextEId = $lastEntry ? ($lastEntry->id + 1) : 1;
-            $entryNumber = 'EN-PR-' . date('Y') . '-' . str_pad($nextEId, 6, '0', STR_PAD_LEFT);
+            // 2. Create Journal Entry (Debit Note Logic) — derived from the
+            // return's own unique id to avoid racing/colliding with other
+            // concurrent or cross-company inserts (see storeBill's note above).
+            $entryNumber = 'EN-PR-' . date('Y') . '-' . str_pad($purchaseReturn->id, 6, '0', STR_PAD_LEFT);
 
             $cid = Auth::user()->company_id;
 
@@ -1292,7 +1293,10 @@ class PurchaseController extends Controller
             $cid = auth()->user()->company_id;
             /** @var JournalEntry $journalEntry */
             $journalEntry = JournalEntry::query()->create([
-                'entry_number' => 'JE-' . date('Ymd') . '-' . str_pad(JournalEntry::query()->count() + 1, 4, '0', STR_PAD_LEFT),
+                // Derived from the expense's own unique id rather than a
+                // count-based sequence, which races under concurrent
+                // requests and isn't scoped per company.
+                'entry_number' => 'JE-EXP-' . date('Ymd') . '-' . str_pad($expense->id, 4, '0', STR_PAD_LEFT),
                 'date' => $request->expense_date,
                 'reference' => 'EXP-' . $expense->id,
                 'description' => 'Purchase Expense: ' . $request->expense_name,
@@ -1398,7 +1402,7 @@ class PurchaseController extends Controller
             $cid = auth()->user()->company_id;
             /** @var JournalEntry $journalEntry */
             $journalEntry = JournalEntry::query()->create([
-                'entry_number' => 'JE-' . date('Ymd') . '-' . str_pad(JournalEntry::query()->count() + 1, 4, '0', STR_PAD_LEFT),
+                'entry_number' => 'JE-EXP-' . date('Ymd') . '-' . str_pad($expense->id, 4, '0', STR_PAD_LEFT),
                 'date'         => $request->expense_date,
                 'reference'    => 'EXP-' . $id,
                 'description'  => 'Purchase Expense: ' . $request->expense_name,
