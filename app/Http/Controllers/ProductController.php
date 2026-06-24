@@ -184,9 +184,14 @@ class ProductController extends Controller
     public function quickStore(Request $request)
     {
         $request->validate([
-            'product_name'  => 'required|string|max:255',
+            'product_name'  => [
+                'required', 'string', 'max:255',
+                Rule::unique('products')->where('company_id', Auth::user()->company_id),
+            ],
             'category_id'   => 'required|exists:categories,id',
             'selling_price' => 'nullable|numeric|min:0',
+        ], [
+            'product_name.unique' => 'A product with this name already exists.',
         ]);
 
         $product = Product::query()->create([
