@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Intervention\Image\Facades\Image;
 
 class ProductController extends Controller
@@ -98,7 +99,10 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'product_name'  => 'required|string|max:255',
+            'product_name'  => [
+                'required', 'string', 'max:255',
+                Rule::unique('products')->where('company_id', Auth::user()->company_id),
+            ],
             'product_code'  => 'nullable|string|unique:products,product_code',
             'category_id'   => 'nullable|exists:categories,id',
             'selling_price' => 'required|numeric|min:0',
@@ -106,6 +110,8 @@ class ProductController extends Controller
             'stock_products'=> 'nullable|numeric|min:0',
             'branch_id'     => 'nullable|exists:branches,id',
             'product_type'  => 'required|in:product,service',
+        ], [
+            'product_name.unique' => 'A product with this name already exists.',
         ]);
 
         try {
@@ -273,12 +279,17 @@ class ProductController extends Controller
         $product = Product::query()->findOrFail($id);
         
         $request->validate([
-            'product_name'  => 'required|string|max:255',
+            'product_name'  => [
+                'required', 'string', 'max:255',
+                Rule::unique('products')->where('company_id', Auth::user()->company_id)->ignore($id),
+            ],
             'product_code'  => 'required|string|unique:products,product_code,' . $id,
             'category_id'   => 'nullable|exists:categories,id',
             'selling_price' => 'required|numeric|min:0',
             'branch_id'    => 'nullable|exists:branches,id',
             'product_type' => 'required|in:product,service',
+        ], [
+            'product_name.unique' => 'A product with this name already exists.',
         ]);
 
         $branchId = $request->input('branch_id') ?: null;
@@ -299,19 +310,28 @@ class ProductController extends Controller
 
         $product->update($data);
 
-        // Update primary stock record (or create one if missing)
+        // Update primary stock record (or create one if missing). Quantity is
+        // only touched when the form actually sent one, so editing a product
+        // without changing its stock count doesn't accidentally zero it out.
         $stockRecord = ProductStock::query()->where('product_id', $product->id)->first();
+        $stockUpdate = ['branch_id' => $branchId];
+        if ($request->filled('stock_products')) {
+            $stockUpdate['quantity'] = $request->input('stock_products');
+        }
         if ($stockRecord) {
-            $stockRecord->update(['branch_id' => $branchId]);
+            $stockRecord->update($stockUpdate);
         } else {
-            ProductStock::query()->create([
+            ProductStock::query()->create(array_merge([
                 'product_id' => $product->id,
-                'branch_id'  => $branchId,
                 'quantity'   => 0,
-            ]);
+            ], $stockUpdate));
         }
 
         AuditLog::log('Products', "Updated product details: {$product->product_name}", 'UPDATE');
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'product' => $product]);
+        }
 
         return redirect()->back()->with('success', 'Product updated successfully.');
     }
@@ -320,10 +340,15 @@ class ProductController extends Controller
     {
         /** @var Product $product */
         $product = Product::query()->findOrFail($id);
-        if ($product->image && file_exists(public_path($product->image))) {
-            unlink(public_path($product->image));
+
+        try {
+            if ($product->image && file_exists(public_path($product->image))) {
+                unlink(public_path($product->image));
+            }
+            $product->delete();
+        } catch (\Illuminate\Database\QueryException $e) {
+            return redirect()->back()->with('error', 'This product can\'t be deleted because it\'s still referenced by other records.');
         }
-        $product->delete();
 
         AuditLog::log('Products', "Deleted product: {$product->product_name}", 'DELETE', 'warning');
 

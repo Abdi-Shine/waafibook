@@ -85,7 +85,10 @@
         this.formErrors = {};
         try {
             const form = document.getElementById('productForm');
-            const response = await fetch('{{ route('product.store') }}', {
+            const url = this.editMode
+                ? '{{ url('/products/update') }}/' + this.productData.id
+                : '{{ route('product.store') }}';
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').content },
                 body: new FormData(form)
@@ -101,6 +104,11 @@
             }
             if (!response.ok) {
                 Swal.fire({ icon: 'error', title: 'Something went wrong', text: data.message || 'Please try again.' });
+                return;
+            }
+
+            if (this.editMode) {
+                window.location.reload();
                 return;
             }
 
@@ -534,7 +542,7 @@
                 </div>
 
                 <form id="productForm" :action="editMode ? '{{ url('/products/update') }}/' + productData.id : '{{ route('product.store') }}'" method="POST" enctype="multipart/form-data"
-                      @submit="if (!editMode) { $event.preventDefault(); submitProduct(); }">
+                      @submit.prevent="submitProduct()">
                     @csrf
                     <template x-if="editMode">
                         @method('PUT')
@@ -642,8 +650,8 @@
                                     <p x-show="formErrors.selling_price" x-text="formErrors.selling_price?.[0]" class="text-red-500 font-bold text-[11px]"></p>
                                 </div>
 
-                                <div class="space-y-1.5" x-show="productData.product_type === 'product' && !editMode" x-transition>
-                                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Initial Stock</label>
+                                <div class="space-y-1.5" x-show="productData.product_type === 'product'" x-transition>
+                                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider" x-text="editMode ? 'Quantity' : 'Initial Stock'"></label>
                                     <div class="relative group">
                                         <input type="number" step="1" name="stock_products" x-model="productData.stock_products" placeholder="Opening quantity"
                                             class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
