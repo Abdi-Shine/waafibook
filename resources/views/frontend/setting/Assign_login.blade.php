@@ -21,22 +21,36 @@
         let form = document.getElementById('assignUserForm');
         form.action = '/employees/assign-login/' + employee.id;
         
+        const roleSelect = document.getElementById('userRole');
+        const roleHidden = document.getElementById('userRoleHidden');
+        const roleLockedNote = document.getElementById('userRoleLockedNote');
+
         if (this.isEditMode) {
             document.getElementById('username').value = employee.user.username;
             document.getElementById('email').value = employee.user.email;
             document.getElementById('password').value = '';
             document.getElementById('password').removeAttribute('required');
-            
-            // Set role radio
-            let roleRadios = document.getElementsByName('userRole');
-            roleRadios.forEach(radio => {
-                if (radio.value === employee.user.role) radio.checked = true;
-            });
+
+            roleSelect.value = employee.user.role;
+
+            // An admin's role can't be reassigned from this screen — locking
+            // it here is just the UI half; the same rule is enforced again
+            // server-side so it can't be bypassed.
+            const isAdmin = employee.user.role === 'admin';
+            roleSelect.disabled = isAdmin;
+            roleHidden.disabled = !isAdmin;
+            roleHidden.value = isAdmin ? 'admin' : '';
+            roleLockedNote.classList.toggle('hidden', !isAdmin);
         } else {
             form.reset();
             document.getElementById('username').value = employee.full_name.toLowerCase().replace(/\s+/g, '.');
             document.getElementById('email').value = '';
             document.getElementById('password').setAttribute('required', 'required');
+
+            roleSelect.disabled = false;
+            roleHidden.disabled = true;
+            roleHidden.value = '';
+            roleLockedNote.classList.add('hidden');
         }
     },
     
@@ -296,6 +310,10 @@
                                 </select>
                                 <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
                             </div>
+                            <input type="hidden" name="userRole" id="userRoleHidden" disabled>
+                            <p id="userRoleLockedNote" class="hidden text-[10px] text-gray-400 italic mt-1">
+                                <i class="bi bi-lock-fill"></i> Admin role is protected and can't be changed here.
+                            </p>
                         </div>
                     </form>
                 </div>

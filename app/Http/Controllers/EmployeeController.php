@@ -226,7 +226,10 @@ class EmployeeController extends Controller
                 $userData = [
                     'username' => $request->username,
                     'email' => $request->email,
-                    'role' => $request->userRole,
+                    // An admin's role can never be changed from here — enforced
+                    // server-side (not just disabled in the UI) so it can't be
+                    // bypassed by editing the page or posting directly.
+                    'role' => $user->role === 'admin' ? 'admin' : $request->userRole,
                 ];
                 if ($request->password) {
                     $userData['password'] = Hash::make($request->password);
