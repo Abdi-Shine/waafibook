@@ -76,9 +76,17 @@ class ExpenseController extends Controller
 
             // Journal Entry: Dr Expense Account / Cr Bank/Cash
             $journalEntry = JournalEntry::query()->create([
-                'entry_number' => 'JE-' . date('Ymd') . '-' . str_pad(JournalEntry::query()->count() + 1, 4, '0', STR_PAD_LEFT),
+                // Derived from the expense's own unique id rather than a
+                // count-based sequence, which races under concurrent
+                // requests and isn't scoped per company (see storeBill's
+                // equivalent fix for the full explanation).
+                'entry_number' => 'JE-EXP-' . date('Ymd') . '-' . str_pad($expense->id, 4, '0', STR_PAD_LEFT),
                 'date'         => $request->expense_date,
-                'reference'    => 'EXP-' . $expense->id,
+                // "GE" (General Expense) distinguishes this from
+                // PurchaseExpense's "EXP-PE-<id>" reference — both models
+                // start their own id sequence from 1, so a plain "EXP-<id>"
+                // lookup could otherwise match the wrong expense's entry.
+                'reference'    => 'EXP-GE-' . $expense->id,
                 'description'  => 'Expense: ' . $request->expense_name,
                 'status'       => 'posted',
                 'total_amount' => $request->amount,
@@ -123,7 +131,7 @@ class ExpenseController extends Controller
             $expense = Expense::query()->findOrFail($id);
 
             // Delete journal items individually so the observer reverses account balances
-            $journalEntry = JournalEntry::query()->where('reference', 'EXP-' . $expense->id)->first();
+            $journalEntry = JournalEntry::query()->where('reference', 'EXP-GE-' . $expense->id)->first();
             if ($journalEntry) {
                 foreach ($journalEntry->items as $item) {
                     $item->delete();
@@ -174,7 +182,7 @@ class ExpenseController extends Controller
             $expense->update($data);
 
             // Reverse old journal entry (delete items individually so observer fires)
-            $journalEntry = JournalEntry::query()->where('reference', 'EXP-' . $expense->id)->first();
+            $journalEntry = JournalEntry::query()->where('reference', 'EXP-GE-' . $expense->id)->first();
             if ($journalEntry) {
                 foreach ($journalEntry->items as $oldItem) {
                     $oldItem->delete();

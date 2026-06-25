@@ -14,7 +14,89 @@
             showModal: false,
             customerName: 'SELECT CUSTOMER',
             returnAmount: '',
-            returnDate: '{{ date('Y-m-d') }}'
+            returnDate: '{{ date('Y-m-d') }}',
+            invoices: @js($invoices),
+            selectedInvoiceId: '',
+            returnItems: [],
+            isSubmitting: false,
+
+            get selectedInvoice() {
+                return this.invoices.find(inv => inv.id == this.selectedInvoiceId);
+            },
+
+            // Mirrors Purchase Return's item picker: load the chosen invoice's
+            // lines, subtracting whatever has already been returned against
+            // them, so the same item can't be returned twice.
+            updateInvoiceItems() {
+                if (this.selectedInvoice) {
+                    this.returnItems = this.selectedInvoice.items.map(item => {
+                        const alreadyReturned = (item.return_items || []).reduce((sum, ri) => sum + parseFloat(ri.quantity || 0), 0);
+                        const remaining = item.quantity - alreadyReturned;
+                        return {
+                            id: item.id,
+                            product_id: item.product_id,
+                            name: item.product ? item.product.product_name : (item.product_name || 'Product'),
+                            remaining_qty: remaining,
+                            return_qty: remaining,
+                            rate: item.unit_price,
+                            selected: remaining > 0,
+                        };
+                    }).filter(i => i.remaining_qty > 0);
+                } else {
+                    this.returnItems = [];
+                }
+            },
+
+            get selectedReturnItems() {
+                return this.returnItems.filter(i => i.selected && i.return_qty > 0);
+            },
+
+            get calculatedAmount() {
+                return this.selectedReturnItems.reduce((sum, i) => sum + (parseFloat(i.return_qty || 0) * parseFloat(i.rate || 0)), 0);
+            },
+
+            openCreateModal() {
+                this.showModal = true;
+                this.selectedInvoiceId = '';
+                this.returnItems = [];
+                this.returnAmount = '';
+                this.returnDate = '{{ date('Y-m-d') }}';
+            },
+
+            async submitReturn() {
+                const form = document.getElementById('creditNoteForm');
+                const data = Object.fromEntries(new FormData(form).entries());
+
+                if (this.selectedInvoiceId) {
+                    if (this.selectedReturnItems.length === 0) {
+                        Swal.fire('Error', 'Select at least one item to return, with a quantity greater than 0.', 'error');
+                        return;
+                    }
+                    data.items = this.selectedReturnItems.map(i => ({
+                        order_item_id: i.id,
+                        product_id: i.product_id,
+                        quantity: i.return_qty,
+                        unit_price: i.rate,
+                    }));
+                    delete data.amount;
+                } else if (!data.amount || parseFloat(data.amount) <= 0) {
+                    Swal.fire('Error', 'Enter a return amount, or select an invoice to return specific items.', 'error');
+                    return;
+                }
+
+                this.isSubmitting = true;
+                try {
+                    const response = await axios.post('{{ route('sales.return.store') }}', data, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    Swal.fire('Success', response.data?.message || 'Credit note issued successfully.', 'success')
+                        .then(() => window.location.reload());
+                } catch (error) {
+                    Swal.fire('Error', error.response?.data?.message || 'Something went wrong.', 'error');
+                } finally {
+                    this.isSubmitting = false;
+                }
+            }
         }">
 
         <!-- Header -->
@@ -24,7 +106,7 @@
                 <p class="text-[13px] text-gray-500 mt-1">Manage product returns and store credits</p>
             </div>
             <div class="flex items-center gap-3">
-                <button @click="showModal = true" class="btn-premium-primary group">
+                <button @click="openCreateModal()" class="btn-premium-primary group">
                     <i class="bi bi-plus-lg group-hover:rotate-180 transition-transform duration-300"></i>
                     <span>New Credit Note</span>
                 </button>
@@ -242,7 +324,7 @@
 
                 <!-- Modal Body -->
                 <div class="px-6 py-6 overflow-y-auto custom-scrollbar flex-grow bg-white">
-                    <form id="creditNoteForm" action="{{ route('sales.return.store') }}" method="POST" class="space-y-5">
+                    <form id="creditNoteForm" @submit.prevent="submitReturn()" class="space-y-5">
                         @csrf
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div class="space-y-1.5">
@@ -260,7 +342,7 @@
                             <div class="space-y-1.5">
                                 <label class="block text-[11px] font-black text-primary uppercase tracking-wider">Original Invoice</label>
                                 <div class="relative group">
-                                    <select name="invoice_id" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-primary focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+                                    <select name="invoice_id" x-model="selectedInvoiceId" @change="updateInvoiceItems()" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-primary focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
                                         <option value="">Select Invoice (optional)...</option>
                                         @foreach($invoices as $invoice)
                                             <option value="{{ $invoice->id }}">{{ $invoice->invoice_no }} — {{ $invoice->customer->name ?? '' }}</option>
@@ -268,6 +350,27 @@
                                     </select>
                                     <i class="bi bi-receipt absolute right-4 top-1/2 -translate-y-1/2 text-primary opacity-40"></i>
                                 </div>
+                                <p class="text-[10px] text-gray-400 font-medium">Pick an invoice to select which items are being returned and restock them automatically.</p>
+                            </div>
+                        </div>
+
+                        <!-- Item picker — only shown once an invoice is selected -->
+                        <div class="space-y-1.5" x-show="selectedInvoiceId" x-cloak>
+                            <label class="block text-[11px] font-black text-primary uppercase tracking-wider">Items Being Returned</label>
+                            <div class="border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-56 overflow-y-auto">
+                                <template x-if="returnItems.length === 0">
+                                    <p class="text-[12px] text-gray-400 px-4 py-3">Every item on this invoice has already been fully returned.</p>
+                                </template>
+                                <template x-for="(item, idx) in returnItems" :key="item.id">
+                                    <div class="flex items-center gap-3 px-4 py-2.5">
+                                        <input type="checkbox" x-model="item.selected" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/30">
+                                        <span class="flex-1 text-[12px] font-bold text-primary-dark" x-text="item.name"></span>
+                                        <span class="text-[10px] text-gray-400" x-text="'of ' + item.remaining_qty + ' available'"></span>
+                                        <input type="number" x-model.number="item.return_qty" :max="item.remaining_qty" min="0.01" step="0.01"
+                                               class="w-20 px-2 py-1 bg-gray-50 border border-gray-200 rounded text-[12px] font-bold text-primary text-right">
+                                        <span class="text-[11px] font-bold text-primary w-16 text-right" x-text="(item.return_qty * item.rate).toFixed(2)"></span>
+                                    </div>
+                                </template>
                             </div>
                         </div>
 
@@ -294,9 +397,15 @@
                         <div class="space-y-1.5">
                             <label class="block text-[11px] font-black text-primary uppercase tracking-wider">Return Amount <span class="text-primary">*</span></label>
                             <div class="relative">
-                                <input type="number" name="amount" step="0.01" required placeholder="0.00" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-primary focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                                <input type="number" name="amount" step="0.01" placeholder="0.00"
+                                       :required="!selectedInvoiceId"
+                                       :readonly="!!selectedInvoiceId"
+                                       :value="selectedInvoiceId ? calculatedAmount.toFixed(2) : undefined"
+                                       :class="selectedInvoiceId ? 'bg-gray-100 text-gray-500' : 'bg-gray-50 text-primary'"
+                                       class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-[13px] font-medium focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
                                 <div class="absolute right-4 top-1/2 -translate-y-1/2 text-primary opacity-40 font-black text-xs">$</div>
                             </div>
+                            <p class="text-[10px] text-gray-400 font-medium" x-show="selectedInvoiceId">Calculated automatically from the items selected above.</p>
                         </div>
 
                         <div class="space-y-1.5 pt-2">
@@ -311,9 +420,9 @@
                     <button type="button" @click="showModal = false" class="px-5 py-2.5 bg-white border border-gray-200 text-primary/60 font-black rounded-lg hover:bg-gray-50 transition-all text-[11px] uppercase tracking-wider shadow-sm">
                         Cancel
                     </button>
-                    <button type="submit" form="creditNoteForm" class="btn-premium-accent">
-                        <i class="bi bi-check2-circle text-base"></i>
-                        <span>Issue Credit Note</span>
+                    <button type="submit" form="creditNoteForm" :disabled="isSubmitting" class="btn-premium-accent" :class="isSubmitting ? 'opacity-60 cursor-not-allowed' : ''">
+                        <i class="bi" :class="isSubmitting ? 'bi-arrow-repeat animate-spin' : 'bi-check2-circle'"></i>
+                        <span x-text="isSubmitting ? 'Saving…' : 'Issue Credit Note'"></span>
                     </button>
                 </div>
             </div>

@@ -22,6 +22,16 @@ class SalesReturn extends Model
         return $this->belongsTo(SalesOrder::class, 'invoice_id');
     }
 
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    public function items()
+    {
+        return $this->hasMany(SalesReturnItem::class);
+    }
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');

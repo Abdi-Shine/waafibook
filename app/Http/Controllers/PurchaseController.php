@@ -358,6 +358,7 @@ class PurchaseController extends Controller
 
             // 0. Capture old supplier balance impact before any changes
             $oldNetBalance = $bill->total_amount - $bill->paid_amount;
+            $oldPaidAmount = $bill->paid_amount;
 
             // 1. Revert Stock Changes from old items
             foreach ($bill->items as $oldItem) {
@@ -447,12 +448,17 @@ class PurchaseController extends Controller
                             $product->save();
                         }
 
-                        $stock = ProductStock::query()->firstOrNew([
-                            'product_id' => $productId,
-                            'branch_id' => $request->branch_id,
-                        ]);
-                        $stock->quantity = ($stock->exists ? $stock->quantity : 0) + ($item['quantity'] ?? 0);
-                        $stock->save();
+                        // Read-then-write here ("$stock->quantity = old + new; save()")
+                        // raced under concurrent requests — two simultaneous edits
+                        // could both read the same starting quantity and one
+                        // update would silently overwrite the other's. increment()
+                        // issues an atomic "UPDATE ... SET quantity = quantity + ?"
+                        // instead.
+                        $stock = ProductStock::query()->firstOrCreate(
+                            ['product_id' => $productId, 'branch_id' => $request->branch_id],
+                            ['quantity' => 0]
+                        );
+                        $stock->increment('quantity', $item['quantity'] ?? 0);
                     }
                 }
             }
@@ -507,6 +513,70 @@ class PurchaseController extends Controller
                         'debit'            => 0,
                         'credit'           => $total_amount,
                     ]);
+                }
+            }
+
+            // 6. Re-sync the immediate-payment side effect (SupplierPayment +
+            // its own Dr Payable / Cr Cash journal entry, created in storeBill
+            // when paid_amount > 0). Previously only the supplier's running
+            // balance was adjusted on edit — the cash/bank account itself, and
+            // the payment record, were left stale, so editing a bill's paid
+            // amount silently desynced the cash ledger from reality.
+            if ((float) $paid_amount !== (float) $oldPaidAmount) {
+                $oldPaymentJournal = JournalEntry::query()->where('reference', 'PAY-' . $bill->bill_number)->first();
+                if ($oldPaymentJournal) {
+                    foreach ($oldPaymentJournal->items as $oldPayItem) {
+                        $oldPayItem->delete();
+                    }
+                    $oldPaymentJournal->delete();
+                }
+
+                $oldPaymentDetail = SupplierPaymentDetail::query()->where('purchase_bill_id', $bill->id)->first();
+                if ($oldPaymentDetail) {
+                    /** @var SupplierPayment|null $oldPayment */
+                    $oldPayment = $oldPaymentDetail->payment;
+                    $oldPaymentDetail->delete();
+                    $oldPayment?->delete();
+                }
+
+                if ($paid_amount > 0) {
+                    $newPayment = SupplierPayment::query()->create([
+                        'voucher_no'      => 'PAY-' . $bill->bill_number,
+                        'payment_date'    => $request->purchase_date,
+                        'supplier_id'     => $supplier->id,
+                        'bank_account_id' => $request->payment_account_id ?: null,
+                        'payment_method'  => 'Cash',
+                        'amount'          => $paid_amount,
+                        'reference'       => 'PAY-' . $bill->bill_number,
+                        'notes'           => 'Immediate payment for ' . $bill->bill_number,
+                        'status'          => 'completed',
+                        'created_by'      => Auth::id(),
+                    ]);
+
+                    SupplierPaymentDetail::query()->create([
+                        'supplier_payment_id' => $newPayment->id,
+                        'purchase_bill_id'    => $bill->id,
+                        'amount'              => $paid_amount,
+                    ]);
+
+                    $cashAccount = Account::query()->find($request->payment_account_id)
+                                ?: Account::query()->where('company_id', $cid)->where('code', '1010')->first()
+                                ?: Account::query()->where('company_id', $cid)->where('name', 'like', '%Cash%')->first();
+
+                    if ($payableAccount && $cashAccount) {
+                        $payJournal = JournalEntry::query()->create([
+                            'entry_number' => 'EN-PAY-' . date('Y') . '-' . str_pad($newPayment->id, 6, '0', STR_PAD_LEFT),
+                            'date'         => $request->purchase_date,
+                            'reference'    => 'PAY-' . $bill->bill_number,
+                            'description'  => 'Payment to ' . $supplier->name,
+                            'total_amount' => $paid_amount,
+                            'status'       => 'posted',
+                            'company_id'   => $cid,
+                            'created_by'   => Auth::id(),
+                        ]);
+                        JournalItem::query()->create(['journal_entry_id' => $payJournal->id, 'account_id' => $payableAccount->id, 'company_id' => $cid, 'description' => 'Payment to Supplier ' . $supplier->name, 'debit' => $paid_amount, 'credit' => 0]);
+                        JournalItem::query()->create(['journal_entry_id' => $payJournal->id, 'account_id' => $cashAccount->id, 'company_id' => $cid, 'description' => 'Cash outflow', 'debit' => 0, 'credit' => $paid_amount]);
+                    }
                 }
             }
 
@@ -687,6 +757,14 @@ class PurchaseController extends Controller
             // 2. Accounting Entry (Purchase Bill)
             $cid = Auth::user()->company_id;
 
+            // A "Return" bill sends goods back to the supplier, which is the
+            // exact opposite of a normal purchase: inventory goes DOWN and
+            // what you owe the supplier goes DOWN too, so every debit/credit
+            // below — and the supplier balance update — has to flip direction
+            // instead of reusing the normal-purchase entries as-is.
+            $purchase_type = $request->purchase_type ?? 'Purchase';
+            $isReturn = $purchase_type === 'Return';
+
             /** @var Account|null $inventoryAccount */
             $inventoryAccount = Account::query()->where('company_id', $cid)->where('code', '1150')->first()
                              ?: Account::query()->where('company_id', $cid)->where('type', 'inventory')->first()
@@ -713,26 +791,26 @@ class PurchaseController extends Controller
                 'created_by'   => Auth::id(),
             ]);
 
-            // Dr Inventory = subtotal; Dr VAT Input = vat; Cr Accounts Payable = total_amount
+            // Normal purchase: Dr Inventory = subtotal; Dr VAT Input = vat; Cr Accounts Payable = total_amount
+            // Return to supplier: same accounts, but debit/credit swapped (see comment above)
             if ($inventoryAccount) {
                 JournalItem::query()->create([
                     'journal_entry_id' => $journal->id,
                     'account_id'       => $inventoryAccount->id,
                     'company_id'       => $cid,
-                    'description'      => 'Stock value increase (' . $billNumber . ')',
-                    'debit'            => $subtotal,
-                    'credit'           => 0,
+                    'description'      => ($isReturn ? 'Stock value decrease (return) ' : 'Stock value increase (') . $billNumber . ')',
+                    'debit'            => $isReturn ? 0 : $subtotal,
+                    'credit'           => $isReturn ? $subtotal : 0,
                 ]);
             }
-            // If VAT > 0 and no separate tax account, roll it into inventory (Dr Inventory += vat)
             if ((float) $vat > 0 && $inventoryAccount) {
                 JournalItem::query()->create([
                     'journal_entry_id' => $journal->id,
                     'account_id'       => $inventoryAccount->id,
                     'company_id'       => $cid,
                     'description'      => 'VAT on purchase (' . $billNumber . ')',
-                    'debit'            => (float) $vat,
-                    'credit'           => 0,
+                    'debit'            => $isReturn ? 0 : (float) $vat,
+                    'credit'           => $isReturn ? (float) $vat : 0,
                 ]);
             }
             if ($payableAccount) {
@@ -740,14 +818,18 @@ class PurchaseController extends Controller
                     'journal_entry_id' => $journal->id,
                     'account_id'       => $payableAccount->id,
                     'company_id'       => $cid,
-                    'description'      => 'Liability to Supplier ' . $supplier->name,
-                    'debit'            => 0,
-                    'credit'           => $total_amount,
+                    'description'      => ($isReturn ? 'Reduced liability to Supplier ' : 'Liability to Supplier ') . $supplier->name,
+                    'debit'            => $isReturn ? $total_amount : 0,
+                    'credit'           => $isReturn ? 0 : $total_amount,
                 ]);
             }
 
-            // Update supplier balance atomically
-            $supplier->increment('amount_balance', $total_amount);
+            // Update supplier balance atomically (return reduces what's owed)
+            if ($isReturn) {
+                $supplier->decrement('amount_balance', $total_amount);
+            } else {
+                $supplier->increment('amount_balance', $total_amount);
+            }
 
             // Supplier Payment (immediate)
             if ($paid_amount > 0) {
@@ -793,8 +875,7 @@ class PurchaseController extends Controller
             }
 
             // Goods Receive (Stock update for bill items)
-            $purchase_type = $request->purchase_type ?? 'Purchase';
-            if ($request->items && $purchase_type !== 'Return') {
+            if ($request->items && !$isReturn) {
                 foreach ($request->items as $item) {
                     $productId = $item['product_id'] ?? null;
 
@@ -839,25 +920,25 @@ class PurchaseController extends Controller
                             $product->save();
                         }
 
-                        // 2. Update Branch/Store Stock
-                        $stock = ProductStock::query()->firstOrNew([
-                            'product_id' => $item['product_id'],
-                            'branch_id' => $branch_id,
-                        ]);
-                        $stock->quantity = ($stock->exists ? $stock->quantity : 0) + ($item['quantity'] ?? 0);
-                        $stock->save();
+                        // 2. Update Branch/Store Stock — atomic increment (see
+                        // updateBill's matching comment on why read-then-save
+                        // races under concurrent requests)
+                        $stock = ProductStock::query()->firstOrCreate(
+                            ['product_id' => $item['product_id'], 'branch_id' => $branch_id],
+                            ['quantity' => 0]
+                        );
+                        $stock->increment('quantity', $item['quantity'] ?? 0);
                     }
                 }
             } elseif ($request->items && $purchase_type === 'Return') {
                 // Purchase Return logic
                 foreach ($request->items as $item) {
                     if (isset($item['product_id']) && is_numeric($item['product_id'])) {
-                        $stock = ProductStock::query()->firstOrNew([
-                            'product_id' => $item['product_id'],
-                            'branch_id' => $branch_id,
-                        ]);
-                        $stock->quantity = ($stock->exists ? $stock->quantity : 0) - ($item['quantity'] ?? 0);
-                        $stock->save();
+                        $stock = ProductStock::query()->firstOrCreate(
+                            ['product_id' => $item['product_id'], 'branch_id' => $branch_id],
+                            ['quantity' => 0]
+                        );
+                        $stock->decrement('quantity', $item['quantity'] ?? 0);
                     }
                 }
             }
@@ -1207,6 +1288,26 @@ class PurchaseController extends Controller
                 $entry->delete();
             }
 
+            // 3b. Reverse the immediate-payment side effect (see updateBill's
+            // matching comment) — deleting a bill that had a payment recorded
+            // against it must also undo that payment's own cash/bank journal
+            // entry, not just the bill's own inventory/payable entry.
+            $paymentEntry = JournalEntry::query()->where('reference', 'PAY-' . $bill->bill_number)->first();
+            if ($paymentEntry) {
+                foreach ($paymentEntry->items as $payItem) {
+                    $payItem->delete();
+                }
+                $paymentEntry->delete();
+            }
+
+            $paymentDetail = SupplierPaymentDetail::query()->where('purchase_bill_id', $bill->id)->first();
+            if ($paymentDetail) {
+                /** @var SupplierPayment|null $payment */
+                $payment = $paymentDetail->payment;
+                $paymentDetail->delete();
+                $payment?->delete();
+            }
+
             // 4. Delete Bill Items
             $bill->items()->delete();
             
@@ -1298,7 +1399,11 @@ class PurchaseController extends Controller
                 // requests and isn't scoped per company.
                 'entry_number' => 'JE-EXP-' . date('Ymd') . '-' . str_pad($expense->id, 4, '0', STR_PAD_LEFT),
                 'date' => $request->expense_date,
-                'reference' => 'EXP-' . $expense->id,
+                // "PE" (Purchase Expense) distinguishes this from the general
+                // Expense model's "EXP-GE-<id>" reference — both models start
+                // their own id sequence from 1, so a plain "EXP-<id>" lookup
+                // could otherwise match the wrong expense's journal entry.
+                'reference' => 'EXP-PE-' . $expense->id,
                 'description' => 'Purchase Expense: ' . $request->expense_name,
                 'status' => 'posted',
                 'total_amount' => $request->amount,
@@ -1378,7 +1483,7 @@ class PurchaseController extends Controller
             $expense = PurchaseExpense::findOrFail($id);
 
             // Reverse old journal entries (delete items individually so observer fires)
-            $oldEntry = JournalEntry::query()->where('reference', 'EXP-' . $id)->first();
+            $oldEntry = JournalEntry::query()->where('reference', 'EXP-PE-' . $id)->first();
             if ($oldEntry) {
                 foreach ($oldEntry->items as $oldItem) {
                     $oldItem->delete();
@@ -1404,7 +1509,7 @@ class PurchaseController extends Controller
             $journalEntry = JournalEntry::query()->create([
                 'entry_number' => 'JE-EXP-' . date('Ymd') . '-' . str_pad($expense->id, 4, '0', STR_PAD_LEFT),
                 'date'         => $request->expense_date,
-                'reference'    => 'EXP-' . $id,
+                'reference'    => 'EXP-PE-' . $id,
                 'description'  => 'Purchase Expense: ' . $request->expense_name,
                 'status'       => 'posted',
                 'total_amount' => $request->amount,
@@ -1450,7 +1555,7 @@ class PurchaseController extends Controller
             $expense = PurchaseExpense::findOrFail($id);
 
             // Delete journal items individually so the observer reverses account balances
-            $entry = JournalEntry::query()->where('reference', 'EXP-' . $id)->first();
+            $entry = JournalEntry::query()->where('reference', 'EXP-PE-' . $id)->first();
             if ($entry) {
                 foreach ($entry->items as $item) {
                     $item->delete();

@@ -13,6 +13,7 @@ use App\Models\ProductStock;
 use App\Models\JournalEntry;
 use App\Models\JournalItem;
 use App\Models\AuditLog;
+use App\Models\StockMovement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -853,41 +854,66 @@ class ProductController extends Controller
 
         $stocks = $query->paginate(10)->withQueryString();
         $products = Product::query()->get();
-        
-        return view('frontend.product.stock_adjustment', compact('stocks', 'products', 'stats'));
+        $branches = Branch::query()->get();
+
+        return view('frontend.product.stock_adjustment', compact('stocks', 'products', 'branches', 'stats'));
     }
 
     public function stockAdjustmentStore(Request $request)
     {
         $request->validate([
             'product_id' => 'required|exists:products,id',
+            'branch_id'  => 'required|exists:branches,id',
             'method'     => 'required|in:addition,deduction,physical',
             'quantity'   => 'required|numeric|min:0',
         ]);
 
         DB::beginTransaction();
         try {
-            // Find existing stock for the product (taking the most recent/first one for simplicity)
-            $stock = ProductStock::query()->where('product_id', $request->product_id)->first();
+            // Scoped to the specific branch being adjusted — matching only on
+            // product_id (as before) silently read/wrote an arbitrary branch's
+            // row on any multi-branch product, corrupting whichever branch
+            // happened to be picked instead of the one actually being counted.
+            $stock = ProductStock::query()->where('product_id', $request->product_id)
+                ->where('branch_id', $request->branch_id)
+                ->lockForUpdate()
+                ->first();
 
             if (!$stock) {
-                $branch = Branch::query()->first();
-                $stock = new ProductStock();
-                $stock->product_id = $request->product_id;
-                $stock->branch_id  = $branch?->id;
-                $stock->quantity   = 0;
+                $stock = ProductStock::query()->create([
+                    'product_id' => $request->product_id,
+                    'branch_id'  => $request->branch_id,
+                    'quantity'   => 0,
+                ]);
             }
 
-            // Logic Method
-            if ($request->input('method') == 'addition') {
-                $stock->quantity += $request->quantity;
-            } elseif ($request->input('method') == 'deduction') {
-                $stock->quantity -= $request->quantity;
+            $before = (float) $stock->quantity;
+
+            if ($request->input('method') === 'addition') {
+                $stock->increment('quantity', $request->quantity);
+            } elseif ($request->input('method') === 'deduction') {
+                $stock->decrement('quantity', $request->quantity);
             } else { // physical reset
-                $stock->quantity = $request->quantity;
+                $stock->update(['quantity' => $request->quantity]);
             }
 
-            $stock->save();
+            $stock->refresh();
+
+            // Audit trail — without this, a stock adjustment was invisible to
+            // any future reconciliation: it changed the number with no record
+            // of who/when/why/by-how-much, indistinguishable from a real
+            // purchase/sale movement.
+            StockMovement::query()->create([
+                'product_id'     => $request->product_id,
+                'branch_id'      => $request->branch_id,
+                'quantity'       => $stock->quantity - $before,
+                'type'           => 'adjustment',
+                'reference_id'   => null,
+                'reference_type' => null,
+                'balance_after'  => $stock->quantity,
+                'created_by'     => Auth::id(),
+            ]);
+
             DB::commit();
 
             return redirect()->back()->with('success', 'Stock level reconciled successfully.');

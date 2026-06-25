@@ -179,6 +179,23 @@
             }
         }
 
+        function updateItemAmount(pid, newAmount) {
+            const item = cart.find(i => i.id === pid);
+            if (!item) return;
+
+            const amount = parseFloat(newAmount);
+            if (isNaN(amount) || amount < 0) {
+                updateCart(); // re-render to snap the field back to its real value
+                return;
+            }
+
+            // The field edits this line's total, not the per-unit price, so
+            // back it out across the current quantity (qty stays controlled
+            // by the +/- buttons; only the per-unit price implicitly changes).
+            item.price = item.quantity > 0 ? (amount / item.quantity) : amount;
+            updateCart();
+        }
+
         function removeFromCart(pid) {
             cart = cart.filter(i => i.id !== pid);
             updateCart();
@@ -201,7 +218,10 @@
                                 <span class="qty-display">${i.quantity}</span>
                                 <button class="qty-btn" onclick="updateQuantity(${i.id}, 1)">+</button>
                             </div>
-                            <div class="item-price">${(i.price * i.quantity).toFixed(2)}</div>
+                            <input type="number" class="item-price-input" min="0" step="0.01"
+                                   value="${(i.price * i.quantity).toFixed(2)}"
+                                   onchange="updateItemAmount(${i.id}, this.value)"
+                                   onclick="this.select()">
                         </div>
                     </div>
                 `).join('');

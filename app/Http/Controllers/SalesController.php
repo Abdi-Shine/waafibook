@@ -458,6 +458,14 @@ class SalesController extends Controller
                 }
             }
 
+            // Captured before $order->update() overwrites branch_id below — the
+            // old items' stock was decremented at THIS branch, so it has to be
+            // reversed here too, not at whatever branch the order is being
+            // moved to. Reversing at the new branch instead left the original
+            // branch permanently short and credited stock to a branch that
+            // never actually held it.
+            $oldBranchId = $order->branch_id;
+
             $order->update([
                 'invoice_date'   => $request->invoice_date,
                 'due_date'       => $request->due_date,
@@ -478,7 +486,7 @@ class SalesController extends Controller
             foreach ($order->items as $oldItem) {
                 if ($oldItem->product_id) {
                     $oldStock = ProductStock::query()->where('product_id', $oldItem->product_id)
-                        ->where('branch_id', $order->branch_id)
+                        ->where('branch_id', $oldBranchId)
                         ->first();
                     if ($oldStock) $oldStock->increment('quantity', $oldItem->quantity);
                 }

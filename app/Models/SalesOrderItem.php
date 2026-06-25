@@ -53,4 +53,9 @@ class SalesOrderItem extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    public function returnItems()
+    {
+        return $this->hasMany(SalesReturnItem::class, 'sales_order_item_id');
+    }
 }
