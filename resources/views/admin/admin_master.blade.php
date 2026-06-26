@@ -223,6 +223,83 @@
                 });
             });
         };
+
+        // Customer/supplier delete flow: if the party already has transactions
+        // against it, deleting would cascade-delete that financial history, so
+        // offer deactivating it instead of the normal password-confirmed delete.
+        window.confirmDeleteParty = async function (baseUrl, id, name, deleteTitle) {
+            const popupClass = { popup: 'rounded-[1.5rem]' };
+            const csrf = document.querySelector('meta[name="csrf-token"]').content;
+
+            let hasTransactions = false;
+            try {
+                const res = await fetch(baseUrl + '/' + id + '/check-deletable', { headers: { 'Accept': 'application/json' } });
+                const data = await res.json();
+                hasTransactions = !!data.has_transactions;
+            } catch (e) {
+                hasTransactions = false;
+            }
+
+            if (!hasTransactions) {
+                deleteRecordWithPassword(baseUrl + '/' + id, name, {
+                    title: deleteTitle,
+                    text: `Are you sure you want to delete ${name}? This action cannot be undone.`
+                });
+                return;
+            }
+
+            const result = await Swal.fire({
+                title: 'Delete Party',
+                html: `
+                    <div class="text-left">
+                        <div style="background:#fdecea;color:#b71c1c;border-radius:0.75rem;padding:0.75rem 1rem;margin-bottom:1rem;font-size:0.85rem;">
+                            This party cannot be deleted as it is already used in transactions. Please delete all transactions before deleting the party.
+                        </div>
+                        <p style="font-size:0.85rem;margin-bottom:0.5rem;"><strong>To avoid deletion of all transactions</strong>, you can try turning off the active status for this party instead. If you deactivate this party:</p>
+                        <ul style="font-size:0.85rem;padding-left:1.25rem;margin:0;text-align:left;">
+                            <li>Move this party to the bottom of your list</li>
+                            <li>All existing transactions will be retained, with no changes to your reports.</li>
+                            <li>Remove this party from the billing list dropdown, but you will still be able to create bills for them if needed.</li>
+                        </ul>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Deactivate',
+                cancelButtonText: 'No, Cancel',
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#9ca3af',
+                customClass: popupClass
+            });
+
+            if (!result.isConfirmed) return;
+
+            try {
+                const res = await fetch(baseUrl + '/' + id + '/deactivate', {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrf
+                    }
+                });
+                if (!res.ok) throw new Error('Failed');
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Deactivated',
+                    text: name + ' has been deactivated.',
+                    confirmButtonColor: '#004161',
+                    customClass: popupClass
+                });
+                window.location.reload();
+            } catch (e) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Something went wrong',
+                    text: 'Could not deactivate this party. Please try again.',
+                    customClass: popupClass
+                });
+            }
+        };
     </script>
 </body>
 </html>

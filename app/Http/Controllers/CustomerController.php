@@ -10,6 +10,7 @@ use App\Models\Account;
 use App\Models\Company;
 use App\Models\JournalEntry;
 use App\Models\JournalItem;
+use App\Models\AuditLog;
 
 class CustomerController extends Controller
 {
@@ -302,9 +303,43 @@ class CustomerController extends Controller
         return redirect()->back()->with('success', 'Customer updated successfully');
     }
 
+    // A customer is considered "in use" once it has any real transaction
+    // against it — deleting it at that point would cascade-delete those
+    // records (see the FKs on sales_orders/payment_ins/sales_returns),
+    // silently wiping out financial history. Deactivating instead keeps
+    // the records intact.
+    private function hasTransactions($customerId): bool
+    {
+        return DB::table('sales_orders')->where('customer_id', $customerId)->exists()
+            || DB::table('payment_ins')->where('customer_id', $customerId)->exists()
+            || DB::table('sales_returns')->where('customer_id', $customerId)->exists();
+    }
+
+    public function checkDeletable($id)
+    {
+        Customer::query()->findOrFail($id);
+        return response()->json(['has_transactions' => $this->hasTransactions($id)]);
+    }
+
+    public function deactivate($id)
+    {
+        $customer = Customer::query()->findOrFail($id);
+        $customer->update(['status' => 'inactive']);
+        AuditLog::log('Parties', "Deactivated customer: {$customer->name}", 'UPDATE');
+        return response()->json(['success' => true]);
+    }
+
     public function destroy($id)
     {
         $customer = Customer::query()->findOrFail($id);
+
+        if ($this->hasTransactions($id)) {
+            return response()->json([
+                'message' => 'This party cannot be deleted as it is already used in transactions. Please delete all transactions before deleting the party.',
+                'has_transactions' => true,
+            ], 409);
+        }
+
         $balance = (float) ($customer->amount_balance ?? 0);
 
         if ($balance != 0) {

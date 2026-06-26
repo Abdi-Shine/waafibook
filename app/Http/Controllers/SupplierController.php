@@ -7,6 +7,7 @@ use App\Models\Supplier;
 use App\Models\Account;
 use App\Models\JournalEntry;
 use App\Models\JournalItem;
+use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -292,9 +293,44 @@ class SupplierController extends Controller
         ]);
     }
 
+    // A supplier is considered "in use" once it has any real transaction
+    // against it — deleting it at that point would cascade-delete those
+    // records (see the FKs on purchase_orders/purchase_bills/supplier_payments/
+    // purchase_returns), silently wiping out financial history. Deactivating
+    // instead keeps the records intact.
+    private function hasTransactions($supplierId): bool
+    {
+        return DB::table('purchase_orders')->where('supplier_id', $supplierId)->exists()
+            || DB::table('purchase_bills')->where('supplier_id', $supplierId)->exists()
+            || DB::table('supplier_payments')->where('supplier_id', $supplierId)->exists()
+            || DB::table('purchase_returns')->where('supplier_id', $supplierId)->exists();
+    }
+
+    public function checkDeletable($id)
+    {
+        Supplier::query()->findOrFail($id);
+        return response()->json(['has_transactions' => $this->hasTransactions($id)]);
+    }
+
+    public function deactivate($id)
+    {
+        $supplier = Supplier::query()->findOrFail($id);
+        $supplier->update(['status' => 'inactive']);
+        AuditLog::log('Parties', "Deactivated supplier: {$supplier->name}", 'UPDATE');
+        return response()->json(['success' => true]);
+    }
+
     public function destroy($id)
     {
         $supplier = Supplier::query()->findOrFail($id);
+
+        if ($this->hasTransactions($id)) {
+            return response()->json([
+                'message' => 'This party cannot be deleted as it is already used in transactions. Please delete all transactions before deleting the party.',
+                'has_transactions' => true,
+            ], 409);
+        }
+
         $balance = (float) ($supplier->amount_balance ?? 0);
 
         if ($balance != 0) {
