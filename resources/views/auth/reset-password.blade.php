@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Set New Password - {{ \App\Models\Company::first()?->name ?? 'Waafibook' }}</title>
+    <title>Set New Password - Waafibook</title>
     
     <!-- Global CSS & JS (Vite) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -89,7 +89,7 @@
             
             <div class="auth-footer py-1 px-5 text-center">
                 <p class="text-muted m-0" style="font-size: 0.75rem;">
-                    &copy; {{ date('Y') }} {{ $company->name ?? 'Waafibook' }}. All rights reserved.
+                    &copy; {{ date('Y') }} Waafibook. All rights reserved.
                 </p>
             </div>
         </div>

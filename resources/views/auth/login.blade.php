@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Login - {{ \App\Models\Company::first()?->name ?? 'Waafibook' }}</title>
+    <title>Login - Waafibook</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
@@ -32,7 +32,7 @@
                     </div>
                 @endif
             </div>
-            <h1 class="text-2xl font-black tracking-tighter mb-0">{{ $company->name ?? 'Waafi Book' }}</h1>
+            <h1 class="text-2xl font-black tracking-tighter mb-0">Waafibook</h1>
             <p class="text-white/60 text-sm mt-1 mb-3">Accounting SaaS for modern teams</p>
         </div>
 
@@ -94,7 +94,7 @@
                 </form>
 
                 <p class="text-center text-primary opacity-50 text-sm mt-4 mb-0">
-                    &copy; {{ date('Y') }} {{ $company->name ?? 'Waafi Book' }}. All rights reserved. <a href="#" class="link-auth" onclick="switchTab('register'); return false;">Sign up</a>
+                    &copy; {{ date('Y') }} Waafibook. All rights reserved. <a href="#" class="link-auth" onclick="switchTab('register'); return false;">Sign up</a>
                 </p>
             </div>
 
