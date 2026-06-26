@@ -32,7 +32,7 @@
                     </div>
                 @endif
             </div>
-            <h1 class="text-2xl font-black tracking-tighter mb-0">{{ $company->name ?? 'Waafihhh Book' }}</h1>
+            <h1 class="text-2xl font-black tracking-tighter mb-0">{{ $company->name ?? 'Waafi Book' }}</h1>
             <p class="text-white/60 text-sm mt-1 mb-3">Accounting SaaS for modern teams</p>
         </div>
 
