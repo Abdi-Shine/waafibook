@@ -24,7 +24,7 @@
 
             <div class="hidden md:block">
                 <span
-                    class="text-[13px] font-bold text-primary-dark uppercase tracking-wide max-w-[180px] truncate">{{ $headerCompany->name ?? 'Horntech LTD' }}</span>
+                    class="text-[13px] font-bold text-primary-dark uppercase tracking-wide max-w-[180px] truncate">{{ $headerCompany->name ?? 'Waafibook' }}</span>
             </div>
         </div>
 
