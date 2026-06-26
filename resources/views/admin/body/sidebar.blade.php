@@ -20,10 +20,11 @@
     <div class="sticky top-0 bg-primary/95 backdrop-blur-sm z-10 px-6 py-6 border-b border-white/10">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
-                <img src="{{ asset('upload/horntechlogo/horntech_logo.jpg') }}" class="w-full h-full object-contain" alt="Horntech LTD Logo">
+                <img src="{{ asset('upload/horntechlogo/Waafibook_logo.jpg') }}" class="w-full h-full object-contain"
+                    alt="Waafibook Logo">
             </div>
             <div>
-                <h4 class="text-white text-lg font-bold tracking-tight">Horntech LTD</h4>
+                <h4 class="text-white text-lg font-bold tracking-tight">Waafi Book</h4>
                 <p class="text-accent text-[10px] font-bold uppercase tracking-widest">Enterprise POS</p>
             </div>
         </div>
@@ -41,7 +42,7 @@
             </a>
         @endif
 
-@if(Auth::user()->hasPermission('Parties'))
+        @if(Auth::user()->hasPermission('Parties'))
             <div class="space-y-1">
                 <button @click="toggleMenu('parties')"
                     class="flex items-center gap-3 px-4 py-3 text-white/70 hover:bg-white/5 hover:text-white rounded-xl font-semibold text-[14px] transition-all duration-200 w-full"

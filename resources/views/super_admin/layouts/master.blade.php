@@ -291,7 +291,7 @@
                     <svg viewBox="0 0 24 24" fill="#004161"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
                 </div>
                 <div>
-                    <div class="sa-brand-text">Horntech LTD</div>
+                    <div class="sa-brand-text">Waafibook</div>
                     <div class="sa-brand-sub">Super Admin</div>
                 </div>
             </a>

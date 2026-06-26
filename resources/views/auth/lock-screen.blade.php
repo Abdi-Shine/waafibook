@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Screen Locked - Horntech LTD</title>
+    <title>Screen Locked - Waafibook</title>
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -31,10 +31,10 @@
             <div class="auth-header-gradient auth-header-border p-5 pb-8 text-center text-white">
                 <div class="auth-logo flex justify-center mb-4">
                     <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-xl overflow-hidden">
-                        <img src="{{ asset('upload/horntechlogo/horntech_logo.jpg') }}" class="w-full h-full object-contain" alt="Horntech LTD Logo">
+                        <img src="{{ asset('upload/horntechlogo/Waafibook_logo.jpg') }}" class="w-full h-full object-contain" alt="Waafibook Logo">
                     </div>
                 </div>
-                <h1 class="auth-title">Horntech LTD</h1>
+                <h1 class="auth-title">Waafibook</h1>
             </div>
             
             <div class="auth-body p-5 pt-0">
@@ -79,7 +79,7 @@
             <!-- Footer -->
             <div class="auth-footer py-4 px-5 text-center border-t border-gray-50">
                  <p class="text-muted m-0 mt-4" style="font-size: 0.75rem;">
-                    &copy; {{ date('Y') }} Horntech LTD. All rights reserved.
+                    &copy; {{ date('Y') }} Waafibook. All rights reserved.
                 </p>
             </div>
         </div>

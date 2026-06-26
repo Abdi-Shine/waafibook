@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Horntech LTD — Complete Business Management Solution</title>
+    <title>Waafibook — Complete Business Management Solution</title>
     <meta name="description" content="Cloud-based ERP platform for growing businesses. Manage inventory, sales, purchases, accounting and HR in one place.">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -171,8 +171,8 @@
 <nav class="lp-nav navbar navbar-expand-lg">
     <div class="container">
         <a class="lp-brand" href="{{ route('landing') }}">
-            <img src="{{ asset('upload/horntechlogo/horntech_logo.jpg') }}" alt="Horntech LTD Logo" style="width:42px;height:42px;object-fit:contain;border-radius:8px;">
-            Horntech LTD
+            <img src="{{ asset('upload/horntechlogo/Waafibook_logo.jpg') }}" alt="Waafibook Logo" style="width:42px;height:42px;object-fit:contain;border-radius:8px;">
+            Waafibook
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#lpNav">
             <span class="navbar-toggler-icon"></span>
@@ -259,7 +259,7 @@
 {{-- ── Features ── --}}
 <section class="lp-section lp-section-gray" id="features">
     <div class="container">
-        <h2 class="lp-section-title">Why Choose Horntech LTD?</h2>
+        <h2 class="lp-section-title">Why Choose Waafibook?</h2>
         <p class="lp-section-sub">Powerful features designed to help your business grow</p>
         <div class="row g-4">
             @foreach([
@@ -417,8 +417,8 @@
         <div class="row g-4">
             <div class="col-lg-4">
                 <a href="{{ route('landing') }}" style="display:flex;align-items:center;gap:.75rem;text-decoration:none;margin-bottom:1rem;">
-                    <img src="{{ asset('upload/horntechlogo/horntech_logo.jpg') }}" alt="Horntech LTD Logo" style="width:38px;height:38px;object-fit:contain;border-radius:8px;background:white;padding:2px;">
-                    <span style="font-size:1.2rem;font-weight:800;color:white;">Horntech LTD</span>
+                    <img src="{{ asset('upload/horntechlogo/Waafibook_logo.jpg') }}" alt="Waafibook Logo" style="width:38px;height:38px;object-fit:contain;border-radius:8px;background:white;padding:2px;">
+                    <span style="font-size:1.2rem;font-weight:800;color:white;">Waafibook</span>
                 </a>
                 <p style="color:rgba(255,255,255,.55);font-size:.88rem;line-height:1.65;">
                     Complete cloud-based ERP for growing businesses in Saudi Arabia and beyond.
@@ -452,7 +452,7 @@
             </div>
         </div>
         <div class="lp-footer-bottom">
-            &copy; {{ date('Y') }} Horntech LTD. All rights reserved.
+            &copy; {{ date('Y') }} Waafibook. All rights reserved.
         </div>
     </div>
 </footer>

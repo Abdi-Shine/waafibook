@@ -40,7 +40,7 @@
                     </div>
 
                     <div class="text-gray-500 text-sm">
-                        {{ __("You're logged in!") }} Welcome to the Horntech LTD Management System.
+                        {{ __("You're logged in!") }} Welcome to the Waafibook Management System.
                     </div>
                 </div>
             </div>

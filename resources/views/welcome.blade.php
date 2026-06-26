@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name', 'Horntech LTD') }} - Advanced Business Intelligence</title>
+    <title>{{ config('app.name', 'Waafibook') }} - Advanced Business Intelligence</title>
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@700;800;900&display=swap" rel="stylesheet">
@@ -28,7 +28,7 @@
                 <i class="bi bi-cpu text-accent text-4xl"></i>
             </div>
             <h1 class="text-white text-5xl md:text-6xl font-black tracking-tighter mb-4 font-display">
-                HORNTECH LTD <span class="text-accent">POS</span>
+                WAAFIBOOK <span class="text-accent">POS</span>
             </h1>
             <p class="text-white/60 text-lg md:text-xl font-medium max-w-2xl mx-auto">
                 Next-generation point of sale and inventory management engineered for speed, accuracy, and enterprise scalability.
@@ -111,7 +111,7 @@
         {{-- Footer --}}
         <footer class="mt-16 text-center">
             <p class="text-white/30 text-[11px] font-bold uppercase tracking-[0.3em]">
-                &copy; {{ date('Y') }} HORNTECH LTD • ALL RIGHTS RESERVED
+                &copy; {{ date('Y') }} WAAFIBOOK • ALL RIGHTS RESERVED
             </p>
         </footer>
     </div>

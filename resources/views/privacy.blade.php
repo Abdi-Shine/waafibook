@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacy Policy - Horntech ERP</title>
+    <title>Privacy Policy - Waafibook</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -42,10 +42,10 @@
             <p>You have the right to access, update, or delete your personal information. Please contact us if you need assistance with these requests.</p>
 
             <h2>7. Contact Us</h2>
-            <p>If you have any questions about this Privacy Policy, please contact us at privacy@horntech.com</p>
+            <p>If you have any questions about this Privacy Policy, please contact us at privacy@waafibook.com</p>
 
             <div class="mt-5 pt-4 border-top text-center text-muted">
-                &copy; {{ date('Y') }} Horntech LTD. All rights reserved.
+                &copy; {{ date('Y') }} Waafibook. All rights reserved.
             </div>
         </div>
     </div>

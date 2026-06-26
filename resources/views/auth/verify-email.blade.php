@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify Email - Horntech LTD</title>
+    <title>Verify Email - Waafibook</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -34,7 +34,7 @@
                 A new verification link has been sent to the email address you provided.
             </div>
         @else
-            <p>Thanks for joining Horntech! Before you start, please verify your email address by clicking on the link we just sent to you. check your inbox and your spam folder.</p>
+            <p>Thanks for joining Waafibook! Before you start, please verify your email address by clicking on the link we just sent to you. check your inbox and your spam folder.</p>
         @endif
 
         <form method="POST" action="{{ route('verification.send') }}">

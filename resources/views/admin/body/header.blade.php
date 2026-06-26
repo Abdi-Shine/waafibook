@@ -249,10 +249,10 @@
         <div class="bg-primary px-5 py-4 flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm overflow-hidden shrink-0">
-                    <img src="{{ asset('upload/horntechlogo/horntech_logo.jpg') }}" class="w-full h-full object-contain" alt="Horntech LTD">
+                    <img src="{{ asset('upload/horntechlogo/Waafibook_logo.jpg') }}" class="w-full h-full object-contain" alt="Waafibook">
                 </div>
                 <div class="leading-tight">
-                    <h4 class="text-white font-bold text-[13px]">Horntech LTD Support</h4>
+                    <h4 class="text-white font-bold text-[13px]">Waafibook Support</h4>
                     <p class="text-white/60 text-[10px] font-medium flex items-center gap-1 mt-0.5">
                         <span class="w-1.5 h-1.5 rounded-full bg-accent"></span> We reply within a few hours
                     </p>

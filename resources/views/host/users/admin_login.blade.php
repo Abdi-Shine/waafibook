@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Super Admin Login — Horntech LTD</title>
+    <title>Super Admin Login — Waafibook</title>
 
     <!-- Global CSS & JS (Vite) — Inter font & Bootstrap Icons loaded via app.css + CDN below -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -18,10 +18,10 @@
             <div class="auth-header-gradient auth-header-border p-6 py-5 text-center text-white">
                 <div class="auth-logo flex justify-center mb-6">
                     <div class="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-2xl overflow-hidden border-4 border-accent/30 p-2 transform hover:scale-110 transition-transform duration-300">
-                        <img src="{{ asset('upload/horntechlogo/horntech_logo.jpg') }}" class="w-full h-full object-contain" alt="Horntech LTD Logo">
+                        <img src="{{ asset('upload/horntechlogo/Waafibook_logo.jpg') }}" class="w-full h-full object-contain" alt="Waafibook Logo">
                     </div>
                 </div>
-                <h1 class="auth-title text-2xl font-black tracking-tighter">Horntech LTD</h1>
+                <h1 class="auth-title text-2xl font-black tracking-tighter">Waafibook</h1>
                 <p class="text-[0.7rem] text-white/70 font-bold uppercase tracking-widest mt-1.5 opacity-90 text-accent">Super Admin Portal</p>
             </div>
 
@@ -50,7 +50,7 @@
                         <label for="email" class="block text-[11px] font-black text-primary uppercase tracking-wider mb-1.5">Email Address</label>
                         <div class="relative">
                             <i class="bi bi-envelope input-icon"></i>
-                            <input id="email" class="form-control @error('email') border-red-400 @enderror" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="email" placeholder="admin@horntech.com" />
+                            <input id="email" class="form-control @error('email') border-red-400 @enderror" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="email" placeholder="admin@waafibook.com" />
                         </div>
                     </div>
 
