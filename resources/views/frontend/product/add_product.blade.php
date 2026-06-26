@@ -395,7 +395,7 @@
                         </td>
                         <td class="px-5 py-4">
                             @if($product->stocks->count() > 0)
-                                @php $stock = $product->stocks->first(); $extra = $product->stocks->count() - 1; @endphp
+                                @php $stock = $product->stocks->firstWhere('branch_id', '!=', null) ?? $product->stocks->first(); $extra = $product->stocks->count() - 1; @endphp
                                 <div class="flex items-center gap-1 text-[12px] font-semibold text-primary-dark">
                                     @if($stock->branch_id && $stock->branch)
                                         <span>{{ $stock->branch->name }}</span>
