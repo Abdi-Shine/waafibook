@@ -308,8 +308,6 @@ class ProductController extends Controller
             'product_name.unique' => 'A product with this name already exists.',
         ]);
 
-        $branchId = $request->input('branch_id') ?: null;
-
         $data = $request->all();
         unset($data['stock_products'], $data['location_type'], $data['branch_id'], $data['store_id'], $data['status'], $data['brand_id'], $data['secondary_unit'], $data['account_type']);
 
@@ -326,29 +324,10 @@ class ProductController extends Controller
 
         $product->update($data);
 
-        // Update primary stock record (or create one if missing). Quantity and
-        // branch are only touched when the form actually sent them, so editing
-        // a product without changing its stock/branch doesn't accidentally
-        // zero out the quantity or null out an already-assigned branch.
-        $stockRecord = ProductStock::query()->where('product_id', $product->id)->first();
-        $stockUpdate = [];
-        if ($request->filled('branch_id')) {
-            $stockUpdate['branch_id'] = $branchId;
-        }
-        if ($request->filled('stock_products')) {
-            $stockUpdate['quantity'] = $request->input('stock_products');
-        }
-        if ($stockRecord) {
-            if (!empty($stockUpdate)) {
-                $stockRecord->update($stockUpdate);
-            }
-        } else {
-            ProductStock::query()->create(array_merge([
-                'product_id' => $product->id,
-                'quantity'   => 0,
-                'branch_id'  => $branchId,
-            ], $stockUpdate));
-        }
+        // Editing a product only touches the product's own columns. Branch
+        // stock (quantity, branch assignment) is managed separately via
+        // stock adjustments/transfers and must never change as a side effect
+        // of saving this form.
 
         AuditLog::log('Products', "Updated product details: {$product->product_name}", 'UPDATE');
 
