@@ -193,12 +193,16 @@
                                     <button class="btn-action-view" title="View">
                                         <i class="bi bi-eye"></i>
                                     </button>
-                                    <button class="btn-action-edit" title="Edit">
+                                    @if(auth()->user() && in_array(strtolower(trim((string) auth()->user()->role)), ['admin', 'super admin']))
+                                    <button type="button" class="btn-action-edit" title="Edit"
+                                        onclick="openEditTransactionModal({{ $trx->id }}, {{ $trx->total_amount }}, '{{ $trx->date->format('Y-m-d') }}', '{{ addslashes($trx->description ?? '') }}', {{ $catItem->account_id ?? 'null' }})">
                                         <i class="bi bi-pencil"></i>
                                     </button>
-                                    <button class="btn-action-delete" title="Delete">
+                                    <button type="button" class="btn-action-delete" title="Delete"
+                                        onclick="deleteTransaction({{ $trx->id }})">
                                         <i class="bi bi-trash"></i>
                                     </button>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -386,11 +390,108 @@
     </div>
 </div>
 
+<!-- Edit Transaction Modal -->
+<div id="editTransactionModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+    <div class="bg-white rounded-[1.5rem] w-full max-w-lg shadow-2xl overflow-hidden relative animate-in zoom-in duration-300">
+        <div class="px-6 py-6 bg-primary relative overflow-hidden shrink-0">
+            <div class="flex items-center justify-between relative z-10">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-white/10 border border-white/10 rounded-lg flex items-center justify-center text-white text-lg shadow-inner backdrop-blur-md">
+                        <i class="bi bi-pencil"></i>
+                    </div>
+                    <h2 class="text-base font-bold text-white tracking-tight uppercase">Edit Transaction</h2>
+                </div>
+                <button type="button" onclick="closeEditTransactionModal()" class="w-7 h-7 bg-white/10 border border-white/10 text-white rounded-md hover:bg-white/20 transition-all flex items-center justify-center shadow-sm">
+                    <i class="bi bi-x-lg text-[10px]"></i>
+                </button>
+            </div>
+        </div>
+        <form id="editTransactionForm" method="POST" class="p-8">
+            @csrf
+            @method('PUT')
+            <div class="space-y-6">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Amount</label>
+                        <input type="number" step="0.01" name="amount" id="editTrxAmount" required class="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Date</label>
+                        <input type="date" name="date" id="editTrxDate" required class="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                    </div>
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Deposit Category</label>
+                    <select name="category_id" id="editTrxCategory" class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+                        <option value="">— No change —</option>
+                        @foreach($accountCategories as $cat)
+                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Description</label>
+                    <input type="text" name="description" id="editTrxDescription" class="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                </div>
+            </div>
+            <div class="flex items-center gap-3 pt-8">
+                <button type="button" onclick="closeEditTransactionModal()" class="flex-1 px-5 py-2.5 bg-white border border-gray-200 text-gray-600 font-semibold rounded-lg hover:bg-gray-50 transition-all text-[13px] shadow-sm">Cancel</button>
+                <button type="submit" class="flex-[2] px-6 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-all text-[13px] shadow-sm flex items-center justify-center gap-2">
+                    <i class="bi bi-check2 text-sm"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Hidden delete form, reused for every row -->
+<form id="deleteTransactionForm" method="POST" class="hidden">
+    @csrf
+    @method('DELETE')
+    <input type="hidden" name="password">
+</form>
+
 <script>
     function openDepositModal() { document.getElementById('depositModal').classList.remove('hidden'); }
     function closeDepositModal() { document.getElementById('depositModal').classList.add('hidden'); }
     function openWithdrawModal() { document.getElementById('withdrawModal').classList.remove('hidden'); }
     function closeWithdrawModal() { document.getElementById('withdrawModal').classList.add('hidden'); }
+
+    function openEditTransactionModal(id, amount, date, description, categoryId) {
+        document.getElementById('editTransactionForm').action = '/account-management/transaction/' + id;
+        document.getElementById('editTrxAmount').value = amount;
+        document.getElementById('editTrxDate').value = date;
+        document.getElementById('editTrxDescription').value = description;
+        document.getElementById('editTrxCategory').value = categoryId ?? '';
+        document.getElementById('editTransactionModal').classList.remove('hidden');
+    }
+    function closeEditTransactionModal() { document.getElementById('editTransactionModal').classList.add('hidden'); }
+
+    function deleteTransaction(id) {
+        Swal.fire({
+            title: 'Delete this transaction?',
+            text: 'This reverses the journal entry and account balances. This cannot be undone.',
+            icon: 'warning',
+            input: 'password',
+            inputPlaceholder: 'Enter your admin password to confirm',
+            inputAttributes: { autocapitalize: 'off', autocorrect: 'off' },
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#004161',
+            cancelButtonColor: '#99CC33',
+            inputValidator: (value) => {
+                if (!value) return 'Password is required to delete this transaction.';
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.getElementById('deleteTransactionForm');
+                form.action = '/account-management/transaction/' + id;
+                form.querySelector('input[name="password"]').value = result.value;
+                form.submit();
+            }
+        });
+    }
 
     function filterTransactions() {
         const accId = document.getElementById('accountFilter').value;

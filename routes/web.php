@@ -200,6 +200,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/account-management/withdraw', [App\Http\Controllers\BankTransactionController::class, 'storeWithdrawal'])->name('bank.transaction.withdraw');
         Route::post('/account-management/transfer', [App\Http\Controllers\BankTransactionController::class, 'storeTransfer'])->name('bank.transaction.transfer');
         Route::post('/account-management/adjustment', [App\Http\Controllers\BankTransactionController::class, 'storeAdjustment'])->name('bank.transaction.adjustment');
+        Route::put('/account-management/transaction/{id}', [App\Http\Controllers\BankTransactionController::class, 'updateTransaction'])->name('bank.transaction.update');
+        Route::delete('/account-management/transaction/{id}', [App\Http\Controllers\BankTransactionController::class, 'destroyTransaction'])->name('bank.transaction.destroy');
         Route::post('/accounts', [App\Http\Controllers\AccountController::class, 'store'])->name('account.store');
         Route::put('/accounts/{id}', [App\Http\Controllers\AccountController::class, 'update'])->name('account.update')->middleware('tenant.owns:chart_of_accounts');
         Route::delete('/accounts/{id}', [App\Http\Controllers\AccountController::class, 'destroy'])->name('account.destroy')->middleware(['tenant.owns:chart_of_accounts', 'permission:Accounting,delete', 'delete.password']);
@@ -320,6 +322,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/sales/invoices/{id}', [App\Http\Controllers\SalesController::class, 'update'])->name('sales.invoice.update')->middleware('tenant.owns:sales_orders');
         Route::delete('/sales/invoices/{id}', [App\Http\Controllers\SalesController::class, 'destroy'])->name('sales.invoice.delete')->middleware(['tenant.owns:sales_orders', 'permission:Sales & POS,delete', 'delete.password']);
         Route::get('/sales/invoices/{id}/pdf', [App\Http\Controllers\SalesController::class, 'pdf'])->name('sales.invoice.pdf')->middleware('tenant.owns:sales_orders');
+        Route::get('/sales/invoices/{id}/pos-pdf', [App\Http\Controllers\SalesController::class, 'posInvoicePdf'])->name('sales.invoice.pos-pdf')->middleware('tenant.owns:sales_orders');
         Route::post('/sales/invoices/{id}/status', [App\Http\Controllers\SalesController::class, 'updateStatus'])->name('sales.invoice.update-status')->middleware('tenant.owns:sales_orders');
         Route::get('/sales/pos', [App\Http\Controllers\SalesController::class, 'pos'])->name('sales.pos.view');
         Route::post('/sales/quick-customer', [App\Http\Controllers\SalesController::class, 'quickStoreCustomer'])->name('sales.quick.customer');
@@ -443,8 +446,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/audit-logs', [App\Http\Controllers\CompanyController::class, 'auditLogs'])->name('audit-logs');
     });
 
-    // Subscription Management
-    Route::controller(App\Http\Controllers\SubscriptionController::class)->group(function () {
+    // Subscription Management — admin-only, same as every other module
+    Route::controller(App\Http\Controllers\SubscriptionController::class)->middleware('permission:System Admin')->group(function () {
         Route::get('/subscribers/plans', 'plansIndex')->name('subscribers.plans.index');
         Route::post('/subscribers/plans', 'plansStore')->name('subscribers.plans.store');
         Route::put('/subscribers/plans/{id}', 'plansUpdate')->name('subscribers.plans.update');
@@ -491,24 +494,30 @@ Route::get('/subscribers/pricing', function () {
 require __DIR__ . '/auth.php';
 
 // Temporary Repair Route - Visit ims.thehorntech.com/repair-db to fix database errors
+// Admin-only: this drops and reseeds the users table, so it must never be reachable
+// without a valid admin session.
 Route::get('/repair-db', function () {
+    if (!auth()->check() || !in_array(strtolower(trim((string) auth()->user()->role)), ['admin', 'super admin'])) {
+        abort(403, 'Only administrators can run the database repair tool.');
+    }
+
     try {
         echo "=== Manual Repair Started ===<br>";
-        
+
         echo "Cleaning up tables...<br>";
         // Using raw SQL to ensure success even if Schema classes fail
         \Illuminate\Support\Facades\DB::statement('DROP TABLE IF EXISTS sessions');
         \Illuminate\Support\Facades\DB::statement('DROP TABLE IF EXISTS password_reset_tokens');
         \Illuminate\Support\Facades\DB::statement('DROP TABLE IF EXISTS users');
-        
+
         echo "Running migrations...<br>";
         \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-        
+
         echo "Running seeders...<br>";
         \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
-        
+
         return "<br><b>Database repaired successfully!</b><br><a href='/'>Click here to go to Login</a>";
     } catch (\Exception $e) {
         return "<br><b style='color:red'>Error:</b> " . $e->getMessage() . "<br><br>Trace:<br>" . nl2br($e->getTraceAsString());
     }
-});
+})->middleware(['auth', 'verified']);

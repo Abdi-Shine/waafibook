@@ -8,7 +8,7 @@
      x-data="{
         searchTerm: '',
         partyType: 'All Parties',
-        parties: @json($parties->values()),
+        parties: {{ \Illuminate\Support\Js::from($parties->values()) }},
         get filteredParties() {
             return this.parties.filter(p => {
                 const matchesSearch = p.name.toLowerCase().includes(this.searchTerm.toLowerCase());

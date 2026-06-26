@@ -77,9 +77,15 @@
         </div>
     </div>
 
+    @php
+        $totalSales = $parties->sum('sales');
+        $totalPurchases = $parties->sum('purchases');
+        $netTotal = $totalSales - $totalPurchases;
+    @endphp
+
     <div class="stats-bar">
-        Total Sale Volume: <span>{{ $company->currency ?? 'SAR' }} 26,860.00</span>
-        Total Purchase Volume: <span>{{ $company->currency ?? 'SAR' }} 27,650.00</span>
+        Total Sale Volume: <span>{{ $company->currency ?? 'SAR' }} {{ number_format($totalSales, 2) }}</span>
+        Total Purchase Volume: <span>{{ $company->currency ?? 'SAR' }} {{ number_format($totalPurchases, 2) }}</span>
     </div>
 
     <table>
@@ -93,48 +99,24 @@
             </tr>
         </thead>
         <tbody>
+            @forelse($parties as $i => $p)
             <tr>
-                <td>01</td>
-                <td class="bold">Mohammed Ali Trading</td>
-                <td class="right green">12,450.00</td>
-                <td class="right">---</td>
-                <td class="right bold">12,450.00</td>
+                <td>{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</td>
+                <td class="bold">{{ $p['name'] }}</td>
+                <td class="right {{ $p['sales'] > 0 ? 'green' : '' }}">{{ $p['sales'] > 0 ? number_format($p['sales'], 2) : '---' }}</td>
+                <td class="right {{ $p['purchases'] > 0 ? 'red' : '' }}">{{ $p['purchases'] > 0 ? number_format($p['purchases'], 2) : '---' }}</td>
+                <td class="right bold {{ ($p['sales'] - $p['purchases']) < 0 ? 'red' : '' }}">{{ number_format($p['sales'] - $p['purchases'], 2) }}</td>
             </tr>
-            <tr>
-                <td>02</td>
-                <td class="bold">Modern Tech Suppliers</td>
-                <td class="right">---</td>
-                <td class="right red">15,450.00</td>
-                <td class="right red">-15,450.00</td>
-            </tr>
-            <tr>
-                <td>03</td>
-                <td class="bold">Fatima Ahmad Store</td>
-                <td class="right green">8,670.00</td>
-                <td class="right">---</td>
-                <td class="right bold">8,670.00</td>
-            </tr>
-            <tr>
-                <td>04</td>
-                <td class="bold">Abdullah Electronics</td>
-                <td class="right green">5,340.00</td>
-                <td class="right red">1,200.00</td>
-                <td class="right bold">4,140.00</td>
-            </tr>
-            <tr>
-                <td>05</td>
-                <td class="bold">Global Import LLC</td>
-                <td class="right">---</td>
-                <td class="right red">8,900.00</td>
-                <td class="right red">-8,900.00</td>
-            </tr>
+            @empty
+            <tr><td colspan="5" style="text-align:center;">No party transactions found.</td></tr>
+            @endforelse
         </tbody>
         <tfoot>
             <tr>
                 <td colspan="2">TOTAL AGGREGATED VOLUME ({{ $company->currency ?? 'SAR' }})</td>
-                <td class="right">26,860.00</td>
-                <td class="right">27,650.00</td>
-                <td class="right red">-790.00 Net</td>
+                <td class="right">{{ number_format($totalSales, 2) }}</td>
+                <td class="right">{{ number_format($totalPurchases, 2) }}</td>
+                <td class="right {{ $netTotal < 0 ? 'red' : '' }}">{{ number_format($netTotal, 2) }} Net</td>
             </tr>
         </tfoot>
     </table>

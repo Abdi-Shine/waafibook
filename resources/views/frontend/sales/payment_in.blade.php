@@ -215,9 +215,11 @@
                                     <a href="{{ route('customer.statement', $item->customer_id) }}" class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary border border-indigo-100 hover:bg-primary/10 hover:text-white transition-all shadow-sm" title="Statement">
                                         <i class="bi bi-file-earmark-person"></i>
                                     </a>
+                                    @if(auth()->user()->hasPermission('Sales & POS', 'delete'))
                                     <button type="button" onclick="confirmDeletePaymentIn('{{ route('payment_in.delete', $item->id) }}', '{{ $item->receipt_no }}')" class="btn-action-delete" title="Delete Records">
                                         <i class="bi bi-trash"></i>
                                     </button>
+                                    @endif
                                 </div>
                             </td>
                         </tr>

@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\Customer;
 use App\Models\Account;
 use App\Models\Company;
+use App\Models\JournalEntry;
+use App\Models\JournalItem;
 
 class CustomerController extends Controller
 {
@@ -68,7 +71,13 @@ class CustomerController extends Controller
             $lastCode = Customer::query()->max('id') ?? 0;
             $validated['customer_code'] = 'CUS-' . date('Y') . '-' . str_pad($lastCode + 1, 3, '0', STR_PAD_LEFT);
 
-            return Customer::query()->create($validated);
+            $customer = Customer::query()->create($validated);
+
+            if (!empty($validated['amount_balance'])) {
+                $this->postOpeningBalanceEntry($customer, (float) $validated['amount_balance']);
+            }
+
+            return $customer;
         });
 
         if ($request->wantsJson()) {
@@ -102,7 +111,7 @@ class CustomerController extends Controller
 
                 $balance = isset($data[5]) ? (float) $data[5] : 0;
 
-                Customer::query()->create([
+                $customer = Customer::query()->create([
                     'name'          => $name,
                     'email'         => $data[1] ?? null,
                     'phone'         => $data[2] ?? null,
@@ -114,6 +123,10 @@ class CustomerController extends Controller
                     'account_code'  => $account?->code,
                     'customer_code' => 'CUS-' . date('Y') . '-' . str_pad($nextId++, 3, '0', STR_PAD_LEFT),
                 ]);
+
+                if ($balance != 0) {
+                    $this->postOpeningBalanceEntry($customer, $balance);
+                }
 
                 $totalBalance += $balance;
             }
@@ -279,6 +292,7 @@ class CustomerController extends Controller
                 $diff = $new_balance - $old_balance;
                 if ($diff != 0) {
                     $account->increment('balance', $diff);
+                    $this->postOpeningBalanceEntry($customer, $diff);
                 }
             }
 
@@ -291,20 +305,90 @@ class CustomerController extends Controller
     public function destroy($id)
     {
         $customer = Customer::query()->findOrFail($id);
-        
-        if ($customer->amount_balance > 0) {
+        $balance = (float) ($customer->amount_balance ?? 0);
+
+        if ($balance != 0) {
             $account = Account::query()->find($customer->account_id);
             if (!$account) {
                 $account = Account::query()->where('name', 'like', '%Receivable%')->first();
             }
             if ($account) {
-                $account->balance -= $customer->amount_balance;
+                $account->balance -= $balance;
                 $account->save();
             }
+
+            // Reverses whatever net opening-balance entries this customer
+            // accumulated (initial + any later adjustments), rather than
+            // hunting down every prior entry individually.
+            $this->postOpeningBalanceEntry($customer, -$balance);
         }
 
         $customer->delete();
 
         return redirect()->back()->with('success', 'Customer deleted successfully');
+    }
+
+    // A customer's opening balance previously only ever bumped
+    // chart_of_accounts.balance directly — a cached column the Balance
+    // Sheet / Trial Balance reports deliberately don't read (they recompute
+    // live from journal_items instead, so they stay correct after any
+    // edit/reversal elsewhere). With no real journal entry ever posted, that
+    // balance was invisible to those reports — Accounts Receivable could
+    // look right on the customer list yet be wrong everywhere it actually
+    // mattered. This posts the real entry: Dr Accounts Receivable (debit
+    // balance = customer owes us) or Cr (credit balance = customer is
+    // prepaid), against Opening Balance Equity — mirroring
+    // ProductController::createInitialInventoryEntry's pattern for opening
+    // stock. $amount may be negative to record/reverse a credit balance.
+    private function postOpeningBalanceEntry(Customer $customer, float $amount, ?string $date = null): void
+    {
+        if ($amount == 0) {
+            return;
+        }
+
+        $companyId = $customer->company_id ?? Auth::user()->company_id;
+
+        $receivableAccount = Account::query()->find($customer->account_id)
+            ?: Account::query()->where('company_id', $companyId)->where('name', 'like', '%Receivable%')->first();
+        $equityAccount = Account::query()->where('company_id', $companyId)->where('code', '3300')->first()
+            ?: Account::query()->where('company_id', $companyId)->where('name', 'like', '%Opening Balance%')->first();
+
+        if (!$receivableAccount || !$equityAccount) {
+            return;
+        }
+
+        $entry = JournalEntry::query()->create([
+            'company_id'   => $companyId,
+            // Placeholder — overwritten right after using the entry's own
+            // (now-known) id, which is guaranteed unique even if this runs
+            // for the same customer more than once on the same day (e.g.
+            // two balance edits today), unlike a customer_id+date combo.
+            'entry_number' => 'JE-CUST-PENDING-' . $customer->id . '-' . microtime(true),
+            'date'         => $date ?: now()->toDateString(),
+            'reference'    => $customer->customer_code,
+            'description'  => 'Opening balance for ' . $customer->name,
+            'status'       => 'posted',
+            'total_amount' => abs($amount),
+            'created_by'   => Auth::id(),
+        ]);
+        $entry->update(['entry_number' => 'JE-CUST-' . date('Ymd') . '-' . str_pad($entry->id, 6, '0', STR_PAD_LEFT)]);
+
+        JournalItem::query()->create([
+            'company_id'       => $companyId,
+            'journal_entry_id' => $entry->id,
+            'account_id'       => $receivableAccount->id,
+            'debit'            => $amount > 0 ? $amount : 0,
+            'credit'           => $amount < 0 ? abs($amount) : 0,
+            'description'      => 'Opening balance for ' . $customer->name,
+        ]);
+
+        JournalItem::query()->create([
+            'company_id'       => $companyId,
+            'journal_entry_id' => $entry->id,
+            'account_id'       => $equityAccount->id,
+            'debit'            => $amount < 0 ? abs($amount) : 0,
+            'credit'           => $amount > 0 ? $amount : 0,
+            'description'      => 'Opening balance for ' . $customer->name,
+        ]);
     }
 }

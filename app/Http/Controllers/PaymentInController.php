@@ -82,6 +82,24 @@ class PaymentInController extends Controller
             'bank_account_id' => 'required|exists:chart_of_accounts,id',
         ]);
 
+        // This screen always credits Accounts Receivable for whatever amount
+        // is typed in, with no real link to an actual invoice — "invoice_no"
+        // is just a free-text memo, never validated against a real
+        // SalesOrder. Recording a payment bigger than what the customer
+        // actually owes (or recording one at all when they owe nothing) was
+        // silently driving AR negative on the balance sheet with no
+        // underlying transaction to justify it. Capping at their current
+        // outstanding balance keeps the ledger honest.
+        /** @var Customer|null $customer */
+        $customer = Customer::query()->find($request->customer_id);
+        $outstanding = (float) ($customer->amount_balance ?? 0);
+        if ($outstanding <= 0) {
+            return redirect()->back()->with('error', 'This customer has no outstanding balance — there is nothing to receive payment against.');
+        }
+        if ((float) $request->amount > $outstanding) {
+            return redirect()->back()->with('error', 'Payment amount ($' . number_format($request->amount, 2) . ') exceeds the customer\'s outstanding balance ($' . number_format($outstanding, 2) . ').');
+        }
+
         DB::transaction(function () use ($request) {
             $count = PaymentIn::query()->count() + 1;
             $receiptNo = 'RCT-' . date('Y') . '-' . str_pad($count, 5, '0', STR_PAD_LEFT);

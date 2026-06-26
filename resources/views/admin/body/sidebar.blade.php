@@ -231,19 +231,9 @@
                     <a href="{{ route('account_management.index') }}"
                         class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200"><i
                             class="bi bi-plus text-lg"></i> Accounts</a>
-                    <a href="{{ route('cash_management.index') }}"
-                        class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200"><i
-                            class="bi bi-plus text-lg"></i> Cash Management</a>
                     <a href="{{ route('cash_in_hand.index') }}"
                         class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200"><i
                             class="bi bi-plus text-lg"></i> Cash In Hand</a>
-                    <a href="{{ route('journal.index') }}"
-                        class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200"><i
-                            class="bi bi-plus text-lg"></i> Journal Entry</a>
-
-                    <a href="{{ route('account.trial-balance') }}"
-                        class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200"><i
-                            class="bi bi-plus text-lg"></i> Trial Balance</a>
                 </div>
             </div>
         @endif
@@ -267,15 +257,9 @@
                     <a href="{{ route('reports.balance_sheet') }}"
                         class="flex items-center gap-3 pl-8 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('reports.balance_sheet') ? 'text-white bg-white/5' : '' }}">
                         <i class="bi bi-plus text-lg"></i> Balance Sheet</a>
-                    <a href="{{ route('reports.trial_balance') }}"
-                        class="flex items-center gap-3 pl-8 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('reports.trial_balance') ? 'text-white bg-white/5' : '' }}">
-                        <i class="bi bi-plus text-lg"></i> Trial Balance</a>
                     <a href="{{ route('reports.cash_flow') }}"
                         class="flex items-center gap-3 pl-8 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('reports.cash_flow') ? 'text-white bg-white/5' : '' }}">
                         <i class="bi bi-plus text-lg"></i> Cash Flow</a>
-                    <a href="{{ route('reports.transaction') }}"
-                        class="flex items-center gap-3 pl-8 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('reports.transaction') ? 'text-white bg-white/5' : '' }}">
-                        <i class="bi bi-plus text-lg"></i> Transactions</a>
 
                     {{-- Sales --}}
                     <a href="{{ route('reports.sales') }}"
@@ -327,9 +311,6 @@
                     <a href="{{ route('company-settings') }}"
                         class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200"><i
                             class="bi bi-plus text-lg"></i> Company Settings</a>
-                    <a href="{{ route('feature-settings') }}"
-                        class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200"><i
-                            class="bi bi-plus text-lg"></i> Feature Settings</a>
                     <a href="{{ route('capital-deposit') }}"
                         class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200"><i
                             class="bi bi-plus text-lg"></i> Share Holders</a>

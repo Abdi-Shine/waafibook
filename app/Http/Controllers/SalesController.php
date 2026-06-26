@@ -277,7 +277,7 @@ class SalesController extends Controller
             'items.*.unit_price'     => 'required|numeric|min:0',
         ]);
 
-        DB::transaction(function () use ($request) {
+        $orderId = DB::transaction(function () use ($request) {
             // Subtotal = sum of (qty × price) per line — per-item discounts already deducted in JS
             $subtotal = 0;
             foreach ($request->items as $item) {
@@ -367,6 +367,8 @@ class SalesController extends Controller
             $this->createAccountingEntry($order);
 
             AuditLog::log('Sales', "Created sales invoice #{$order->invoice_no} for total $" . number_format($order->total_amount, 2), 'CREATE');
+
+            return $order->id;
         });
 
         if ($request->wantsJson() || $request->ajax()) {
@@ -374,6 +376,7 @@ class SalesController extends Controller
                 'success'  => true,
                 'message'  => 'Invoice created successfully.',
                 'redirect' => route('sales.invoice.view'),
+                'order_id' => $orderId,
             ]);
         }
 
@@ -613,6 +616,61 @@ class SalesController extends Controller
                   ->setPaper('a4', 'portrait');
 
         return $pdf->stream('Invoice_' . $order->invoice_no . '.pdf');
+    }
+
+    // POS / cash-sale receipt — a simpler classic invoice layout (item table +
+    // amount in words + received/balance + signature box), distinct from the
+    // "Tax Invoice" style sales_invoice_pdf used elsewhere.
+    public function posInvoicePdf($id)
+    {
+        /** @var SalesOrder|null $order */
+        $order   = SalesOrder::query()->with('customer', 'items')->findOrFail($id);
+        /** @var Company|null $company */
+        $company = Company::find(auth()->user()->company_id);
+
+        $pdf = Pdf::loadView('frontend.sales.pos_invoice_pdf', compact('order', 'company'))
+                  ->setPaper('a4', 'portrait');
+
+        return $pdf->stream('Invoice_' . $order->invoice_no . '.pdf');
+    }
+
+    // Converts a whole-dollar amount into words, e.g. 1150 -> "One Thousand
+    // One Hundred Fifty". No existing package/helper for this in the app, and
+    // pulling in a dependency for one phrase on one receipt isn't worth it.
+    public static function numberToWords(float $amount): string
+    {
+        $dollars = (int) floor($amount);
+        $cents   = (int) round(($amount - $dollars) * 100);
+
+        $words = $dollars === 0 ? 'Zero' : self::wordsForInteger($dollars);
+        $words .= ' Dollars';
+
+        if ($cents > 0) {
+            $words .= ' and ' . self::wordsForInteger($cents) . ' Cents';
+        }
+
+        return $words . ' only';
+    }
+
+    private static function wordsForInteger(int $number): string
+    {
+        $ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
+                 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
+                 'Seventeen', 'Eighteen', 'Nineteen'];
+        $tens  = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+        if ($number === 0) return '';
+        if ($number < 20) return $ones[$number];
+        if ($number < 100) {
+            return trim($tens[intdiv($number, 10)] . ' ' . $ones[$number % 10]);
+        }
+        if ($number < 1000) {
+            return trim($ones[intdiv($number, 100)] . ' Hundred ' . self::wordsForInteger($number % 100));
+        }
+        if ($number < 1000000) {
+            return trim(self::wordsForInteger(intdiv($number, 1000)) . ' Thousand ' . self::wordsForInteger($number % 1000));
+        }
+        return trim(self::wordsForInteger(intdiv($number, 1000000)) . ' Million ' . self::wordsForInteger($number % 1000000));
     }
 
     // Public, signed-URL version so the PDF can be opened by a customer (e.g. via WhatsApp)

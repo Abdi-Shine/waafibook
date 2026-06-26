@@ -74,11 +74,17 @@
         </div>
     </div>
 
+    @php
+        $totalQty = $products->sum('qty');
+        $totalValue = $products->sum(fn($p) => $p['purchasePrice'] * $p['qty']);
+        $totalRevenue = $products->sum(fn($p) => $p['salePrice'] * $p['qty']);
+    @endphp
+
     <div class="stats-bar clearfix">
-        Total Items: <span>2</span>
-        Total Stock Qty: <span>12 units</span>
-        Stock Value: <span>{{ $company->currency ?? 'SAR' }} 3,400.00</span>
-        Potential Revenue: <span>{{ $company->currency ?? 'SAR' }} 2,700.00</span>
+        Total Items: <span>{{ $products->count() }}</span>
+        Total Stock Qty: <span>{{ number_format($totalQty) }} units</span>
+        Stock Value: <span>{{ $company->currency ?? 'SAR' }} {{ number_format($totalValue, 2) }}</span>
+        Potential Revenue: <span>{{ $company->currency ?? 'SAR' }} {{ number_format($totalRevenue, 2) }}</span>
     </div>
 
     <table>
@@ -95,34 +101,32 @@
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>01</td>
-                <td class="bold">Laptop</td>
-                <td>Electronics</td>
-                <td class="right green">150.00</td>
-                <td class="right red">200.00</td>
-                <td class="center red">2</td>
-                <td class="center red">Low Stock</td>
-                <td class="right">400.00</td>
-            </tr>
-            <tr>
-                <td>02</td>
-                <td class="bold">Printers</td>
-                <td>Office Equipment</td>
-                <td class="right green">200.00</td>
-                <td class="right red">300.00</td>
-                <td class="center teal">10</td>
-                <td class="center teal">Medium</td>
-                <td class="right">3,000.00</td>
-            </tr>
+            @forelse($products as $i => $p)
+                @php
+                    $statusClass = $p['qty'] <= 0 ? 'red' : ($p['qty'] < 5 ? 'red' : ($p['qty'] <= 20 ? 'teal' : 'green'));
+                    $statusLabel = $p['qty'] <= 0 ? 'Out of Stock' : ($p['qty'] < 5 ? 'Low Stock' : ($p['qty'] <= 20 ? 'Medium' : 'Healthy'));
+                @endphp
+                <tr>
+                    <td>{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</td>
+                    <td class="bold">{{ $p['name'] }}</td>
+                    <td>{{ $p['category'] }}</td>
+                    <td class="right green">{{ number_format($p['salePrice'], 2) }}</td>
+                    <td class="right red">{{ number_format($p['purchasePrice'], 2) }}</td>
+                    <td class="center {{ $statusClass }}">{{ $p['qty'] }}</td>
+                    <td class="center {{ $statusClass }}">{{ $statusLabel }}</td>
+                    <td class="right">{{ number_format($p['purchasePrice'] * $p['qty'], 2) }}</td>
+                </tr>
+            @empty
+                <tr><td colspan="8" class="center">No products found.</td></tr>
+            @endforelse
         </tbody>
         <tfoot>
             <tr>
                 <td colspan="4">TOTALS ({{ $company->currency ?? 'SAR' }})</td>
-                <td class="right">3,400.00 purchase</td>
-                <td class="right">12 units</td>
+                <td class="right">{{ number_format($totalValue, 2) }} purchase</td>
+                <td class="right">{{ number_format($totalQty) }} units</td>
                 <td></td>
-                <td class="right">3,400.00</td>
+                <td class="right">{{ number_format($totalValue, 2) }}</td>
             </tr>
         </tfoot>
     </table>

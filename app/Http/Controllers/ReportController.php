@@ -17,6 +17,8 @@ use App\Models\Role;
 use App\Models\Account;
 use App\Models\Category;
 use App\Models\JournalItem;
+use App\Models\PaymentIn;
+use App\Models\SupplierPayment;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -1480,12 +1482,142 @@ class ReportController extends Controller
         return $pdf->download('balance-sheet-' . $asOfDate . '.pdf');
     }
 
+    private function partiesStatementData(Request $request)
+    {
+        $customers = Customer::query()->orderBy('name')->get();
+        $suppliers = Supplier::query()->orderBy('name')->get();
+
+        $totalReceivable = (float) Customer::query()->sum('amount_balance');
+        $totalPayable    = (float) Supplier::query()->sum('amount_balance');
+        $activeParties   = Customer::query()->where('status', 'active')->count()
+                          + Supplier::query()->where('status', 'active')->count();
+
+        $fromDate = $request->input('from_date') ?: now()->startOfYear()->toDateString();
+        $toDate   = $request->input('to_date') ?: now()->toDateString();
+        $partyKey = $request->input('party');
+
+        $totalTransactions = SalesOrder::query()->whereBetween('invoice_date', [$fromDate, $toDate])->count()
+            + PurchaseBill::query()->whereBetween('bill_date', [$fromDate, $toDate])->count()
+            + PaymentIn::query()->whereBetween('payment_date', [$fromDate, $toDate])->count()
+            + SupplierPayment::query()->whereBetween('payment_date', [$fromDate, $toDate])->count();
+
+        $party  = null;
+        $ledger = collect();
+
+        if ($partyKey && str_contains($partyKey, '_')) {
+            [$type, $partyId] = explode('_', $partyKey, 2);
+
+            if ($type === 'customer') {
+                $party = Customer::query()->find($partyId);
+                if ($party) {
+                    $increases = SalesOrder::query()->where('customer_id', $party->id)->get()->map(fn($o) => [
+                        'date'        => $o->invoice_date ?? $o->created_at,
+                        'type'        => 'Invoice',
+                        'description' => 'Sales Invoice',
+                        'reference'   => $o->invoice_no,
+                        'debit'       => (float) $o->total_amount,
+                        'credit'      => 0,
+                    ]);
+                    $decreases = PaymentIn::query()->where('customer_id', $party->id)->get()->map(fn($p) => [
+                        'date'        => $p->payment_date,
+                        'type'        => 'Payment',
+                        'description' => 'Payment Received',
+                        'reference'   => $p->receipt_no,
+                        'debit'       => 0,
+                        'credit'      => (float) $p->amount,
+                    ]);
+                    $ledger = $this->buildPartyStatementLedger($party, $increases, $decreases, $fromDate, $toDate);
+                }
+            } elseif ($type === 'supplier') {
+                $party = Supplier::query()->find($partyId);
+                if ($party) {
+                    $increases = PurchaseBill::query()->where('supplier_id', $party->id)->get()->map(fn($b) => [
+                        'date'        => $b->bill_date,
+                        'type'        => 'Bill',
+                        'description' => 'Purchase Bill',
+                        'reference'   => $b->bill_number,
+                        'debit'       => (float) $b->total_amount,
+                        'credit'      => 0,
+                    ]);
+                    $decreases = SupplierPayment::query()->where('supplier_id', $party->id)->get()->map(fn($p) => [
+                        'date'        => $p->payment_date,
+                        'type'        => 'Payment',
+                        'description' => 'Payment Made',
+                        'reference'   => $p->voucher_no,
+                        'debit'       => 0,
+                        'credit'      => (float) $p->amount,
+                    ]);
+                    $ledger = $this->buildPartyStatementLedger($party, $increases, $decreases, $fromDate, $toDate);
+                }
+            }
+        }
+
+        return compact(
+            'customers', 'suppliers', 'totalReceivable', 'totalPayable',
+            'activeParties', 'totalTransactions', 'fromDate', 'toDate', 'partyKey', 'party', 'ledger'
+        );
+    }
+
+    // Builds a running-balance ledger for one customer or supplier, anchored
+    // to that party's current amount_balance (the authoritative subledger
+    // total) rather than assuming every historical transaction is known —
+    // mirrors the back-calculation already used in customer_statement.blade.php.
+    // "Debit" here means "increases what's owed" (a new invoice/bill) and
+    // "credit" means "decreases what's owed" (a payment), for both
+    // customers and suppliers, so the table reads consistently either way.
+    private function buildPartyStatementLedger($party, $increases, $decreases, $fromDate, $toDate)
+    {
+        $all = $increases->concat($decreases)
+            ->filter(fn($t) => !empty($t['date']))
+            ->sortBy(fn($t) => \Carbon\Carbon::parse($t['date']))
+            ->values();
+
+        $currentBalance = (float) ($party->amount_balance ?? 0);
+        $balanceAtZero  = $currentBalance - $all->sum('debit') + $all->sum('credit');
+
+        $from = \Carbon\Carbon::parse($fromDate)->startOfDay();
+        $to   = \Carbon\Carbon::parse($toDate)->endOfDay();
+
+        $opening = $balanceAtZero;
+        foreach ($all as $t) {
+            if (\Carbon\Carbon::parse($t['date'])->lt($from)) {
+                $opening += $t['debit'] - $t['credit'];
+            }
+        }
+
+        $periodTxns = $all->filter(function ($t) use ($from, $to) {
+            $d = \Carbon\Carbon::parse($t['date']);
+            return $d->gte($from) && $d->lte($to);
+        })->values();
+
+        $rows = collect();
+        $running = $opening;
+        $rows->push([
+            'date' => $from, 'type' => 'Opening', 'description' => 'Opening Balance',
+            'reference' => '---', 'debit' => 0, 'credit' => 0, 'balance' => $running,
+        ]);
+
+        foreach ($periodTxns as $t) {
+            $running += $t['debit'] - $t['credit'];
+            $rows->push([
+                'date' => \Carbon\Carbon::parse($t['date']), 'type' => $t['type'],
+                'description' => $t['description'], 'reference' => $t['reference'] ?: '---',
+                'debit' => $t['debit'], 'credit' => $t['credit'], 'balance' => $running,
+            ]);
+        }
+
+        return $rows;
+    }
+
     public function partiesStatementReport(Request $request)
     {
         /** @var Company|null $company */
         $id = auth()->user()->company_id;
         $company = $id ? Company::find($id) : Company::first();
-        return view('frontend.report.Parties_Statement_reports', compact('company'));
+
+        $data = $this->partiesStatementData($request);
+
+        return view('frontend.report.Parties_Statement_reports', array_merge(['company' => $company], $data));
     }
 
     public function exportPartiesStatementPdf(Request $request)
@@ -1493,7 +1625,11 @@ class ReportController extends Controller
         /** @var Company|null $company */
         $id = auth()->user()->company_id;
         $company = $id ? Company::find($id) : Company::first();
-        $pdf = Pdf::loadView('frontend.report.Parties_statement_pdf_reports', compact('company'));
+
+        $data = $this->partiesStatementData($request);
+
+        $pdf = Pdf::loadView('frontend.report.Parties_statement_pdf_reports', array_merge(['company' => $company], $data));
+        $pdf->setPaper('a4', 'landscape');
         return $pdf->download('party-statement.pdf');
     }
 
@@ -1623,11 +1759,9 @@ class ReportController extends Controller
         return $pdf->download('all-parties-status-report.pdf');
     }
 
-    public function salesPurchaseByPartyReport(Request $request)
+    private function salesPurchaseByPartyData()
     {
-        /** @var Company|null $company */
         $id = auth()->user()->company_id;
-        $company = $id ? Company::find($id) : Company::first();
 
         // Customers — sum sales_orders per customer for this company
         $customerRows = \Illuminate\Support\Facades\DB::table('customers as c')
@@ -1666,7 +1800,7 @@ class ReportController extends Controller
         ]);
 
         // Merge: if same name appears as both customer and supplier, combine
-        $parties = $customers->concat($suppliers)
+        return $customers->concat($suppliers)
             ->groupBy('name')
             ->map(function ($group) {
                 return [
@@ -1678,7 +1812,17 @@ class ReportController extends Controller
                 ];
             })
             ->values()
-            ->filter(fn($p) => $p['sales'] > 0 || $p['purchases'] > 0);
+            ->filter(fn($p) => $p['sales'] > 0 || $p['purchases'] > 0)
+            ->values();
+    }
+
+    public function salesPurchaseByPartyReport(Request $request)
+    {
+        /** @var Company|null $company */
+        $id = auth()->user()->company_id;
+        $company = $id ? Company::find($id) : Company::first();
+
+        $parties = $this->salesPurchaseByPartyData();
 
         return view('frontend.report.sales_purchase_by_party_reports', compact('company', 'parties'));
     }
@@ -1688,7 +1832,10 @@ class ReportController extends Controller
         /** @var Company|null $company */
         $id = auth()->user()->company_id;
         $company = $id ? Company::find($id) : Company::first();
-        $pdf = Pdf::loadView('frontend.report.sales_purchase_by_party_pdf_reports', compact('company'));
+
+        $parties = $this->salesPurchaseByPartyData();
+
+        $pdf = Pdf::loadView('frontend.report.sales_purchase_by_party_pdf_reports', compact('company', 'parties'));
         $pdf->setPaper('a4', 'landscape');
         return $pdf->download('sales-purchase-by-party-report.pdf');
     }
@@ -1711,12 +1858,38 @@ class ReportController extends Controller
         return $pdf->download('sales-purchase-by-party-group-report.pdf');
     }
 
+    private function summaryStockProducts()
+    {
+        $userBranchId = auth()->user()->getAssignedBranchId();
+
+        return Product::query()->with('category')
+            ->withSum(['stocks' => function ($q) use ($userBranchId) {
+                if ($userBranchId) $q->where('branch_id', $userBranchId);
+            }], 'quantity')
+            ->orderBy('product_name')
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'id'            => $p->id,
+                    'name'          => $p->product_name,
+                    'category'      => $p->category->name ?? 'Uncategorized',
+                    'salePrice'     => (float) $p->selling_price,
+                    'purchasePrice' => (float) $p->purchase_price,
+                    'qty'           => (int) ($p->stocks_sum_quantity ?? 0),
+                ];
+            })->values();
+    }
+
     public function summaryStockReport(Request $request)
     {
         /** @var Company|null $company */
         $id = auth()->user()->company_id;
         $company = $id ? Company::find($id) : Company::first();
-        return view('frontend.report.summary_stock_reports', compact('company'));
+
+        $products   = $this->summaryStockProducts();
+        $categories = Category::query()->orderBy('name')->pluck('name');
+
+        return view('frontend.report.summary_stock_reports', compact('company', 'products', 'categories'));
     }
 
     public function exportSummaryStockPdf(Request $request)
@@ -1724,7 +1897,10 @@ class ReportController extends Controller
         /** @var Company|null $company */
         $id = auth()->user()->company_id;
         $company = $id ? Company::find($id) : Company::first();
-        $pdf = Pdf::loadView('frontend.report.summary_stock_pdf_reports', compact('company'));
+
+        $products = $this->summaryStockProducts();
+
+        $pdf = Pdf::loadView('frontend.report.summary_stock_pdf_reports', compact('company', 'products'));
         $pdf->setPaper('a4', 'landscape');
         return $pdf->download('summary-stock-report.pdf');
     }

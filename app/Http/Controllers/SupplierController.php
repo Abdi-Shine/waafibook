@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Company;
 use App\Models\Supplier;
 use App\Models\Account;
+use App\Models\JournalEntry;
+use App\Models\JournalItem;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class SupplierController extends Controller
@@ -64,7 +67,7 @@ class SupplierController extends Controller
 
                 $balance = isset($data[5]) ? (float) $data[5] : 0;
 
-                Supplier::query()->create([
+                $supplier = Supplier::query()->create([
                     'name'           => $name,
                     'email'          => $data[1] ?? null,
                     'phone'          => $data[2] ?? null,
@@ -76,6 +79,10 @@ class SupplierController extends Controller
                     'account_code'   => $account?->code,
                     'supplier_code'  => 'SUP-' . date('Y') . '-' . str_pad($nextId++, 3, '0', STR_PAD_LEFT),
                 ]);
+
+                if ($balance != 0) {
+                    $this->postOpeningBalanceEntry($supplier, $balance);
+                }
 
                 $totalBalance += $balance;
             }
@@ -153,7 +160,13 @@ class SupplierController extends Controller
             $lastId = Supplier::query()->max('id') ?? 0;
             $validated['supplier_code'] = 'SUP-' . date('Y') . '-' . str_pad($lastId + 1, 3, '0', STR_PAD_LEFT);
 
-            return Supplier::query()->create($validated);
+            $supplier = Supplier::query()->create($validated);
+
+            if (!empty($validated['amount_balance'])) {
+                $this->postOpeningBalanceEntry($supplier, (float) $validated['amount_balance']);
+            }
+
+            return $supplier;
         });
 
         if ($request->expectsJson()) {
@@ -189,6 +202,7 @@ class SupplierController extends Controller
                 $diff = $new_balance - $old_balance;
                 if ($diff != 0) {
                     $account->increment('balance', $diff);
+                    $this->postOpeningBalanceEntry($supplier, $diff);
                 }
             }
 
@@ -281,20 +295,86 @@ class SupplierController extends Controller
     public function destroy($id)
     {
         $supplier = Supplier::query()->findOrFail($id);
-        
-        if ($supplier->amount_balance > 0) {
+        $balance = (float) ($supplier->amount_balance ?? 0);
+
+        if ($balance != 0) {
             $account = Account::query()->find($supplier->account_id);
             if (!$account) {
                 $account = Account::query()->where('name', 'like', '%Payable%')->first();
             }
             if ($account) {
-                $account->balance -= $supplier->amount_balance;
+                $account->balance -= $balance;
                 $account->save();
             }
+
+            // Reverses whatever net opening-balance entries this supplier
+            // accumulated (initial + any later adjustments), rather than
+            // hunting down every prior entry individually.
+            $this->postOpeningBalanceEntry($supplier, -$balance);
         }
 
         $supplier->delete();
 
         return redirect()->back()->with('success', 'Supplier deleted successfully');
+    }
+
+    // A supplier's opening balance previously only ever bumped
+    // chart_of_accounts.balance directly — a cached column the Balance
+    // Sheet / Trial Balance reports deliberately don't read (they recompute
+    // live from journal_items instead). With no real journal entry ever
+    // posted, that balance was invisible to those reports. This posts the
+    // real entry: Cr Accounts Payable (positive amount = we owe them more)
+    // against Opening Balance Equity — the liability-side mirror of
+    // CustomerController::postOpeningBalanceEntry. $amount may be negative
+    // to record/reverse an overpayment (we owe them less / they owe us).
+    private function postOpeningBalanceEntry(Supplier $supplier, float $amount, ?string $date = null): void
+    {
+        if ($amount == 0) {
+            return;
+        }
+
+        $companyId = $supplier->company_id ?? Auth::user()->company_id;
+
+        $payableAccount = Account::query()->find($supplier->account_id)
+            ?: Account::query()->where('company_id', $companyId)->where('name', 'like', '%Payable%')->first();
+        $equityAccount = Account::query()->where('company_id', $companyId)->where('code', '3300')->first()
+            ?: Account::query()->where('company_id', $companyId)->where('name', 'like', '%Opening Balance%')->first();
+
+        if (!$payableAccount || !$equityAccount) {
+            return;
+        }
+
+        $entry = JournalEntry::query()->create([
+            'company_id'   => $companyId,
+            // Placeholder — overwritten right after using the entry's own
+            // (now-known) id, which is guaranteed unique even if this runs
+            // for the same supplier more than once on the same day.
+            'entry_number' => 'JE-SUPP-PENDING-' . $supplier->id . '-' . microtime(true),
+            'date'         => $date ?: now()->toDateString(),
+            'reference'    => $supplier->supplier_code,
+            'description'  => 'Opening balance for ' . $supplier->name,
+            'status'       => 'posted',
+            'total_amount' => abs($amount),
+            'created_by'   => Auth::id(),
+        ]);
+        $entry->update(['entry_number' => 'JE-SUPP-' . date('Ymd') . '-' . str_pad($entry->id, 6, '0', STR_PAD_LEFT)]);
+
+        JournalItem::query()->create([
+            'company_id'       => $companyId,
+            'journal_entry_id' => $entry->id,
+            'account_id'       => $equityAccount->id,
+            'debit'            => $amount > 0 ? $amount : 0,
+            'credit'           => $amount < 0 ? abs($amount) : 0,
+            'description'      => 'Opening balance for ' . $supplier->name,
+        ]);
+
+        JournalItem::query()->create([
+            'company_id'       => $companyId,
+            'journal_entry_id' => $entry->id,
+            'account_id'       => $payableAccount->id,
+            'debit'            => $amount < 0 ? abs($amount) : 0,
+            'credit'           => $amount > 0 ? $amount : 0,
+            'description'      => 'Opening balance for ' . $supplier->name,
+        ]);
     }
 }

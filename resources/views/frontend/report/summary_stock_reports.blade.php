@@ -11,10 +11,7 @@
         searchTerm: '',
         categoryFilter: 'All',
         stockFilter: 'All',
-        products: [
-            { id: 1, name: 'Laptop', category: 'Electronics', salePrice: 150.00, purchasePrice: 200.00, qty: 2 },
-            { id: 2, name: 'Printers', category: 'Office Equipment', salePrice: 200.00, purchasePrice: 300.00, qty: 10 }
-        ],
+        products: {{ \Illuminate\Support\Js::from($products) }},
         get filtered() {
             return this.products.filter(p => {
                 const matchSearch = p.name.toLowerCase().includes(this.searchTerm.toLowerCase());
@@ -112,10 +109,9 @@
             <span class="report-premium-filter-label">Category</span>
             <select x-model="categoryFilter" class="report-premium-filter-input">
                 <option value="All">All Categories</option>
-                <option>Electronics</option>
-                <option>Office Equipment</option>
-                <option>Furniture</option>
-                <option>Accessories</option>
+                @foreach($categories as $categoryName)
+                    <option>{{ $categoryName }}</option>
+                @endforeach
             </select>
         </div>
         <div class="report-premium-filter-group w-auto min-w-[170px]">

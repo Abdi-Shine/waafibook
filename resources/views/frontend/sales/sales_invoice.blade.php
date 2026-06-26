@@ -226,12 +226,14 @@
                                     <a href="{{ route('sales.invoice.edit', $order->id) }}" class="btn-action-edit" title="Edit Invoice">
                                         <i class="bi bi-pencil-square"></i>
                                     </a>
+                                    @if(auth()->user()->hasPermission('Sales & POS', 'delete'))
                                     <button onclick="confirmDelete({{ $order->id }})" class="btn-action-delete" title="Delete Invoice">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                     <form id="delete-form-{{ $order->id }}" action="{{ route('sales.invoice.delete', $order->id) }}" method="POST" class="hidden">
                                         @csrf @method('DELETE')
                                     </form>
+                                    @endif
                                 </div>
                             </td>
                         </tr>

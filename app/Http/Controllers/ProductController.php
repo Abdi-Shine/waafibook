@@ -61,12 +61,22 @@ class ProductController extends Controller
 
         $totalProducts = (clone $query)->count();
 
-        $totalStockValueQuery = DB::table('product_stocks')
-            ->join('products', 'product_stocks.product_id', '=', 'products.id')
-            ->where('products.company_id', auth()->user()->company_id);
-        if ($userBranchId) $totalStockValueQuery->where('product_stocks.branch_id', $userBranchId);
-        $totalStockValue = $totalStockValueQuery->selectRaw('SUM(product_stocks.quantity * products.purchase_price) as total_value')
-            ->value('total_value') ?? 0;
+        // Pulled from the Inventory GL account itself (same source the Balance
+        // Sheet/Trial Balance use) rather than recalculated as qty * today's
+        // purchase_price. A product's purchase_price reflects the cost of its
+        // *latest* purchase, so once a product has been bought at more than
+        // one price, qty * current price no longer matches what's actually
+        // on the books for the units still on hand. Reading the ledger
+        // directly keeps this card always consistent with the Chart of
+        // Accounts. Not branch-scoped — the ledger doesn't track inventory
+        // value per branch.
+        $inventoryAccount = Account::query()->where('code', '1150')->first()
+            ?: Account::query()->where('type', 'inventory')->first()
+            ?: Account::query()->where('name', 'like', '%Inventory%')->first();
+        $totalStockValue = $inventoryAccount
+            ? JournalItem::query()->where('account_id', $inventoryAccount->id)
+                ->selectRaw('SUM(debit) - SUM(credit) as balance')->value('balance') ?? 0
+            : 0;
 
         $lowStockItems = DB::table('products')
             ->when($userBranchId, fn($q) => $q->join('product_stocks', fn($j) => $j->on('products.id', '=', 'product_stocks.product_id')->where('product_stocks.branch_id', $userBranchId)),
@@ -347,11 +357,25 @@ class ProductController extends Controller
         /** @var Product $product */
         $product = Product::query()->findOrFail($id);
 
+        // product_stocks cascade-deletes with the product, so its stock value
+        // has to be read and reversed in the books *before* that happens —
+        // otherwise the original "opening stock" debit to Inventory stays on
+        // the books forever with nothing left to account for it, permanently
+        // inflating Inventory by however much stock this product was
+        // carrying at the time it was deleted.
+        $stockValue = ProductStock::query()->where('product_id', $product->id)->sum('quantity') * $product->purchase_price;
+
         try {
-            if ($product->image && file_exists(public_path($product->image))) {
-                unlink(public_path($product->image));
-            }
-            $product->delete();
+            DB::transaction(function () use ($product, $stockValue) {
+                if ($stockValue != 0) {
+                    $this->reverseInventoryValue($product, $stockValue);
+                }
+
+                if ($product->image && file_exists(public_path($product->image))) {
+                    unlink(public_path($product->image));
+                }
+                $product->delete();
+            });
         } catch (\Illuminate\Database\QueryException $e) {
             return redirect()->back()->with('error', 'This product can\'t be deleted because it\'s still referenced by other records.');
         }
@@ -359,6 +383,57 @@ class ProductController extends Controller
         AuditLog::log('Products', "Deleted product: {$product->product_name}", 'DELETE', 'warning');
 
         return redirect()->back()->with('success', 'Product deleted successfully.');
+    }
+
+    // Reverses whatever stock value this product was still carrying on the
+    // books when it's deleted — Cr Inventory / Dr Opening Balance Equity,
+    // the mirror image of createInitialInventoryEntry's Dr Inventory / Cr
+    // Equity. Doesn't touch/delete the original entries (there could be
+    // several, from opening stock plus any purchase bills); just nets the
+    // remaining value back out in one entry.
+    private function reverseInventoryValue(Product $product, float $stockValue): void
+    {
+        $companyId = Auth::user()->company_id;
+
+        $inventoryAccount = Account::query()->where('company_id', $companyId)->where('code', '1150')->first()
+                         ?: Account::query()->where('company_id', $companyId)->where('type', 'inventory')->first()
+                         ?: Account::query()->where('company_id', $companyId)->where('name', 'like', '%Inventory%')->first();
+        $equityAccount = Account::query()->where('company_id', $companyId)->where('code', '3300')->first()
+                      ?: Account::query()->where('company_id', $companyId)->where('name', 'like', '%Opening Balance%')->first();
+
+        if (!$inventoryAccount || !$equityAccount) {
+            return;
+        }
+
+        $entry = JournalEntry::query()->create([
+            'entry_number' => 'JE-INV-DEL-' . date('Ymd') . '-' . $product->id . '-' . microtime(true),
+            'date'         => now()->toDateString(),
+            'reference'    => $product->product_code,
+            'description'  => 'Inventory value removed on deletion of ' . $product->product_name,
+            'status'       => 'posted',
+            'total_amount' => abs($stockValue),
+            'created_by'   => Auth::id(),
+            'company_id'   => $companyId,
+        ]);
+        $entry->update(['entry_number' => 'JE-INV-DEL-' . date('Ymd') . '-' . str_pad($entry->id, 6, '0', STR_PAD_LEFT)]);
+
+        JournalItem::query()->create([
+            'journal_entry_id' => $entry->id,
+            'account_id'       => $equityAccount->id,
+            'company_id'       => $companyId,
+            'description'      => 'Inventory removed: ' . $product->product_name,
+            'debit'            => $stockValue > 0 ? $stockValue : 0,
+            'credit'           => $stockValue < 0 ? abs($stockValue) : 0,
+        ]);
+
+        JournalItem::query()->create([
+            'journal_entry_id' => $entry->id,
+            'account_id'       => $inventoryAccount->id,
+            'company_id'       => $companyId,
+            'description'      => 'Inventory removed: ' . $product->product_name,
+            'debit'            => $stockValue < 0 ? abs($stockValue) : 0,
+            'credit'           => $stockValue > 0 ? $stockValue : 0,
+        ]);
     }
 
     public function ledgerView(Request $request)
@@ -489,7 +564,10 @@ class ProductController extends Controller
     public function export()
     {
         $fileName = 'products_export_' . date('Y-m-d_H:i:s') . '.csv';
-        $products = Product::query()->with('category')->get();
+        // stock_products isn't a real product attribute (see import()'s
+        // comment) — the actual stock lives on ProductStock, summed here
+        // across branches, same as the product list page.
+        $products = Product::query()->with('category')->withSum('stocks', 'quantity')->get();
 
         $headers = array(
             "Content-type"        => "text/csv",
@@ -513,7 +591,7 @@ class ProductController extends Controller
                     $product->unit ?? 'Piece',
                     $product->purchase_price,
                     $product->selling_price,
-                    $product->stock_products,
+                    $product->stocks_sum_quantity ?? 0,
                     $product->description ?? ''
                 ));
             }
@@ -581,7 +659,17 @@ class ProductController extends Controller
                     $cleanStock = preg_replace('/[^0-9]/', '', $data[6] ?? '0');
 
                     $category = Category::query()->firstOrCreate(['name' => $categoryName]);
+                    $stockQty = (int) $cleanStock;
 
+                    // stock_products isn't a real column on products — it's a
+                    // transient form field that store()/update() translate
+                    // into a separate ProductStock row. Passing it straight
+                    // into Product::create() (as this previously did) throws
+                    // "Unknown column 'stock_products'" since the column
+                    // doesn't exist on this table.
+                    // 'status' also isn't a column on products (same class of
+                    // bug as stock_products above — it doesn't exist on this
+                    // table at all).
                     $product = Product::query()->create([
                         'product_name' => $name,
                         'product_code' => $code,
@@ -589,13 +677,20 @@ class ProductController extends Controller
                         'unit' => $unit,
                         'purchase_price' => (float)$cleanPurchase,
                         'selling_price' => (float)$cleanSelling,
-                        'stock_products' => (int)$cleanStock,
                         'description' => trim($data[7] ?? ''),
-                        'status' => 'active'
                     ]);
 
-                    if ($product->stock_products > 0 && $product->purchase_price > 0) {
-                        $this->createInitialInventoryEntry($product, $product->stock_products);
+                    if ($stockQty > 0) {
+                        $branchId = Branch::query()->where('company_id', Auth::user()->company_id)->value('id');
+                        ProductStock::query()->create([
+                            'product_id' => $product->id,
+                            'branch_id'  => $branchId,
+                            'quantity'   => $stockQty,
+                        ]);
+
+                        if ($product->purchase_price > 0) {
+                            $this->createInitialInventoryEntry($product, $stockQty);
+                        }
                     }
 
                     $importedCount++;

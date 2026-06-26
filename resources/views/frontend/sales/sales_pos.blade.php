@@ -93,6 +93,7 @@
     <script>
         const CSRF_TOKEN = '{{ csrf_token() }}';
         const CURRENCY = '{{ $company->currency ?? "SAR" }}';
+        const POS_INVOICE_PDF_URL_TEMPLATE = '{{ route("sales.invoice.pos-pdf", ["id" => "__ID__"]) }}';
         const products = @json($products);
         let cart = [];
         let selectedPaymentMethod = 'Cash';
@@ -118,6 +119,9 @@
                     <div class="product-name">${p.product_name}</div>
                     <div class="product-stock ${p.stocks_sum_quantity <= 0 ? 'text-danger fw-bold' : ''}">
                         Stock: ${p.stocks_sum_quantity || 0}
+                    </div>
+                    <div class="product-purchase-price text-muted" style="font-size: 11px;">
+                        Cost: ${parseFloat(p.purchase_price || 0).toFixed(2)} ${CURRENCY}
                     </div>
                     <div class="product-price">${parseFloat(p.selling_price).toFixed(2)} ${CURRENCY}</div>
                 </div>
@@ -274,6 +278,9 @@
                     .then(r => r.json())
                     .then(res => {
                         if (res.success) {
+                            if (res.order_id) {
+                                window.open(POS_INVOICE_PDF_URL_TEMPLATE.replace('__ID__', res.order_id), '_blank');
+                            }
                             Swal.fire('Success', 'Transaction Complete', 'success').then(() => window.location.reload());
                         } else {
                             Swal.fire('Error', res.message, 'error');

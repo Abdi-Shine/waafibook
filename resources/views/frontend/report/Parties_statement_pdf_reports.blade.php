@@ -91,10 +91,16 @@
                 <div class="report-title">Party Statement Report</div>
             </span>
         </div>
+        @php
+            $currency = $company->currency ?? 'SAR';
+            $lastBalance = $ledger->last()['balance'] ?? 0;
+            $totalDebit = $ledger->sum('debit');
+            $totalCredit = $ledger->sum('credit');
+        @endphp
         <div class="report-meta header-right">
             <p><strong>Generated:</strong> {{ now()->format('d M Y, h:i A') }}</p>
-            <p><strong>Period:</strong> Jan 01 2026 — Mar 08 2026</p>
-            <p><strong>Active Transactions:</strong> 156</p>
+            <p><strong>Period:</strong> {{ \Carbon\Carbon::parse($fromDate)->format('M d Y') }} — {{ \Carbon\Carbon::parse($toDate)->format('M d Y') }}</p>
+            <p><strong>Active Transactions:</strong> {{ $totalTransactions }}</p>
         </div>
     </div>
 
@@ -102,10 +108,10 @@
     <!-- Status bar applied -->
     <div class="filters-bar clearfix">
         <div style="float: left;">
-            Party: <span>Mohammed Ali Trading</span> &nbsp;|&nbsp; Ledger Statement
+            Party: <span>{{ $party->name ?? 'All Parties' }}</span> &nbsp;|&nbsp; Ledger Statement
         </div>
         <div style="float: right;">
-            Net Balance: <span>{{ $company->currency ?? 'SAR' }} 12,450.00 DR</span>
+            Net Balance: <span>{{ $currency }} {{ number_format(abs($lastBalance), 2) }} {{ $lastBalance >= 0 ? 'DR' : 'CR' }}</span>
         </div>
     </div>
 
@@ -124,43 +130,32 @@
             </tr>
         </thead>
         <tbody>
+            @forelse($ledger as $i => $row)
             <tr>
-                <td class="center">01</td>
-                <td class="bold">01-Jan-2026</td>
-                <td class="bold">Opening Balance</td>
-                <td>---</td>
-                <td class="right red">---</td>
-                <td class="right green">5,000.00</td>
-                <td class="right bold">5,000.00 CR</td>
+                <td class="center">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</td>
+                <td class="bold">{{ $row['date']->format('d-M-Y') }}</td>
+                <td class="bold">{{ $row['description'] }}</td>
+                <td>{{ $row['reference'] }}</td>
+                <td class="right red">{{ $row['debit'] > 0 ? number_format($row['debit'], 2) : '---' }}</td>
+                <td class="right green">{{ $row['credit'] > 0 ? number_format($row['credit'], 2) : '---' }}</td>
+                <td class="right bold">{{ number_format(abs($row['balance']), 2) }} {{ $row['balance'] >= 0 ? 'DR' : 'CR' }}</td>
             </tr>
+            @empty
             <tr>
-                <td class="center">02</td>
-                <td class="bold">05-Jan-2026</td>
-                <td>Sales Invoice #INV-2026-001</td>
-                <td>12345</td>
-                <td class="right red">12,450.00</td>
-                <td class="right green">---</td>
-                <td class="right bold">7,450.00 DR</td>
+                <td colspan="7" class="center">{{ $party ?? false ? 'No transactions for this party in the selected period.' : 'Select a party to view their statement ledger.' }}</td>
             </tr>
-            <tr>
-                <td class="center">03</td>
-                <td class="bold">10-Jan-2026</td>
-                <td>Payment Received (Bank Transfer)</td>
-                <td>RCV-9988</td>
-                <td class="right red">---</td>
-                <td class="right green">7,450.00</td>
-                <td class="right bold">0.00</td>
-            </tr>
-            <!-- ... more rows ... -->
+            @endforelse
         </tbody>
+        @if($ledger->isNotEmpty())
         <tfoot>
             <tr>
                 <td colspan="4" class="bold">PERIOD ACTIVITY TOTALS</td>
-                <td class="right" style="color:#ef4444;">12,450.00</td>
-                <td class="right" style="color:#10b981;">12,450.00</td>
-                <td class="right">0.00</td>
+                <td class="right" style="color:#ef4444;">{{ number_format($totalDebit, 2) }}</td>
+                <td class="right" style="color:#10b981;">{{ number_format($totalCredit, 2) }}</td>
+                <td class="right">{{ number_format(abs($lastBalance), 2) }} {{ $lastBalance >= 0 ? 'DR' : 'CR' }}</td>
             </tr>
         </tfoot>
+        @endif
     </table>
 
     <!-- Footer -->

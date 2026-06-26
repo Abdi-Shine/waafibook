@@ -13,6 +13,81 @@ use Illuminate\Support\Facades\Auth;
 
 class BankTransactionController extends Controller
 {
+    private function isAdmin(): bool
+    {
+        $role = strtolower(trim((string) (Auth::user()->role ?? '')));
+        return in_array($role, ['admin', 'super admin']);
+    }
+
+    public function updateTransaction(Request $request, $id)
+    {
+        if (!$this->isAdmin()) {
+            abort(403, 'Only administrators can edit transactions.');
+        }
+
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'date' => 'required|date',
+            'description' => 'nullable|string|max:255',
+            'category_id' => 'nullable|exists:chart_of_accounts,id',
+        ]);
+
+        /** @var JournalEntry $entry */
+        $entry = JournalEntry::query()->with('items')->findOrFail($id);
+        $bankAccountIds = Account::query()->whereIn('type', ['bank', 'cash'])->pluck('id');
+
+        DB::transaction(function () use ($entry, $request, $bankAccountIds) {
+            $entry->update([
+                'date' => $request->date,
+                'description' => $request->description,
+                'total_amount' => $request->amount,
+            ]);
+
+            foreach ($entry->items as $item) {
+                $isBankLeg = $bankAccountIds->contains($item->account_id);
+
+                $update = [
+                    'debit' => $item->debit > 0 ? $request->amount : 0,
+                    'credit' => $item->credit > 0 ? $request->amount : 0,
+                ];
+
+                // Only the non-bank ("category") leg's account can be retargeted.
+                if (!$isBankLeg && $request->filled('category_id')) {
+                    $update['account_id'] = $request->category_id;
+                }
+
+                $item->update($update);
+            }
+        });
+
+        return redirect()->back()->with('success', 'Transaction updated successfully.');
+    }
+
+    public function destroyTransaction(Request $request, $id)
+    {
+        if (!$this->isAdmin()) {
+            abort(403, 'Only administrators can delete transactions.');
+        }
+
+        $request->validate(['password' => 'required|string']);
+
+        if (!\Illuminate\Support\Facades\Hash::check($request->password, Auth::user()->password)) {
+            return redirect()->back()->with('error', 'Incorrect password — transaction was not deleted.');
+        }
+
+        /** @var JournalEntry $entry */
+        $entry = JournalEntry::query()->with('items')->findOrFail($id);
+
+        DB::transaction(function () use ($entry) {
+            foreach ($entry->items as $item) {
+                $item->delete(); // observer reverses the account balance
+            }
+            $entry->delete();
+        });
+
+        return redirect()->back()->with('success', 'Transaction deleted and balances reversed.');
+    }
+
     public function index(Request $request)
     {
         // 1. Get Accounts
