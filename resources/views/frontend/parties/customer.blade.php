@@ -293,7 +293,7 @@
                                             <i class="bi bi-eye"></i>
                                         </a>
                                         @if($customer->phone)
-                                            <button onclick="sendWhatsAppStatement('{{ addslashes($customer->name) }}', '{{ $customer->phone }}', '{{ $symbol }} {{ number_format($customer->amount_balance, 2) }}', '{{ \App\Support\PublicUrl::temporarySigned('customer.statement.public-pdf', now()->addDays(7), ['id' => $customer->id]) }}')"
+                                            <button onclick="sendWhatsAppStatement('{{ addslashes($customer->name) }}', '{{ $customer->phone }}', '{{ $symbol }} {{ number_format($customer->amount_balance, 2) }}', '{{ \App\Support\PublicUrl::temporarySigned('customer.statement.public-pdf', now()->addDays(7), ['id' => $customer->id]) }}', '{{ addslashes($company->name ?? 'Waafibook') }}', '{{ now()->format('jS F Y') }}', '{{ $company->phone ?? '' }}')"
                                                 class="btn-action-whatsapp" title="Send Statement on WhatsApp">
                                                 <i class="bi bi-whatsapp"></i>
                                             </button>
@@ -564,8 +564,15 @@
 
 @push('scripts')
 <script>
-function sendWhatsAppStatement(customerName, phone, balance, pdfUrl) {
-    const message = pdfUrl;
+function sendWhatsAppStatement(customerName, phone, balance, pdfUrl, companyName, asOfDate, companyPhone) {
+    let message = `*${companyName}*\n\n`;
+    message += `*Xasuusin Lacag Bixin*\n`;
+    message += `${balance}\n`;
+    message += `taariikhda ${asOfDate}\n\n`;
+    message += `Salaam ${customerName},\n`;
+    message += `Kani waa xasuusin saaxiibtinimo oo ku saabsan lacagta ${balance} ee aan kugu leenahay, fadlan bixi marka aad fursad hesho. Xisaabta dhammaystiran: ${pdfUrl}\n\n`;
+    message += `Mahadsanid,\n${companyName}`;
+    if (companyPhone) message += `\n${companyPhone}`;
     const cleanPhone = phone.replace(/\D/g, '');
     const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');

@@ -207,7 +207,7 @@
                                     <a href="{{ route('payment_in.view', $item->id) }}" target="_blank" class="btn-action-view" title="View PDF">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <button onclick="sendWhatsAppPayment('{{ $item->receipt_no }}','{{ addslashes($item->customer->name ?? 'N/A') }}','{{ $item->customer->phone ?? '' }}','{{ date('M d, Y', strtotime($item->payment_date)) }}','{{ number_format($item->amount, 2) }}','{{ $symbol }}')"
+                                    <button onclick="sendWhatsAppPayment('{{ $item->receipt_no }}','{{ addslashes($item->customer->name ?? 'N/A') }}','{{ $item->customer->phone ?? '' }}','{{ date('jS F Y', strtotime($item->payment_date)) }}','{{ number_format($item->amount, 2) }}','{{ $symbol }}','{{ addslashes($company->name ?? 'Waafibook') }}','{{ $company->phone ?? '' }}')"
                                             class="w-8 h-8 flex items-center justify-center rounded-lg bg-accent/10 text-accent border border-accent/20 hover:bg-accent/10 hover:text-white transition-all shadow-sm"
                                             title="WhatsApp">
                                         <i class="bi bi-whatsapp"></i>
@@ -483,13 +483,15 @@
             });
         }
 
-        function sendWhatsAppPayment(receiptNo, customer, phone, date, amount, symbol) {
-            let message = `*PAYMENT RECEIPT*\n\n`;
-            message += `*Receipt No:* ${receiptNo}\n`;
-            message += `*Customer:* ${customer}\n`;
-            message += `*Date:* ${date}\n`;
-            message += `*Amount:* ${symbol} ${amount}\n\n`;
-            message += `Thank you for your business!`;
+        function sendWhatsAppPayment(receiptNo, customer, phone, date, amount, symbol, companyName, companyPhone) {
+            let message = `*${companyName}*\n\n`;
+            message += `*Rasiidka Lacag Bixinta*\n`;
+            message += `${symbol} ${amount}\n`;
+            message += `taariikhda ${date}\n\n`;
+            message += `Salaam ${customer},\n`;
+            message += `Waxaan xaqiijinaynaa inaan helnay lacagtaada ${symbol} ${amount} (Rasiidh Lambar: ${receiptNo}).\n\n`;
+            message += `Mahadsanid,\n${companyName}`;
+            if (companyPhone) message += `\n${companyPhone}`;
             let url = phone
                 ? `https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent(message)}`
                 : `https://wa.me/?text=${encodeURIComponent(message)}`;
