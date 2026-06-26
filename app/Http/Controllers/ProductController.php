@@ -324,10 +324,20 @@ class ProductController extends Controller
 
         $product->update($data);
 
-        // Editing a product only touches the product's own columns. Branch
-        // stock (quantity, branch assignment) is managed separately via
-        // stock adjustments/transfers and must never change as a side effect
-        // of saving this form.
+        // Update stock quantity only — branch assignment is managed
+        // separately via stock adjustments/transfers and must never change
+        // as a side effect of saving this form.
+        if ($request->filled('stock_products')) {
+            $stockRecord = ProductStock::query()->where('product_id', $product->id)->first();
+            if ($stockRecord) {
+                $stockRecord->update(['quantity' => $request->input('stock_products')]);
+            } else {
+                ProductStock::query()->create([
+                    'product_id' => $product->id,
+                    'quantity'   => $request->input('stock_products'),
+                ]);
+            }
+        }
 
         AuditLog::log('Products', "Updated product details: {$product->product_name}", 'UPDATE');
 
