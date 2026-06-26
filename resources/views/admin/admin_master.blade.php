@@ -195,6 +195,9 @@
                         }).then(async (response) => {
                             const data = await response.json().catch(() => ({}));
                             if (!response.ok) {
+                                if (data.has_transactions && options.onBlocked) {
+                                    return { blocked: true };
+                                }
                                 throw new Error(data.message || 'Something went wrong.');
                             }
                             return data;
@@ -205,48 +208,39 @@
                     },
                     allowOutsideClick: () => !Swal.isLoading()
                 }).then((result2) => {
-                    if (result2.isConfirmed) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Deleted',
-                            text: label + ' has been deleted.',
-                            confirmButtonColor: '#004161',
-                            customClass: popupClass
-                        }).then(() => {
-                            if (options.onSuccess) {
-                                options.onSuccess();
-                            } else {
-                                window.location.reload();
-                            }
-                        });
+                    if (!result2.isConfirmed) return;
+
+                    if (result2.value && result2.value.blocked) {
+                        options.onBlocked();
+                        return;
                     }
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Deleted',
+                        text: label + ' has been deleted.',
+                        confirmButtonColor: '#004161',
+                        customClass: popupClass
+                    }).then(() => {
+                        if (options.onSuccess) {
+                            options.onSuccess();
+                        } else {
+                            window.location.reload();
+                        }
+                    });
                 });
             });
         };
 
         // Customer/supplier delete flow: if the party already has transactions
-        // against it, deleting would cascade-delete that financial history, so
-        // offer deactivating it instead of the normal password-confirmed delete.
-        window.confirmDeleteParty = async function (baseUrl, id, name, deleteTitle) {
+        // against it, deleting would cascade-delete that financial history (see
+        // the destroy() guard server-side), so offer deactivating it instead.
+        // This rides the normal password-confirmed delete attempt itself rather
+        // than a separate pre-check request, so there's only one URL to get
+        // right (deleteRecordWithPassword's own, already battle-tested).
+        window.showDeactivatePartyDialog = async function (deactivateUrl, name) {
             const popupClass = { popup: 'rounded-[1.5rem]' };
             const csrf = document.querySelector('meta[name="csrf-token"]').content;
-
-            let hasTransactions = false;
-            try {
-                const res = await fetch(baseUrl + '/' + id + '/check-deletable', { headers: { 'Accept': 'application/json' } });
-                const data = await res.json();
-                hasTransactions = !!data.has_transactions;
-            } catch (e) {
-                hasTransactions = false;
-            }
-
-            if (!hasTransactions) {
-                deleteRecordWithPassword(baseUrl + '/' + id, name, {
-                    title: deleteTitle,
-                    text: `Are you sure you want to delete ${name}? This action cannot be undone.`
-                });
-                return;
-            }
 
             const result = await Swal.fire({
                 title: 'Delete Party',
@@ -274,7 +268,7 @@
             if (!result.isConfirmed) return;
 
             try {
-                const res = await fetch(baseUrl + '/' + id + '/deactivate', {
+                const res = await fetch(deactivateUrl, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',

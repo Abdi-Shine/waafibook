@@ -315,12 +315,6 @@ class CustomerController extends Controller
             || DB::table('sales_returns')->where('customer_id', $customerId)->exists();
     }
 
-    public function checkDeletable($id)
-    {
-        Customer::query()->findOrFail($id);
-        return response()->json(['has_transactions' => $this->hasTransactions($id)]);
-    }
-
     public function deactivate($id)
     {
         $customer = Customer::query()->findOrFail($id);

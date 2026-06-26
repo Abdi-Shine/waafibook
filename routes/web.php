@@ -227,7 +227,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/customers', [App\Http\Controllers\CustomerController::class, 'store'])->name('customer.store');
         Route::post('/customers/import', [App\Http\Controllers\CustomerController::class, 'import'])->name('customer.import');
         Route::put('/customers/{id}', [App\Http\Controllers\CustomerController::class, 'update'])->name('customer.update')->middleware('tenant.owns:customers');
-        Route::get('/customers/{id}/check-deletable', [App\Http\Controllers\CustomerController::class, 'checkDeletable'])->name('customer.check-deletable')->middleware('tenant.owns:customers');
         Route::patch('/customers/{id}/deactivate', [App\Http\Controllers\CustomerController::class, 'deactivate'])->name('customer.deactivate')->middleware(['tenant.owns:customers', 'permission:Parties,delete']);
         Route::delete('/customers/{id}', [App\Http\Controllers\CustomerController::class, 'destroy'])->name('customer.destroy')->middleware(['tenant.owns:customers', 'permission:Parties,delete', 'delete.password']);
 
@@ -239,7 +238,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/suppliers', [App\Http\Controllers\SupplierController::class, 'store'])->name('supplier.store');
         Route::post('/suppliers/import', [App\Http\Controllers\SupplierController::class, 'import'])->name('supplier.import');
         Route::put('/suppliers/{id}', [App\Http\Controllers\SupplierController::class, 'update'])->name('supplier.update')->middleware('tenant.owns:suppliers');
-        Route::get('/suppliers/{id}/check-deletable', [App\Http\Controllers\SupplierController::class, 'checkDeletable'])->name('supplier.check-deletable')->middleware('tenant.owns:suppliers');
         Route::patch('/suppliers/{id}/deactivate', [App\Http\Controllers\SupplierController::class, 'deactivate'])->name('supplier.deactivate')->middleware(['tenant.owns:suppliers', 'permission:Parties,delete']);
         Route::delete('/suppliers/{id}', [App\Http\Controllers\SupplierController::class, 'destroy'])->name('supplier.destroy')->middleware(['tenant.owns:suppliers', 'permission:Parties,delete', 'delete.password']);
     });

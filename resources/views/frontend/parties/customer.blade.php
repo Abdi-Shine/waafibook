@@ -107,8 +107,12 @@
                     this.activeModal = 'customer-modal';
                 },
 
-                async confirmDelete(id, name) {
-                    confirmDeleteParty('{{ url('/customers') }}', id, name, 'Delete Customer?');
+                confirmDelete(id, name) {
+                    deleteRecordWithPassword('{{ url('/customers') }}/' + id, name, {
+                        title: 'Delete Customer?',
+                        text: `Are you sure you want to delete ${name}? This action cannot be undone.`,
+                        onBlocked: () => showDeactivatePartyDialog('{{ url('/customers') }}/' + id + '/deactivate', name)
+                    });
                 }
             }">
 

@@ -306,12 +306,6 @@ class SupplierController extends Controller
             || DB::table('purchase_returns')->where('supplier_id', $supplierId)->exists();
     }
 
-    public function checkDeletable($id)
-    {
-        Supplier::query()->findOrFail($id);
-        return response()->json(['has_transactions' => $this->hasTransactions($id)]);
-    }
-
     public function deactivate($id)
     {
         $supplier = Supplier::query()->findOrFail($id);

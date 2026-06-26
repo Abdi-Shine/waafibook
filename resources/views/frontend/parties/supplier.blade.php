@@ -103,8 +103,12 @@
                 this.activeModal = 'supplier-modal';
             },
 
-            async confirmDelete(id, name) {
-                confirmDeleteParty('{{ url('/suppliers') }}', id, name, 'Delete Supplier?');
+            confirmDelete(id, name) {
+                deleteRecordWithPassword('{{ url('/suppliers') }}/' + id, name, {
+                    title: 'Delete Supplier?',
+                    text: `Are you sure you want to delete ${name}? This action cannot be undone.`,
+                    onBlocked: () => showDeactivatePartyDialog('{{ url('/suppliers') }}/' + id + '/deactivate', name)
+                });
             }
         }">
 
