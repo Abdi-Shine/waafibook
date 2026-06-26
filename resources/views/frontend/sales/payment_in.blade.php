@@ -207,7 +207,7 @@
                                     <a href="{{ route('payment_in.view', $item->id) }}" target="_blank" class="btn-action-view" title="View PDF">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <button onclick="sendWhatsAppPayment('{{ $item->receipt_no }}','{{ addslashes($item->customer->name ?? 'N/A') }}','{{ $item->customer->phone ?? '' }}','{{ date('jS F Y', strtotime($item->payment_date)) }}','{{ number_format($item->amount, 2) }}','{{ $symbol }}','{{ addslashes($company->name ?? 'Waafibook') }}','{{ $company->phone ?? '' }}')"
+                                    <button onclick="sendWhatsAppPayment('{{ $item->receipt_no }}','{{ addslashes($item->customer->name ?? 'N/A') }}','{{ $item->customer->phone ?? '' }}','{{ date('jS F Y', strtotime($item->payment_date)) }}','{{ number_format($item->amount, 2) }}','{{ $symbol }}','{{ addslashes($company->name ?? 'Waafibook') }}','{{ $company->phone ?? '' }}','{{ $company->email ?? '' }}')"
                                             class="w-8 h-8 flex items-center justify-center rounded-lg bg-accent/10 text-accent border border-accent/20 hover:bg-accent/10 hover:text-white transition-all shadow-sm"
                                             title="WhatsApp">
                                         <i class="bi bi-whatsapp"></i>
@@ -483,7 +483,7 @@
             });
         }
 
-        function sendWhatsAppPayment(receiptNo, customer, phone, date, amount, symbol, companyName, companyPhone) {
+        function sendWhatsAppPayment(receiptNo, customer, phone, date, amount, symbol, companyName, companyPhone, companyEmail) {
             let message = `*${companyName}*\n\n`;
             message += `*Rasiidka Lacag Bixinta*\n`;
             message += `${symbol} ${amount}\n`;
@@ -492,6 +492,7 @@
             message += `Waxaan xaqiijinaynaa inaan helnay lacagtaada ${symbol} ${amount} (Rasiidh Lambar: ${receiptNo}).\n\n`;
             message += `Mahadsanid,\n${companyName}`;
             if (companyPhone) message += `\n${companyPhone}`;
+            if (companyEmail) message += `\n${companyEmail}`;
             let url = phone
                 ? `https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent(message)}`
                 : `https://wa.me/?text=${encodeURIComponent(message)}`;
