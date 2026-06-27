@@ -163,12 +163,11 @@ class ProductController extends Controller
                 'company_id' => Auth::user()->company_id,
             ]);
 
-            // Accounting - Journal Entry for Initial Stock
-            if ($stockQuantity > 0 && ($product->purchase_price ?? 0) > 0) {
-                $this->createInitialInventoryEntry($product, $stockQuantity);
-            } elseif ($stockQuantity > 0) {
-                session()->flash('warning', 'Product created with stock, but no journal entry was recorded because purchase price is $0.');
-            }
+            // Accounting - Opening Stock journal entry. Always recorded (even
+            // at $0 value when there's no quantity/price yet) so every
+            // product has an Opening Stock transaction to show in its ledger,
+            // rather than appearing to have no history at all.
+            $this->createInitialInventoryEntry($product, $stockQuantity);
 
             AuditLog::log('Products', "Created new product: {$product->product_name}", 'CREATE');
 
@@ -258,7 +257,11 @@ class ProductController extends Controller
             $entry = JournalEntry::query()->create([
                 'entry_number' => 'JE-INV-' . date('Ymd') . '-' . str_pad($product->id, 5, '0', STR_PAD_LEFT),
                 'date' => now()->toDateString(),
-                'reference' => $product->product_code,
+                // Keyed by product ID, not product_code — the code is an
+                // optional, user-editable field on imports and can be left
+                // blank, which would make every blank-code product's entry
+                // collide on the same reference when looked up below.
+                'reference' => 'PRODUCT-' . $product->id,
                 'description' => 'Initial stock for ' . $product->product_name,
                 'status' => 'posted',
                 'total_amount' => $totalValue,
@@ -529,7 +532,7 @@ class ProductController extends Controller
             });
 
         $openingEntries = JournalEntry::query()
-            ->where('reference', $product->product_code)
+            ->where('reference', 'PRODUCT-' . $product->id)
             ->where('description', 'like', 'Initial stock for%')
             ->get()
             ->map(function($entry) use ($product) {
@@ -712,9 +715,10 @@ class ProductController extends Controller
                         'quantity'   => $stockQty,
                     ]);
 
-                    if ($stockQty > 0 && $product->purchase_price > 0) {
-                        $this->createInitialInventoryEntry($product, $stockQty);
-                    }
+                    // Always recorded — even at $0 value — so every imported
+                    // product has an Opening Stock transaction in its ledger
+                    // instead of appearing to have no history at all.
+                    $this->createInitialInventoryEntry($product, $stockQty);
 
                     $importedCount++;
                 } catch (\Exception $rowException) {
