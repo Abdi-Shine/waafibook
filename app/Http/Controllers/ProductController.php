@@ -642,7 +642,11 @@ class ProductController extends Controller
                 try {
                     $name = trim($data[0]);
                     $code = trim($data[1] ?? '');
-                    
+
+                    if (Product::query()->where('product_name', $name)->exists()) {
+                        throw new \Exception("Product name '{$name}' already exists.");
+                    }
+
                     if (!empty($code) && Product::query()->where('product_code', $code)->exists()) {
                         throw new \Exception("Code '{$code}' already exists.");
                     }
