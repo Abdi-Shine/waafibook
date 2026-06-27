@@ -77,14 +77,16 @@
 
     // Transaction delete icon: deletes the underlying sale/purchase record
     // itself (password-confirmed), then refreshes this item's ledger in
-    // place. Opening Stock rows have no single deletable record behind them
-    // (they're derived from journal entries), so they don't get this icon.
+    // place. Opening Stock deletes the journal entry created alongside the
+    // product and backs the quantity it represented out of current stock.
     deleteTransaction(txn) {
         let url = null;
         if (txn.type === 'Sale' && txn.ref) {
             url = '{{ url('/sales/invoices') }}/' + txn.ref;
         } else if (txn.type === 'Purchase Order' && txn.ref) {
             url = '{{ url('/purchase/bills') }}/' + txn.ref;
+        } else if (txn.type === 'Opening Stock') {
+            url = '{{ url('/products') }}/' + this.selectedId + '/opening-stock';
         }
         if (!url) return;
 
@@ -138,7 +140,7 @@
                     <div class="flex items-center gap-2 shrink-0">
                         <span class="text-[13px] font-bold text-accent" x-text="product.quantity"></span>
                         <button @click.stop="deleteProductItem(product.id, product.name)" title="Delete Item"
-                            class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all">
+                            class="opacity-0 group-hover:opacity-100 text-primary hover:text-red-500 transition-all">
                             <i class="bi bi-trash3"></i>
                         </button>
                     </div>
@@ -238,8 +240,8 @@
                                         <td class="px-5 py-3.5 text-[13px] text-gray-700 text-right" x-text="txn.price !== null ? '{{ $symbol }} ' + parseFloat(txn.price).toFixed(2) : '-'"></td>
                                         <td class="px-5 py-3.5 text-[13px] text-gray-700" x-text="txn.status ?? ''"></td>
                                         <td class="px-5 py-3.5 text-right">
-                                            <button x-show="txn.type === 'Sale' || txn.type === 'Purchase Order'" @click="deleteTransaction(txn)" title="Delete Transaction"
-                                                class="text-gray-300 hover:text-red-500 transition-colors">
+                                            <button @click="deleteTransaction(txn)" title="Delete Transaction"
+                                                class="text-primary hover:text-red-500 transition-colors">
                                                 <i class="bi bi-trash3"></i>
                                             </button>
                                         </td>

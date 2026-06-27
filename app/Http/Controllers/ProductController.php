@@ -351,6 +351,47 @@ class ProductController extends Controller
         return redirect()->back()->with('success', 'Product updated successfully.');
     }
 
+    // Deletes this product's Opening Stock entry from the Item Ledger:
+    // removes the journal entry that recorded it and backs the quantity it
+    // represented out of the product's current stock. Unlike a Sale or
+    // Purchase Bill, there's no separate model for this — it's just the
+    // journal entry created alongside the product, so undoing it means
+    // reversing that entry directly rather than calling another
+    // controller's destroy().
+    public function deleteOpeningStock($id)
+    {
+        /** @var Product $product */
+        $product = Product::query()->findOrFail($id);
+
+        $entry = JournalEntry::query()
+            ->where('reference', 'PRODUCT-' . $id)
+            ->where('description', 'like', 'Initial stock for%')
+            ->first();
+
+        if (!$entry) {
+            return response()->json(['message' => 'No opening stock transaction found for this product.'], 404);
+        }
+
+        $qty = $product->purchase_price > 0 ? round($entry->total_amount / $product->purchase_price, 2) : 0;
+
+        DB::transaction(function () use ($entry, $product, $qty) {
+            $entry->items()->delete();
+            $entry->delete();
+
+            if ($qty != 0) {
+                $stock = ProductStock::query()->where('product_id', $product->id)->first();
+                if ($stock) {
+                    $stock->quantity -= $qty;
+                    $stock->save();
+                }
+            }
+        });
+
+        AuditLog::log('Products', "Deleted opening stock for product: {$product->product_name}", 'DELETE', 'warning');
+
+        return redirect()->back()->with('success', 'Opening stock transaction deleted successfully.');
+    }
+
     // A product is considered "in use" once it has any real transaction
     // against it. Deleting it then would leave those historical sales/
     // purchase line items pointing at a vanished product (their product_id

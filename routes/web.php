@@ -253,6 +253,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/products/delete/{id}', [App\Http\Controllers\ProductController::class, 'destroy'])->name('product.delete')->middleware(['tenant.owns:products', 'permission:Product,delete', 'delete.password']);
         Route::get('/products/ledger', [App\Http\Controllers\ProductController::class, 'ledgerView'])->name('product.ledger');
         Route::get('/products/{id}/ledger-data', [App\Http\Controllers\ProductController::class, 'ledgerData'])->name('product.ledger-data')->middleware('tenant.owns:products');
+        Route::delete('/products/{id}/opening-stock', [App\Http\Controllers\ProductController::class, 'deleteOpeningStock'])->name('product.opening-stock.delete')->middleware(['tenant.owns:products', 'permission:Product,delete', 'delete.password']);
         Route::post('/products/update-status/{id}', [App\Http\Controllers\ProductController::class, 'updateStatus'])->name('product.update-status')->middleware('tenant.owns:products');
         Route::post('/products/quick-store', [App\Http\Controllers\ProductController::class, 'quickStore'])->name('product.quick.store');
         Route::get('/products/low-stock', [App\Http\Controllers\ProductController::class, 'lowStockView'])->name('low-stock.view');
