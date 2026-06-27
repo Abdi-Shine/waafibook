@@ -348,10 +348,31 @@ class ProductController extends Controller
         return redirect()->back()->with('success', 'Product updated successfully.');
     }
 
+    // A product is considered "in use" once it has any real transaction
+    // against it. Deleting it then would leave those historical sales/
+    // purchase line items pointing at a vanished product (their product_id
+    // FK is ON DELETE SET NULL, so the records survive but lose the
+    // reference) — better to make the user clear those out first.
+    private function hasTransactions($productId): bool
+    {
+        return DB::table('sales_order_items')->where('product_id', $productId)->exists()
+            || DB::table('purchase_bill_items')->where('product_id', $productId)->exists()
+            || DB::table('purchase_order_items')->where('product_id', $productId)->exists()
+            || DB::table('sales_return_items')->where('product_id', $productId)->exists()
+            || DB::table('purchase_return_items')->where('product_id', $productId)->exists();
+    }
+
     public function destroy($id)
     {
         /** @var Product $product */
         $product = Product::query()->findOrFail($id);
+
+        if ($this->hasTransactions($id)) {
+            return response()->json([
+                'message' => 'This product cannot be deleted as it is already used in transactions. Please delete all related transactions before deleting this product.',
+                'has_transactions' => true,
+            ], 409);
+        }
 
         // product_stocks cascade-deletes with the product, so its stock value
         // has to be read and reversed in the books *before* that happens —

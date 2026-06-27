@@ -45,6 +45,56 @@
         }
     },
 
+    async refreshLedger() {
+        if (this.selectedId === null) return;
+        this.loading = true;
+        try {
+            const res = await fetch('{{ url('/products') }}/' + this.selectedId + '/ledger-data', { headers: { 'Accept': 'application/json' } });
+            this.ledger = await res.json();
+            const p = this.products.find(p => p.id === this.selectedId);
+            if (p) p.quantity = this.ledger.product.stock_quantity;
+        } catch (e) {
+            Swal.fire({ icon: 'error', title: 'Something went wrong', text: 'Could not refresh item ledger.' });
+        } finally {
+            this.loading = false;
+        }
+    },
+
+    // Main delete icon: deletes the item itself, blocked server-side (with
+    // an explanatory message) if it's already used in any transaction.
+    deleteProductItem(id, name) {
+        deleteRecordWithPassword('{{ url('/products/delete') }}/' + id, name, {
+            title: 'Delete Item?',
+            text: `Are you sure you want to delete ${name}? This action cannot be undone.`,
+            onBlocked: () => Swal.fire({
+                icon: 'error',
+                title: 'Cannot Delete',
+                text: 'This product cannot be deleted as it is already used in transactions. Please delete all related transactions before deleting this product.',
+                confirmButtonColor: '#004161'
+            })
+        });
+    },
+
+    // Transaction delete icon: deletes the underlying sale/purchase record
+    // itself (password-confirmed), then refreshes this item's ledger in
+    // place. Opening Stock rows have no single deletable record behind them
+    // (they're derived from journal entries), so they don't get this icon.
+    deleteTransaction(txn) {
+        let url = null;
+        if (txn.type === 'Sale' && txn.ref) {
+            url = '{{ url('/sales/invoices') }}/' + txn.ref;
+        } else if (txn.type === 'Purchase Order' && txn.ref) {
+            url = '{{ url('/purchase/bills') }}/' + txn.ref;
+        }
+        if (!url) return;
+
+        deleteRecordWithPassword(url, txn.type, {
+            title: 'Delete Transaction?',
+            text: `Are you sure you want to delete this ${txn.type.toLowerCase()}? This action cannot be undone.`,
+            onSuccess: () => this.refreshLedger()
+        });
+    },
+
     exportCsv() {
         if (!this.ledger) return;
         const q = String.fromCharCode(34);
@@ -82,10 +132,16 @@
         <div class="flex-1 overflow-y-auto custom-scrollbar">
             <template x-for="product in filteredProducts" :key="product.id">
                 <div @click="selectProduct(product.id)"
-                    class="flex items-center justify-between px-4 py-3 cursor-pointer border-b border-gray-50 hover:bg-gray-50 transition-colors"
+                    class="flex items-center justify-between px-4 py-3 cursor-pointer border-b border-gray-50 hover:bg-gray-50 transition-colors group"
                     :class="selectedId === product.id ? 'bg-primary/5 border-l-[3px] border-l-primary' : ''">
                     <span class="text-[13px] font-semibold text-primary-dark truncate" :class="selectedId === product.id ? 'font-bold' : ''" x-text="product.name"></span>
-                    <span class="text-[13px] font-bold text-accent" x-text="product.quantity"></span>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span class="text-[13px] font-bold text-accent" x-text="product.quantity"></span>
+                        <button @click.stop="deleteProductItem(product.id, product.name)" title="Delete Item"
+                            class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all">
+                            <i class="bi bi-trash3"></i>
+                        </button>
+                    </div>
                 </div>
             </template>
             <template x-if="!filteredProducts.length">
@@ -165,6 +221,7 @@
                                     <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right">Quantity</th>
                                     <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right">Price/Unit</th>
                                     <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider">Status</th>
+                                    <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-50">
@@ -180,10 +237,16 @@
                                         <td class="px-5 py-3.5 text-[13px] text-gray-700 text-right" x-text="txn.quantity"></td>
                                         <td class="px-5 py-3.5 text-[13px] text-gray-700 text-right" x-text="txn.price !== null ? '{{ $symbol }} ' + parseFloat(txn.price).toFixed(2) : '-'"></td>
                                         <td class="px-5 py-3.5 text-[13px] text-gray-700" x-text="txn.status ?? ''"></td>
+                                        <td class="px-5 py-3.5 text-right">
+                                            <button x-show="txn.type === 'Sale' || txn.type === 'Purchase Order'" @click="deleteTransaction(txn)" title="Delete Transaction"
+                                                class="text-gray-300 hover:text-red-500 transition-colors">
+                                                <i class="bi bi-trash3"></i>
+                                            </button>
+                                        </td>
                                     </tr>
                                 </template>
                                 <template x-if="!filteredTransactions.length">
-                                    <tr><td colspan="7" class="px-5 py-10 text-center text-[13px] text-gray-400">No transactions found for this item.</td></tr>
+                                    <tr><td colspan="8" class="px-5 py-10 text-center text-[13px] text-gray-400">No transactions found for this item.</td></tr>
                                 </template>
                             </tbody>
                         </table>
