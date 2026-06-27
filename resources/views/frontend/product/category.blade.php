@@ -2,8 +2,8 @@
 @section('page_title', 'Categories')
 
 @section('admin')
-    <div class="px-4 py-8 md:px-8 md:py-10 bg-background min-h-screen font-inter" x-data="{ 
-        activeModal: null, 
+    <div class="px-4 py-8 md:px-8 md:py-10 bg-background min-h-screen font-inter" x-data="{
+        activeModal: null,
         isEditMode: false,
         showQuickAddParent: false,
         categoryCodeRand: null,
@@ -66,6 +66,8 @@
             });
         }
     }">
+        @include('frontend.product.partials.product_tabs', ['active' => 'category'])
+
         <!-- Page Header -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
             <div>

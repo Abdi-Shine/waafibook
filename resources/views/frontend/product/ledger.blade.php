@@ -6,7 +6,11 @@
     $symbol = '$';
 @endphp
 
-<div class="h-[calc(100vh-5rem)] flex bg-background" x-data="{
+<div class="px-4 pt-6 md:px-8 bg-white">
+    @include('frontend.product.partials.product_tabs', ['active' => ($type ?? 'product') === 'service' ? 'services' : 'products'])
+</div>
+
+<div class="h-[calc(100vh-9.5rem)] flex bg-background" x-data="{
     products: @js($products->map(fn($p) => ['id' => $p->id, 'name' => $p->product_name, 'quantity' => $p->stocks_sum_quantity ?? 0])),
     search: '',
     txnSearch: '',

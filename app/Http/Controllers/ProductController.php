@@ -500,8 +500,10 @@ class ProductController extends Controller
     public function ledgerView(Request $request)
     {
         $userBranchId = Auth::user()->getAssignedBranchId();
+        $type = $request->input('type', 'product');
 
         $products = Product::query()
+            ->where('product_type', $type)
             ->withSum(['stocks' => function($q) use ($userBranchId) {
                 if ($userBranchId) $q->where('branch_id', $userBranchId);
             }], 'quantity')
@@ -511,7 +513,7 @@ class ProductController extends Controller
         $selectedId = $request->input('product_id', $products->first()->id ?? null);
         $ledger = $selectedId ? $this->buildLedgerData($selectedId) : null;
 
-        return view('frontend.product.ledger', compact('products', 'selectedId', 'ledger'));
+        return view('frontend.product.ledger', compact('products', 'selectedId', 'ledger', 'type'));
     }
 
     public function ledgerData($id)

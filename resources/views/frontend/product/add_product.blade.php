@@ -618,15 +618,9 @@
                                     <div class="relative">
                                         <select name="unit" x-model="productData.unit" :required="productData.product_type === 'product'"
                                             class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none border-primary/20 !border-2">
-                                            <option value="Piece">Piece</option>
-                                            <option value="Box">Box</option>
-                                            <option value="Pack">Pack</option>
-                                            <option value="Carton">Carton</option>
-                                            <option value="Dozen">Dozen</option>
-                                            <option value="kg">kilogram (kg)</option>
-                                            <option value="g">gram (g)</option>
-                                            <option value="Meter">Meter (m)</option>
-                                            <option value="Liter">Liter (L)</option>
+                                            @foreach($units as $unit)
+                                                <option value="{{ $unit->name }}">{{ $unit->name }}</option>
+                                            @endforeach
                                         </select>
                                         <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                                     </div>

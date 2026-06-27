@@ -155,6 +155,16 @@ class RegisteredUserController extends Controller
         // Seed full chart of accounts using the same service as the seeder
         app(\App\Services\ChartOfAccountsService::class)->seedForCompany($company->id, $hqBranch->id);
 
+        // Seed the standard set of measurement units so the product form's
+        // Base Unit dropdown isn't empty from the start
+        foreach (['Piece', 'Box', 'Pack', 'Carton', 'Dozen', 'kg', 'g', 'Meter', 'Liter'] as $unitName) {
+            \App\Models\Unit::withoutGlobalScopes()->create([
+                'company_id' => $company->id,
+                'name'       => $unitName,
+                'status'     => 'active',
+            ]);
+        }
+
         // Create an Employee record for the registering admin so they appear in Employee Management
         \App\Models\Employee::withoutGlobalScopes()->create([
             'company_id'  => $company->id,

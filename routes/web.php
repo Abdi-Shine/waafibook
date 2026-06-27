@@ -266,6 +266,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/categories/store', [App\Http\Controllers\CategoryController::class, 'store'])->name('category.store');
         Route::put('/categories/update/{id}', [App\Http\Controllers\CategoryController::class, 'update'])->name('category.update');
         Route::delete('/categories/delete/{id}', [App\Http\Controllers\CategoryController::class, 'destroy'])->name('category.delete')->middleware(['permission:Product,delete', 'delete.password']);
+
+        Route::get('/units', [App\Http\Controllers\UnitController::class, 'index'])->name('units.index');
+        Route::post('/units/store', [App\Http\Controllers\UnitController::class, 'store'])->name('units.store');
+        Route::put('/units/update/{id}', [App\Http\Controllers\UnitController::class, 'update'])->name('units.update');
+        Route::delete('/units/delete/{id}', [App\Http\Controllers\UnitController::class, 'destroy'])->name('units.delete')->middleware(['permission:Product,delete', 'delete.password']);
     });
 
     // Purchase
