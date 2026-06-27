@@ -218,6 +218,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('permission:Parties')->group(function () {
         Route::get('/parties/ledger', [App\Http\Controllers\PartiesController::class, 'ledgerView'])->name('parties.ledger');
         Route::get('/parties/{type}/{id}/ledger-data', [App\Http\Controllers\PartiesController::class, 'ledgerData'])->name('parties.ledger-data');
+        Route::delete('/parties/{type}/{id}/opening-balance', [App\Http\Controllers\PartiesController::class, 'deleteOpeningBalance'])->name('parties.opening-balance.delete')->middleware(['permission:Parties,delete', 'delete.password']);
 
         Route::get('/customers', [App\Http\Controllers\CustomerController::class, 'index'])->name('customer.index');
         Route::get('/customers/export', [App\Http\Controllers\CustomerController::class, 'export'])->name('customer.export');

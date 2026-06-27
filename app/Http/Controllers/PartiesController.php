@@ -10,8 +10,11 @@ use App\Models\SalesReturn;
 use App\Models\PurchaseBill;
 use App\Models\SupplierPayment;
 use App\Models\PurchaseReturn;
+use App\Models\JournalEntry;
+use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class PartiesController extends Controller
 {
@@ -30,6 +33,47 @@ class PartiesController extends Controller
     public function ledgerData($type, $id)
     {
         return response()->json($this->buildPartyLedger($type, $id));
+    }
+
+    // Deletes a party's Opening Balance entry from the ledger: removes the
+    // journal entry created when that opening balance was set, and backs
+    // the amount it represented out of the party's current balance. Like
+    // Product's Opening Stock, there's no separate model for this — it's
+    // just the journal entry posted alongside the customer/supplier.
+    public function deleteOpeningBalance($type, $id)
+    {
+        $isSupplier = $type === 'supplier';
+        /** @var Customer|Supplier $party */
+        $party = $isSupplier ? Supplier::query()->findOrFail($id) : Customer::query()->findOrFail($id);
+        $code  = $isSupplier ? $party->supplier_code : $party->customer_code;
+
+        $entry = JournalEntry::query()
+            ->where('reference', $code)
+            ->where('company_id', $party->company_id)
+            ->where('description', 'like', 'Opening balance for%')
+            ->first();
+
+        if (!$entry) {
+            return response()->json(['message' => 'No opening balance transaction found for this party.'], 404);
+        }
+
+        $ledger = $this->buildPartyLedger($type, $id);
+        $openingTxn = $ledger['transactions']->firstWhere('type', 'Opening Balance');
+        $openingAmount = $openingTxn['balance'] ?? 0;
+
+        DB::transaction(function () use ($entry, $party, $openingAmount) {
+            $entry->items()->delete();
+            $entry->delete();
+
+            if ($openingAmount != 0) {
+                $party->amount_balance -= $openingAmount;
+                $party->save();
+            }
+        });
+
+        AuditLog::log('Parties', "Deleted opening balance for: {$party->name}", 'DELETE', 'warning');
+
+        return redirect()->back()->with('success', 'Opening balance transaction deleted successfully.');
     }
 
     private function allParties()
@@ -55,6 +99,7 @@ class PartiesController extends Controller
         $statusLabels = ['completed' => 'Paid', 'partial' => 'Partial', 'pending' => 'Unpaid'];
 
         $sales = SalesOrder::query()->where('customer_id', $id)->get()->map(fn($o) => [
+            'id'         => $o->id,
             'type'       => 'Sale',
             'type_color' => 'bg-emerald-500',
             'number'     => $o->invoice_no,
@@ -68,6 +113,7 @@ class PartiesController extends Controller
         $payments = PaymentIn::query()->where('customer_id', $id)->get()->map(function($p) {
             $date = $p->payment_date ? Carbon::parse($p->payment_date) : null;
             return [
+                'id'         => $p->id,
                 'type'       => 'Payment',
                 'type_color' => 'bg-blue-500',
                 'number'     => $p->receipt_no,
@@ -82,6 +128,7 @@ class PartiesController extends Controller
         $returns = SalesReturn::query()->where('customer_id', $id)->get()->map(function($r) {
             $date = $r->return_date ? Carbon::parse($r->return_date) : null;
             return [
+                'id'         => $r->id,
                 'type'       => 'Credit Note',
                 'type_color' => 'bg-orange-500',
                 'number'     => $r->credit_note_no,
@@ -133,6 +180,7 @@ class PartiesController extends Controller
         $purchases = PurchaseBill::query()->where('supplier_id', $id)->get()->map(function($b) use ($statusLabels) {
             $date = $b->bill_date ? Carbon::parse($b->bill_date) : null;
             return [
+                'id'         => $b->id,
                 'type'       => 'Purchase',
                 'type_color' => 'bg-emerald-500',
                 'number'     => $b->bill_number,
@@ -147,6 +195,7 @@ class PartiesController extends Controller
         $payments = SupplierPayment::query()->where('supplier_id', $id)->get()->map(function($p) {
             $date = $p->payment_date ? Carbon::parse($p->payment_date) : null;
             return [
+                'id'         => $p->id,
                 'type'       => 'Payment',
                 'type_color' => 'bg-blue-500',
                 'number'     => $p->voucher_no,
@@ -161,6 +210,7 @@ class PartiesController extends Controller
         $returns = PurchaseReturn::query()->where('supplier_id', $id)->get()->map(function($r) {
             $date = $r->return_date ? Carbon::parse($r->return_date) : null;
             return [
+                'id'         => $r->id,
                 'type'       => 'Debit Note',
                 'type_color' => 'bg-orange-500',
                 'number'     => $r->return_number,

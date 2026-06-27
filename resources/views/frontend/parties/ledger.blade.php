@@ -51,6 +51,49 @@
         }
     },
 
+    async refreshLedger() {
+        if (!this.selectedType || this.selectedId === null) return;
+        this.loading = true;
+        try {
+            const res = await fetch('{{ url('/parties') }}/' + this.selectedType + '/' + this.selectedId + '/ledger-data', { headers: { 'Accept': 'application/json' } });
+            this.ledger = await res.json();
+        } catch (e) {
+            Swal.fire({ icon: 'error', title: 'Something went wrong', text: 'Could not refresh party ledger.' });
+        } finally {
+            this.loading = false;
+        }
+    },
+
+    // Maps each transaction type to the route for the record actually
+    // behind it, reusing each module's existing delete endpoint (with its
+    // own balance/accounting reversal already built in) rather than
+    // duplicating that logic here. Payment/Sale/Purchase routes differ by
+    // party type since customers and suppliers use separate models.
+    deleteTransaction(txn) {
+        const isSupplier = this.ledger.party.type === 'supplier';
+        let url = null;
+        if (txn.type === 'Sale' && txn.id) {
+            url = '{{ url('/sales/invoices') }}/' + txn.id;
+        } else if (txn.type === 'Purchase' && txn.id) {
+            url = '{{ url('/purchase/bills') }}/' + txn.id;
+        } else if (txn.type === 'Payment' && txn.id) {
+            url = isSupplier ? '{{ url('/payment-out/delete') }}/' + txn.id : '{{ url('/payment-in/delete') }}/' + txn.id;
+        } else if (txn.type === 'Credit Note' && txn.id) {
+            url = '{{ url('/sales-return') }}/' + txn.id;
+        } else if (txn.type === 'Debit Note' && txn.id) {
+            url = '{{ url('/purchase/returns') }}/' + txn.id;
+        } else if (txn.type === 'Opening Balance') {
+            url = '{{ url('/parties') }}/' + this.ledger.party.type + '/' + this.ledger.party.id + '/opening-balance';
+        }
+        if (!url) return;
+
+        deleteRecordWithPassword(url, txn.type, {
+            title: 'Delete Transaction?',
+            text: `Are you sure you want to delete this ${txn.type.toLowerCase()}? This action cannot be undone.`,
+            onSuccess: () => this.refreshLedger()
+        });
+    },
+
     exportCsv() {
         if (!this.ledger) return;
         const q = String.fromCharCode(34);
@@ -186,6 +229,7 @@
                                     <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right">Total</th>
                                     <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right">Balance</th>
                                     <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider">Status</th>
+                                    <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-50">
@@ -200,10 +244,16 @@
                                         <td class="px-5 py-3.5 text-[13px] font-semibold text-primary-dark text-right" x-text="'{{ $symbol }} ' + parseFloat(txn.total).toFixed(2)"></td>
                                         <td class="px-5 py-3.5 text-[13px] text-gray-700 text-right" x-text="'{{ $symbol }} ' + parseFloat(txn.balance).toFixed(2)"></td>
                                         <td class="px-5 py-3.5 text-[13px] text-gray-700" x-text="txn.status ?? ''"></td>
+                                        <td class="px-5 py-3.5 text-right">
+                                            <button @click="deleteTransaction(txn)" title="Delete Transaction"
+                                                class="text-primary hover:text-red-500 transition-colors">
+                                                <i class="bi bi-trash3"></i>
+                                            </button>
+                                        </td>
                                     </tr>
                                 </template>
                                 <template x-if="!filteredTransactions.length">
-                                    <tr><td colspan="6" class="px-5 py-10 text-center text-[13px] text-gray-400">No transactions found for this party.</td></tr>
+                                    <tr><td colspan="7" class="px-5 py-10 text-center text-[13px] text-gray-400">No transactions found for this party.</td></tr>
                                 </template>
                             </tbody>
                         </table>
