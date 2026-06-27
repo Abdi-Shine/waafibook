@@ -153,15 +153,15 @@ class ProductController extends Controller
 
             $product = Product::query()->create($data);
 
-            // Create initial stock record
-            if ($stockQuantity > 0) {
-                ProductStock::query()->create([
-                    'product_id' => $product->id,
-                    'branch_id'  => $branchId,
-                    'quantity'   => $stockQuantity,
-                    'company_id' => Auth::user()->company_id,
-                ]);
-            }
+            // Always create the stock record (even at 0 qty) so the product
+            // is assigned to a branch from the start, regardless of whether
+            // it was given any opening stock.
+            ProductStock::query()->create([
+                'product_id' => $product->id,
+                'branch_id'  => $branchId,
+                'quantity'   => $stockQuantity,
+                'company_id' => Auth::user()->company_id,
+            ]);
 
             // Accounting - Journal Entry for Initial Stock
             if ($stockQuantity > 0 && ($product->purchase_price ?? 0) > 0) {
@@ -680,17 +680,19 @@ class ProductController extends Controller
                         'description' => trim($data[7] ?? ''),
                     ]);
 
-                    if ($stockQty > 0) {
-                        $branchId = Branch::query()->where('company_id', Auth::user()->company_id)->value('id');
-                        ProductStock::query()->create([
-                            'product_id' => $product->id,
-                            'branch_id'  => $branchId,
-                            'quantity'   => $stockQty,
-                        ]);
+                    // Always create the stock record (even at 0 qty) so the
+                    // product is assigned to the company's branch from the
+                    // start — leaving it stock-less is what caused imported
+                    // products to show a blank branch in the product list.
+                    $branchId = Branch::query()->where('company_id', Auth::user()->company_id)->value('id');
+                    ProductStock::query()->create([
+                        'product_id' => $product->id,
+                        'branch_id'  => $branchId,
+                        'quantity'   => $stockQty,
+                    ]);
 
-                        if ($product->purchase_price > 0) {
-                            $this->createInitialInventoryEntry($product, $stockQty);
-                        }
+                    if ($stockQty > 0 && $product->purchase_price > 0) {
+                        $this->createInitialInventoryEntry($product, $stockQty);
                     }
 
                     $importedCount++;
