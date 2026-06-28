@@ -24,6 +24,12 @@ return Application::configure(basePath: dirname(__DIR__))
         }
     })
     ->withMiddleware(function (Middleware $middleware): void {
+        // Trust Cloudflare's proxy headers (X-Forwarded-Proto, etc.) so the app
+        // knows requests arrived over HTTPS even though Cloudflare talks plain
+        // HTTP to this origin (SSL mode: Flexible) — otherwise url()/redirect()
+        // generate http:// links and downgrade visitors off HTTPS.
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'permission'      => \App\Http\Middleware\CheckPermission::class,
             'role'            => \App\Http\Middleware\CheckRole::class,
