@@ -321,15 +321,12 @@
         </div>
 
         <ul class="sa-nav">
-            <li class="sa-nav-label">Overview</li>
             <li>
                 <a href="{{ route('host.dashboard') }}"
                    class="{{ request()->routeIs('host.dashboard') ? 'active' : '' }}">
                     <i class="bi bi-speedometer2"></i> Dashboard
                 </a>
             </li>
-
-            <li class="sa-nav-label">Platform</li>
             <li>
                 <a href="{{ route('host.companies') }}"
                    class="{{ request()->routeIs('host.companies') ? 'active' : '' }}">
@@ -344,41 +341,16 @@
             </li>
             <li>
                 <a href="{{ route('host.subscriptions') }}"
-                   class="{{ request()->routeIs('host.subscriptions*') ? 'active' : '' }}">
-                    <i class="bi bi-credit-card"></i> Subscriptions
+                   class="{{ request()->routeIs('host.subscriptions*') || request()->routeIs('host.payments*') || request()->routeIs('host.plans*') ? 'active' : '' }}">
+                    <i class="bi bi-credit-card"></i> Subscription &amp; Billing
                 </a>
             </li>
-            <li>
-                <a href="{{ route('host.payments') }}"
-                   class="{{ request()->routeIs('host.payments*') ? 'active' : '' }}">
-                    <i class="bi bi-cash-stack"></i> Payments
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('host.plans') }}"
-                   class="{{ request()->routeIs('host.plans*') ? 'active' : '' }}">
-                    <i class="bi bi-tags"></i> Pricing Plans
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('host.demo_requests') }}"
-                   class="{{ request()->routeIs('host.demo_requests*') ? 'active' : '' }}">
-                    <i class="bi bi-camera-video"></i> Demo Requests
-                    @php $pendingDemos = \App\Models\DemoRequest::where('status','pending')->count(); @endphp
-                    @if($pendingDemos > 0)
-                        <span class="badge bg-warning text-dark ms-auto">{{ $pendingDemos }}</span>
-                    @endif
-                </a>
-            </li>
-
             <li>
                 <a href="{{ route('host.announcements') }}"
                    class="{{ request()->routeIs('host.announcements*') ? 'active' : '' }}">
                     <i class="bi bi-megaphone"></i> Announcements
                 </a>
             </li>
-
-            <li class="sa-nav-label">System</li>
             <li>
                 <a href="{{ route('host.security') }}"
                    class="{{ request()->routeIs('host.security*') ? 'active' : '' }}">
@@ -386,21 +358,9 @@
                 </a>
             </li>
             <li>
-                <a href="{{ route('host.reports') }}"
-                   class="{{ request()->routeIs('host.reports*') ? 'active' : '' }}">
-                    <i class="bi bi-file-earmark-bar-graph"></i> Reports
-                </a>
-            </li>
-            <li>
                 <a href="{{ route('host.settings') }}"
                    class="{{ request()->routeIs('host.settings*') ? 'active' : '' }}">
-                    <i class="bi bi-gear"></i> Settings
-                </a>
-            </li>
-
-            <li class="sa-nav-back">
-                <a href="{{ route('dashboard') }}" class="sa-back-link">
-                    <i class="bi bi-arrow-left-circle"></i> Back to App
+                    <i class="bi bi-gear"></i> System Settings
                 </a>
             </li>
         </ul>
