@@ -42,9 +42,16 @@ Route::get('/dashboard', function () {
             return str_contains($name, 'cash') || str_contains($name, 'bank');
         })->sum('balance');
 
-    $stockValue = \App\Models\ProductStock::with('product')->get()->sum(function($stock) {
-        return $stock->quantity * ($stock->product->purchase_price ?? 0);
-    });
+    // Read from the Inventory GL account itself rather than recalculated as
+    // qty * today's purchase_price, so this stays consistent with the
+    // Product Inventory page and Chart of Accounts (see ProductController::index).
+    $inventoryAccount = \App\Models\Account::query()->where('code', '1150')->first()
+        ?: \App\Models\Account::query()->where('type', 'inventory')->first()
+        ?: \App\Models\Account::query()->where('name', 'like', '%Inventory%')->first();
+    $stockValue = $inventoryAccount
+        ? \App\Models\JournalItem::query()->where('account_id', $inventoryAccount->id)
+            ->selectRaw('SUM(debit) - SUM(credit) as balance')->value('balance') ?? 0
+        : 0;
 
     $accountsReceivable = \App\Models\Customer::sum('amount_balance');
 
