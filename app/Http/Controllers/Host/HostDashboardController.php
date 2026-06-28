@@ -17,39 +17,35 @@ class HostDashboardController extends Controller
 {
     public function dashboard()
     {
-        $totalCompanies = Company::count();
-        $totalUsers     = User::withoutGlobalScopes()->count();
-        $newThisMonth   = Company::whereMonth('created_at', now()->month)
-                            ->whereYear('created_at', now()->year)
-                            ->count();
+        $totalCompanies     = Company::count();
+        $activeCompanies    = Company::where('status', 'active')->count();
+        $suspendedCompanies = Company::where('status', 'suspended')->count();
+        $totalUsers         = User::withoutGlobalScopes()->count();
+        $newThisMonth       = Company::whereMonth('created_at', now()->month)
+                                ->whereYear('created_at', now()->year)
+                                ->count();
 
         $monthlyRevenue = SubscriptionPayment::query()
             ->whereMonth('payment_date', now()->month)
             ->whereYear('payment_date', now()->year)
-            ->where('status', 'paid')
+            ->where('status', 'completed')
             ->sum('amount');
 
-        $expiringSoon = Subscription::query()
-            ->where('status', 'active')
-            ->whereBetween('expiry_date', [now()->toDateString(), now()->addDays(7)->toDateString()])
-            ->count();
+        $revenueCollected = SubscriptionPayment::where('status', 'completed')->sum('amount');
+        $pendingApprovals = DemoRequest::where('status', 'pending')->count();
+        $overdueAccounts  = Subscription::where('status', 'expired')->count();
 
-        $recentCompanies = Company::with(['subscription.plan'])
-            ->withCount('users as user_count')
+        $recentActivity = \App\Models\AuditLog::with('user')->orderByDesc('created_at')->take(10)->get();
+
+        $newSignupsThisWeek = Company::with(['subscription.plan'])
+            ->where('created_at', '>=', now()->subDays(7))
             ->orderByDesc('created_at')
-            ->take(10)
             ->get();
 
-        $planDistribution = SubscriptionPlan::withCount([
-            'subscriptions as active_count' => fn($q) => $q->where('status', 'active'),
-        ])->get();
-
-        $totalActiveSubs = $planDistribution->sum('active_count') ?: 1;
-
         return view('super_admin.dashboard', compact(
-            'totalCompanies', 'totalUsers', 'monthlyRevenue',
-            'expiringSoon', 'newThisMonth', 'recentCompanies',
-            'planDistribution', 'totalActiveSubs'
+            'totalCompanies', 'activeCompanies', 'suspendedCompanies', 'totalUsers',
+            'monthlyRevenue', 'newThisMonth', 'revenueCollected', 'pendingApprovals',
+            'overdueAccounts', 'recentActivity', 'newSignupsThisWeek'
         ));
     }
 
