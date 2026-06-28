@@ -151,7 +151,6 @@
             width:38px; height:38px; background:white; border-radius:8px;
             display:flex; align-items:center; justify-content:center; flex-shrink:0;
         }
-        .sa-brand-logo svg { width:22px; height:22px; }
         .sa-brand-text { font-size:1rem; font-weight:700; color:white; line-height:1.2; }
         .sa-brand-sub  { font-size:.65rem; color:var(--accent); font-weight:700; letter-spacing:.05em; text-transform:uppercase; }
 
@@ -311,7 +310,7 @@
         <div class="sa-brand">
             <a href="{{ route('host.dashboard') }}">
                 <div class="sa-brand-logo">
-                    <svg viewBox="0 0 24 24" fill="#004161"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    <img src="{{ asset('upload/horntechlogo/horntech_logo.jpg') }}" alt="Waafibook" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">
                 </div>
                 <div>
                     <div class="sa-brand-text">Waafibook</div>
