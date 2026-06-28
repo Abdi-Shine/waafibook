@@ -138,7 +138,7 @@
         .sa-sidebar {
             position: fixed; top: 0; left: 0;
             width: var(--sidebar-w); height: 100vh;
-            background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
+            background: var(--primary);
             z-index: 1000; overflow-y: auto;
             box-shadow: 4px 0 20px rgba(0,0,0,.12);
         }
@@ -153,7 +153,7 @@
         }
         .sa-brand-logo svg { width:22px; height:22px; }
         .sa-brand-text { font-size:1rem; font-weight:700; color:white; line-height:1.2; }
-        .sa-brand-sub  { font-size:.65rem; color:rgba(255,255,255,.55); font-weight:500; letter-spacing:.05em; text-transform:uppercase; }
+        .sa-brand-sub  { font-size:.65rem; color:var(--accent); font-weight:700; letter-spacing:.05em; text-transform:uppercase; }
 
         .sa-nav { list-style:none; padding:.75rem 0; }
         .sa-nav li { margin:.1rem 0; }
