@@ -479,6 +479,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['role:Super Admin'])->prefix('host')->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\Host\HostDashboardController::class, 'dashboard'])->name('host.dashboard');
         Route::get('/companies', [App\Http\Controllers\Host\HostDashboardController::class, 'manageCompanies'])->name('host.companies');
+        Route::patch('/companies/{id}/status', [App\Http\Controllers\Host\HostDashboardController::class, 'toggleCompanyStatus'])->name('host.companies.toggle-status');
         Route::get('/demo-requests', [App\Http\Controllers\Host\HostDashboardController::class, 'demoRequests'])->name('host.demo_requests');
         Route::patch('/demo-requests/{id}/status', [App\Http\Controllers\Host\HostDashboardController::class, 'updateDemoRequestStatus'])->name('host.demo_requests.status');
 

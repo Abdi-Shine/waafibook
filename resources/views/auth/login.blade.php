@@ -136,7 +136,7 @@
                                 <i class="bi bi-telephone input-icon"></i>
                                 <input type="text" name="company_phone"
                                        class="form-control"
-                                       placeholder="+252 61 234 5678"
+                                       placeholder="+252 61 00000000"
                                        value="{{ old('company_phone') }}">
                             </div>
                         </div>

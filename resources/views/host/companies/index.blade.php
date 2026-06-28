@@ -3,6 +3,13 @@
 
 @section('content')
 
+@if(session('success'))
+<div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i>{{ session('success') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+@endif
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h4 style="font-weight:800;color:#111827;margin:0;">Companies</h4>
@@ -24,6 +31,8 @@
                         <th>Expiry</th>
                         <th>Country</th>
                         <th>Joined</th>
+                        <th>Status</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -82,10 +91,29 @@
                         </td>
                         <td style="font-size:.82rem;">{{ $company->country ?? '—' }}</td>
                         <td style="font-size:.8rem;color:#6b7280;">{{ $company->created_at->format('d M Y') }}</td>
+                        <td>
+                            @if($company->status === 'suspended')
+                                <span class="sa-badge sa-badge-red"><i class="bi bi-slash-circle"></i> Suspended</span>
+                            @else
+                                <span class="sa-badge sa-badge-green"><i class="bi bi-check-circle"></i> Active</span>
+                            @endif
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ route('host.companies.toggle-status', $company->id) }}"
+                                  onsubmit="return confirm('{{ $company->status === 'suspended' ? 'Reactivate' : 'Suspend' }} {{ $company->name }}?');">
+                                @csrf
+                                @method('PATCH')
+                                @if($company->status === 'suspended')
+                                    <button type="submit" class="btn btn-sm" style="background:#dcfce7;color:#15803d;border:none;font-weight:600;font-size:.78rem;padding:.3rem .7rem;border-radius:6px;">Activate</button>
+                                @else
+                                    <button type="submit" class="btn btn-sm" style="background:#fee2e2;color:#b91c1c;border:none;font-weight:600;font-size:.78rem;padding:.3rem .7rem;border-radius:6px;">Suspend</button>
+                                @endif
+                            </form>
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="text-center py-5" style="color:#9ca3af;">No companies registered yet.</td>
+                        <td colspan="9" class="text-center py-5" style="color:#9ca3af;">No companies registered yet.</td>
                     </tr>
                     @endforelse
                 </tbody>

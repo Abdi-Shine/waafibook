@@ -61,6 +61,17 @@ class HostDashboardController extends Controller
         return view('host.companies.index', compact('companies'));
     }
 
+    public function toggleCompanyStatus($id)
+    {
+        $company = Company::findOrFail($id);
+        $company->status = $company->status === 'suspended' ? 'active' : 'suspended';
+        $company->save();
+
+        \App\Models\AuditLog::log('Company', ucfirst($company->status) . " company: {$company->name}", 'UPDATE');
+
+        return redirect()->route('host.companies')->with('success', "{$company->name} is now {$company->status}.");
+    }
+
     public function demoRequests()
     {
         $requests = DemoRequest::orderByDesc('created_at')->paginate(20);

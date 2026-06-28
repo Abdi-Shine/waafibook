@@ -27,6 +27,15 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
+        $company = $request->user()->company_id ? \App\Models\Company::find($request->user()->company_id) : null;
+        if ($company && $company->status === 'suspended') {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return back()->withErrors(['email' => 'Your company account has been suspended. Please contact support.']);
+        }
+
         $request->session()->regenerate();
 
         AuditLog::log('Authentication', 'User logged into the system', 'LOGIN');
