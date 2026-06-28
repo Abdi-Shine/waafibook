@@ -46,7 +46,7 @@ class HostDashboardController extends Controller
 
         $totalActiveSubs = $planDistribution->sum('active_count') ?: 1;
 
-        return view('host.dashboard', compact(
+        return view('super_admin.dashboard', compact(
             'totalCompanies', 'totalUsers', 'monthlyRevenue',
             'expiringSoon', 'newThisMonth', 'recentCompanies',
             'planDistribution', 'totalActiveSubs'
@@ -67,7 +67,7 @@ class HostDashboardController extends Controller
 
         $plans = SubscriptionPlan::orderBy('name')->pluck('name');
 
-        return view('host.companies.index', compact('companies', 'plans'));
+        return view('super_admin.companies.index', compact('companies', 'plans'));
     }
 
     public function toggleCompanyStatus($id)
@@ -153,7 +153,7 @@ class HostDashboardController extends Controller
         $requests = DemoRequest::orderByDesc('created_at')->paginate(20);
         $pendingCount = DemoRequest::where('status', 'pending')->count();
 
-        return view('host.demo_requests.index', compact('requests', 'pendingCount'));
+        return view('super_admin.demo_requests.index', compact('requests', 'pendingCount'));
     }
 
     public function updateDemoRequestStatus($id, Request $request)
@@ -176,7 +176,7 @@ class HostDashboardController extends Controller
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
             ->orderByDesc('created_at');
         $users = $query->paginate(20)->withQueryString();
-        return view('host.users.index', compact('users', 'companies'));
+        return view('super_admin.users.index', compact('users', 'companies'));
     }
 
     public function resetUserPassword($id)
@@ -215,7 +215,7 @@ class HostDashboardController extends Controller
     public function subscriptions()
     {
         $subscriptions = Subscription::with(['company', 'plan'])->orderByDesc('created_at')->paginate(20);
-        return view('host.subscriptions.index', compact('subscriptions'));
+        return view('super_admin.subscriptions.index', compact('subscriptions'));
     }
 
     public function payments()
@@ -223,7 +223,7 @@ class HostDashboardController extends Controller
         $payments = SubscriptionPayment::with(['subscription.company', 'subscription.plan'])
             ->orderByDesc('payment_date')->paginate(20);
         $totalRevenue = SubscriptionPayment::where('status', 'completed')->sum('amount');
-        return view('host.payments.index', compact('payments', 'totalRevenue'));
+        return view('super_admin.payments.index', compact('payments', 'totalRevenue'));
     }
 
     public function markPaymentPaid($id)
@@ -258,7 +258,7 @@ class HostDashboardController extends Controller
     public function plans()
     {
         $plans = SubscriptionPlan::orderBy('price')->get();
-        return view('host.plans.index', compact('plans'));
+        return view('super_admin.plans.index', compact('plans'));
     }
 
     public function storePlan(Request $request)
@@ -333,7 +333,7 @@ class HostDashboardController extends Controller
         $announcements = \App\Models\Announcement::with('targetCompany')->orderByDesc('created_at')->paginate(20);
         $companies = Company::orderBy('name')->get();
 
-        return view('host.announcements.index', compact('announcements', 'companies'));
+        return view('super_admin.announcements.index', compact('announcements', 'companies'));
     }
 
     public function storeAnnouncement(Request $request)
@@ -389,7 +389,7 @@ class HostDashboardController extends Controller
             ->orderByDesc('sessions.last_activity')
             ->get();
 
-        return view('host.security.index', compact('logs', 'modules', 'sessions'));
+        return view('super_admin.security.index', compact('logs', 'modules', 'sessions'));
     }
 
     public function exportAuditLog(Request $request)
@@ -451,7 +451,7 @@ class HostDashboardController extends Controller
             'subscriptions' => fn($q) => $q->where('status', 'active'),
         ])->get();
 
-        return view('host.reports.index', compact(
+        return view('super_admin.reports.index', compact(
             'totalCompanies', 'totalUsers', 'totalRevenue',
             'activeSubs', 'monthlyRevenue', 'planDistribution'
         ));
@@ -461,7 +461,7 @@ class HostDashboardController extends Controller
     {
         $settings = SystemSetting::all()->pluck('value', 'key');
         $maintenanceMode = SystemSetting::get('maintenance_mode', '0') === '1';
-        return view('host.settings.index', compact('settings', 'maintenanceMode'));
+        return view('super_admin.settings.index', compact('settings', 'maintenanceMode'));
     }
 
     public function toggleMaintenanceMode()
