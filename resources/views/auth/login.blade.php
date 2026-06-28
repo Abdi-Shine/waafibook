@@ -131,6 +131,17 @@
                     </div>
 
                     <div class="mb-4">
+                        <label class="block text-[11px] font-black text-primary uppercase tracking-wider mb-1.5">Company Telephone</label>
+                        <div class="relative">
+                            <i class="bi bi-telephone input-icon"></i>
+                            <input type="text" name="company_phone"
+                                   class="form-control"
+                                   placeholder="+252 61 234 5678"
+                                   value="{{ old('company_phone') }}">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
                         <label class="block text-[11px] font-black text-primary uppercase tracking-wider mb-1.5">Full Name <span class="text-red-500">*</span></label>
                         <div class="relative">
                             <i class="bi bi-person input-icon"></i>
