@@ -56,6 +56,7 @@ class RegisteredUserController extends Controller
             'name'                => $request->company_name,
             'industry'            => $request->industry,
             'registration_number' => $request->cr_number,
+            'phone'               => $request->company_phone,
             'address'             => $request->address,
             'city'                => $request->city,
             'country'             => $request->country ?: 'Saudi Arabia',

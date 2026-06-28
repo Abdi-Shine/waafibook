@@ -374,6 +374,14 @@
                             </select>
                         </div>
                         <div class="col-md-6">
+                            <label class="form-label">Company Telephone</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                <input type="text" name="company_phone" class="form-control"
+                                       placeholder="+252 61 234 5678" value="{{ old('company_phone') }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
                             <label class="form-label">Commercial Registration</label>
                             <input type="text" name="cr_number" class="form-control"
                                    placeholder="CR Number" value="{{ old('cr_number') }}">
