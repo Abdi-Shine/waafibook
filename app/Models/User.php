@@ -69,6 +69,7 @@ class User extends Authenticatable
         'role',
         'company_id',
         'email_verified_at',
+        'status',
     ];
 
     /**

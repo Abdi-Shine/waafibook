@@ -30,6 +30,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // generate http:// links and downgrade visitors off HTTPS.
         $middleware->trustProxies(at: '*');
 
+        $middleware->web(append: [
+            \App\Http\Middleware\CheckMaintenanceMode::class,
+        ]);
+
         $middleware->alias([
             'permission'      => \App\Http\Middleware\CheckPermission::class,
             'role'            => \App\Http\Middleware\CheckRole::class,

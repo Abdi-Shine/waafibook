@@ -119,6 +119,13 @@ Route::get('/dashboard', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/ask-ai', [App\Http\Controllers\AskAiController::class, 'index'])->name('ask-ai');
     Route::post('/ask-ai', [App\Http\Controllers\AskAiController::class, 'ask'])->name('ask-ai.ask');
+
+    Route::post('/announcements/{id}/dismiss', function ($id) {
+        $dismissed = session('dismissed_announcements', []);
+        $dismissed[] = (int) $id;
+        session(['dismissed_announcements' => array_unique($dismissed)]);
+        return response()->noContent();
+    })->name('announcements.dismiss');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -480,19 +487,38 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\Host\HostDashboardController::class, 'dashboard'])->name('host.dashboard');
         Route::get('/companies', [App\Http\Controllers\Host\HostDashboardController::class, 'manageCompanies'])->name('host.companies');
         Route::patch('/companies/{id}/status', [App\Http\Controllers\Host\HostDashboardController::class, 'toggleCompanyStatus'])->name('host.companies.toggle-status');
+        Route::get('/companies/{id}/show', [App\Http\Controllers\Host\HostDashboardController::class, 'showCompany'])->name('host.companies.show');
+        Route::put('/companies/{id}', [App\Http\Controllers\Host\HostDashboardController::class, 'updateCompany'])->name('host.companies.update');
+        Route::delete('/companies/{id}', [App\Http\Controllers\Host\HostDashboardController::class, 'destroyCompany'])->name('host.companies.destroy');
+        Route::post('/companies/bulk', [App\Http\Controllers\Host\HostDashboardController::class, 'bulkCompanyAction'])->name('host.companies.bulk');
         Route::get('/demo-requests', [App\Http\Controllers\Host\HostDashboardController::class, 'demoRequests'])->name('host.demo_requests');
         Route::patch('/demo-requests/{id}/status', [App\Http\Controllers\Host\HostDashboardController::class, 'updateDemoRequestStatus'])->name('host.demo_requests.status');
 
         Route::get('/users', [App\Http\Controllers\Host\HostDashboardController::class, 'users'])->name('host.users');
+        Route::post('/users/{id}/reset-password', [App\Http\Controllers\Host\HostDashboardController::class, 'resetUserPassword'])->name('host.users.reset-password');
+        Route::patch('/users/{id}/status', [App\Http\Controllers\Host\HostDashboardController::class, 'toggleUserStatus'])->name('host.users.toggle-status');
+        Route::delete('/users/{id}', [App\Http\Controllers\Host\HostDashboardController::class, 'destroyUser'])->name('host.users.destroy');
         Route::get('/subscriptions', [App\Http\Controllers\Host\HostDashboardController::class, 'subscriptions'])->name('host.subscriptions');
         Route::get('/payments', [App\Http\Controllers\Host\HostDashboardController::class, 'payments'])->name('host.payments');
+        Route::patch('/payments/{id}/mark-paid', [App\Http\Controllers\Host\HostDashboardController::class, 'markPaymentPaid'])->name('host.payments.mark-paid');
+        Route::patch('/subscriptions/{id}/cancel', [App\Http\Controllers\Host\HostDashboardController::class, 'cancelSubscriptionAction'])->name('host.subscriptions.cancel');
+        Route::post('/subscriptions/{id}/send-invoice', [App\Http\Controllers\Host\HostDashboardController::class, 'sendInvoice'])->name('host.subscriptions.send-invoice');
         Route::get('/plans', [App\Http\Controllers\Host\HostDashboardController::class, 'plans'])->name('host.plans');
         Route::post('/plans', [App\Http\Controllers\Host\HostDashboardController::class, 'storePlan'])->name('host.plans.store');
         Route::put('/plans/{id}', [App\Http\Controllers\Host\HostDashboardController::class, 'updatePlan'])->name('host.plans.update');
         Route::delete('/plans/{id}', [App\Http\Controllers\Host\HostDashboardController::class, 'destroyPlan'])->name('host.plans.destroy');
+        Route::get('/announcements', [App\Http\Controllers\Host\HostDashboardController::class, 'announcements'])->name('host.announcements');
+        Route::post('/announcements', [App\Http\Controllers\Host\HostDashboardController::class, 'storeAnnouncement'])->name('host.announcements.store');
+        Route::patch('/announcements/{id}/send', [App\Http\Controllers\Host\HostDashboardController::class, 'sendAnnouncement'])->name('host.announcements.send');
+
+        Route::get('/security', [App\Http\Controllers\Host\HostDashboardController::class, 'security'])->name('host.security');
+        Route::get('/security/export', [App\Http\Controllers\Host\HostDashboardController::class, 'exportAuditLog'])->name('host.security.export');
+        Route::delete('/security/sessions/{id}', [App\Http\Controllers\Host\HostDashboardController::class, 'forceLogoutSession'])->name('host.security.force-logout');
+
         Route::get('/reports', [App\Http\Controllers\Host\HostDashboardController::class, 'reports'])->name('host.reports');
         Route::get('/settings', [App\Http\Controllers\Host\HostDashboardController::class, 'settings'])->name('host.settings');
         Route::post('/settings', [App\Http\Controllers\Host\HostDashboardController::class, 'updateSettings'])->name('host.settings.update');
+        Route::post('/settings/maintenance', [App\Http\Controllers\Host\HostDashboardController::class, 'toggleMaintenanceMode'])->name('host.settings.maintenance');
     });
 });
 

@@ -183,6 +183,24 @@
                 </div>
             </div>
 
+            {{-- Maintenance Mode --}}
+            <div class="sa-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-black mb-0 text-uppercase" style="color:var(--primary);font-size:.75rem;letter-spacing:.08em;">
+                        <i class="bi bi-cone-striped me-2"></i>Maintenance Mode
+                    </h6>
+                    <span class="sa-badge {{ $maintenanceMode ? 'sa-badge-red' : 'sa-badge-green' }}">{{ $maintenanceMode ? 'ON' : 'OFF' }}</span>
+                </div>
+                <p class="text-muted small mb-3">When enabled, every tenant is shown a maintenance page until you disable this. Super Admin always retains access.</p>
+                <form method="POST" action="{{ route('host.settings.maintenance') }}"
+                      onsubmit="return confirm('{{ $maintenanceMode ? 'Disable maintenance mode? Tenants will regain access immediately.' : 'Enable maintenance mode? Every tenant will be locked out until you disable this.' }}');">
+                    @csrf
+                    <button type="submit" class="btn btn-sm {{ $maintenanceMode ? 'btn-outline-primary' : 'btn-outline-danger' }} w-100">
+                        {{ $maintenanceMode ? 'Disable Maintenance Mode' : 'Enable Maintenance Mode' }}
+                    </button>
+                </form>
+            </div>
+
             {{-- System Info --}}
             <div class="sa-card p-4">
                 <h6 class="fw-black mb-3 text-uppercase" style="color:var(--primary);font-size:.75rem;letter-spacing:.08em;">

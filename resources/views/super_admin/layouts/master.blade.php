@@ -216,10 +216,12 @@
 
         /* ── Stat cards ── */
         .sa-stat {
-            background:white; border-radius:12px; padding:1.25rem 1.5rem;
+            background:white; border-radius:12px; padding:1.25rem 1.5rem; position:relative;
             box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 12px rgba(0,0,0,.04);
             transition: transform .2s, box-shadow .2s;
         }
+        .sa-stat-link { font-size:.72rem; font-weight:700; color:#6b7280; text-decoration:none; display:inline-flex; align-items:center; gap:.3rem; text-transform:uppercase; letter-spacing:.03em; }
+        .sa-stat-link:hover { color:var(--primary); }
         .sa-stat:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,.09); }
         .sa-stat-icon {
             width:48px; height:48px; border-radius:10px;
@@ -261,10 +263,31 @@
 
         /* ── Action buttons ── */
         .sa-btn-icon {
-            width:30px; height:30px; border-radius:6px; border:none; cursor:pointer;
-            display:inline-flex; align-items:center; justify-content:center;
+            width:30px; height:30px; border-radius:6px; border:1px solid #e5e7eb; background:#f9fafb; cursor:pointer;
+            display:inline-flex; align-items:center; justify-content:center; color:#6b7280;
             font-size:.8rem; transition:all .2s;
         }
+        .sa-btn-icon:hover { background:var(--primary); color:#fff; border-color:var(--primary); }
+        .sa-btn-icon.danger:hover { background:#dc2626; border-color:#dc2626; color:#fff; }
+        .sa-btn-icon.warn:hover { background:#d97706; border-color:#d97706; color:#fff; }
+        .sa-btn-icon.ok:hover { background:var(--accent); border-color:var(--accent); color:var(--primary-dark); }
+        .sa-row-actions { display:flex; gap:.35rem; }
+
+        /* ── Pill badge ── */
+        .sa-pill {
+            position:absolute; top:1.1rem; right:1.1rem; font-size:.6rem; font-weight:800;
+            text-transform:uppercase; letter-spacing:.05em; padding:.25rem .55rem; border-radius:30px;
+            background:#e0edf3; color:var(--primary);
+        }
+
+        /* ── Solid fill cards (Dashboard quick stats) ── */
+        .sa-fill-card { border-radius:12px; padding:1.1rem 1.25rem; color:#fff; }
+        .sa-fill-navy { background:var(--primary); }
+        .sa-fill-lime { background:var(--accent); color:var(--primary-dark); }
+        .sa-fill-card .icon { width:34px; height:34px; border-radius:8px; background:rgba(255,255,255,.18); display:flex; align-items:center; justify-content:center; font-size:1rem; margin-bottom:1.4rem; }
+        .sa-fill-lime .icon { background:rgba(0,45,71,.12); }
+        .sa-fill-card .lbl-top { font-size:.68rem; font-weight:800; text-transform:uppercase; letter-spacing:.04em; opacity:.85; margin-bottom:.2rem; }
+        .sa-fill-card .val { font-size:1.35rem; font-weight:800; }
 
         /* ── Back to App link ── */
         .sa-nav-back { margin-top: 1.5rem; padding: .75rem 1.25rem; border-top: 1px solid rgba(255,255,255,.1); }
@@ -348,7 +371,20 @@
                 </a>
             </li>
 
+            <li>
+                <a href="{{ route('host.announcements') }}"
+                   class="{{ request()->routeIs('host.announcements*') ? 'active' : '' }}">
+                    <i class="bi bi-megaphone"></i> Announcements
+                </a>
+            </li>
+
             <li class="sa-nav-label">System</li>
+            <li>
+                <a href="{{ route('host.security') }}"
+                   class="{{ request()->routeIs('host.security*') ? 'active' : '' }}">
+                    <i class="bi bi-shield-lock"></i> Security &amp; Audit Log
+                </a>
+            </li>
             <li>
                 <a href="{{ route('host.reports') }}"
                    class="{{ request()->routeIs('host.reports*') ? 'active' : '' }}">
@@ -396,6 +432,9 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+    </script>
     @stack('js')
 </body>
 </html>

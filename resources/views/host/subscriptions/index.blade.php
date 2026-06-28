@@ -1,6 +1,14 @@
 @extends('super_admin.layouts.master')
 @section('page_title', 'Subscriptions')
 @section('content')
+
+@if(session('success'))
+<div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i>{{ session('success') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+@endif
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h4 class="fw-bold mb-1">Subscriptions</h4>
@@ -20,6 +28,7 @@
                 <th>Expiry Date</th>
                 <th>Auto Renew</th>
                 <th>Payment</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -56,9 +65,25 @@
                     @endif
                 </td>
                 <td>{{ $sub->payment_method ?? '—' }}</td>
+                <td>
+                    <div class="sa-row-actions">
+                        @if($sub->status !== 'cancelled')
+                        <form method="POST" action="{{ route('host.subscriptions.cancel', $sub->id) }}" class="d-inline"
+                              onsubmit="return confirm('{{ addslashes($sub->company->name ?? '') }} will lose access to paid features at the end of the billing period. Continue?');">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="sa-btn-icon warn" data-bs-toggle="tooltip" title="Cancel Subscription"><i class="bi bi-x-circle"></i></button>
+                        </form>
+                        @endif
+                        <form method="POST" action="{{ route('host.subscriptions.send-invoice', $sub->id) }}" class="d-inline">
+                            @csrf
+                            <button type="submit" class="sa-btn-icon" data-bs-toggle="tooltip" title="Send Invoice"><i class="bi bi-receipt"></i></button>
+                        </form>
+                    </div>
+                </td>
             </tr>
             @empty
-            <tr><td colspan="7" class="text-center py-5 text-muted">No subscriptions found</td></tr>
+            <tr><td colspan="8" class="text-center py-5 text-muted">No subscriptions found</td></tr>
             @endforelse
         </tbody>
     </table>

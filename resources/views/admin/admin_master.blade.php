@@ -182,6 +182,38 @@
     @include('admin.body.header')
 @endauth
 
+@auth
+    @php
+        $dismissedAnnouncements = session('dismissed_announcements', []);
+        $activeAnnouncements = \App\Models\Announcement::where('status', 'Sent')
+            ->where(fn ($q) => $q->whereNull('target_company_id')->orWhere('target_company_id', auth()->user()->company_id))
+            ->whereNotIn('id', $dismissedAnnouncements)
+            ->orderByDesc('sent_at')
+            ->get();
+    @endphp
+    @foreach($activeAnnouncements as $announcement)
+        @php
+            $bannerColors = [
+                'Critical' => 'bg-rose-50 border-rose-200 text-rose-800',
+                'Warning'  => 'bg-amber-50 border-amber-200 text-amber-800',
+                'Info'     => 'bg-primary/5 border-primary/20 text-primary-dark',
+            ][$announcement->priority] ?? 'bg-primary/5 border-primary/20 text-primary-dark';
+        @endphp
+        <div class="lg:ml-[260px] border-b px-4 py-3 flex items-start justify-between gap-4 {{ $bannerColors }}" id="announcement-{{ $announcement->id }}">
+            <div class="flex items-start gap-2">
+                <i class="bi bi-megaphone-fill mt-0.5"></i>
+                <div>
+                    <span class="font-bold">{{ $announcement->title }}</span>
+                    <span class="ml-1">{{ $announcement->message }}</span>
+                </div>
+            </div>
+            <button onclick="dismissAnnouncement({{ $announcement->id }})" class="shrink-0 opacity-60 hover:opacity-100">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+    @endforeach
+@endauth
+
 <div class="main-content @auth lg:ml-[260px] @endauth min-h-screen transition-all duration-300">
     @yield('admin')
 </div>
@@ -223,6 +255,14 @@
                 text: "{!! addslashes(session('warning')) !!}",
             });
         @endif
+
+        function dismissAnnouncement(id) {
+            document.getElementById('announcement-' + id)?.remove();
+            fetch(`/announcements/${id}/dismiss`, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+            });
+        }
 
         // Mobile / Tablet Layout Toggle
         const sidebar  = document.getElementById('sidebar');
