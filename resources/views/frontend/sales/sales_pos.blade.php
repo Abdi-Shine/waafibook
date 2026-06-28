@@ -243,10 +243,11 @@
             
             Swal.fire({
                 title: 'Confirm Checkout',
-                text: `Total: ${total.toFixed(2)} ${CURRENCY}`,
+                html: `Total: <strong style="color:#004161">${total.toFixed(2)} ${CURRENCY}</strong>`,
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonText: 'Confirm'
+                confirmButtonText: 'Confirm',
+                footer: 'Inventory levels will be updated automatically.'
             }).then(res => {
                 if (res.isConfirmed) {
                     Swal.showLoading();

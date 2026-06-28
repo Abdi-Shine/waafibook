@@ -66,11 +66,19 @@
             },
         });
 
-        /* Override global Swal so all calls use branding by default */
+        /* Override global Swal so all calls use branding by default — including
+           the legacy Swal.fire(title, text, icon) shorthand still used in many
+           views, which a plain object-only patch would silently skip. */
         const _origFire = Swal.fire.bind(Swal);
         Swal.fire = function (...args) {
+            let opts = null;
             if (args.length === 1 && typeof args[0] === 'object') {
-                const opts = args[0];
+                opts = args[0];
+            } else if (typeof args[0] === 'string') {
+                opts = { title: args[0], text: args[1], icon: args[2] };
+            }
+
+            if (opts) {
                 if (!opts.confirmButtonColor) opts.confirmButtonColor = '#004161';
                 if (!opts.cancelButtonColor)  opts.cancelButtonColor  = '#6b7280';
                 if (!opts.denyButtonColor)    opts.denyButtonColor    = '#e11d48';
@@ -82,6 +90,7 @@
                         footer: 'swal-footer-branded',
                     };
                 }
+                return _origFire(opts);
             }
             return _origFire(...args);
         };
