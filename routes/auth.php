@@ -13,10 +13,10 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
 // ── Super Admin portal login (separate from company login) ──
-Route::get('admin/login',  [HostLoginController::class, 'create'])->name('host.login');
-Route::post('admin/login', [HostLoginController::class, 'store'])->name('host.login.store');
+Route::get('super_admin/login',  [HostLoginController::class, 'create'])->name('host.login');
+Route::post('super_admin/login', [HostLoginController::class, 'store'])->name('host.login.store');
 
-Route::middleware('auth')->post('admin/logout', [HostLoginController::class, 'destroy'])->name('host.logout');
+Route::middleware('auth')->post('super_admin/logout', [HostLoginController::class, 'destroy'])->name('host.logout');
 
 Route::middleware('guest')->group(function () {
     Route::get('register', [RegisteredUserController::class, 'create'])

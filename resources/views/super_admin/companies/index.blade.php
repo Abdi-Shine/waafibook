@@ -220,7 +220,7 @@ function viewCompany(id) {
     const modal = new bootstrap.Modal(document.getElementById('viewCompanyModal'));
     document.getElementById('viewCompanyBody').innerHTML = '<div class="text-center py-4 text-muted">Loading…</div>';
     modal.show();
-    fetch('/host/companies/' + id + '/show').then(r => r.json()).then(c => {
+    fetch('/super_admin/companies/' + id + '/show').then(r => r.json()).then(c => {
         document.getElementById('viewCompanyBody').innerHTML = `
             <div class="row g-3">
                 <div class="col-md-6">
@@ -252,7 +252,7 @@ function viewCompany(id) {
 }
 
 function editCompany(id, name, email, phone) {
-    document.getElementById('editCompanyForm').action = '/host/companies/' + id;
+    document.getElementById('editCompanyForm').action = '/super_admin/companies/' + id;
     document.getElementById('editName').value = name;
     document.getElementById('editEmail').value = email;
     document.getElementById('editPhone').value = phone;
@@ -264,7 +264,7 @@ function deleteCompany(id, name) {
     const typed = prompt('Type "' + name + '" to confirm permanent deletion:');
     if (typed !== name) { if (typed !== null) alert('Company name did not match. Deletion cancelled.'); return; }
     const form = document.getElementById('deleteCompanyForm');
-    form.action = '/host/companies/' + id;
+    form.action = '/super_admin/companies/' + id;
     form.submit();
 }
 

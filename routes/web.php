@@ -483,7 +483,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Host / Service Provider Management
-    Route::middleware(['role:Super Admin'])->prefix('host')->group(function () {
+    Route::middleware(['role:Super Admin'])->prefix('super_admin')->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\Host\HostDashboardController::class, 'dashboard'])->name('host.dashboard');
         Route::get('/companies', [App\Http\Controllers\Host\HostDashboardController::class, 'manageCompanies'])->name('host.companies');
         Route::patch('/companies/{id}/status', [App\Http\Controllers\Host\HostDashboardController::class, 'toggleCompanyStatus'])->name('host.companies.toggle-status');

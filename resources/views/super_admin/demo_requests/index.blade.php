@@ -128,7 +128,7 @@
 @push('js')
 <script>
 function updateStatus(id, status) {
-    fetch(`/host/demo-requests/${id}/status`, {
+    fetch(`/super_admin/demo-requests/${id}/status`, {
         method: 'PATCH',
         headers: {
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
