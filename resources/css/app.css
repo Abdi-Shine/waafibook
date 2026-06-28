@@ -22,12 +22,25 @@
     #sidebar { scrollbar-width: none; -ms-overflow-style: none; }
 
     /* SweetAlert Premium Branding */
-    .swal-popup-branded { border-radius: 1rem !important; font-family: 'Inter', sans-serif !important; }
+    .swal-popup-branded {
+        border-radius: 1.25rem !important;
+        font-family: 'Inter', sans-serif !important;
+        box-shadow: 0 24px 60px rgba(0, 65, 97, 0.18) !important;
+        padding-bottom: 24px !important;
+    }
+    .swal-title-branded { color: #003451 !important; font-weight: 800 !important; letter-spacing: -0.3px !important; }
+    .swal-text-branded  { color: #6B7280 !important; font-size: 14px !important; line-height: 1.6 !important; }
+    .swal-footer-branded {
+        color: #9CA3AF !important; font-size: 12px !important;
+        border-top: 1px solid #E5E7EB !important; margin-top: 8px !important;
+    }
     .swal-btn-confirm, .swal-btn-deny, .swal-btn-cancel {
         border-radius: 8px !important; font-weight: 700 !important;
         font-size: 13px !important; padding: 8px 22px !important;
     }
     .swal2-confirm.swal-btn-confirm { background-color: #004161 !important; }
+    .swal2-deny.swal-btn-deny       { background-color: #e11d48 !important; }
+    .swal2-cancel.swal-btn-cancel   { background-color: #F3F4F6 !important; color: #6B7280 !important; }
 
     /* Global Focus Policy */
     input:focus, select:focus, textarea:focus {

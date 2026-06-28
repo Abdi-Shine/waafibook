@@ -60,6 +60,9 @@
                 denyButton:    'swal-btn-deny',
                 cancelButton:  'swal-btn-cancel',
                 popup:         'swal-popup-branded',
+                title:         'swal-title-branded',
+                htmlContainer: 'swal-text-branded',
+                footer:        'swal-footer-branded',
             },
         });
 
@@ -71,9 +74,90 @@
                 if (!opts.confirmButtonColor) opts.confirmButtonColor = '#004161';
                 if (!opts.cancelButtonColor)  opts.cancelButtonColor  = '#6b7280';
                 if (!opts.denyButtonColor)    opts.denyButtonColor    = '#e11d48';
+                if (!opts.customClass) {
+                    opts.customClass = {
+                        confirmButton: 'swal-btn-confirm', denyButton: 'swal-btn-deny',
+                        cancelButton: 'swal-btn-cancel', popup: 'swal-popup-branded',
+                        title: 'swal-title-branded', htmlContainer: 'swal-text-branded',
+                        footer: 'swal-footer-branded',
+                    };
+                }
             }
             return _origFire(...args);
         };
+
+        /* ── ERP action alerts ───────────────────────────────────────────────────
+           One branded template per business event (sale, purchase, customer,
+           supplier, payment, warning/error). Every category uses the same
+           navy/lime/rose brand palette — only the icon and footer copy change —
+           so the whole app speaks with one visual voice instead of the
+           per-category rainbow colors a generic SweetAlert demo would use.
+         ─────────────────────────────────────────────────────────────────────── */
+        const ERP_FOOTERS = {
+            sale:     'Inventory levels have been updated automatically.',
+            purchase: 'Stock and supplier balance have been updated.',
+            customer: 'Customer account balance has been updated.',
+            supplier: 'Supplier account balance has been updated.',
+            payment:  'Account balances have been updated.',
+            expense:  'Expense accounts have been updated.',
+            delete:   'Deleted records are not recoverable.',
+        };
+
+        function erpSuccess(category, title, text) {
+            Swal.fire({ icon: 'success', title, text, footer: ERP_FOOTERS[category] });
+        }
+        function erpDeleteConfirm(category, title, text, onConfirm) {
+            Swal.fire({
+                icon: 'warning', title, text,
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                confirmButtonText: 'Yes, Delete',
+                cancelButtonText: 'Cancel',
+                footer: ERP_FOOTERS.delete,
+            }).then(r => { if (r.isConfirmed && onConfirm) onConfirm(); });
+        }
+
+        window.ErpAlerts = {
+            saleSaved:        () => erpSuccess('sale', 'Sale Recorded Successfully', 'The sale transaction has been saved to the system.'),
+            saleUpdated:      () => erpSuccess('sale', 'Sale Updated', 'The sale record has been revised and saved.'),
+            saleDeleted:      (onConfirm) => erpDeleteConfirm('sale', 'Delete This Sale?', 'This will permanently remove the sale record and reverse its effect on inventory.', onConfirm),
+
+            purchaseSaved:    () => erpSuccess('purchase', 'Purchase Order Recorded', 'The purchase has been logged and stock levels updated accordingly.'),
+            purchaseUpdated:  () => erpSuccess('purchase', 'Purchase Order Updated', 'Changes to the purchase record have been saved successfully.'),
+            purchaseDeleted:  (onConfirm) => erpDeleteConfirm('purchase', 'Delete This Purchase?', 'Removing this purchase will reverse the stock additions associated with it.', onConfirm),
+
+            customerSaved:    () => erpSuccess('customer', 'Customer Added', 'The new customer profile has been created and is ready for use.'),
+            customerUpdated:  () => erpSuccess('customer', 'Customer Profile Updated', "The customer's details have been revised and saved."),
+            customerDeleted:  (onConfirm) => erpDeleteConfirm('customer', 'Delete This Customer?', 'Sales history linked to this customer will remain, but the profile will be removed.', onConfirm),
+
+            supplierSaved:    () => erpSuccess('supplier', 'Supplier Added', 'The supplier has been registered and is available for purchase orders.'),
+            supplierUpdated:  () => erpSuccess('supplier', 'Supplier Profile Updated', "The supplier's information has been revised and saved."),
+            supplierDeleted:  (onConfirm) => erpDeleteConfirm('supplier', 'Delete This Supplier?', 'Purchase history for this supplier will be retained, but the supplier profile will be removed.', onConfirm),
+
+            paymentReceived:  () => erpSuccess('payment', 'Payment Received', 'The customer payment has been recorded and the account balance updated.'),
+            paymentSent:      () => erpSuccess('payment', 'Payment Sent to Supplier', 'The outgoing payment has been recorded and the supplier balance adjusted.'),
+            paymentDeleted:   (onConfirm) => erpDeleteConfirm('payment', 'Delete This Payment?', 'Removing this payment will reverse the balance adjustment on the associated account.', onConfirm),
+
+            lowStock:         (text) => Swal.fire({ icon: 'warning', title: 'Low Stock Alert', text: text || 'One or more items have fallen below their minimum stock threshold.', footer: 'You can set reorder levels in Inventory Settings.' }),
+            validationError:  (text) => Swal.fire({ icon: 'error', title: 'Required Fields Missing', text: text || 'Please review the form and correct the highlighted fields before submitting.', confirmButtonColor: '#e11d48' }),
+            sessionExpired:   () => Swal.fire({ icon: 'info', title: 'Session Expired', text: 'Your session has timed out due to inactivity. Please log in again to continue.', allowOutsideClick: false, allowEscapeKey: false, confirmButtonText: 'Log In Again' }),
+        };
+
+        /* Best-effort category guess from a flashed message's wording, so every
+           existing controller's session('success'/'error') flash — without any
+           controller changes — still gets a relevant footer hint instead of a
+           blank one. */
+        function erpFooterFor(message) {
+            const m = (message || '').toLowerCase();
+            if (m.includes('delet')) return ERP_FOOTERS.delete;
+            if (m.includes('invoice') || m.includes('sale')) return ERP_FOOTERS.sale;
+            if (m.includes('purchase')) return ERP_FOOTERS.purchase;
+            if (m.includes('customer')) return ERP_FOOTERS.customer;
+            if (m.includes('supplier')) return ERP_FOOTERS.supplier;
+            if (m.includes('payment') || m.includes('voucher') || m.includes('receipt')) return ERP_FOOTERS.payment;
+            if (m.includes('expense')) return ERP_FOOTERS.expense;
+            return undefined;
+        }
     </script>
     @stack('css')
 </head>
@@ -101,6 +185,7 @@
                 icon: 'success',
                 title: 'Success!',
                 text: "{{ session('success') }}",
+                footer: erpFooterFor("{{ session('success') }}"),
             });
         @endif
 
@@ -109,6 +194,8 @@
                 icon: 'error',
                 title: 'Validation Error',
                 html: '<ul class="text-left text-sm">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>',
+                confirmButtonColor: '#e11d48',
+                footer: 'All fields marked with * are mandatory.',
             });
         @endif
 
@@ -161,9 +248,10 @@
                 text: options.text || ('Are you sure you want to delete ' + label + '? This action cannot be undone.'),
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#004161',
-                cancelButtonColor: '#99CC33',
+                confirmButtonColor: '#e11d48',
+                cancelButtonColor: '#6b7280',
                 confirmButtonText: 'Yes, delete it!',
+                footer: options.footer || ERP_FOOTERS.delete,
                 customClass: popupClass
             }).then((result) => {
                 if (!result.isConfirmed) return;
@@ -175,8 +263,8 @@
                     inputPlaceholder: 'Password',
                     inputAttributes: { autocapitalize: 'off', autocomplete: 'current-password' },
                     showCancelButton: true,
-                    confirmButtonColor: '#004161',
-                    cancelButtonColor: '#99CC33',
+                    confirmButtonColor: '#e11d48',
+                    cancelButtonColor: '#6b7280',
                     confirmButtonText: 'Confirm & Delete',
                     customClass: popupClass,
                     preConfirm: (password) => {
@@ -220,6 +308,7 @@
                         title: 'Deleted',
                         text: label + ' has been deleted.',
                         confirmButtonColor: '#004161',
+                        footer: options.footer || ERP_FOOTERS.delete,
                         customClass: popupClass
                     }).then(() => {
                         if (options.onSuccess) {

@@ -612,7 +612,7 @@ class SalesController extends Controller
         /** @var Company|null $company */
         $company = Company::find(auth()->user()->company_id);
 
-        $pdf = Pdf::loadView('frontend.sales.sales_invoice_pdf', compact('order', 'company'))
+        $pdf = Pdf::loadView('frontend.sales.pos_invoice_pdf', compact('order', 'company'))
                   ->setPaper('a4', 'portrait');
 
         return $pdf->stream('Invoice_' . $order->invoice_no . '.pdf');
@@ -682,7 +682,7 @@ class SalesController extends Controller
         /** @var Company|null $company */
         $company = Company::find($order->company_id);
 
-        $pdf = Pdf::loadView('frontend.sales.sales_invoice_pdf', compact('order', 'company'))
+        $pdf = Pdf::loadView('frontend.sales.pos_invoice_pdf', compact('order', 'company'))
                   ->setPaper('a4', 'portrait');
 
         return $pdf->stream('Invoice_' . $order->invoice_no . '.pdf');
