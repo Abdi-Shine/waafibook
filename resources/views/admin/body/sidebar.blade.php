@@ -33,6 +33,11 @@
     <!-- Menu Sections -->
     <div class="px-4 py-4 space-y-1">
 
+        {{-- Tenant-only modules: Super Admin has no company_id, so none of these
+             business pages (Cash In Hand, Sales & POS, etc.) apply to them —
+             they manage the platform via Subscribers below instead. --}}
+        @unless(is_null(Auth::user()->company_id))
+
         <!-- 1. Company Dashboard -->
         @if(Auth::user()->hasPermission('Dashboard'))
             <a href="{{ route('dashboard') }}"
@@ -339,6 +344,8 @@
                 </div>
             </div>
         @endif
+
+        @endunless
 
         <!-- 10. Subscribers -->
         @if(Auth::user()->hasPermission('subscribers'))

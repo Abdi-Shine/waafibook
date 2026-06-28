@@ -7,16 +7,6 @@
     txnSearch: '',
     adjustType: 'increase',
     saving: false,
-    transactions: @js($transactions),
-
-    get filteredTransactions() {
-        if (!this.txnSearch) return this.transactions;
-        const term = this.txnSearch.toLowerCase();
-        return this.transactions.filter(t =>
-            (t.type || '').toLowerCase().includes(term) ||
-            (t.name || '').toLowerCase().includes(term)
-        );
-    },
 
     openAdjustModal() {
         this.adjustType = 'increase';
@@ -65,19 +55,19 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
-                    <template x-for="txn in filteredTransactions" :key="txn.type + txn.name + txn.date + txn.amount">
-                        <tr class="hover:bg-gray-50/60 transition-colors">
-                            <td class="px-5 py-3.5 text-[13px] font-bold text-primary-dark" x-text="txn.type"></td>
-                            <td class="px-5 py-3.5 text-[13px] text-gray-700" x-text="txn.name"></td>
-                            <td class="px-5 py-3.5 text-[13px] text-gray-500" x-text="txn.date"></td>
-                            <td class="px-5 py-3.5 text-[13px] font-bold text-right"
-                                :class="txn.direction === 'in' ? 'text-accent' : 'text-red-500'"
-                                x-text="'{{ $companyCurrency }} ' + parseFloat(txn.amount).toFixed(0)"></td>
-                        </tr>
-                    </template>
-                    <template x-if="!filteredTransactions.length">
-                        <tr><td colspan="4" class="px-5 py-10 text-center text-[13px] text-gray-400">No transactions found.</td></tr>
-                    </template>
+                    @forelse($transactions as $txn)
+                    <tr class="hover:bg-gray-50/60 transition-colors"
+                        x-show="!txnSearch || {{ \Illuminate\Support\Js::from(strtolower($txn['type'].' '.$txn['name'])) }}.includes(txnSearch.toLowerCase())">
+                        <td class="px-5 py-3.5 text-[13px] font-bold text-primary-dark">{{ $txn['type'] }}</td>
+                        <td class="px-5 py-3.5 text-[13px] text-gray-700">{{ $txn['name'] }}</td>
+                        <td class="px-5 py-3.5 text-[13px] text-gray-500">{{ $txn['date'] }}</td>
+                        <td class="px-5 py-3.5 text-[13px] font-bold text-right {{ $txn['direction'] === 'in' ? 'text-accent' : 'text-red-500' }}">
+                            {{ $companyCurrency }} {{ number_format($txn['amount'], 0) }}
+                        </td>
+                    </tr>
+                    @empty
+                    <tr><td colspan="4" class="px-5 py-10 text-center text-[13px] text-gray-400">No transactions found.</td></tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
