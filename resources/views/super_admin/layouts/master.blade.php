@@ -1,3 +1,13 @@
+@php
+    // Second-most-recent LOGIN entry — the most recent one is the current
+    // session itself, so "last login" means the one before it.
+    $lastLogin = \App\Models\AuditLog::where('user_id', auth()->id())
+        ->where('module', 'Authentication')
+        ->where('action', 'LOGIN')
+        ->orderByDesc('created_at')
+        ->skip(1)
+        ->first()?->created_at;
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -183,24 +193,19 @@
             display:flex; align-items:center; padding:0 1.75rem;
             box-shadow: 0 1px 0 #e5e7eb, 0 2px 8px rgba(0,0,0,.04);
         }
-        .sa-header-search {
-            position:relative; flex:1; max-width:360px;
+        .sa-header-title { font-weight:800; color:#111827; font-size:1.15rem; margin:0; }
+        .sa-header-lastlogin { font-size:.85rem; color:#6b7280; }
+        .sa-header-lastlogin strong { color:#111827; }
+
+        .sa-bell-btn {
+            width:38px; height:38px; border-radius:8px; border:1px solid #e5e7eb; background:#f9fafb;
+            display:flex; align-items:center; justify-content:center; position:relative; color:#6b7280; flex-shrink:0;
         }
-        .sa-header-search i {
-            position:absolute; left:.875rem; top:50%; transform:translateY(-50%);
-            color:#9ca3af; font-size:.875rem; pointer-events:none;
-        }
-        .sa-header-search input {
-            width:100%; padding:.5rem .75rem .5rem 2.25rem;
-            border:1px solid #e5e7eb; border-radius:8px;
-            font-size:.875rem; outline:none;
-            transition: border-color .2s;
-        }
-        .sa-header-search input:focus { border-color:var(--primary); }
+        .sa-bell-dot { position:absolute; top:6px; right:7px; width:6px; height:6px; border-radius:50%; background:#dc2626; }
 
         .sa-avatar {
             width:36px; height:36px; border-radius:50%;
-            background:var(--accent); color:var(--primary-dark);
+            background:var(--primary); color:#fff;
             display:flex; align-items:center; justify-content:center;
             font-weight:700; font-size:.8rem; flex-shrink:0;
         }
@@ -296,8 +301,6 @@
         /* ── Header user info ── */
         .sa-user-name  { font-weight: 700; font-size: .85rem; color: #111827; }
         .sa-user-role  { font-size: .72rem; color: #9ca3af; }
-        .sa-logout-btn { color: #9ca3af; font-size: .85rem; text-decoration: none; padding: .25rem .5rem; border-radius: 6px; transition: color .2s; }
-        .sa-logout-btn:hover { color: var(--primary); }
 
         @yield('extra_css')
     </style>
@@ -362,26 +365,32 @@
                     <i class="bi bi-gear"></i> System Settings
                 </a>
             </li>
+
+            <li class="sa-nav-back">
+                <a href="{{ route('host.logout') }}" onclick="event.preventDefault(); document.getElementById('sa-logout').submit();" class="sa-back-link" style="color:var(--accent);font-weight:600;">
+                    <i class="bi bi-box-arrow-right"></i> Sign Out
+                </a>
+                <form id="sa-logout" action="{{ route('host.logout') }}" method="POST" class="d-none">@csrf</form>
+            </li>
         </ul>
     </aside>
 
     {{-- Header --}}
     <header class="sa-header">
-        <div class="sa-header-search">
-            <i class="bi bi-search"></i>
-            <input type="text" placeholder="Search companies, subscriptions...">
-        </div>
+        <h1 class="sa-header-title">@yield('page_title', 'Dashboard')</h1>
 
         <div class="ms-auto d-flex align-items-center gap-3">
-            <div class="sa-avatar">{{ strtoupper(substr(auth()->user()->name ?? 'SA', 0, 2)) }}</div>
-            <div>
-                <div class="sa-user-name">{{ auth()->user()->name }}</div>
-                <div class="sa-user-role">Super Administrator</div>
+            <div class="sa-header-lastlogin">
+                Last login: <strong>{{ $lastLogin?->format('d M Y, H:i') ?? '—' }}</strong>
             </div>
-            <a href="{{ route('host.logout') }}" onclick="event.preventDefault(); document.getElementById('sa-logout').submit();" class="sa-logout-btn">
-                <i class="bi bi-box-arrow-right"></i>
-            </a>
-            <form id="sa-logout" action="{{ route('host.logout') }}" method="POST" class="d-none">@csrf</form>
+            <button type="button" class="sa-bell-btn"><i class="bi bi-bell"></i><span class="sa-bell-dot"></span></button>
+            <div class="d-flex align-items-center gap-2">
+                <div class="sa-avatar">{{ strtoupper(substr(auth()->user()->name ?? 'SA', 0, 2)) }}</div>
+                <div>
+                    <div class="sa-user-name">{{ auth()->user()->name }}</div>
+                    <div class="sa-user-role">Platform Owner</div>
+                </div>
+            </div>
         </div>
     </header>
 
