@@ -123,9 +123,8 @@
                             <div class="relative">
                                 <i class="bi bi-globe input-icon"></i>
                                 <select name="country" class="form-control">
-                                    <option value="">Select country</option>
                                     @foreach(['Djibouti','Ethiopia','Kenya','Somalia','Tanzania','Uganda', 'Rwanda', 'Burundi', 'South Sudan', 'Sudan', 'Eritrea', 'Other'] as $c)
-                                        <option value="{{ $c }}" {{ old('country') === $c ? 'selected' : '' }}>{{ $c }}</option>
+                                        <option value="{{ $c }}" {{ old('country', 'Somalia') === $c ? 'selected' : '' }}>{{ $c }}</option>
                                     @endforeach
                                 </select>
                             </div>
