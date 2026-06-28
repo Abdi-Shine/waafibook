@@ -1701,6 +1701,11 @@ class ReportController extends Controller
         }
         unset($party);
 
+        // Apply party type filter: "customer" excludes the synthetic "Cash Sale" bucket
+        if ($request->party_type === 'customer') {
+            $partyData = array_filter($partyData, fn ($p, $key) => $key !== 'cash', ARRAY_FILTER_USE_BOTH);
+        }
+
         // Apply search filter after grouping
         if ($request->search) {
             $search    = strtolower($request->search);
@@ -1733,12 +1738,39 @@ class ReportController extends Controller
         ];
 
         $filters = [
-            'search'    => $request->search ?? '',
-            'from_date' => $fromDate,
-            'to_date'   => $toDate,
+            'search'     => $request->search ?? '',
+            'from_date'  => $fromDate,
+            'to_date'    => $toDate,
+            'party_type' => $request->party_type ?? '',
         ];
 
         return [array_values($partyData), $totals, $filters];
+    }
+
+    public function exportPartyWiseProfitLossExcel(Request $request)
+    {
+        [$reportData, $totals] = $this->buildPartyWiseProfitLoss($request);
+
+        $filename = 'party-wise-profit-loss-' . now()->format('Y-m-d') . '.csv';
+        $headers  = ['Content-Type' => 'text/csv', 'Content-Disposition' => "attachment; filename=\"$filename\""];
+
+        $callback = function () use ($reportData) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['#', 'Party Name', 'Phone No.', 'Total Sale Amount', 'Profit(+)/Loss(-)']);
+
+            foreach ($reportData as $i => $party) {
+                fputcsv($handle, [
+                    $i + 1,
+                    $party['name'],
+                    $party['phone'],
+                    number_format($party['revenue'], 2),
+                    number_format($party['profit'], 2),
+                ]);
+            }
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function allPartiesReport(Request $request)

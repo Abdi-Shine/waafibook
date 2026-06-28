@@ -417,6 +417,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/reports/parties-statement/pdf', [App\Http\Controllers\ReportController::class, 'exportPartiesStatementPdf'])->name('reports.party_statement.pdf');
         Route::get('/reports/party-wise-profit-loss', [App\Http\Controllers\ReportController::class, 'partyWiseProfitLossReport'])->name('reports.party_wise_profit_loss');
         Route::get('/reports/party-wise-profit-loss/pdf', [App\Http\Controllers\ReportController::class, 'exportPartyWiseProfitLossPdf'])->name('reports.party_wise_profit_loss.pdf');
+        Route::get('/reports/party-wise-profit-loss/excel', [App\Http\Controllers\ReportController::class, 'exportPartyWiseProfitLossExcel'])->name('reports.party_wise_profit_loss.excel');
         Route::get('/reports/all-parties', [App\Http\Controllers\ReportController::class, 'allPartiesReport'])->name('reports.party_all');
         Route::get('/reports/all-parties/pdf', [App\Http\Controllers\ReportController::class, 'exportAllPartiesPdf'])->name('reports.party_all.pdf');
         Route::get('/reports/sales-purchase-by-party', [App\Http\Controllers\ReportController::class, 'salesPurchaseByPartyReport'])->name('reports.sales_purchase_by_party');

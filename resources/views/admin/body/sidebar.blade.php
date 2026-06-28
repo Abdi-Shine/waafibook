@@ -255,6 +255,12 @@
                     <a href="{{ route('reports.profit_loss') }}"
                         class="flex items-center gap-3 pl-8 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('reports.profit_loss') ? 'text-white bg-white/5' : '' }}">
                         <i class="bi bi-plus text-lg"></i> Profit & Loss</a>
+                    <a href="{{ route('reports.bill_wise_profit') }}"
+                        class="flex items-center gap-3 pl-8 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('reports.bill_wise_profit') ? 'text-white bg-white/5' : '' }}">
+                        <i class="bi bi-plus text-lg"></i> Bill Wise Profit</a>
+                    <a href="{{ route('reports.party_wise_profit_loss') }}"
+                        class="flex items-center gap-3 pl-8 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('reports.party_wise_profit_loss') ? 'text-white bg-white/5' : '' }}">
+                        <i class="bi bi-plus text-lg"></i> Party Profit & Loss</a>
                     <a href="{{ route('reports.balance_sheet') }}"
                         class="flex items-center gap-3 pl-8 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('reports.balance_sheet') ? 'text-white bg-white/5' : '' }}">
                         <i class="bi bi-plus text-lg"></i> Balance Sheet</a>

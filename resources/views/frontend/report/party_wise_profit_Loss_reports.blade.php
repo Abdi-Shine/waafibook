@@ -14,11 +14,17 @@
 
     <!-- Header Section -->
     <div class="report-premium-header no-print">
-        <h1 class="report-premium-title">Party Wise Profit & Loss Report</h1>
+        <div>
+            <h1 class="report-premium-title">Party Wise Profit & Loss Report</h1>
+            <p class="report-premium-subtitle">Profitability analysis by customer</p>
+        </div>
         <div class="flex items-center gap-2">
             <button onclick="window.print()" class="report-premium-btn-outline">
                 <i class="bi bi-printer text-sm"></i> PRINT
             </button>
+            <a href="{{ route('reports.party_wise_profit_loss.excel') }}?{{ http_build_query($filters) }}" class="report-premium-btn-outline !bg-emerald-600 !text-white !border-emerald-600">
+                <i class="bi bi-file-earmark-excel text-sm"></i> EXPORT EXCEL
+            </a>
             <a href="{{ route('reports.party_wise_profit_loss.pdf') }}?{{ http_build_query($filters) }}" class="report-premium-btn-primary">
                 <i class="bi bi-file-earmark-pdf text-sm"></i> EXPORT PDF
             </a>
@@ -86,6 +92,14 @@
             </div>
         </div>
 
+        <div class="report-premium-filter-group w-auto min-w-[160px]">
+            <span class="report-premium-filter-label">Party Type</span>
+            <select name="party_type" class="report-premium-filter-input">
+                <option value="" {{ $filters['party_type'] === '' ? 'selected' : '' }}>All Parties</option>
+                <option value="customer" {{ $filters['party_type'] === 'customer' ? 'selected' : '' }}>Registered Customers Only</option>
+            </select>
+        </div>
+
         <div class="report-premium-filter-group w-auto min-w-[140px]">
             <span class="report-premium-filter-label">From Date</span>
             <input type="date" name="from_date" value="{{ $filters['from_date'] }}" class="report-premium-filter-input">
@@ -125,12 +139,10 @@
                 <thead>
                     <tr>
                         <th class="text-center w-12">#</th>
-                        <th>Party Identity</th>
-                        <th>Contact No.</th>
-                        <th class="text-right">Aggregate Sales</th>
-                        <th class="text-right">COGS</th>
-                        <th class="text-right">Profit Contribution</th>
-                        <th class="text-right">Margin %</th>
+                        <th>Party Name</th>
+                        <th>Phone No.</th>
+                        <th class="text-right">Total Sale Amount</th>
+                        <th class="text-right">Profit (+) / Loss (-)</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -151,9 +163,6 @@
                             <span class="text-xs font-black text-primary-dark font-mono">{{ $symbol }} {{ number_format($party['revenue'], 2) }}</span>
                         </td>
                         <td class="px-5 py-4 text-right">
-                            <span class="text-xs font-black text-gray-500 font-mono">{{ $symbol }} {{ number_format($party['cogs'], 2) }}</span>
-                        </td>
-                        <td class="px-5 py-4 text-right">
                             @if($party['profit'] >= 0)
                                 <span class="report-premium-badge report-premium-badge-success italic !px-3 font-black font-mono">
                                     +{{ $symbol }} {{ number_format($party['profit'], 2) }}
@@ -164,13 +173,10 @@
                                 </span>
                             @endif
                         </td>
-                        <td class="px-5 py-4 text-right">
-                            <span class="text-[11px] font-black {{ $party['margin'] >= 0 ? 'text-emerald-600' : 'text-red-500' }}">{{ $party['margin'] }}%</span>
-                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-5 py-10 text-center">
+                        <td colspan="5" class="px-5 py-10 text-center">
                             <i class="bi bi-inbox text-3xl text-gray-300 block mb-2"></i>
                             <p class="text-xs text-gray-400 font-bold">No party data found for the selected period.</p>
                         </td>
@@ -183,20 +189,12 @@
                             <span class="text-[11px] font-black uppercase tracking-[0.2em] italic text-primary-dark opacity-70">Consolidated Profit Analysis</span>
                         </td>
                         <td class="px-5 py-4 text-right">
-                            <span class="text-[9px] text-gray-400 block font-black uppercase mb-0.5 leading-none">Total Revenue</span>
+                            <span class="text-[9px] text-gray-400 block font-black uppercase mb-0.5 leading-none">Total Sale Amount</span>
                             <span class="text-[13px] font-black font-mono text-primary-dark">{{ $symbol }} {{ number_format($totals['totalSales'], 2) }}</span>
                         </td>
-                        <td class="px-5 py-4 text-right">
-                            <span class="text-[9px] text-gray-400 block font-black uppercase mb-0.5 leading-none">Total COGS</span>
-                            <span class="text-[13px] font-black font-mono text-primary-dark">{{ $symbol }} {{ number_format($totals['totalCOGS'], 2) }}</span>
-                        </td>
                         <td class="px-5 py-4 text-right bg-accent/10">
-                            <span class="text-[9px] text-gray-400 block font-black uppercase mb-0.5 leading-none">Total Net Profit</span>
+                            <span class="text-[9px] text-gray-400 block font-black uppercase mb-0.5 leading-none">Total Profit(+)/Loss(-)</span>
                             <span class="text-[15px] font-black font-mono text-accent italic">{{ $symbol }} {{ number_format($totals['totalProfit'], 2) }}</span>
-                        </td>
-                        <td class="px-5 py-4 text-right">
-                            <span class="text-[9px] text-gray-400 block font-black uppercase mb-0.5 leading-none">Overall Margin</span>
-                            <span class="text-[13px] font-black {{ $totals['overallMargin'] >= 0 ? 'text-emerald-600' : 'text-red-500' }}">{{ $totals['overallMargin'] }}%</span>
                         </td>
                     </tr>
                 </tfoot>
