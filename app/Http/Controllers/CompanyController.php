@@ -314,6 +314,19 @@ class CompanyController extends Controller
             Account::query()->where('id', $request->account_id)->update(['branch_id' => $branch->id]);
         }
 
+        // Every branch needs its own Cash on Hand account for POS/cash tracking —
+        // the chosen account_id above is for an existing bank account, not this.
+        Account::query()->firstOrCreate(
+            ['company_id' => $company->id, 'branch_id' => $branch->id, 'type' => 'cash'],
+            [
+                'code'     => '1110-' . $branch->id,
+                'name'     => $branch->name . ' - Cash on Hand',
+                'category' => 'assets',
+                'balance'  => 0,
+                'is_active' => true,
+            ]
+        );
+
         return redirect()->back()->with('success', 'Branch added successfully');
     }
 
