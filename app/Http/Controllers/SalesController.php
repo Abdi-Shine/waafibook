@@ -267,9 +267,11 @@ class SalesController extends Controller
 
     public function store(Request $request)
     {
+        $cid = auth()->user()->company_id;
+
         $request->validate([
             'customer_id'            => 'nullable|exists:customers,id',
-            'branch_id'              => 'required|exists:branches,id',
+            'branch_id'              => ['required', \Illuminate\Validation\Rule::exists('branches', 'id')->where('company_id', $cid)],
             'invoice_date'           => 'required|date',
             'items'                  => 'required|array|min:1',
             'items.*.product_name'   => 'required|string',
