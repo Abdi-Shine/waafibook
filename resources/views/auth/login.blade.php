@@ -170,32 +170,34 @@
                         @enderror
                     </div>
 
-                    <div class="mb-4">
-                        <label class="block text-[11px] font-black text-primary uppercase tracking-wider mb-1.5">Password <span class="text-red-500">*</span></label>
-                        <div class="relative">
-                            <i class="bi bi-lock input-icon"></i>
-                            <input type="password" name="password" id="reg-password"
-                                   class="form-control @error('password') border-red-400 @enderror"
-                                   placeholder="Create password" required autocomplete="new-password">
-                            <button type="button" class="password-toggle" onclick="togglePassword('reg-password', 'regToggleIcon')">
-                                <i class="bi bi-eye" id="regToggleIcon"></i>
-                            </button>
+                    <div class="mb-4 grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-black text-primary uppercase tracking-wider mb-1.5">Password <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <i class="bi bi-lock input-icon"></i>
+                                <input type="password" name="password" id="reg-password"
+                                       class="form-control @error('password') border-red-400 @enderror"
+                                       placeholder="Create password" required autocomplete="new-password">
+                                <button type="button" class="password-toggle" onclick="togglePassword('reg-password', 'regToggleIcon')">
+                                    <i class="bi bi-eye" id="regToggleIcon"></i>
+                                </button>
+                            </div>
+                            <p class="text-primary opacity-40 mt-1.5 text-[0.7rem]">Min. 8 characters with uppercase, lowercase and numbers</p>
+                            @error('password')
+                                <p class="text-red-500 font-bold mt-1.5 uppercase text-[0.7rem]">{{ $message }}</p>
+                            @enderror
                         </div>
-                        <p class="text-primary opacity-40 mt-1.5 text-[0.7rem]">Min. 8 characters with uppercase, lowercase and numbers</p>
-                        @error('password')
-                            <p class="text-red-500 font-bold mt-1.5 uppercase text-[0.7rem]">{{ $message }}</p>
-                        @enderror
-                    </div>
 
-                    <div class="mb-4">
-                        <label class="block text-[11px] font-black text-primary uppercase tracking-wider mb-1.5">Confirm Password <span class="text-red-500">*</span></label>
-                        <div class="relative">
-                            <i class="bi bi-lock-fill input-icon"></i>
-                            <input type="password" name="password_confirmation" id="reg-password-confirm"
-                                   class="form-control" placeholder="Confirm password" required autocomplete="new-password">
-                            <button type="button" class="password-toggle" onclick="togglePassword('reg-password-confirm', 'regConfirmToggleIcon')">
-                                <i class="bi bi-eye" id="regConfirmToggleIcon"></i>
-                            </button>
+                        <div>
+                            <label class="block text-[11px] font-black text-primary uppercase tracking-wider mb-1.5">Confirm Password <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <i class="bi bi-lock-fill input-icon"></i>
+                                <input type="password" name="password_confirmation" id="reg-password-confirm"
+                                       class="form-control" placeholder="Confirm password" required autocomplete="new-password">
+                                <button type="button" class="password-toggle" onclick="togglePassword('reg-password-confirm', 'regConfirmToggleIcon')">
+                                    <i class="bi bi-eye" id="regConfirmToggleIcon"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
