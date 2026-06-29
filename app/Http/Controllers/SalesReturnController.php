@@ -75,8 +75,11 @@ class SalesReturnController extends Controller
             // invoice. A return with no invoice (e.g. a goodwill credit) is
             // financial-only: no items, no stock impact.
             $branchId = null;
+            $outstandingDue = 0;
             if ($request->invoice_id) {
-                $branchId = SalesOrder::query()->find($request->invoice_id)?->branch_id;
+                $invoiceOrder = SalesOrder::query()->find($request->invoice_id);
+                $branchId = $invoiceOrder?->branch_id;
+                $outstandingDue = (float) ($invoiceOrder?->due_amount ?? 0);
             }
 
             $amount = count($items) > 0
@@ -107,12 +110,14 @@ class SalesReturnController extends Controller
                 $customer->save();
             }
 
-            // Journal Entry: Dr Sales Revenue / Cr Accounts Receivable,
+            // Journal Entry: Dr Sales Revenue / Cr Accounts Receivable
+            // (capped at what was actually still owed on the invoice — a
+            // refund payable for the rest, see createReturnJournalEntry),
             // plus Dr Inventory / Cr COGS for any returned items — the
             // exact reversal of what the original sale posted, so a
             // restocked return puts the goods' value back on the books
             // instead of just bumping the physical quantity.
-            $this->createReturnJournalEntry($return, $companyId, $branchId ? $items : []);
+            $this->createReturnJournalEntry($return, $companyId, $branchId ? $items : [], $outstandingDue);
 
             // Restock returned goods at the branch they were originally sold from
             if ($branchId) {
@@ -195,18 +200,40 @@ class SalesReturnController extends Controller
         return redirect()->back()->with('success', 'Credit note reversed and deleted.');
     }
 
-    private function createReturnJournalEntry(SalesReturn $return, $companyId, array $items = [])
+    private function createReturnJournalEntry(SalesReturn $return, $companyId, array $items = [], float $outstandingDue = 0)
     {
         // Dr Sales Revenue (reverses earned revenue)
         $revenueAccount = Account::query()->where('company_id', $companyId)->where('code', '4110')->first()
                        ?: Account::query()->where('company_id', $companyId)->where('name', 'like', '%Revenue%')->first();
 
-        // Cr Accounts Receivable (reduces what customer owes — or creates a credit balance)
+        // Cr Accounts Receivable — but only up to what was actually still
+        // owed on the invoice. A fully-paid invoice has no AR balance to
+        // reduce, so crediting the whole return amount there would just
+        // push Accounts Receivable negative. Anything beyond the
+        // outstanding due is money the business now owes the customer
+        // back, which belongs in a refund liability instead.
         $receivableAccount = Account::query()->where('company_id', $companyId)->where('code', '1140')->first()
                           ?: Account::query()->where('company_id', $companyId)->where('name', 'like', '%Receivable%')->first();
 
         if (!$revenueAccount || !$receivableAccount) {
             return;
+        }
+
+        $toReceivable = min($return->amount, max($outstandingDue, 0));
+        $toRefundPayable = $return->amount - $toReceivable;
+
+        $refundPayableAccount = null;
+        if ($toRefundPayable > 0) {
+            $refundPayableAccount = Account::query()->where('company_id', $companyId)->where('code', '2160')->first()
+                                 ?: Account::query()->where('company_id', $companyId)->where('name', 'Customer Refunds Payable')->first()
+                                 ?: Account::query()->create([
+                                        'company_id' => $companyId,
+                                        'code'       => '2160',
+                                        'name'       => 'Customer Refunds Payable',
+                                        'category'   => 'liabilities',
+                                        'type'       => 'current_liability',
+                                        'balance'    => 0,
+                                    ]);
         }
 
         // Mirror SalesController's COGS posting (code 1150 Inventory / 5110
@@ -250,15 +277,29 @@ class SalesReturnController extends Controller
             'description'      => 'Return: ' . $return->credit_note_no,
         ]);
 
-        // Cr Receivable (reduces AR balance)
-        JournalItem::query()->create([
-            'company_id'       => $companyId,
-            'journal_entry_id' => $entry->id,
-            'account_id'       => $receivableAccount->id,
-            'debit'            => 0,
-            'credit'           => $return->amount,
-            'description'      => 'Return: ' . $return->credit_note_no,
-        ]);
+        // Cr Receivable (reduces AR balance, capped at what was actually due)
+        if ($toReceivable > 0) {
+            JournalItem::query()->create([
+                'company_id'       => $companyId,
+                'journal_entry_id' => $entry->id,
+                'account_id'       => $receivableAccount->id,
+                'debit'            => 0,
+                'credit'           => $toReceivable,
+                'description'      => 'Return: ' . $return->credit_note_no,
+            ]);
+        }
+
+        // Cr Customer Refunds Payable (money owed back on an already-paid invoice)
+        if ($toRefundPayable > 0 && $refundPayableAccount) {
+            JournalItem::query()->create([
+                'company_id'       => $companyId,
+                'journal_entry_id' => $entry->id,
+                'account_id'       => $refundPayableAccount->id,
+                'debit'            => 0,
+                'credit'           => $toRefundPayable,
+                'description'      => 'Refund owed for: ' . $return->credit_note_no,
+            ]);
+        }
 
         if ($inventoryReversal > 0) {
             // Dr Inventory (goods are back in stock)
