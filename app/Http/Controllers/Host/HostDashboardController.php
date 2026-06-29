@@ -51,7 +51,7 @@ class HostDashboardController extends Controller
 
     public function manageCompanies(Request $request)
     {
-        $companies = Company::with(['subscription.plan'])
+        $companies = Company::with(['subscription.plan', 'users' => fn ($q) => $q->orderByRaw("role = 'admin' desc")])
             ->when($request->filled('search'), fn ($q) => $q->where(fn ($q2) => $q2
                 ->where('name', 'like', '%' . $request->search . '%')
                 ->orWhere('email', 'like', '%' . $request->search . '%')))
@@ -61,9 +61,96 @@ class HostDashboardController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        $plans = SubscriptionPlan::orderBy('name')->pluck('name');
+        $allPlans = SubscriptionPlan::orderBy('price')->get();
+        $plans = $allPlans->pluck('name');
 
-        return view('super_admin.companies.index', compact('companies', 'plans'));
+        return view('super_admin.companies.index', compact('companies', 'plans', 'allPlans'));
+    }
+
+    public function storeCompany(Request $request)
+    {
+        $request->validate([
+            'name'             => 'required|string|max:255|unique:companies,name',
+            'owner_name'       => 'required|string|max:255',
+            'owner_email'      => 'required|email|max:255|unique:users,email',
+            'phone'            => 'nullable|string|max:50',
+            'country'          => 'nullable|string|max:100',
+            'subscription_plan_id' => 'nullable|exists:subscription_plans,id',
+        ]);
+
+        $company = \DB::transaction(function () use ($request) {
+            $company = Company::create([
+                'name'    => $request->name,
+                'email'   => $request->owner_email,
+                'phone'   => $request->phone,
+                'country' => $request->country,
+                'status'  => 'active',
+            ]);
+
+            $tempPassword = \Illuminate\Support\Str::random(12);
+            User::withoutGlobalScopes()->create([
+                'name'              => $request->owner_name,
+                'fullname'          => $request->owner_name,
+                'email'             => $request->owner_email,
+                'password'          => \Illuminate\Support\Facades\Hash::make($tempPassword),
+                'role'              => 'admin',
+                'company_id'        => $company->id,
+                'email_verified_at' => now(),
+            ]);
+
+            if ($request->subscription_plan_id) {
+                Subscription::create([
+                    'company_id'           => $company->id,
+                    'subscription_plan_id' => $request->subscription_plan_id,
+                    'start_date'           => now(),
+                    'expiry_date'          => now()->addDays(14),
+                    'status'               => 'trial',
+                    'auto_renew'           => false,
+                ]);
+            }
+
+            return $company;
+        });
+
+        \App\Models\AuditLog::log('Company', "Created new company: {$company->name}", 'CREATE');
+
+        // Mail delivery is best-effort — a bad/unreachable address shouldn't
+        // undo the company that was already created above.
+        $emailSent = true;
+        try {
+            \Illuminate\Support\Facades\Password::sendResetLink(['email' => $request->owner_email]);
+        } catch (\Throwable $e) {
+            $emailSent = false;
+        }
+
+        return redirect()->route('host.companies')->with('success', $emailSent
+            ? "{$company->name} has been created and the owner has been notified by email."
+            : "{$company->name} has been created, but the welcome email could not be sent — please share login details manually.");
+    }
+
+    public function managePlan(Request $request, $id)
+    {
+        $request->validate(['subscription_plan_id' => 'required|exists:subscription_plans,id']);
+
+        $company = Company::with('subscription')->findOrFail($id);
+
+        if ($company->subscription) {
+            $company->subscription->update(['subscription_plan_id' => $request->subscription_plan_id]);
+        } else {
+            Subscription::create([
+                'company_id'           => $company->id,
+                'subscription_plan_id' => $request->subscription_plan_id,
+                'start_date'           => now(),
+                'expiry_date'          => now()->addDays(14),
+                'status'               => 'trial',
+                'auto_renew'           => false,
+            ]);
+        }
+
+        $plan = SubscriptionPlan::find($request->subscription_plan_id);
+        \App\Models\AuditLog::log('Company', "Changed subscription plan for {$company->name} to {$plan->name}", 'UPDATE');
+
+        return redirect()->route('host.companies')->with('success', "{$company->name} is now on the {$plan->name} plan.");
     }
 
     public function toggleCompanyStatus($id)
@@ -179,7 +266,12 @@ class HostDashboardController extends Controller
     {
         $user = User::withoutGlobalScopes()->findOrFail($id);
 
-        \Illuminate\Support\Facades\Password::sendResetLink(['email' => $user->email]);
+        try {
+            \Illuminate\Support\Facades\Password::sendResetLink(['email' => $user->email]);
+        } catch (\Throwable $e) {
+            \App\Models\AuditLog::log('User', "Password reset email failed for: {$user->name}", 'UPDATE');
+            return redirect()->route('host.users')->with('error', "Could not send the reset email to {$user->email}.");
+        }
 
         \App\Models\AuditLog::log('User', "Sent password reset link to: {$user->name}", 'UPDATE');
 

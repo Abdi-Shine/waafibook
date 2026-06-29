@@ -20,7 +20,7 @@
     <div class="sticky top-0 bg-primary/95 backdrop-blur-sm z-10 px-6 py-6 border-b border-white/10">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
-                <img src="{{ asset('upload/horntechlogo/Waafibook_logo.jpg') }}" class="w-full h-full object-contain"
+                <img src="{{ asset('upload/horntechlogo/horntech_logo.jpg') }}" class="w-full h-full object-contain"
                     alt="Waafibook Logo">
             </div>
             <div>
