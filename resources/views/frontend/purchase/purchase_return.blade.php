@@ -59,7 +59,7 @@
                 return {
                     id: item.id,
                     product_id: item.product_id,
-                    name: item.product ? item.product.name : (item.product_name || 'Generic Product'),
+                    name: item.product ? item.product.product_name : (item.product_name || 'Generic Product'),
                     original_qty: item.quantity,
                     already_returned_qty: alreadyReturned,
                     remaining_qty: remaining,
@@ -178,7 +178,7 @@
             subtotal: r.subtotal,
             bill_number: r.bill ? r.bill.bill_number : '',
             items: (r.items || []).map(i => ({
-                name: i.product ? i.product.name : (i.product_name || 'Product'),
+                name: i.product ? i.product.product_name : (i.product_name || 'Product'),
                 quantity: i.quantity,
                 unit_price: i.unit_price,
                 subtotal: i.subtotal,
@@ -383,7 +383,7 @@
                             <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark" x-text="r.supplier?.name || 'Unknown Entity'"></td>
                             <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark">
                                 <div class="flex flex-col leading-tight">
-                                    <span x-text="r.items && r.items[0] ? (r.items[0].product?.name || 'Item') : 'Mixed Items'"></span>
+                                    <span x-text="r.items && r.items[0] ? (r.items[0].product?.product_name || 'Item') : 'Mixed Items'"></span>
                                     <span class="text-[9px] font-bold text-gray-400 uppercase tracking-tighter mt-1" x-text="`Manifest: ${r.items?.length || 0} items`"></span>
                                 </div>
                             </td>
