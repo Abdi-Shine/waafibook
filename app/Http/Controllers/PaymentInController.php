@@ -90,17 +90,28 @@ class PaymentInController extends Controller
         // silently driving AR negative on the balance sheet with no
         // underlying transaction to justify it. Capping at their current
         // outstanding balance keeps the ledger honest.
+        //
+        // A NEGATIVE balance means the business owes the customer money
+        // instead (e.g. a return on an already-paid invoice — see
+        // SalesReturnController, which books that as Customer Refunds
+        // Payable). That's a real, payable obligation too, just in the
+        // opposite direction, so it's handled here as a 'refund' rather
+        // than rejected outright.
         /** @var Customer|null $customer */
         $customer = Customer::query()->find($request->customer_id);
         $outstanding = (float) ($customer->amount_balance ?? 0);
-        if ($outstanding <= 0) {
+        $isRefund = $outstanding < 0;
+        $payable = abs($outstanding);
+
+        if ($outstanding == 0) {
             return redirect()->back()->with('error', 'This customer has no outstanding balance — there is nothing to receive payment against.');
         }
-        if ((float) $request->amount > $outstanding) {
-            return redirect()->back()->with('error', 'Payment amount ($' . number_format($request->amount, 2) . ') exceeds the customer\'s outstanding balance ($' . number_format($outstanding, 2) . ').');
+        if ((float) $request->amount > $payable) {
+            $label = $isRefund ? 'the refund owed to the customer' : 'the customer\'s outstanding balance';
+            return redirect()->back()->with('error', 'Amount ($' . number_format($request->amount, 2) . ') exceeds ' . $label . ' ($' . number_format($payable, 2) . ').');
         }
 
-        DB::transaction(function () use ($request) {
+        DB::transaction(function () use ($request, $isRefund) {
             $count = PaymentIn::query()->count() + 1;
             $receiptNo = 'RCT-' . date('Y') . '-' . str_pad($count, 5, '0', STR_PAD_LEFT);
 
@@ -118,14 +129,17 @@ class PaymentInController extends Controller
                 'payment_method' => $method,
                 'notes' => $request->notes,
                 'status' => 'completed',
+                'type' => $isRefund ? 'refund' : 'receipt',
                 'created_by' => Auth::id(),
             ]);
 
-            // Update Customer Balance
+            // Update Customer Balance — a receipt reduces what they owe us
+            // (balance moves down); a refund reduces what we owe them
+            // (balance moves up, back toward zero).
             /** @var Customer|null $customer */
             $customer = Customer::query()->find($request->customer_id);
             if ($customer) {
-                $customer->amount_balance -= $request->amount;
+                $customer->amount_balance += $isRefund ? $request->amount : -$request->amount;
                 $customer->save();
             }
 
@@ -133,7 +147,7 @@ class PaymentInController extends Controller
             $this->createAccountingEntry($payment);
         });
 
-        return redirect()->back()->with('success', 'Payment received successfully.');
+        return redirect()->back()->with('success', $isRefund ? 'Refund paid to customer successfully.' : 'Payment received successfully.');
     }
 
     private function createAccountingEntry($payment)
@@ -151,8 +165,14 @@ class PaymentInController extends Controller
             }
         }
 
-        // Accounts Receivable (Credit)
-        $receivableAccount = Account::query()->where('code', '1030')->first() ?: Account::query()->where('name', 'like', '%Receivable%')->first();
+        $isRefund = $payment->type === 'refund';
+
+        // Accounts Receivable (normal receipt) or Customer Refunds Payable
+        // (paying out a refund — see SalesReturnController, which is what
+        // books money into this account in the first place).
+        $receivableAccount = $isRefund
+            ? (Account::query()->where('code', '2160')->first() ?: Account::query()->where('name', 'Customer Refunds Payable')->first())
+            : (Account::query()->where('code', '1030')->first() ?: Account::query()->where('name', 'like', '%Receivable%')->first());
 
         if ($assetAccount && $receivableAccount) {
             $companyId = $payment->company_id ?? auth()->user()->company_id;
@@ -162,31 +182,53 @@ class PaymentInController extends Controller
                 'entry_number' => 'JE-PAY-' . date('Ymd') . '-' . str_pad($payment->id, 4, '0', STR_PAD_LEFT),
                 'date'         => $payment->payment_date,
                 'reference'    => $payment->receipt_no,
-                'description'  => 'Payment received from ' . $payment->customer->name,
+                'description'  => ($isRefund ? 'Refund paid to ' : 'Payment received from ') . $payment->customer->name,
                 'status'       => 'posted',
                 'total_amount' => $payment->amount,
                 'created_by'   => Auth::id(),
             ]);
 
-            JournalItem::query()->create([
-                'company_id'       => $companyId,
-                'journal_entry_id' => $entry->id,
-                'account_id'       => $assetAccount->id,
-                'debit'            => $payment->amount,
-                'credit'           => 0,
-                'description'      => 'Receipt ' . $payment->receipt_no,
-            ]);
+            if ($isRefund) {
+                // Dr Customer Refunds Payable (settles the liability)
+                JournalItem::query()->create([
+                    'company_id'       => $companyId,
+                    'journal_entry_id' => $entry->id,
+                    'account_id'       => $receivableAccount->id,
+                    'debit'            => $payment->amount,
+                    'credit'           => 0,
+                    'description'      => 'Refund ' . $payment->receipt_no,
+                ]);
 
-            JournalItem::query()->create([
-                'company_id'       => $companyId,
-                'journal_entry_id' => $entry->id,
-                'account_id'       => $receivableAccount->id,
-                'debit'            => 0,
-                'credit'           => $payment->amount,
-                'description'      => 'Receipt ' . $payment->receipt_no,
-            ]);
+                // Cr Cash/Bank (money paid out)
+                JournalItem::query()->create([
+                    'company_id'       => $companyId,
+                    'journal_entry_id' => $entry->id,
+                    'account_id'       => $assetAccount->id,
+                    'debit'            => 0,
+                    'credit'           => $payment->amount,
+                    'description'      => 'Refund ' . $payment->receipt_no,
+                ]);
+            } else {
+                JournalItem::query()->create([
+                    'company_id'       => $companyId,
+                    'journal_entry_id' => $entry->id,
+                    'account_id'       => $assetAccount->id,
+                    'debit'            => $payment->amount,
+                    'credit'           => 0,
+                    'description'      => 'Receipt ' . $payment->receipt_no,
+                ]);
+
+                JournalItem::query()->create([
+                    'company_id'       => $companyId,
+                    'journal_entry_id' => $entry->id,
+                    'account_id'       => $receivableAccount->id,
+                    'debit'            => 0,
+                    'credit'           => $payment->amount,
+                    'description'      => 'Receipt ' . $payment->receipt_no,
+                ]);
+            }
         } else {
-            Log::error("Accounting failed for PaymentIn {$payment->id}: Asset or Receivable account missing.");
+            Log::error("Accounting failed for PaymentIn {$payment->id}: Asset or Receivable/Refunds Payable account missing.");
             throw new \RuntimeException("Required accounts missing — payment journal entry could not be created.");
         }
     }
@@ -228,7 +270,7 @@ class PaymentInController extends Controller
                 /** @var Customer|null $customer */
                 $customer = Customer::query()->find($payment->customer_id);
                 if ($customer) {
-                    $customer->amount_balance += $payment->amount;
+                    $customer->amount_balance += $payment->type === 'refund' ? -$payment->amount : $payment->amount;
                     $customer->save();
                 }
                 $this->reverseAccountingEntry($payment);
@@ -248,7 +290,7 @@ class PaymentInController extends Controller
             /** @var Customer|null $customer */
             $customer = Customer::query()->find($payment->customer_id);
             if ($customer) {
-                $customer->amount_balance += $payment->amount;
+                $customer->amount_balance += $payment->type === 'refund' ? -$payment->amount : $payment->amount;
                 $customer->save();
             }
 
