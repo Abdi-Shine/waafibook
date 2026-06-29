@@ -56,6 +56,7 @@
                         <th>Company Name</th>
                         <th>Owner</th>
                         <th>Email</th>
+                        <th>Phone</th>
                         <th>Plan</th>
                         <th>Status</th>
                         <th>Joined</th>
@@ -81,6 +82,7 @@
                         </td>
                         <td style="font-size:.85rem;">{{ $owner->name ?? '—' }}</td>
                         <td style="font-size:.82rem;color:#6b7280;">{{ $company->email ?? '—' }}</td>
+                        <td style="font-size:.82rem;color:#6b7280;">{{ $company->phone ?? '—' }}</td>
                         <td>
                             @if($company->subscription?->plan)
                                 <span class="sa-badge sa-badge-blue">{{ $company->subscription->plan->name }}</span>
@@ -123,7 +125,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="text-center py-5" style="color:#9ca3af;">No companies match your filters.</td>
+                        <td colspan="9" class="text-center py-5" style="color:#9ca3af;">No companies match your filters.</td>
                     </tr>
                     @endforelse
                 </tbody>
