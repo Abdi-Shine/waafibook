@@ -228,6 +228,29 @@ class ProductController extends Controller
         ]);
     }
 
+    // Recomputes the Opening Stock journal entry's amount as current
+    // quantity * current purchase_price, so editing either field on the
+    // product keeps the books matching what's actually on hand. Mirrors
+    // the lookup deleteOpeningStock() already uses (reference + description).
+    private function syncInitialInventoryEntry($product)
+    {
+        $quantity = (float) ProductStock::query()->where('product_id', $product->id)->sum('quantity');
+        $newTotalValue = $quantity * (float) $product->purchase_price;
+
+        $entry = JournalEntry::query()
+            ->where('reference', 'PRODUCT-' . $product->id)
+            ->where('description', 'like', 'Initial stock for%')
+            ->first();
+
+        if ($entry) {
+            $entry->update(['total_amount' => $newTotalValue]);
+            $entry->items()->where('debit', '>', 0)->update(['debit' => $newTotalValue]);
+            $entry->items()->where('credit', '>', 0)->update(['credit' => $newTotalValue]);
+        } elseif ($newTotalValue > 0) {
+            $this->createInitialInventoryEntry($product, $quantity);
+        }
+    }
+
     private function createInitialInventoryEntry($product, $stockQuantity)
     {
         $totalValue = $stockQuantity * $product->purchase_price;
@@ -341,6 +364,12 @@ class ProductController extends Controller
                 ]);
             }
         }
+
+        // Keep the Opening Stock journal entry in sync — otherwise editing
+        // purchase price or quantity here silently drifts the Inventory GL
+        // balance away from qty * price, the same mismatch already fixed
+        // for the Dashboard/Product Inventory "Total Value" cards.
+        $this->syncInitialInventoryEntry($product);
 
         AuditLog::log('Products', "Updated product details: {$product->product_name}", 'UPDATE');
 
