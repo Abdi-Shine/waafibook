@@ -132,22 +132,9 @@ class HostDashboardController extends Controller
         $request->validate(['subscription_plan_id' => 'required|exists:subscription_plans,id']);
 
         $company = Company::with('subscription')->findOrFail($id);
+        $plan = $this->applyCompanyPlan($company, $request->subscription_plan_id);
 
-        if ($company->subscription) {
-            $company->subscription->update(['subscription_plan_id' => $request->subscription_plan_id]);
-        } else {
-            Subscription::create([
-                'company_id'           => $company->id,
-                'subscription_plan_id' => $request->subscription_plan_id,
-                'start_date'           => now(),
-                'expiry_date'          => now()->addDays(14),
-                'status'               => 'trial',
-                'auto_renew'           => false,
-            ]);
-        }
-
-        $plan = SubscriptionPlan::find($request->subscription_plan_id);
-        \App\Models\AuditLog::log('Company', "Changed subscription plan for {$company->name} to {$plan->name}", 'UPDATE');
+        \App\Models\AuditLog::log('Company', "Moved {$company->name} onto the {$plan->name} plan and marked the subscription active", 'UPDATE');
 
         return redirect()->route('host.companies')->with('success', "{$company->name} is now on the {$plan->name} plan.");
     }
@@ -183,19 +170,54 @@ class HostDashboardController extends Controller
 
     public function updateCompany(Request $request, $id)
     {
-        $company = Company::findOrFail($id);
+        $company = Company::with('subscription')->findOrFail($id);
 
         $request->validate([
-            'name'  => 'required|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:50',
+            'name'                 => 'required|string|max:255',
+            'email'                => 'nullable|email|max:255',
+            'phone'                => 'nullable|string|max:50',
+            'subscription_plan_id' => 'nullable|exists:subscription_plans,id',
         ]);
 
         $company->update($request->only('name', 'email', 'phone'));
 
+        if ($request->filled('subscription_plan_id')) {
+            $plan = $this->applyCompanyPlan($company, $request->subscription_plan_id);
+            \App\Models\AuditLog::log('Company', "Moved {$company->name} onto the {$plan->name} plan and marked the subscription active", 'UPDATE');
+        }
+
         \App\Models\AuditLog::log('Company', "Updated company details: {$company->name}", 'UPDATE');
 
         return redirect()->route('host.companies')->with('success', "{$company->name}'s details have been updated.");
+    }
+
+    // Assigning a plan here represents a confirmed, paid plan change —
+    // there's no separate "mark as paid" step elsewhere in the app — so
+    // it always activates the subscription with a fresh expiry date,
+    // taking a company off Free Trial the moment Super Admin uses this.
+    private function applyCompanyPlan(Company $company, $planId): SubscriptionPlan
+    {
+        $plan = SubscriptionPlan::findOrFail($planId);
+        $expiryDate = now()->addMonths($plan->billing_cycle === 'yearly' ? 12 : 1);
+
+        if ($company->subscription) {
+            $company->subscription->update([
+                'subscription_plan_id' => $planId,
+                'status'                => 'active',
+                'expiry_date'           => $expiryDate,
+            ]);
+        } else {
+            Subscription::create([
+                'company_id'           => $company->id,
+                'subscription_plan_id' => $planId,
+                'start_date'            => now(),
+                'expiry_date'           => $expiryDate,
+                'status'                => 'active',
+                'auto_renew'            => false,
+            ]);
+        }
+
+        return $plan;
     }
 
     public function destroyCompany($id)

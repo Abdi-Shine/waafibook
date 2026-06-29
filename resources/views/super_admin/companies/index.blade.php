@@ -103,7 +103,7 @@
                                 <button type="button" class="sa-btn-icon" data-bs-toggle="tooltip" title="View"
                                         onclick="viewCompany({{ $company->id }})"><i class="bi bi-eye"></i></button>
                                 <button type="button" class="sa-btn-icon" data-bs-toggle="tooltip" title="Edit"
-                                        onclick="editCompany({{ $company->id }}, '{{ addslashes($company->name) }}', '{{ addslashes($company->email) }}', '{{ addslashes($company->phone) }}')"><i class="bi bi-pencil"></i></button>
+                                        onclick="editCompany({{ $company->id }}, '{{ addslashes($company->name) }}', '{{ addslashes($company->email) }}', '{{ addslashes($company->phone) }}', {{ $company->subscription->subscription_plan_id ?? 'null' }})"><i class="bi bi-pencil"></i></button>
                                 <button type="button" class="sa-btn-icon" data-bs-toggle="tooltip" title="Manage Plan"
                                         onclick="managePlan({{ $company->id }}, '{{ addslashes($company->name) }}', {{ $company->subscription->subscription_plan_id ?? 'null' }})"><i class="bi bi-credit-card"></i></button>
 
@@ -161,8 +161,20 @@
                     <div class="modal-header"><h5 class="modal-title">Edit Company</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                     <div class="modal-body">
                         <div class="mb-3"><label class="form-label fw-bold">Company Name</label><input type="text" name="name" id="editName" class="form-control" required></div>
-                        <div class="mb-3"><label class="form-label fw-bold">Owner Email</label><input type="email" name="email" id="editEmail" class="form-control"></div>
-                        <div class="mb-3"><label class="form-label fw-bold">Phone</label><input type="text" name="phone" id="editPhone" class="form-control"></div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6"><label class="form-label fw-bold">Owner Email</label><input type="email" name="email" id="editEmail" class="form-control"></div>
+                            <div class="col-md-6"><label class="form-label fw-bold">Phone Number</label><input type="text" name="phone" id="editPhone" class="form-control"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Subscription Plan</label>
+                            <select name="subscription_plan_id" id="editPlan" class="form-select">
+                                <option value="">None</option>
+                                @foreach($allPlans as $plan)
+                                    <option value="{{ $plan->id }}">{{ $plan->name }} — ${{ number_format($plan->price, 0) }}/{{ $plan->billing_cycle }}</option>
+                                @endforeach
+                            </select>
+                            <div class="form-text">Moving a company off a Free Trial plan here marks its subscription Active immediately — use this once payment has been confirmed.</div>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -275,11 +287,12 @@ function viewCompany(id) {
     });
 }
 
-function editCompany(id, name, email, phone) {
+function editCompany(id, name, email, phone, currentPlanId) {
     document.getElementById('editCompanyForm').action = '/super_admin/companies/' + id;
     document.getElementById('editName').value = name;
     document.getElementById('editEmail').value = email;
     document.getElementById('editPhone').value = phone;
+    document.getElementById('editPlan').value = currentPlanId ?? '';
     new bootstrap.Modal(document.getElementById('editCompanyModal')).show();
 }
 
