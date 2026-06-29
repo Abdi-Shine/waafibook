@@ -390,6 +390,8 @@
                     <div class="sa-user-name">{{ auth()->user()->name }}</div>
                     <div class="sa-user-role">Platform Owner</div>
                 </div>
+                <button type="button" class="sa-btn-icon" data-bs-toggle="tooltip" title="Sign Out"
+                        onclick="document.getElementById('sa-logout').submit();"><i class="bi bi-box-arrow-right"></i></button>
             </div>
         </div>
     </header>
