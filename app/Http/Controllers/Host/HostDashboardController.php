@@ -300,7 +300,46 @@ class HostDashboardController extends Controller
         $payments = SubscriptionPayment::with(['subscription.company', 'subscription.plan'])
             ->orderByDesc('payment_date')->paginate(20);
         $totalRevenue = SubscriptionPayment::where('status', 'completed')->sum('amount');
-        return view('super_admin.payments.index', compact('payments', 'totalRevenue'));
+        $subscriptions = Subscription::with(['company', 'plan'])->orderBy('id', 'desc')->get();
+        return view('super_admin.payments.index', compact('payments', 'totalRevenue', 'subscriptions'));
+    }
+
+    // Lets Super Admin record a payment that happened outside the
+    // automated checkout flow (e.g. cash, manual bank transfer) so the
+    // company's billing history and revenue totals stay accurate.
+    public function storePayment(Request $request)
+    {
+        $request->validate([
+            'subscription_id' => 'required|exists:subscriptions,id',
+            'amount'          => 'required|numeric|min:0.01',
+            'payment_date'    => 'required|date',
+            'payment_method'  => 'required|string|max:50',
+            'transaction_id'  => 'nullable|string|max:100',
+            'status'          => 'required|in:completed,pending,failed',
+        ]);
+
+        $subscription = Subscription::with('company')->findOrFail($request->subscription_id);
+
+        $payment = SubscriptionPayment::create($request->only(
+            'subscription_id', 'amount', 'payment_date', 'payment_method', 'transaction_id', 'status'
+        ));
+
+        \App\Models\AuditLog::log('Billing', "Recorded manual payment of {$payment->amount} for: {$subscription->company->name}", 'CREATE');
+
+        return redirect()->route('host.payments')->with('success', 'Payment recorded successfully.');
+    }
+
+    public function destroyPayment($id)
+    {
+        $payment = SubscriptionPayment::with('subscription.company')->findOrFail($id);
+        $companyName = $payment->subscription->company->name ?? 'Unknown company';
+        $amount = $payment->amount;
+
+        $payment->delete();
+
+        \App\Models\AuditLog::log('Billing', "Deleted payment record of {$amount} for: {$companyName}", 'DELETE', 'warning');
+
+        return redirect()->route('host.payments')->with('success', 'Payment record deleted.');
     }
 
     public function markPaymentPaid($id)

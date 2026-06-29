@@ -501,7 +501,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/users/{id}', [App\Http\Controllers\Host\HostDashboardController::class, 'destroyUser'])->name('host.users.destroy');
         Route::get('/subscriptions', [App\Http\Controllers\Host\HostDashboardController::class, 'subscriptions'])->name('host.subscriptions');
         Route::get('/payments', [App\Http\Controllers\Host\HostDashboardController::class, 'payments'])->name('host.payments');
+        Route::post('/payments', [App\Http\Controllers\Host\HostDashboardController::class, 'storePayment'])->name('host.payments.store');
         Route::patch('/payments/{id}/mark-paid', [App\Http\Controllers\Host\HostDashboardController::class, 'markPaymentPaid'])->name('host.payments.mark-paid');
+        Route::delete('/payments/{id}', [App\Http\Controllers\Host\HostDashboardController::class, 'destroyPayment'])->name('host.payments.destroy');
         Route::patch('/subscriptions/{id}/cancel', [App\Http\Controllers\Host\HostDashboardController::class, 'cancelSubscriptionAction'])->name('host.subscriptions.cancel');
         Route::post('/subscriptions/{id}/send-invoice', [App\Http\Controllers\Host\HostDashboardController::class, 'sendInvoice'])->name('host.subscriptions.send-invoice');
         Route::get('/plans', [App\Http\Controllers\Host\HostDashboardController::class, 'plans'])->name('host.plans');

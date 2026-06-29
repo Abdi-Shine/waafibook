@@ -61,4 +61,15 @@ class Subscription extends Model
         return $this->status === 'active'
             && \Carbon\Carbon::parse($this->expiry_date)->endOfDay()->isFuture();
     }
+
+    // Broader than isActive(): also covers an unexpired trial. Used to
+    // gate write access app-wide once a trial or paid term has actually run out.
+    public function hasAccess(): bool
+    {
+        if (in_array($this->status, ['cancelled', 'expired'])) {
+            return false;
+        }
+
+        return !$this->expiry_date || \Carbon\Carbon::parse($this->expiry_date)->endOfDay()->isFuture();
+    }
 }

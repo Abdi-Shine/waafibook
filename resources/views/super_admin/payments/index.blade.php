@@ -14,14 +14,19 @@
         <h4 style="font-weight:800;color:#111827;margin:0;">Payments</h4>
         <p style="color:#6b7280;font-size:.875rem;margin:.2rem 0 0;">All subscription payment transactions.</p>
     </div>
-    <div class="sa-stat d-flex align-items-center gap-3 px-4 py-3" style="margin-bottom:0;">
-        <div class="sa-stat-icon" style="background:rgba(153,204,51,.15);color:#5a7a1a;margin-bottom:0;">
-            <i class="bi bi-currency-dollar"></i>
+    <div class="d-flex align-items-center gap-3">
+        <div class="sa-stat d-flex align-items-center gap-3 px-4 py-3" style="margin-bottom:0;">
+            <div class="sa-stat-icon" style="background:rgba(153,204,51,.15);color:#5a7a1a;margin-bottom:0;">
+                <i class="bi bi-currency-dollar"></i>
+            </div>
+            <div>
+                <div class="sa-stat-lbl">Total Revenue</div>
+                <div class="sa-stat-val" style="color:#5a7a1a;">${{ number_format($totalRevenue, 2) }}</div>
+            </div>
         </div>
-        <div>
-            <div class="sa-stat-lbl">Total Revenue</div>
-            <div class="sa-stat-val" style="color:#5a7a1a;">${{ number_format($totalRevenue, 2) }}</div>
-        </div>
+        <button type="button" class="btn btn-primary fw-bold" style="background:var(--primary);border-color:var(--primary);" data-bs-toggle="modal" data-bs-target="#recordPaymentModal">
+            <i class="bi bi-plus-lg"></i> Record Payment
+        </button>
     </div>
 </div>
 
@@ -58,14 +63,22 @@
                 <td><code>{{ $pmt->transaction_id ?? '—' }}</code></td>
                 <td><span class="sa-badge {{ $badgeClass }}">{{ ucfirst($pmt->status) }}</span></td>
                 <td>
-                    @if($pmt->status !== 'completed')
-                    <form method="POST" action="{{ route('host.payments.mark-paid', $pmt->id) }}" class="d-inline"
-                          onsubmit="return confirm('Mark this payment as paid?');">
-                        @csrf
-                        @method('PATCH')
-                        <button type="submit" class="sa-btn-icon ok" data-bs-toggle="tooltip" title="Mark as Paid"><i class="bi bi-check2-circle"></i></button>
-                    </form>
-                    @endif
+                    <div class="sa-row-actions">
+                        @if($pmt->status !== 'completed')
+                        <form method="POST" action="{{ route('host.payments.mark-paid', $pmt->id) }}" class="d-inline"
+                              onsubmit="return confirm('Mark this payment as paid?');">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="sa-btn-icon ok" data-bs-toggle="tooltip" title="Mark as Paid"><i class="bi bi-check2-circle"></i></button>
+                        </form>
+                        @endif
+                        <form method="POST" action="{{ route('host.payments.destroy', $pmt->id) }}" class="d-inline"
+                              onsubmit="return confirm('Permanently delete this payment record? This cannot be undone.');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="sa-btn-icon danger" data-bs-toggle="tooltip" title="Delete"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             @empty
@@ -78,4 +91,52 @@
 @if($payments->hasPages())
 <div class="mt-4 d-flex justify-content-center">{{ $payments->links() }}</div>
 @endif
+
+{{-- Record Payment Modal --}}
+<div class="modal fade" id="recordPaymentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="POST" action="{{ route('host.payments.store') }}">
+            @csrf
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">Record Payment</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Company / Subscription *</label>
+                        <select name="subscription_id" class="form-select" required>
+                            <option value="">Select a subscription…</option>
+                            @foreach($subscriptions as $sub)
+                                <option value="{{ $sub->id }}">{{ $sub->company->name ?? '—' }} — {{ $sub->plan->name ?? 'No Plan' }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-3"><label class="form-label fw-bold">Amount *</label><input type="number" step="0.01" min="0.01" name="amount" class="form-control" required></div>
+                    <div class="mb-3"><label class="form-label fw-bold">Payment Date *</label><input type="date" name="payment_date" class="form-control" value="{{ now()->toDateString() }}" required></div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Payment Method *</label>
+                        <select name="payment_method" class="form-select" required>
+                            <option value="Cash">Cash</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="EVC Plus">EVC Plus</option>
+                            <option value="Card">Card</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3"><label class="form-label fw-bold">Transaction ID</label><input type="text" name="transaction_id" class="form-control" placeholder="Optional reference"></div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Status *</label>
+                        <select name="status" class="form-select" required>
+                            <option value="completed">Completed</option>
+                            <option value="pending">Pending</option>
+                            <option value="failed">Failed</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Payment</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection
