@@ -9,41 +9,43 @@
 </div>
 @endif
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
     <div>
-        <h4 class="fw-bold mb-1">Users</h4>
-        <p class="text-muted mb-0">All users across all tenant companies</p>
+        <h4 style="font-weight:800;color:#111827;margin:0;">Users Management</h4>
+        <p style="color:#6b7280;font-size:.875rem;margin:.2rem 0 0;">Every user across every tenant company, in one place.</p>
     </div>
     <span class="sa-badge sa-badge-blue">{{ $users->total() }} total</span>
 </div>
 
-{{-- Filter --}}
-<form method="GET" class="mb-4 d-flex gap-2 align-items-center flex-wrap">
-    <input type="text" name="search" value="{{ request('search') }}" class="form-control form-control-sm" style="max-width:220px;" placeholder="Search by name or email...">
-    <select name="company_id" class="form-select form-select-sm" style="max-width:200px;" onchange="this.form.submit()">
-        <option value="">All Companies</option>
-        @foreach($companies as $c)
-            <option value="{{ $c->id }}" {{ request('company_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
-        @endforeach
-    </select>
-    <select name="role" class="form-select form-select-sm" style="max-width:160px;" onchange="this.form.submit()">
-        <option value="">All Roles</option>
-        @foreach(['admin','Manager','Cashier','Accountant'] as $r)
-            <option value="{{ $r }}" {{ request('role') === $r ? 'selected' : '' }}>{{ $r }}</option>
-        @endforeach
-    </select>
-    <select name="status" class="form-select form-select-sm" style="max-width:160px;" onchange="this.form.submit()">
-        <option value="">All Status</option>
-        <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
-        <option value="suspended" {{ request('status') === 'suspended' ? 'selected' : '' }}>Suspended</option>
-    </select>
-    <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-funnel"></i> Filter</button>
-    @if(request()->anyFilled(['search','company_id','role','status']))
-        <a href="{{ route('host.users') }}" class="btn btn-sm btn-outline-secondary">Clear</a>
-    @endif
-</form>
-
 <div class="sa-card">
+    <div class="p-3 border-bottom" style="background:#fafafa;">
+        <form method="GET" class="d-flex gap-2 align-items-center flex-wrap m-0">
+            <div class="position-relative" style="max-width:280px;flex:1;">
+                <i class="bi bi-search position-absolute" style="left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:.85rem;"></i>
+                <input type="text" name="search" value="{{ request('search') }}" class="form-control" style="padding-left:34px;" placeholder="Search by name or email...">
+            </div>
+            <select name="company_id" class="form-select" style="max-width:200px;" onchange="this.form.submit()">
+                <option value="">All Companies</option>
+                @foreach($companies as $c)
+                    <option value="{{ $c->id }}" {{ request('company_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
+                @endforeach
+            </select>
+            <select name="role" class="form-select" style="max-width:160px;" onchange="this.form.submit()">
+                <option value="">All Roles</option>
+                @foreach(['admin','Manager','Cashier','Accountant'] as $r)
+                    <option value="{{ $r }}" {{ request('role') === $r ? 'selected' : '' }}>{{ $r }}</option>
+                @endforeach
+            </select>
+            <select name="status" class="form-select" style="max-width:160px;" onchange="this.form.submit()">
+                <option value="">All Status</option>
+                <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
+                <option value="suspended" {{ request('status') === 'suspended' ? 'selected' : '' }}>Suspended</option>
+            </select>
+            @if(request()->anyFilled(['search','company_id','role','status']))
+                <a href="{{ route('host.users') }}" class="btn btn-outline-secondary">Clear</a>
+            @endif
+        </form>
+    </div>
     <table class="sa-table">
         <thead>
             <tr>

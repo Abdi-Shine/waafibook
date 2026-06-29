@@ -9,12 +9,39 @@
 </div>
 @endif
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
     <div>
-        <h4 class="fw-bold mb-1">Subscriptions</h4>
-        <p class="text-muted mb-0">All tenant subscriptions</p>
+        <h4 style="font-weight:800;color:#111827;margin:0;">Subscription &amp; Billing</h4>
+        <p style="color:#6b7280;font-size:.875rem;margin:.2rem 0 0;">Revenue, renewals, and payment status across every active subscription.</p>
     </div>
     <span class="sa-badge sa-badge-blue">{{ $subscriptions->total() }} total</span>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="sa-stat">
+            <span class="sa-pill">Monthly</span>
+            <div class="sa-stat-icon" style="background:rgba(0,65,97,.08);color:#004161;"><i class="bi bi-cash-coin"></i></div>
+            <div class="sa-stat-val" style="color:#004161;">${{ number_format($totalMrr, 0) }}</div>
+            <div class="sa-stat-lbl">Total MRR</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="sa-stat">
+            <span class="sa-pill">Payments</span>
+            <div class="sa-stat-icon" style="background:rgba(225,29,72,.1);color:#dc2626;"><i class="bi bi-exclamation-triangle"></i></div>
+            <div class="sa-stat-val" style="color:#dc2626;">{{ $overduePayments }}</div>
+            <div class="sa-stat-lbl">Overdue Payments</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="sa-stat">
+            <span class="sa-pill">This Month</span>
+            <div class="sa-stat-icon" style="background:rgba(245,158,11,.12);color:#d97706;"><i class="bi bi-calendar-event"></i></div>
+            <div class="sa-stat-val" style="color:#d97706;">{{ $expiringThisMonth }}</div>
+            <div class="sa-stat-lbl">Expiring This Month</div>
+        </div>
+    </div>
 </div>
 
 <div class="sa-card">

@@ -282,7 +282,17 @@ class HostDashboardController extends Controller
     public function subscriptions()
     {
         $subscriptions = Subscription::with(['company', 'plan'])->orderByDesc('created_at')->paginate(20);
-        return view('super_admin.subscriptions.index', compact('subscriptions'));
+
+        $totalMrr = Subscription::with('plan')->where('status', 'active')->get()
+            ->sum(fn ($s) => $s->plan ? $s->plan->price / ($s->plan->billing_cycle === 'yearly' ? 12 : ($s->plan->billing_cycle === 'quarterly' ? 3 : 1)) : 0);
+
+        $overduePayments = SubscriptionPayment::whereIn('status', ['pending', 'failed'])->count();
+
+        $expiringThisMonth = Subscription::where('status', 'active')
+            ->whereBetween('expiry_date', [now()->toDateString(), now()->endOfMonth()->toDateString()])
+            ->count();
+
+        return view('super_admin.subscriptions.index', compact('subscriptions', 'totalMrr', 'overduePayments', 'expiringThisMonth'));
     }
 
     public function payments()

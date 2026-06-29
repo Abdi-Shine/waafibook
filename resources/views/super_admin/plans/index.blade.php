@@ -15,10 +15,10 @@
 </div>
 @endif
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
     <div>
-        <h4 class="fw-bold mb-1">Pricing Plans</h4>
-        <p class="text-muted mb-0">Manage subscription tiers available to tenants</p>
+        <h4 style="font-weight:800;color:#111827;margin:0;">Pricing Plans</h4>
+        <p style="color:#6b7280;font-size:.875rem;margin:.2rem 0 0;">Manage subscription tiers available to tenants.</p>
     </div>
     <button class="btn btn-sm text-white fw-semibold px-4"
             style="background:var(--primary);border-radius:8px;"

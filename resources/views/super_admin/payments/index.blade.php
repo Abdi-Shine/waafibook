@@ -9,18 +9,18 @@
 </div>
 @endif
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
     <div>
-        <h4 class="fw-bold mb-1">Payments</h4>
-        <p class="text-muted mb-0">All subscription payment transactions</p>
+        <h4 style="font-weight:800;color:#111827;margin:0;">Payments</h4>
+        <p style="color:#6b7280;font-size:.875rem;margin:.2rem 0 0;">All subscription payment transactions.</p>
     </div>
     <div class="sa-stat d-flex align-items-center gap-3 px-4 py-3" style="margin-bottom:0;">
-        <div class="sa-stat-icon" style="background:#dcfce7;color:#16a34a;margin-bottom:0;">
+        <div class="sa-stat-icon" style="background:rgba(153,204,51,.15);color:#5a7a1a;margin-bottom:0;">
             <i class="bi bi-currency-dollar"></i>
         </div>
         <div>
             <div class="sa-stat-lbl">Total Revenue</div>
-            <div class="sa-stat-val text-success">${{ number_format($totalRevenue, 2) }}</div>
+            <div class="sa-stat-val" style="color:#5a7a1a;">${{ number_format($totalRevenue, 2) }}</div>
         </div>
     </div>
 </div>
