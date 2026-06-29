@@ -107,8 +107,12 @@ class SalesReturnController extends Controller
                 $customer->save();
             }
 
-            // Journal Entry: Dr Sales Revenue / Cr Accounts Receivable
-            $this->createReturnJournalEntry($return, $companyId);
+            // Journal Entry: Dr Sales Revenue / Cr Accounts Receivable,
+            // plus Dr Inventory / Cr COGS for any returned items — the
+            // exact reversal of what the original sale posted, so a
+            // restocked return puts the goods' value back on the books
+            // instead of just bumping the physical quantity.
+            $this->createReturnJournalEntry($return, $companyId, $branchId ? $items : []);
 
             // Restock returned goods at the branch they were originally sold from
             if ($branchId) {
@@ -191,7 +195,7 @@ class SalesReturnController extends Controller
         return redirect()->back()->with('success', 'Credit note reversed and deleted.');
     }
 
-    private function createReturnJournalEntry(SalesReturn $return, $companyId)
+    private function createReturnJournalEntry(SalesReturn $return, $companyId, array $items = [])
     {
         // Dr Sales Revenue (reverses earned revenue)
         $revenueAccount = Account::query()->where('company_id', $companyId)->where('code', '4110')->first()
@@ -203,6 +207,26 @@ class SalesReturnController extends Controller
 
         if (!$revenueAccount || !$receivableAccount) {
             return;
+        }
+
+        // Mirror SalesController's COGS posting (code 1150 Inventory / 5110
+        // Product Cost), but reversed: the goods are physically back in
+        // stock, so debit Inventory and credit COGS for the same amount
+        // the original sale recorded.
+        $inventoryAccount = Account::query()->where('company_id', $companyId)->where('code', '1150')->first()
+                         ?: Account::query()->where('company_id', $companyId)->where('name', 'like', '%Inventory%')->first();
+        $cogsAccount = Account::query()->where('company_id', $companyId)->where('code', '5110')->first()
+                    ?: Account::query()->where('company_id', $companyId)->where('code', '5100')->first()
+                    ?: Account::query()->where('company_id', $companyId)->where('category', 'expenses')->where('name', 'like', '%Cost%')->where('type', '!=', 'parent')->first();
+
+        $inventoryReversal = 0;
+        if ($inventoryAccount && $cogsAccount) {
+            foreach ($items as $itemData) {
+                $product = \App\Models\Product::query()->find($itemData['product_id']);
+                $purchasePrice = (float) ($product->purchase_price ?? 0);
+                if ($purchasePrice <= 0) continue;
+                $inventoryReversal += $itemData['quantity'] * $purchasePrice;
+            }
         }
 
         $entry = JournalEntry::query()->create([
@@ -235,5 +259,27 @@ class SalesReturnController extends Controller
             'credit'           => $return->amount,
             'description'      => 'Return: ' . $return->credit_note_no,
         ]);
+
+        if ($inventoryReversal > 0) {
+            // Dr Inventory (goods are back in stock)
+            JournalItem::query()->create([
+                'company_id'       => $companyId,
+                'journal_entry_id' => $entry->id,
+                'account_id'       => $inventoryAccount->id,
+                'debit'            => $inventoryReversal,
+                'credit'           => 0,
+                'description'      => 'Inventory restored from return: ' . $return->credit_note_no,
+            ]);
+
+            // Cr COGS (reverses the cost recorded at sale time)
+            JournalItem::query()->create([
+                'company_id'       => $companyId,
+                'journal_entry_id' => $entry->id,
+                'account_id'       => $cogsAccount->id,
+                'debit'            => 0,
+                'credit'           => $inventoryReversal,
+                'description'      => 'Cost of Goods Sold reversal for return: ' . $return->credit_note_no,
+            ]);
+        }
     }
 }
