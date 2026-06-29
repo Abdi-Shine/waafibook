@@ -11,6 +11,7 @@ use App\Models\SubscriptionPlan;
 use App\Models\SystemSetting;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class HostDashboardController extends Controller
 {
@@ -208,6 +209,26 @@ class HostDashboardController extends Controller
         \App\Models\AuditLog::log('Company', "Deleted company: {$name}", 'DELETE');
 
         return redirect()->route('host.companies')->with('success', "{$name} has been permanently deleted.");
+    }
+
+    public function bulkCompanyAction(Request $request)
+    {
+        $request->validate([
+            'ids'    => 'required|array|min:1',
+            'action' => 'required|in:suspend,reactivate,delete',
+        ]);
+
+        $companies = Company::whereIn('id', $request->ids)->get();
+
+        foreach ($companies as $company) {
+            if ($request->action === 'suspend') $company->update(['status' => 'suspended']);
+            if ($request->action === 'reactivate') $company->update(['status' => 'active']);
+            if ($request->action === 'delete') $company->delete();
+        }
+
+        \App\Models\AuditLog::log('Company', "Bulk {$request->action} applied to " . $companies->count() . ' companies', 'UPDATE');
+
+        return redirect()->route('host.companies')->with('success', ucfirst($request->action) . ' applied to ' . $companies->count() . ' ' . Str::plural('company', $companies->count()) . '.');
     }
 
     public function demoRequests()
