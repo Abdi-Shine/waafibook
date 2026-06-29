@@ -46,24 +46,12 @@
                     <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
                     <option value="suspended" {{ request('status') === 'suspended' ? 'selected' : '' }}>Suspended</option>
                 </select>
-
-                <form method="POST" action="{{ route('host.companies.bulk') }}" id="bulkForm" class="d-flex gap-2">
-                    @csrf
-                    <select name="action" class="form-select" style="max-width:200px;">
-                        <option value="">Bulk Action…</option>
-                        <option value="suspend">Suspend Selected</option>
-                        <option value="reactivate">Reactivate Selected</option>
-                        <option value="delete">Delete Selected</option>
-                    </select>
-                    <button type="submit" class="btn btn-outline-primary" onclick="return confirmBulk(event)">Apply</button>
-                </form>
             </form>
         </div>
         <div class="table-responsive">
             <table class="sa-table">
                 <thead>
                     <tr>
-                        <th><input type="checkbox" id="selectAll"></th>
                         <th>#</th>
                         <th>Company Name</th>
                         <th>Owner</th>
@@ -78,7 +66,6 @@
                     @forelse($companies as $company)
                     @php $owner = $company->users->first(); @endphp
                     <tr>
-                        <td><input type="checkbox" class="company-check" name="ids[]" value="{{ $company->id }}" form="bulkForm"></td>
                         <td style="color:#9ca3af;font-size:.78rem;">{{ $companies->firstItem() + $loop->index }}</td>
                         <td>
                             <div class="d-flex align-items-center gap-2">
@@ -136,7 +123,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="text-center py-5" style="color:#9ca3af;">No companies match your filters.</td>
+                        <td colspan="8" class="text-center py-5" style="color:#9ca3af;">No companies match your filters.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -310,17 +297,5 @@ function deleteCompany(id, name) {
     form.submit();
 }
 
-function confirmBulk(e) {
-    const action = document.querySelector('#bulkForm select[name="action"]').value;
-    const checked = document.querySelectorAll('.company-check:checked').length;
-    if (!action) { alert('Choose a bulk action first.'); e.preventDefault(); return false; }
-    if (!checked) { alert('Select at least one company.'); e.preventDefault(); return false; }
-    if (!confirm(action.charAt(0).toUpperCase() + action.slice(1) + ' ' + checked + ' selected companies?')) { e.preventDefault(); return false; }
-    return true;
-}
-
-document.getElementById('selectAll').addEventListener('change', e => {
-    document.querySelectorAll('.company-check').forEach(cb => cb.checked = e.target.checked);
-});
 </script>
 @endpush
