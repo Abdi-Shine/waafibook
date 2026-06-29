@@ -21,7 +21,7 @@ class HostLoginController extends Controller
             return redirect()->route('dashboard');
         }
 
-        return view('super_admin.users.admin_login');
+        return view('super_admin.admin_login');
     }
 
     /** Handle super-admin login attempt. */
