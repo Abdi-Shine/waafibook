@@ -492,6 +492,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/companies/{id}/show', [App\Http\Controllers\Host\HostDashboardController::class, 'showCompany'])->name('host.companies.show');
         Route::put('/companies/{id}', [App\Http\Controllers\Host\HostDashboardController::class, 'updateCompany'])->name('host.companies.update');
         Route::delete('/companies/{id}', [App\Http\Controllers\Host\HostDashboardController::class, 'destroyCompany'])->name('host.companies.destroy');
+        Route::post('/companies/bulk', [App\Http\Controllers\Host\HostDashboardController::class, 'bulkCompanyAction'])->name('host.companies.bulk');
         Route::get('/demo-requests', [App\Http\Controllers\Host\HostDashboardController::class, 'demoRequests'])->name('host.demo_requests');
         Route::patch('/demo-requests/{id}/status', [App\Http\Controllers\Host\HostDashboardController::class, 'updateDemoRequestStatus'])->name('host.demo_requests.status');
 

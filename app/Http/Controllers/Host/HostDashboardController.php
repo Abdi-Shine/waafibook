@@ -232,6 +232,37 @@ class HostDashboardController extends Controller
         return redirect()->route('host.companies')->with('success', "{$name} has been permanently deleted.");
     }
 
+    public function bulkCompanyAction(Request $request)
+    {
+        $request->validate([
+            'ids'    => 'required|array|min:1',
+            'action' => 'required|in:suspend,reactivate,delete,export',
+        ]);
+
+        $companies = Company::whereIn('id', $request->ids)->get();
+
+        if ($request->action === 'export') {
+            return response()->streamDownload(function () use ($companies) {
+                $out = fopen('php://output', 'w');
+                fputcsv($out, ['Company Name', 'Email', 'Phone', 'Status', 'Joined']);
+                foreach ($companies as $company) {
+                    fputcsv($out, [$company->name, $company->email, $company->phone, $company->status, $company->created_at->format('Y-m-d')]);
+                }
+                fclose($out);
+            }, 'companies-export-' . now()->format('Ymd-His') . '.csv');
+        }
+
+        foreach ($companies as $company) {
+            if ($request->action === 'suspend') $company->update(['status' => 'suspended']);
+            if ($request->action === 'reactivate') $company->update(['status' => 'active']);
+            if ($request->action === 'delete') \Illuminate\Support\Facades\DB::transaction(fn () => $company->delete());
+        }
+
+        \App\Models\AuditLog::log('Company', "Bulk {$request->action} applied to " . $companies->count() . ' companies', 'UPDATE');
+
+        return redirect()->route('host.companies')->with('success', ucfirst($request->action) . ' applied to ' . $companies->count() . ' ' . \Illuminate\Support\Str::plural('company', $companies->count()) . '.');
+    }
+
     public function demoRequests()
     {
         $requests = DemoRequest::orderByDesc('created_at')->paginate(20);
