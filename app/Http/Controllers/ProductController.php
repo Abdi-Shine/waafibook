@@ -244,8 +244,16 @@ class ProductController extends Controller
 
         if ($entry) {
             $entry->update(['total_amount' => $newTotalValue]);
-            $entry->items()->where('debit', '>', 0)->update(['debit' => $newTotalValue]);
-            $entry->items()->where('credit', '>', 0)->update(['credit' => $newTotalValue]);
+            // Identify debit/credit side by creation order (inventory item is
+            // always created first, equity item second — see
+            // createInitialInventoryEntry() below), not by current value:
+            // a where('debit', '>', 0) filter would permanently get stuck
+            // once a row's amount happened to be 0 (e.g. quantity hit 0).
+            $items = $entry->items()->orderBy('id')->get();
+            if ($items->count() === 2) {
+                $items[0]->update(['debit' => $newTotalValue, 'credit' => 0]);
+                $items[1]->update(['debit' => 0, 'credit' => $newTotalValue]);
+            }
         } elseif ($newTotalValue > 0) {
             $this->createInitialInventoryEntry($product, $quantity);
         }
