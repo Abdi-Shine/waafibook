@@ -149,19 +149,19 @@
                 </h6>
 
                 {{-- EVC Preview --}}
-                <div class="rounded-3 p-3 mb-3" style="background:#eff6ff;border:1px solid #bfdbfe;">
-                    <p class="fw-black text-uppercase mb-1" style="font-size:.65rem;letter-spacing:.08em;color:#1d4ed8;">
+                <div class="rounded-3 p-3 mb-3" style="background:rgba(0,65,97,.06);border:1px solid rgba(0,65,97,.18);">
+                    <p class="fw-black text-uppercase mb-1" style="font-size:.65rem;letter-spacing:.08em;color:var(--primary);">
                         EVC Plus — What clients see
                     </p>
-                    <p class="small text-primary mb-1 fw-semibold">Merchant Number:</p>
-                    <p class="fw-black mb-0" style="color:#1e3a5f;font-size:.85rem;">
+                    <p class="small mb-1 fw-semibold" style="color:var(--primary);">Merchant Number:</p>
+                    <p class="fw-black mb-0" style="color:var(--primary-dark);font-size:.85rem;">
                         {{ $settings['evc_merchant_number'] ?: '— Not configured —' }}
                     </p>
                 </div>
 
                 {{-- Bank Preview --}}
-                <div class="rounded-3 p-3" style="background:#fffbeb;border:1px solid #fde68a;">
-                    <p class="fw-black text-uppercase mb-2" style="font-size:.65rem;letter-spacing:.08em;color:#92400e;">
+                <div class="rounded-3 p-3" style="background:rgba(153,204,51,.12);border:1px solid rgba(153,204,51,.35);">
+                    <p class="fw-black text-uppercase mb-2" style="font-size:.65rem;letter-spacing:.08em;color:#5a7a1a;">
                         Bank Transfer — What clients see
                     </p>
                     @foreach([
@@ -172,13 +172,13 @@
                     ] as $label => $val)
                         @if($val)
                         <div class="d-flex justify-content-between small mb-1">
-                            <span style="color:#92400e;">{{ $label }}</span>
-                            <span class="fw-bold" style="color:#451a03;">{{ $val }}</span>
+                            <span style="color:#5a7a1a;">{{ $label }}</span>
+                            <span class="fw-bold" style="color:var(--primary-dark);">{{ $val }}</span>
                         </div>
                         @endif
                     @endforeach
                     @if(!($settings['bank_name'] ?? '') && !($settings['bank_account_number'] ?? ''))
-                        <p class="small mb-0 fw-semibold" style="color:#92400e;">— Not configured —</p>
+                        <p class="small mb-0 fw-semibold" style="color:#5a7a1a;">— Not configured —</p>
                     @endif
                 </div>
             </div>
