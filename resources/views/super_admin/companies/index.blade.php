@@ -47,7 +47,7 @@
                     <option value="suspended" {{ request('status') === 'suspended' ? 'selected' : '' }}>Suspended</option>
                 </select>
 
-                <form method="POST" action="{{ route('host.companies.bulk') }}" id="bulkForm" class="d-flex gap-2 ms-auto">
+                <form method="POST" action="{{ route('host.companies.bulk') }}" id="bulkForm" class="d-flex gap-2">
                     @csrf
                     <select name="action" class="form-select" style="max-width:200px;">
                         <option value="">Bulk Action…</option>
