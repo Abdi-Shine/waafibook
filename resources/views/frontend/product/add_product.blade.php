@@ -108,7 +108,13 @@
             }
 
             if (this.editMode) {
-                window.location.reload();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Product Updated',
+                    text: data.product?.product_name ? `${data.product.product_name} has been updated successfully.` : 'The product has been updated successfully.',
+                    timer: 1500,
+                    showConfirmButton: false,
+                }).then(() => window.location.reload());
                 return;
             }
 
