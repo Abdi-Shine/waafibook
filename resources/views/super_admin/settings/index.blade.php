@@ -2,9 +2,9 @@
 @section('page_title', 'Platform Settings')
 @section('content')
 
-<div class="mb-6">
-    <h4 class="fw-bold mb-1">Platform Settings</h4>
-    <p class="text-muted mb-0 small">Manage platform configuration and payment collection details.</p>
+<div class="mb-4">
+    <h4 style="font-weight:800;color:#111827;margin:0;">System Settings</h4>
+    <p style="color:#6b7280;font-size:.875rem;margin:.2rem 0 0;">Platform-wide configuration, defaults, and maintenance controls.</p>
 </div>
 
 @if(session('success'))

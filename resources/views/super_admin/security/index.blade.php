@@ -9,32 +9,33 @@
 </div>
 @endif
 
-<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
     <div>
-        <h4 class="fw-bold mb-1">Security &amp; Audit Log</h4>
-        <p class="text-muted mb-0">Every action taken on the platform, and who's currently signed in.</p>
+        <h4 style="font-weight:800;color:#111827;margin:0;">Security &amp; Audit Log</h4>
+        <p style="color:#6b7280;font-size:.875rem;margin:.2rem 0 0;">Every action taken on the platform, and who's currently signed in.</p>
     </div>
     <a href="{{ route('host.security.export') }}?{{ http_build_query(request()->query()) }}" class="btn btn-outline-primary">
         <i class="bi bi-download"></i> Export CSV
     </a>
 </div>
 
-<form method="GET" class="mb-3 d-flex gap-2 flex-wrap">
-    <select name="module" class="form-select form-select-sm" style="max-width:180px;" onchange="this.form.submit()">
-        <option value="">All Action Types</option>
-        @foreach($modules as $m)
-            <option value="{{ $m }}" {{ request('module') === $m ? 'selected' : '' }}>{{ $m }}</option>
-        @endforeach
-    </select>
-    <input type="date" name="from" value="{{ request('from') }}" class="form-control form-control-sm" style="max-width:160px;">
-    <input type="date" name="to" value="{{ request('to') }}" class="form-control form-control-sm" style="max-width:160px;">
-    <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-funnel"></i> Filter</button>
-    @if(request()->anyFilled(['module','from','to']))
-        <a href="{{ route('host.security') }}" class="btn btn-sm btn-outline-secondary">Clear</a>
-    @endif
-</form>
-
 <div class="sa-card">
+    <div class="p-3 border-bottom" style="background:#fafafa;">
+        <form method="GET" class="d-flex gap-2 flex-wrap m-0">
+            <select name="module" class="form-select" style="max-width:180px;" onchange="this.form.submit()">
+                <option value="">All Action Types</option>
+                @foreach($modules as $m)
+                    <option value="{{ $m }}" {{ request('module') === $m ? 'selected' : '' }}>{{ $m }}</option>
+                @endforeach
+            </select>
+            <input type="date" name="from" value="{{ request('from') }}" class="form-control" style="max-width:160px;">
+            <input type="date" name="to" value="{{ request('to') }}" class="form-control" style="max-width:160px;">
+            <button type="submit" class="btn btn-outline-primary"><i class="bi bi-funnel"></i> Filter</button>
+            @if(request()->anyFilled(['module','from','to']))
+                <a href="{{ route('host.security') }}" class="btn btn-outline-secondary">Clear</a>
+            @endif
+        </form>
+    </div>
     <div class="sa-card-head"><h6>Full Audit Log</h6></div>
     <table class="sa-table">
         <thead>

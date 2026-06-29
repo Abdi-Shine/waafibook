@@ -10,8 +10,8 @@
 @endif
 
 <div class="mb-4">
-    <h4 class="fw-bold mb-1">Announcements &amp; Notifications</h4>
-    <p class="text-muted mb-0">Send a message to every tenant, or target a specific company.</p>
+    <h4 style="font-weight:800;color:#111827;margin:0;">Announcements &amp; Notifications</h4>
+    <p style="color:#6b7280;font-size:.875rem;margin:.2rem 0 0;">Send a message to every tenant, or target a specific company.</p>
 </div>
 
 <div class="sa-card">
