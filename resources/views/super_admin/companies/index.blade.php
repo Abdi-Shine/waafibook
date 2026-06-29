@@ -28,36 +28,37 @@
         </button>
     </div>
 
-    <form method="GET" action="{{ route('host.companies') }}" class="d-flex gap-2 flex-wrap mb-3">
-        <div class="position-relative" style="max-width:280px;flex:1;">
-            <i class="bi bi-search position-absolute" style="left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:.85rem;"></i>
-            <input type="text" name="search" value="{{ request('search') }}" class="form-control" style="padding-left:34px;" placeholder="Search by company or owner name...">
-        </div>
-        <select name="plan" class="form-select" style="max-width:160px;" onchange="this.form.submit()">
-            <option value="">All Plans</option>
-            @foreach($plans as $p)
-                <option value="{{ $p }}" {{ request('plan') === $p ? 'selected' : '' }}>{{ $p }}</option>
-            @endforeach
-        </select>
-        <select name="status" class="form-select" style="max-width:160px;" onchange="this.form.submit()">
-            <option value="">All Status</option>
-            <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
-            <option value="suspended" {{ request('status') === 'suspended' ? 'selected' : '' }}>Suspended</option>
-        </select>
-
-        <form method="POST" action="{{ route('host.companies.bulk') }}" id="bulkForm" class="d-flex gap-2 ms-auto">
-            @csrf
-            <select name="action" class="form-select" style="max-width:200px;">
-                <option value="">Bulk Action…</option>
-                <option value="suspend">Suspend Selected</option>
-                <option value="reactivate">Reactivate Selected</option>
-                <option value="delete">Delete Selected</option>
-            </select>
-            <button type="submit" class="btn btn-outline-primary" onclick="return confirmBulk(event)">Apply</button>
-        </form>
-    </form>
-
     <div class="sa-card">
+        <div class="p-3 border-bottom" style="background:#fafafa;">
+            <form method="GET" action="{{ route('host.companies') }}" class="d-flex gap-2 flex-wrap m-0">
+                <div class="position-relative" style="max-width:280px;flex:1;">
+                    <i class="bi bi-search position-absolute" style="left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:.85rem;"></i>
+                    <input type="text" name="search" value="{{ request('search') }}" class="form-control" style="padding-left:34px;" placeholder="Search by company or owner name...">
+                </div>
+                <select name="plan" class="form-select" style="max-width:160px;" onchange="this.form.submit()">
+                    <option value="">All Plans</option>
+                    @foreach($plans as $p)
+                        <option value="{{ $p }}" {{ request('plan') === $p ? 'selected' : '' }}>{{ $p }}</option>
+                    @endforeach
+                </select>
+                <select name="status" class="form-select" style="max-width:160px;" onchange="this.form.submit()">
+                    <option value="">All Status</option>
+                    <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
+                    <option value="suspended" {{ request('status') === 'suspended' ? 'selected' : '' }}>Suspended</option>
+                </select>
+
+                <form method="POST" action="{{ route('host.companies.bulk') }}" id="bulkForm" class="d-flex gap-2 ms-auto">
+                    @csrf
+                    <select name="action" class="form-select" style="max-width:200px;">
+                        <option value="">Bulk Action…</option>
+                        <option value="suspend">Suspend Selected</option>
+                        <option value="reactivate">Reactivate Selected</option>
+                        <option value="delete">Delete Selected</option>
+                    </select>
+                    <button type="submit" class="btn btn-outline-primary" onclick="return confirmBulk(event)">Apply</button>
+                </form>
+            </form>
+        </div>
         <div class="table-responsive">
             <table class="sa-table">
                 <thead>
