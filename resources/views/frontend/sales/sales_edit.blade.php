@@ -569,7 +569,12 @@ function removeRow(rn) {
     const rows = document.querySelectorAll('#itemsTbody .item-row');
     if (rows.length <= 1) { toastWarn('At least one row is required.'); return; }
     const row = document.querySelector(`tr[data-row="${rn}"]`);
-    $(row).find('select').select2('destroy');
+    // Only .item-select is ever initialized as a Select2 (see
+    // initItemSelect2) — .unit-input is a plain <select>. Calling
+    // select2('destroy') on an element that was never initialized throws,
+    // which silently aborted everything below it (the row never actually
+    // got removed).
+    $(row).find('.item-select').select2('destroy');
     row.remove();
     renumberRows();
     recalcAll();
