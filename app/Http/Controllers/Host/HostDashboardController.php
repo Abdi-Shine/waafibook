@@ -466,7 +466,7 @@ class HostDashboardController extends Controller
         $invoiceNo    = 'INV-SUB-' . str_pad($subscription->id, 5, '0', STR_PAD_LEFT);
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
-            'super_admin.subscription_invoice',
+            'super_admin.subscription_invoice_pdf',
             compact('subscription', 'lastPayment', 'invoiceNo')
         )->setPaper('a4', 'portrait');
 
