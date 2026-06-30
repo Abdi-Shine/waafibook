@@ -73,12 +73,6 @@
                 </a>
             </li>
             <li>
-                <a href="{{ route('host.security') }}"
-                   class="{{ request()->routeIs('host.security*') ? 'active' : '' }}">
-                    <i class="bi bi-shield-lock"></i> Security &amp; Audit Log
-                </a>
-            </li>
-            <li>
                 <a href="{{ route('host.settings') }}"
                    class="{{ request()->routeIs('host.settings*') ? 'active' : '' }}">
                     <i class="bi bi-gear"></i> System Settings
