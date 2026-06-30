@@ -19,24 +19,24 @@
 
 <div class="sa-card">
     <div class="p-3 border-bottom" style="background:#fafafa;">
-        <form method="GET" class="d-flex gap-2 align-items-center flex-wrap m-0">
-            <div class="position-relative" style="max-width:280px;flex:1;">
+        <form method="GET" class="d-flex gap-2 align-items-center m-0">
+            <div class="position-relative flex-fill" style="min-width:160px;">
                 <i class="bi bi-search position-absolute" style="left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:.85rem;"></i>
-                <input type="text" name="search" value="{{ request('search') }}" class="form-control" style="padding-left:34px;" placeholder="Search by name or email...">
+                <input type="text" name="search" value="{{ request('search') }}" class="form-control w-100" style="padding-left:34px;" placeholder="Search by name or email...">
             </div>
-            <select name="company_id" class="form-select" style="max-width:200px;" onchange="this.form.submit()">
+            <select name="company_id" class="form-select flex-fill" style="min-width:120px;" onchange="this.form.submit()">
                 <option value="">All Companies</option>
                 @foreach($companies as $c)
                     <option value="{{ $c->id }}" {{ request('company_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
                 @endforeach
             </select>
-            <select name="role" class="form-select" style="max-width:160px;" onchange="this.form.submit()">
+            <select name="role" class="form-select flex-fill" style="min-width:110px;" onchange="this.form.submit()">
                 <option value="">All Roles</option>
                 @foreach(['admin','Manager','Cashier','Accountant'] as $r)
                     <option value="{{ $r }}" {{ request('role') === $r ? 'selected' : '' }}>{{ $r }}</option>
                 @endforeach
             </select>
-            <select name="status" class="form-select" style="max-width:160px;" onchange="this.form.submit()">
+            <select name="status" class="form-select flex-fill" style="min-width:110px;" onchange="this.form.submit()">
                 <option value="">All Status</option>
                 <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
                 <option value="suspended" {{ request('status') === 'suspended' ? 'selected' : '' }}>Suspended</option>
@@ -46,6 +46,7 @@
             @endif
         </form>
     </div>
+    <div class="table-responsive">
     <table class="sa-table">
         <thead>
             <tr>
@@ -122,6 +123,7 @@
             @endforelse
         </tbody>
     </table>
+    </div>
 </div>
 
 @if($users->hasPages())
