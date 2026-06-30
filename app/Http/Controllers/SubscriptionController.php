@@ -197,7 +197,6 @@ class SubscriptionController extends Controller
             ->with(['company', 'plan', 'payments'])
             ->where('company_id', $companyId)
             ->get();
-        $plans = SubscriptionPlan::where('status', 'active')->orderBy('price')->get();
-        return view('admin.subscribers.subscriptions.index', compact('subscriptions', 'plans'));
+        return view('admin.subscribers.subscriptions.index', compact('subscriptions'));
     }
 }

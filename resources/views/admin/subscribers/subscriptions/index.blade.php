@@ -5,16 +5,9 @@
 <div class="px-4 py-8 md:px-8 md:py-10 bg-background min-h-screen font-inter">
 
     {{-- Header --}}
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-            <h1 class="text-[22px] font-bold text-primary-dark">My Subscription</h1>
-            <p class="text-[13px] text-gray-400 font-medium mt-0.5">Manage your active subscription and billing</p>
-        </div>
-        <a href="{{ route('subscribers.plans.index') }}"
-           class="btn-premium-primary group normal-case">
-            <i class="bi bi-arrow-up-circle"></i>
-            <span>Upgrade Plan</span>
-        </a>
+    <div class="mb-8">
+        <h1 class="text-[22px] font-bold text-primary-dark">My Subscription</h1>
+        <p class="text-[13px] text-gray-400 font-medium mt-0.5">Manage your active subscription and billing</p>
     </div>
 
     @if(session('success'))
@@ -119,57 +112,6 @@
     </div>
     @endforelse
 
-    {{-- Available Plans Reference --}}
-    @if($plans->count())
-    <div class="bg-white rounded-[1.2rem] border border-gray-100 shadow-sm overflow-hidden mt-6">
-        <div class="px-6 py-4 border-b border-gray-100 bg-background/50 flex items-center justify-between">
-            <h2 class="text-[12px] font-black text-primary-dark uppercase tracking-wider">Available Plans</h2>
-            <a href="{{ route('subscribers.plans.index') }}" class="text-[12px] font-semibold text-primary hover:underline">
-                View All <i class="bi bi-arrow-right ms-1"></i>
-            </a>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-[12px]">
-                <thead class="bg-gray-50 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                    <tr>
-                        <th class="text-left px-5 py-3">Plan</th>
-                        <th class="text-left px-5 py-3">Price</th>
-                        <th class="text-left px-5 py-3">Users</th>
-                        <th class="text-left px-5 py-3">Storage</th>
-                        <th class="text-left px-5 py-3">Billing</th>
-                        <th class="px-5 py-3"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($plans as $plan)
-                    <tr class="border-t border-gray-100 hover:bg-gray-50">
-                        <td class="px-5 py-3 font-semibold text-primary-dark">
-                            {{ $plan->name }}
-                            @if($plan->is_popular)
-                            <span class="ml-2 px-2 py-0.5 bg-accent/20 text-primary-dark rounded-full text-[10px] font-bold">Popular</span>
-                            @endif
-                        </td>
-                        <td class="px-5 py-3 font-bold text-primary-dark">${{ number_format($plan->price, 2) }}</td>
-                        <td class="px-5 py-3 text-gray-600">{{ $plan->max_users }}</td>
-                        <td class="px-5 py-3 text-gray-600">{{ $plan->storage_limit_gb }} GB</td>
-                        <td class="px-5 py-3 text-gray-600">{{ ucfirst($plan->billing_cycle) }}</td>
-                        <td class="px-5 py-3 text-right">
-                            <form method="POST" action="{{ route('subscribers.plans.store') }}" class="inline">
-                                @csrf
-                                <input type="hidden" name="plan_id" value="{{ $plan->id }}">
-                                <button type="submit"
-                                    class="px-4 py-1.5 bg-primary text-white text-[11px] font-bold rounded-lg hover:bg-primary-dark transition-all">
-                                    Select
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-    @endif
 
 </div>
 @endsection
