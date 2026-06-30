@@ -98,5 +98,35 @@
         </div>
     </div>
 
+    {{-- New Signups This Week --}}
+    <div class="mt-3">
+        <div class="sa-card">
+            <div class="sa-card-head"><h6>New Signups This Week</h6></div>
+            <div class="table-responsive">
+                <table class="sa-table">
+                    <thead>
+                        <tr><th>Company</th><th>Plan</th><th>Joined</th></tr>
+                    </thead>
+                    <tbody>
+                        @forelse($newSignupsThisWeek as $company)
+                        <tr>
+                            <td style="font-weight:600;color:#111827;">{{ $company->name }}</td>
+                            <td>
+                                @if($company->subscription?->plan)
+                                    <span class="sa-badge sa-badge-blue">{{ $company->subscription->plan->name }}</span>
+                                @else
+                                    <span class="sa-badge sa-badge-gray">—</span>
+                                @endif
+                            </td>
+                            <td style="color:#6b7280;font-size:.8rem;">{{ $company->created_at->format('d M Y') }}</td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="3" class="text-center py-4" style="color:#9ca3af;">No new signups this week.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
 @endsection
