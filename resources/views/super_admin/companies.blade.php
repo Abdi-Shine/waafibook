@@ -29,29 +29,30 @@
     </div>
 
     <div class="sa-card">
-        <div class="p-3 border-bottom" style="background:#fafafa;">
-            <form method="GET" action="{{ route('host.companies') }}" class="d-flex gap-2 flex-wrap m-0">
-                <div class="position-relative" style="max-width:280px;flex:1;">
+        <div class="p-3 border-bottom d-flex gap-2 align-items-center" style="background:#fafafa;">
+            {{-- Filter form --}}
+            <form method="GET" action="{{ route('host.companies') }}" class="d-flex gap-2 align-items-center flex-fill m-0">
+                <div class="position-relative flex-fill" style="min-width:160px;">
                     <i class="bi bi-search position-absolute" style="left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:.85rem;"></i>
-                    <input type="text" name="search" value="{{ request('search') }}" class="form-control" style="padding-left:34px;" placeholder="Search by company or owner name...">
+                    <input type="text" name="search" value="{{ request('search') }}" class="form-control w-100" style="padding-left:34px;" placeholder="Search by company or owner name...">
                 </div>
-                <select name="plan" class="form-select" style="max-width:160px;" onchange="this.form.submit()">
+                <select name="plan" class="form-select flex-fill" style="min-width:120px;" onchange="this.form.submit()">
                     <option value="">All Plans</option>
                     @foreach($plans as $p)
                         <option value="{{ $p }}" {{ request('plan') === $p ? 'selected' : '' }}>{{ $p }}</option>
                     @endforeach
                 </select>
-                <select name="status" class="form-select" style="max-width:160px;" onchange="this.form.submit()">
+                <select name="status" class="form-select flex-fill" style="min-width:120px;" onchange="this.form.submit()">
                     <option value="">All Status</option>
                     <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
                     <option value="suspended" {{ request('status') === 'suspended' ? 'selected' : '' }}>Suspended</option>
                     <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
                 </select>
             </form>
-
-            <form method="POST" action="{{ route('host.companies.bulk') }}" id="bulkForm" class="d-flex gap-2 mt-2">
+            {{-- Bulk form --}}
+            <form method="POST" action="{{ route('host.companies.bulk') }}" id="bulkForm" class="d-flex gap-2 align-items-center m-0 flex-shrink-0">
                 @csrf
-                <select name="action" class="form-select" style="max-width:200px;">
+                <select name="action" class="form-select" style="min-width:160px;">
                     <option value="">Bulk Action…</option>
                     <option value="suspend">Suspend Selected</option>
                     <option value="reactivate">Reactivate Selected</option>
