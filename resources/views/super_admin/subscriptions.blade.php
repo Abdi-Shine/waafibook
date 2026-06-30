@@ -91,7 +91,15 @@
                         <span class="sa-badge sa-badge-gray">No</span>
                     @endif
                 </td>
-                <td>{{ $sub->payment_method ?? '—' }}</td>
+                <td>
+                    @php $lastPmt = $sub->payments->where('status','completed')->sortByDesc('payment_date')->first(); @endphp
+                    @if($lastPmt)
+                        <div class="fw-semibold" style="font-size:.85rem;">${{ number_format($lastPmt->amount, 2) }}</div>
+                        <div style="font-size:.72rem;color:#9ca3af;">{{ $lastPmt->payment_method }} · {{ \Carbon\Carbon::parse($lastPmt->payment_date)->format('d M Y') }}</div>
+                    @else
+                        <span style="color:#9ca3af;">—</span>
+                    @endif
+                </td>
                 <td>
                     <div class="sa-row-actions">
                         @if($sub->status !== 'cancelled')
