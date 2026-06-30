@@ -87,9 +87,9 @@
     <a href="{{ route('host.subscriptions') }}" class="btn-back">
         ← Back to Subscriptions
     </a>
-    <button class="btn-print" onclick="window.print()">
-        🖨 Print / Download PDF
-    </button>
+    <a href="{{ route('host.subscriptions.invoice.pdf', $subscription->id) }}" class="btn-print">
+        ⬇ Download PDF
+    </a>
 </div>
 
 <div class="inv-wrap">

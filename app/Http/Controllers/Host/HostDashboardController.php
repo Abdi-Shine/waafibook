@@ -459,6 +459,20 @@ class HostDashboardController extends Controller
         return view('super_admin.subscription_invoice', compact('subscription', 'lastPayment', 'invoiceNo'));
     }
 
+    public function downloadInvoicePdf($id)
+    {
+        $subscription = Subscription::with(['company', 'plan', 'payments'])->findOrFail($id);
+        $lastPayment  = $subscription->payments->where('status', 'completed')->sortByDesc('payment_date')->first();
+        $invoiceNo    = 'INV-SUB-' . str_pad($subscription->id, 5, '0', STR_PAD_LEFT);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+            'super_admin.subscription_invoice',
+            compact('subscription', 'lastPayment', 'invoiceNo')
+        )->setPaper('a4', 'portrait');
+
+        return $pdf->download($invoiceNo . '.pdf');
+    }
+
     public function plans()
     {
         $plans = SubscriptionPlan::orderBy('price')->get();
