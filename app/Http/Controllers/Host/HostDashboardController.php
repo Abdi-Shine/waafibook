@@ -98,11 +98,14 @@ class HostDashboardController extends Controller
             ]);
 
             if ($request->subscription_plan_id) {
+                $newPlan = SubscriptionPlan::find($request->subscription_plan_id);
                 Subscription::create([
                     'company_id'           => $company->id,
                     'subscription_plan_id' => $request->subscription_plan_id,
                     'start_date'           => now(),
-                    'expiry_date'          => now()->addDays(14),
+                    'expiry_date'          => $newPlan && $newPlan->price == 0
+                                                ? now()->addDays(7)
+                                                : now()->addMonths($newPlan && $newPlan->billing_cycle === 'yearly' ? 12 : 1),
                     'status'               => 'trial',
                     'auto_renew'           => false,
                 ]);
@@ -218,7 +221,10 @@ class HostDashboardController extends Controller
     private function applyCompanyPlan(Company $company, $planId): SubscriptionPlan
     {
         $plan = SubscriptionPlan::findOrFail($planId);
-        $expiryDate = now()->addMonths($plan->billing_cycle === 'yearly' ? 12 : 1);
+        // Free Trial (price $0) = 7 days; yearly = 12 months; monthly = 1 month
+        $expiryDate = $plan->price == 0
+            ? now()->addDays(7)
+            : now()->addMonths($plan->billing_cycle === 'yearly' ? 12 : 1);
 
         if ($company->subscription) {
             $company->subscription->update([

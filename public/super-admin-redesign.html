@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Super Admin Panel — Waafibook Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+:root{
+  --bg:#F5F7FA; --card:#ffffff; --card-alt:#F3F4F6; --border:#E5E7EB;
+  --text:#1F2937; --text-dim:#6B7280; --text-faint:#9CA3AF;
+  --accent:#004161; --accent-light:#0a6c9c; --accent-glow:rgba(0,65,97,.14);
+  --success:#99CC33; --warning:#f59e0b; --danger:#e11d48; --info:#3b82f6;
+  --sidebar-bg:#004161; --sidebar-text:rgba(255,255,255,.68); --sidebar-hover:rgba(255,255,255,.09);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter','Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px;overflow-x:hidden;}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;}
+input,select,textarea{font-family:inherit;}
+
+/* ── Layout ── */
+.app{display:flex;min-height:100vh;}
+.sidebar{
+  width:250px;background:var(--sidebar-bg);border-right:none;
+  position:fixed;top:0;left:0;height:100vh;display:flex;flex-direction:column;z-index:50;
+}
+.sidebar-brand{padding:22px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.12);}
+.sidebar-brand .logo{width:38px;height:38px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:var(--accent);}
+.sidebar-brand .name{font-weight:800;font-size:15px;letter-spacing:-.2px;color:#fff;}
+.sidebar-brand .sub{font-size:10px;color:var(--success);text-transform:uppercase;letter-spacing:1px;font-weight:700;}
+.sidebar-nav{flex:1;padding:14px 12px;overflow-y:auto;}
+.nav-item{
+  display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;
+  color:var(--sidebar-text);font-weight:600;font-size:13.5px;margin-bottom:3px;transition:.15s;
+}
+.nav-item i{font-size:16px;width:18px;text-align:center;}
+.nav-item:hover{background:var(--sidebar-hover);color:#fff;}
+.nav-item.active{background:rgba(255,255,255,.14);color:#fff;box-shadow:inset 3px 0 0 var(--success);}
+.nav-section-label{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:rgba(255,255,255,.4);font-weight:700;padding:16px 14px 6px;}
+.sidebar-footer{padding:14px;border-top:1px solid rgba(255,255,255,.12);}
+.logout-btn{display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;border-radius:10px;background:none;border:1px solid rgba(255,255,255,.15);color:var(--success);font-weight:700;font-size:13px;}
+.logout-btn:hover{background:var(--sidebar-hover);}
+
+.main{margin-left:250px;flex:1;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{
+  height:68px;background:var(--card);border-bottom:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.03);
+  display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:40;
+}
+.topbar-title{font-size:18px;font-weight:800;letter-spacing:-.3px;}
+.topbar-right{display:flex;align-items:center;gap:18px;}
+.last-login{font-size:12px;color:var(--text-dim);}
+.bell-wrap{position:relative;}
+.bell-btn{width:38px;height:38px;border-radius:10px;background:var(--card-alt);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:16px;position:relative;}
+.bell-dot{position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--danger);border:2px solid var(--card);}
+.bell-panel{
+  position:absolute;top:48px;right:0;width:300px;background:var(--card);border:1px solid var(--border);
+  border-radius:12px;box-shadow:0 20px 50px rgba(0,0,0,.5);display:none;overflow:hidden;z-index:60;
+}
+.bell-panel.show{display:block;}
+.bell-panel .head{padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid var(--border);}
+.bell-item{padding:12px 16px;border-bottom:1px solid var(--border);font-size:12.5px;color:var(--text-dim);}
+.bell-item:last-child{border-bottom:none;}
+.bell-item strong{color:var(--text);display:block;margin-bottom:2px;font-size:12.5px;}
+.admin-chip{display:flex;align-items:center;gap:10px;padding:6px 12px 6px 6px;border-radius:30px;background:var(--card-alt);border:1px solid var(--border);}
+.admin-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-light));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;}
+.admin-chip .name{font-size:12.5px;font-weight:700;}
+.admin-chip .role{font-size:10px;color:var(--text-dim);}
+
+.content{padding:26px 28px;flex:1;}
+.page{display:none;}
+.page.active{display:block;animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px;}
+.page-head h2{font-size:21px;font-weight:800;letter-spacing:-.3px;margin-bottom:3px;}
+.page-head p{font-size:13px;color:var(--text-dim);}
+
+/* ── Cards / Stats ── */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;position:relative;overflow:hidden;}
+.stat-card .icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:14px;}
+.stat-card .pill{position:absolute;top:18px;right:18px;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;padding:4px 9px;border-radius:30px;background:rgba(0,65,97,.08);color:var(--accent);}
+.stat-card .lbl-top{font-size:11px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
+.stat-card .val{font-size:24px;font-weight:800;letter-spacing:-.5px;margin-bottom:3px;color:var(--accent);}
+.stat-card .lbl{font-size:12px;color:var(--text-dim);font-weight:600;}
+.stat-card .delta{font-size:11px;font-weight:700;margin-top:8px;display:inline-flex;align-items:center;gap:4px;}
+.stat-card .see-link{font-size:11px;font-weight:700;color:var(--text-dim);margin-top:10px;display:inline-flex;align-items:center;gap:5px;text-transform:uppercase;letter-spacing:.3px;}
+.fill-card{border-radius:14px;padding:18px;color:#fff;position:relative;overflow:hidden;}
+.fill-navy{background:var(--accent);}
+.fill-lime{background:var(--success);}
+.fill-card .icon{width:36px;height:36px;border-radius:9px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:30px;}
+.fill-card .lbl-top{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;opacity:.85;margin-bottom:4px;}
+.fill-card .val{font-size:22px;font-weight:800;}
+.bg-purple{background:rgba(0,65,97,.15);color:var(--accent-light);}
+.bg-green{background:rgba(153,204,51,.18);color:var(--success);}
+.bg-orange{background:rgba(245,158,11,.15);color:var(--warning);}
+.bg-blue{background:rgba(59,130,246,.15);color:var(--info);}
+.bg-red{background:rgba(225,29,72,.15);color:var(--danger);}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px;}
+.card-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.card-head h3{font-size:14.5px;font-weight:700;}
+.card-body{padding:18px 20px;}
+
+/* ── Tables ── */
+table{width:100%;border-collapse:collapse;}
+.tbl-wrap{overflow-x:auto;}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--text-faint);font-weight:700;padding:12px 16px;border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:13px 16px;border-bottom:1px solid var(--border);font-size:13px;white-space:nowrap;}
+tbody tr:hover{background:var(--card-alt);}
+tbody tr:last-child td{border-bottom:none;}
+.cell-main{font-weight:700;color:var(--text);}
+.cell-sub{font-size:11.5px;color:var(--text-dim);}
+
+/* ── Badges ── */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:30px;font-size:11px;font-weight:700;}
+.badge-green{background:rgba(153,204,51,.18);color:var(--success);}
+.badge-orange{background:rgba(245,158,11,.15);color:var(--warning);}
+.badge-blue{background:rgba(59,130,246,.15);color:var(--info);}
+.badge-red{background:rgba(225,29,72,.15);color:var(--danger);}
+.badge-gray{background:rgba(139,146,168,.15);color:var(--text-dim);}
+.badge-purple{background:rgba(0,65,97,.18);color:var(--accent-light);}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:9px;font-size:13px;font-weight:700;border:none;transition:.15s;}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent-light));color:#fff;box-shadow:0 4px 14px var(--accent-glow);}
+.btn-primary:hover{transform:translateY(-1px);}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text);}
+.btn-outline:hover{background:var(--card-alt);}
+.btn-sm{padding:7px 12px;font-size:12px;}
+.icon-btn{
+  width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--card-alt);
+  color:var(--text-dim);display:inline-flex;align-items:center;justify-content:center;font-size:13.5px;position:relative;
+}
+.icon-btn:hover{color:#fff;border-color:var(--accent);background:var(--accent);}
+.icon-btn.danger:hover{color:#fff;border-color:var(--danger);background:var(--danger);}
+.icon-btn.warn:hover{color:#fff;border-color:var(--warning);background:var(--warning);}
+.icon-btn.ok:hover{color:#1F2937;border-color:var(--success);background:var(--success);}
+.row-actions{display:flex;gap:6px;}
+
+[data-tip]{position:relative;}
+[data-tip]::after{
+  content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);
+  background:#0a0c12;color:#fff;font-size:11px;font-weight:600;padding:5px 9px;border-radius:6px;white-space:nowrap;
+  opacity:0;pointer-events:none;transition:.15s;box-shadow:0 6px 16px rgba(0,0,0,.4);z-index:30;
+}
+[data-tip]:hover::after{opacity:1;}
+
+/* ── Forms ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.form-grid .full{grid-column:1/-1;}
+.f-group label{display:block;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-dim);margin-bottom:7px;}
+.f-group input,.f-group select,.f-group textarea{
+  width:100%;background:var(--card-alt);border:1.5px solid var(--border);color:var(--text);
+  padding:10px 13px;border-radius:9px;font-size:13.5px;outline:none;transition:.15s;
+}
+.f-group input:focus,.f-group select:focus,.f-group textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);}
+.f-group textarea{resize:vertical;min-height:80px;}
+.f-hint{font-size:11px;color:var(--text-faint);margin-top:5px;}
+
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+.toolbar .search-box{position:relative;flex:1;min-width:220px;}
+.toolbar .search-box i{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text-faint);font-size:14px;}
+.toolbar .search-box input{width:100%;padding:10px 14px 10px 36px;background:var(--card-alt);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;outline:none;}
+.toolbar select{padding:10px 13px;background:var(--card-alt);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;outline:none;}
+
+.switch{position:relative;display:inline-block;width:46px;height:26px;}
+.switch input{opacity:0;width:0;height:0;}
+.slider{position:absolute;cursor:pointer;inset:0;background:var(--border);border-radius:30px;transition:.2s;}
+.slider::before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;}
+input:checked + .slider{background:var(--accent);}
+input:checked + .slider::before{transform:translateX(20px);}
+
+/* ── Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(5,6,10,.7);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
+.modal-overlay.show{display:flex;}
+.modal-box{background:var(--card);border:1px solid var(--border);border-radius:16px;width:100%;max-width:600px;max-height:88vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.25);}
+.modal-box.wide{max-width:760px;}
+.modal-head{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--card);z-index:5;}
+.modal-head h3{font-size:16px;font-weight:800;}
+.modal-close{width:32px;height:32px;border-radius:8px;background:var(--card-alt);border:1px solid var(--border);color:var(--text-dim);display:flex;align-items:center;justify-content:center;}
+.modal-body{padding:22px 24px;}
+.modal-foot{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;}
+
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px;}
+.profile-section{background:var(--card-alt);border:1px solid var(--border);border-radius:12px;padding:16px;}
+.profile-section h4{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-faint);font-weight:700;margin-bottom:12px;}
+.profile-row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);}
+.profile-row:last-child{border-bottom:none;}
+.profile-row span:first-child{color:var(--text-dim);}
+.usage-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px;}
+.usage-box{background:var(--card-alt);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;}
+.usage-box .n{font-size:19px;font-weight:800;}
+.usage-box .l{font-size:11px;color:var(--text-dim);margin-top:2px;}
+
+.checkbox{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;}
+
+@media (max-width:1100px){
+  .sidebar{transform:translateX(-100%);transition:.2s;}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-left:0;}
+  .form-grid{grid-template-columns:1fr;}
+  .profile-grid{grid-template-columns:1fr;}
+  .usage-grid{grid-template-columns:1fr 1fr;}
+}
+.menu-toggle{display:none;width:38px;height:38px;border-radius:9px;background:var(--card-alt);border:1px solid var(--border);color:var(--text);align-items:center;justify-content:center;font-size:17px;}
+@media (max-width:1100px){.menu-toggle{display:flex;}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo">W</div>
+      <div>
+        <div class="name">Waafibook</div>
+        <div class="sub">Super Admin</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" data-page="dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      <a class="nav-item" data-page="companies"><i class="bi bi-building"></i> Companies</a>
+      <a class="nav-item" data-page="users"><i class="bi bi-people"></i> Users</a>
+      <a class="nav-item" data-page="billing"><i class="bi bi-credit-card"></i> Subscription &amp; Billing</a>
+      <a class="nav-item" data-page="announcements"><i class="bi bi-megaphone"></i> Announcements</a>
+      <a class="nav-item" data-page="security"><i class="bi bi-shield-lock"></i> Security &amp; Audit Log</a>
+      <a class="nav-item" data-page="settings"><i class="bi bi-gear"></i> System Settings</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" id="logoutBtn"><i class="bi bi-box-arrow-right"></i> Sign Out</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <button class="menu-toggle" id="menuToggle"><i class="bi bi-list"></i></button>
+        <div class="topbar-title" id="topbarTitle">Dashboard</div>
+      </div>
+      <div class="topbar-right">
+        <div class="last-login">Last login: <strong id="lastLoginTime" style="color:var(--text)"></strong></div>
+        <div class="bell-wrap">
+          <button class="bell-btn" id="bellBtn"><i class="bi bi-bell"></i><span class="bell-dot"></span></button>
+          <div class="bell-panel" id="bellPanel">
+            <div class="head">Notifications</div>
+            <div class="bell-item"><strong>New company signed up</strong>Towfiiq Pharmacy joined on the Starter plan.</div>
+            <div class="bell-item"><strong>Payment overdue</strong>Nasiye Hardware's invoice is 6 days overdue.</div>
+            <div class="bell-item"><strong>Suspicious session</strong>A login from a new device was flagged for review.</div>
+          </div>
+        </div>
+        <div class="admin-chip">
+          <div class="admin-avatar">SA</div>
+          <div>
+            <div class="name">Super Admin</div>
+            <div class="role">Platform Owner</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="content" id="content">
+      <!-- ═══════════ DASHBOARD ═══════════ -->
+      <section class="page active" id="page-dashboard">
+        <div class="page-head">
+          <div>
+            <h2>Platform Overview</h2>
+            <p>A snapshot of every tenant, user and dollar moving through Waafibook right now.</p>
+          </div>
+        </div>
+
+        <div class="stat-grid" id="dashboardStats"></div>
+
+        <div class="stat-grid" id="dashboardFillRow" style="margin-bottom:24px;"></div>
+
+        <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:20px;" id="dashboardLowerGrid">
+          <div class="card">
+            <div class="card-head"><h3>Recent Activity</h3><span class="badge badge-purple">Last 10 actions</span></div>
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr><th>Time</th><th>Action</th><th>Target</th></tr></thead>
+                <tbody id="recentActivityBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>New Signups This Week</h3></div>
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr><th>Company</th><th>Plan</th><th>Joined</th></tr></thead>
+                <tbody id="newSignupsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════ COMPANIES ═══════════ -->
+      <section class="page" id="page-companies">
+        <div class="page-head">
+          <div>
+            <h2>Company Management</h2>
+            <p>Every tenant registered on the platform — search, filter, and act on any of them.</p>
+          </div>
+          <button class="btn btn-primary" id="addCompanyBtn"><i class="bi bi-plus-lg"></i> Add Company</button>
+        </div>
+
+        <div class="toolbar">
+          <div class="search-box"><i class="bi bi-search"></i><input type="text" id="companySearch" placeholder="Search by company or owner name..."></div>
+          <select id="planFilter">
+            <option value="">All Plans</option>
+            <option value="Free">Free</option>
+            <option value="Starter">Starter</option>
+            <option value="Pro">Pro</option>
+            <option value="Enterprise">Enterprise</option>
+          </select>
+          <select id="statusFilter">
+            <option value="">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Suspended">Suspended</option>
+            <option value="Pending">Pending</option>
+          </select>
+          <select id="bulkAction">
+            <option value="">Bulk Action…</option>
+            <option value="suspend">Suspend Selected</option>
+            <option value="reactivate">Reactivate Selected</option>
+            <option value="delete">Delete Selected</option>
+            <option value="export">Export Selected as CSV</option>
+          </select>
+          <button class="btn btn-outline btn-sm" id="applyBulkBtn">Apply</button>
+        </div>
+
+        <div class="card">
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th><input type="checkbox" class="checkbox" id="selectAllCompanies"></th>
+                  <th>#</th><th>Company Name</th><th>Owner</th><th>Email</th><th>Plan</th><th>Status</th><th>Joined</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="companiesBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════ USERS ═══════════ -->
+      <section class="page" id="page-users">
+        <div class="page-head">
+          <div>
+            <h2>Users Management</h2>
+            <p>Every user across every tenant company, in one place.</p>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="search-box"><i class="bi bi-search"></i><input type="text" id="userSearch" placeholder="Search by name or email..."></div>
+          <select id="userCompanyFilter"><option value="">All Companies</option></select>
+          <select id="userRoleFilter">
+            <option value="">All Roles</option>
+            <option value="Admin">Admin</option>
+            <option value="Manager">Manager</option>
+            <option value="Cashier">Cashier</option>
+            <option value="Accountant">Accountant</option>
+          </select>
+          <select id="userStatusFilter">
+            <option value="">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Suspended">Suspended</option>
+          </select>
+        </div>
+
+        <div class="card">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Company</th><th>Role</th><th>Status</th><th>Last Login</th><th>Actions</th></tr></thead>
+              <tbody id="usersBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════ BILLING ═══════════ -->
+      <section class="page" id="page-billing">
+        <div class="page-head">
+          <div>
+            <h2>Subscription &amp; Billing</h2>
+            <p>Revenue, renewals, and payment status across every active subscription.</p>
+          </div>
+        </div>
+
+        <div class="stat-grid" id="billingStats"></div>
+
+        <div class="card">
+          <div class="card-head"><h3>Active Subscriptions</h3></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Company</th><th>Plan</th><th>Billing Cycle</th><th>Next Renewal</th><th>Payment Status</th><th>Actions</th></tr></thead>
+              <tbody id="billingBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════ ANNOUNCEMENTS ═══════════ -->
+      <section class="page" id="page-announcements">
+        <div class="page-head">
+          <div>
+            <h2>Announcements &amp; Notifications</h2>
+            <p>Send a message to every tenant, or target a specific company.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>Compose Announcement</h3></div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="f-group full">
+                <label>Title</label>
+                <input type="text" id="annTitle" placeholder="e.g. Scheduled maintenance this weekend">
+              </div>
+              <div class="f-group full">
+                <label>Message</label>
+                <textarea id="annMessage" placeholder="Write the announcement message..."></textarea>
+              </div>
+              <div class="f-group">
+                <label>Target</label>
+                <select id="annTarget">
+                  <option value="All">All Companies</option>
+                  <option value="specific">Specific Company…</option>
+                </select>
+              </div>
+              <div class="f-group" id="annCompanyWrap" style="display:none;">
+                <label>Company</label>
+                <select id="annCompany"></select>
+              </div>
+              <div class="f-group">
+                <label>Priority</label>
+                <select id="annPriority">
+                  <option value="Info">Info</option>
+                  <option value="Warning">Warning</option>
+                  <option value="Critical">Critical</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="modal-foot" style="border-top:1px solid var(--border);">
+            <button class="btn btn-outline" id="annDraftBtn"><i class="bi bi-save2"></i> Save as Draft</button>
+            <button class="btn btn-primary" id="annSendBtn"><i class="bi bi-send"></i> Send Now</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>Past Announcements</h3></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Title</th><th>Target</th><th>Priority</th><th>Status</th><th>Date</th></tr></thead>
+              <tbody id="announcementsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════ SECURITY / AUDIT ═══════════ -->
+      <section class="page" id="page-security">
+        <div class="page-head">
+          <div>
+            <h2>Security &amp; Audit Log</h2>
+            <p>Every action a Super Admin has taken on the platform, and who's currently signed in.</p>
+          </div>
+          <button class="btn btn-outline" id="exportAuditBtn"><i class="bi bi-download"></i> Export CSV</button>
+        </div>
+
+        <div class="toolbar">
+          <select id="auditActionFilter">
+            <option value="">All Action Types</option>
+            <option value="Company">Company</option>
+            <option value="User">User</option>
+            <option value="Billing">Billing</option>
+            <option value="Announcement">Announcement</option>
+            <option value="Settings">Settings</option>
+          </select>
+          <input type="date" id="auditFrom" style="background:var(--card-alt);border:1.5px solid var(--border);border-radius:9px;color:var(--text);padding:9px 12px;">
+          <input type="date" id="auditTo" style="background:var(--card-alt);border:1.5px solid var(--border);border-radius:9px;color:var(--text);padding:9px 12px;">
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>Full Audit Log</h3></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Timestamp</th><th>Action Type</th><th>Action</th><th>Target</th><th>IP Address</th></tr></thead>
+              <tbody id="auditLogBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>Active Sessions</h3></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>User</th><th>Device</th><th>IP Address</th><th>Signed In</th><th>Actions</th></tr></thead>
+              <tbody id="sessionsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════ SETTINGS ═══════════ -->
+      <section class="page" id="page-settings">
+        <div class="page-head">
+          <div>
+            <h2>System Settings</h2>
+            <p>Platform-wide configuration, defaults, and maintenance controls.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>General</h3></div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="f-group"><label>Platform Name</label><input type="text" id="setPlatformName" value="Waafibook"></div>
+              <div class="f-group"><label>Support Email</label><input type="text" id="setSupportEmail" value="support@waafibook.com"></div>
+              <div class="f-group"><label>Timezone</label>
+                <select id="setTimezone">
+                  <option>Africa/Mogadishu</option><option>Africa/Nairobi</option><option>Asia/Dubai</option><option>UTC</option>
+                </select>
+              </div>
+              <div class="f-group"><label>Default Plan for New Signups</label>
+                <select id="setDefaultPlan"><option>Free</option><option>Starter</option><option>Pro</option><option>Enterprise</option></select>
+              </div>
+            </div>
+          </div>
+          <div class="modal-foot" style="border-top:1px solid var(--border);"><button class="btn btn-primary" id="saveGeneralBtn"><i class="bi bi-check-lg"></i> Save Changes</button></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h3>Maintenance Mode</h3>
+            <label class="switch"><input type="checkbox" id="maintenanceToggle"><span class="slider"></span></label>
+          </div>
+          <div class="card-body">
+            <p style="color:var(--text-dim);font-size:13px;">When enabled, every tenant is shown a maintenance page and cannot access the platform until you turn it back off.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>SMTP Email Settings</h3></div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="f-group"><label>SMTP Host</label><input type="text" id="smtpHost" value="smtp.mailgun.org"></div>
+              <div class="f-group"><label>SMTP Port</label><input type="text" id="smtpPort" value="587"></div>
+              <div class="f-group"><label>SMTP Username</label><input type="text" id="smtpUser" value="postmaster@waafibook.com"></div>
+              <div class="f-group"><label>SMTP Password</label><input type="password" id="smtpPass" value="••••••••••"></div>
+              <div class="f-group"><label>Encryption</label><select id="smtpEnc"><option>TLS</option><option>SSL</option><option>None</option></select></div>
+            </div>
+          </div>
+          <div class="modal-foot" style="border-top:1px solid var(--border);"><button class="btn btn-outline" id="testSmtpBtn"><i class="bi bi-envelope-check"></i> Send Test Email</button><button class="btn btn-primary" id="saveSmtpBtn"><i class="bi bi-check-lg"></i> Save SMTP Settings</button></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>Backup &amp; Restore</h3></div>
+          <div class="card-body">
+            <p style="color:var(--text-dim);font-size:13px;margin-bottom:14px;">Last backup: <strong style="color:var(--text)">Today, 03:00 AM</strong> — Size: 1.4 GB</p>
+            <div style="display:flex;gap:10px;">
+              <button class="btn btn-primary" id="backupNowBtn"><i class="bi bi-cloud-arrow-up"></i> Run Backup Now</button>
+              <button class="btn btn-outline" id="restoreBtn"><i class="bi bi-cloud-arrow-down"></i> Restore From Backup</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════ MODALS ═══════════ -->
+      <div class="modal-overlay" id="modalView">
+        <div class="modal-box wide">
+          <div class="modal-head"><h3>Company Profile</h3><button class="modal-close" data-close="modalView"><i class="bi bi-x-lg"></i></button></div>
+          <div class="modal-body" id="viewModalBody"></div>
+        </div>
+      </div>
+
+      <div class="modal-overlay" id="modalEdit">
+        <div class="modal-box">
+          <div class="modal-head"><h3>Edit Company</h3><button class="modal-close" data-close="modalEdit"><i class="bi bi-x-lg"></i></button></div>
+          <div class="modal-body">
+            <input type="hidden" id="editId">
+            <div class="form-grid">
+              <div class="f-group full"><label>Company Name</label><input type="text" id="editName"></div>
+              <div class="f-group"><label>Owner Email</label><input type="text" id="editEmail"></div>
+              <div class="f-group"><label>Phone Number</label><input type="text" id="editPhone"></div>
+              <div class="f-group full"><label>Subscription Plan</label>
+                <select id="editPlan"><option>Free</option><option>Starter</option><option>Pro</option><option>Enterprise</option></select>
+              </div>
+            </div>
+          </div>
+          <div class="modal-foot"><button class="btn btn-outline" data-close="modalEdit">Cancel</button><button class="btn btn-primary" id="saveEditBtn"><i class="bi bi-check-lg"></i> Save Changes</button></div>
+        </div>
+      </div>
+
+      <div class="modal-overlay" id="modalAdd">
+        <div class="modal-box">
+          <div class="modal-head"><h3>Add Company Manually</h3><button class="modal-close" data-close="modalAdd"><i class="bi bi-x-lg"></i></button></div>
+          <div class="modal-body">
+            <div class="form-grid">
+              <div class="f-group full"><label>Company Name *</label><input type="text" id="addName" placeholder="e.g. Hodan Electronics"></div>
+              <div class="f-group"><label>Owner Full Name *</label><input type="text" id="addOwner" placeholder="e.g. Asha Nur"></div>
+              <div class="f-group"><label>Owner Email *</label><input type="text" id="addEmail" placeholder="owner@company.com"></div>
+              <div class="f-group"><label>Phone Number</label><input type="text" id="addPhone" placeholder="+252 61 000 0000"></div>
+              <div class="f-group"><label>Country</label>
+                <select id="addCountry"><option>Somalia</option><option>Kenya</option><option>Ethiopia</option><option>Djibouti</option><option>Other</option></select>
+              </div>
+              <div class="f-group"><label>Subscription Plan</label>
+                <select id="addPlan"><option>Free</option><option>Starter</option><option>Pro</option><option>Enterprise</option></select>
+              </div>
+              <div class="f-group"><label>Database Prefix</label><input type="text" id="addPrefix" placeholder="auto-generated"></div>
+              <div class="f-group"><label>Active From</label><input type="date" id="addActiveFrom"></div>
+              <div class="f-group full"><label>Notes / Remarks</label><textarea id="addNotes" placeholder="Optional internal notes about this account..."></textarea></div>
+            </div>
+          </div>
+          <div class="modal-foot"><button class="btn btn-outline" data-close="modalAdd">Cancel</button><button class="btn btn-primary" id="saveAddBtn"><i class="bi bi-plus-lg"></i> Create Company</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $  = (s, el=document) => el.querySelector(s);
+const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
+
+function daysAgo(n){ const d = new Date(); d.setDate(d.getDate()-n); return d; }
+function fmtDate(d){ return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+function fmtDateTime(d){ return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) + ', ' + d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
+function slugify(s){ return s.toLowerCase().trim().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'') + '_'; }
+
+const PLAN_PRICE = { Free:0, Starter:29, Pro:79, Enterprise:199 };
+
+/* ── Dummy Data ───────────────────────────────────────────────── */
+let companies = [
+  { id:1, name:'Horntech Retail Co.', owner:'Abdirahman Yusuf', email:'abdirahman@horntech.so', phone:'+252 61 234 5678', country:'Somalia', plan:'Pro', status:'Active', joined:daysAgo(240), prefix:'horntech_', notes:'Key account, multi-branch retailer.', users:18, products:340, sales:1280, cycle:'Monthly', renewal:daysAgo(-12) },
+  { id:2, name:'Saaxil Traders', owner:'Faadumo Ali', email:'faadumo@saaxil.com', phone:'+252 61 345 6789', country:'Somalia', plan:'Starter', status:'Active', joined:daysAgo(165), prefix:'saaxil_', notes:'Growing fast, considering Pro upgrade.', users:6, products:95, sales:410, cycle:'Monthly', renewal:daysAgo(-4) },
+  { id:3, name:'Bilkheyr Wholesale', owner:'Hassan Mire', email:'hassan@bilkheyr.com', phone:'+252 61 456 7890', country:'Somalia', plan:'Enterprise', status:'Active', joined:daysAgo(310), prefix:'bilkheyr_', notes:'Largest tenant by revenue.', users:42, products:1120, sales:5230, cycle:'Yearly', renewal:daysAgo(-190) },
+  { id:4, name:'Waaberi Supermarket', owner:'Khadija Nur', email:'khadija@waaberi.so', phone:'+252 61 567 8901', country:'Somalia', plan:'Free', status:'Suspended', joined:daysAgo(95), prefix:'waaberi_', notes:'Suspended for unpaid invoice (45 days overdue).', users:3, products:60, sales:88, cycle:'Monthly', renewal:daysAgo(15) },
+  { id:5, name:'Geeska Electronics', owner:'Omar Said', email:'omar@geeska.com', phone:'+252 61 678 9012', country:'Somalia', plan:'Pro', status:'Active', joined:daysAgo(58), prefix:'geeska_', notes:'Electronics importer, two branches.', users:11, products:520, sales:760, cycle:'Monthly', renewal:daysAgo(-9) },
+  { id:6, name:'Towfiiq Pharmacy', owner:'Sahra Mohamed', email:'sahra@towfiiq.so', phone:'+252 61 789 0123', country:'Somalia', plan:'Starter', status:'Pending', joined:daysAgo(2), prefix:'towfiiq_', notes:'Awaiting first payment to activate.', users:2, products:140, sales:0, cycle:'Monthly', renewal:daysAgo(-28) },
+  { id:7, name:'Iftin General Trading', owner:'Yusuf Cabdi', email:'yusuf@iftin.com', phone:'+252 61 890 1234', country:'Kenya', plan:'Enterprise', status:'Active', joined:daysAgo(420), prefix:'iftin_', notes:'Cross-border operations, Kenya + Somalia.', users:35, products:890, sales:4100, cycle:'Yearly', renewal:daysAgo(-95) },
+  { id:8, name:'Nasiye Hardware', owner:'Amina Hassan', email:'amina@nasiye.so', phone:'+252 61 901 2345', country:'Somalia', plan:'Free', status:'Suspended', joined:daysAgo(130), prefix:'nasiye_', notes:'Suspended pending owner verification.', users:4, products:210, sales:155, cycle:'Monthly', renewal:daysAgo(6) },
+];
+let nextCompanyId = 9;
+
+let users = [
+  { id:1, name:'Abdirahman Yusuf', email:'abdirahman@horntech.so', company:'Horntech Retail Co.', role:'Admin', status:'Active', lastLogin:daysAgo(0) },
+  { id:2, name:'Ifrah Cali', email:'ifrah@horntech.so', company:'Horntech Retail Co.', role:'Manager', status:'Active', lastLogin:daysAgo(1) },
+  { id:3, name:'Faadumo Ali', email:'faadumo@saaxil.com', company:'Saaxil Traders', role:'Admin', status:'Active', lastLogin:daysAgo(0) },
+  { id:4, name:'Nuurto Warsame', email:'nuurto@saaxil.com', company:'Saaxil Traders', role:'Cashier', status:'Active', lastLogin:daysAgo(3) },
+  { id:5, name:'Hassan Mire', email:'hassan@bilkheyr.com', company:'Bilkheyr Wholesale', role:'Admin', status:'Active', lastLogin:daysAgo(0) },
+  { id:6, name:'Mohamed Cabdulle', email:'mohamed@bilkheyr.com', company:'Bilkheyr Wholesale', role:'Accountant', status:'Active', lastLogin:daysAgo(2) },
+  { id:7, name:'Khadija Nur', email:'khadija@waaberi.so', company:'Waaberi Supermarket', role:'Admin', status:'Suspended', lastLogin:daysAgo(46) },
+  { id:8, name:'Ayaan Salah', email:'ayaan@waaberi.so', company:'Waaberi Supermarket', role:'Cashier', status:'Suspended', lastLogin:daysAgo(46) },
+  { id:9, name:'Omar Said', email:'omar@geeska.com', company:'Geeska Electronics', role:'Admin', status:'Active', lastLogin:daysAgo(0) },
+  { id:10, name:'Sagal Warsame', email:'sagal@geeska.com', company:'Geeska Electronics', role:'Manager', status:'Active', lastLogin:daysAgo(1) },
+  { id:11, name:'Sahra Mohamed', email:'sahra@towfiiq.so', company:'Towfiiq Pharmacy', role:'Admin', status:'Active', lastLogin:daysAgo(2) },
+  { id:12, name:'Yusuf Cabdi', email:'yusuf@iftin.com', company:'Iftin General Trading', role:'Admin', status:'Active', lastLogin:daysAgo(0) },
+  { id:13, name:'Ladan Xasan', email:'ladan@iftin.com', company:'Iftin General Trading', role:'Accountant', status:'Active', lastLogin:daysAgo(1) },
+  { id:14, name:'Amina Hassan', email:'amina@nasiye.so', company:'Nasiye Hardware', role:'Admin', status:'Suspended', lastLogin:daysAgo(131) },
+  { id:15, name:'Cabdiraxman Nur', email:'cabdiraxman@nasiye.so', company:'Nasiye Hardware', role:'Cashier', status:'Suspended', lastLogin:daysAgo(131) },
+];
+
+let activityLog = [
+  { time:daysAgo(0), type:'Company', action:'Reviewed company profile', target:'Horntech Retail Co.', ip:'41.215.10.22' },
+  { time:daysAgo(0), type:'Billing', action:'Marked invoice as paid', target:'Geeska Electronics', ip:'41.215.10.22' },
+  { time:daysAgo(1), type:'User', action:'Reset password for user', target:'Khadija Nur', ip:'41.215.10.22' },
+  { time:daysAgo(1), type:'Company', action:'Suspended company', target:'Nasiye Hardware', ip:'41.215.10.22' },
+  { time:daysAgo(2), type:'Announcement', action:'Sent platform-wide announcement', target:'All Companies', ip:'41.215.10.22' },
+  { time:daysAgo(3), type:'Company', action:'Changed subscription plan', target:'Geeska Electronics → Pro', ip:'41.215.10.22' },
+  { time:daysAgo(4), type:'Settings', action:'Updated SMTP configuration', target:'System Settings', ip:'41.215.10.22' },
+  { time:daysAgo(5), type:'Company', action:'Created new company', target:'Towfiiq Pharmacy', ip:'41.215.10.22' },
+  { time:daysAgo(6), type:'User', action:'Suspended user account', target:'Ayaan Salah', ip:'41.215.10.22' },
+  { time:daysAgo(8), type:'Billing', action:'Sent invoice', target:'Iftin General Trading', ip:'41.215.10.22' },
+];
+
+let announcements = [
+  { title:'Scheduled maintenance — June 30th', target:'All Companies', priority:'Warning', status:'Sent', date:daysAgo(4) },
+  { title:'New Inventory module released', target:'All Companies', priority:'Info', status:'Sent', date:daysAgo(11) },
+  { title:'Payment reminder', target:'Nasiye Hardware', priority:'Critical', status:'Draft', date:daysAgo(1) },
+];
+
+let sessions = [
+  { user:'Super Admin', device:'Chrome on Windows', ip:'41.215.10.22', since:daysAgo(0) },
+  { user:'Hassan Mire', device:'Safari on iPhone', ip:'105.22.18.4', since:daysAgo(0) },
+  { user:'Faadumo Ali', device:'Chrome on Android', ip:'196.188.5.11', since:daysAgo(1) },
+];
+
+let selectedCompanyIds = new Set();
+
+/* ── SweetAlert2 branded theme ───────────────────────────────────── */
+const swalDark = Swal.mixin({
+  background:'#ffffff', color:'#1F2937',
+  confirmButtonColor:'#004161', cancelButtonColor:'#6b7280', denyButtonColor:'#e11d48',
+  customClass:{ popup:'sa-swal-popup', confirmButton:'sa-swal-btn', cancelButton:'sa-swal-btn', denyButton:'sa-swal-btn' },
+});
+(function(){
+  const style = document.createElement('style');
+  style.textContent = '.sa-swal-popup{border-radius:1.25rem!important;border:1px solid #E5E7EB;box-shadow:0 24px 60px rgba(0,65,97,.18)!important;} .swal2-title{font-weight:800!important;color:#003451!important;} .swal2-html-container{font-size:14px!important;color:#6B7280!important;} .sa-swal-btn{border-radius:8px!important;font-weight:700!important;padding:9px 22px!important;}';
+  document.head.appendChild(style);
+})();
+
+function toast(icon, title){
+  swalDark.fire({ icon, title, toast:true, position:'top-end', showConfirmButton:false, timer:2600, timerProgressBar:true });
+}
+function logActivity(type, action, target){
+  activityLog.unshift({ time:new Date(), type, action, target, ip:'41.215.10.22' });
+  if (document.getElementById('page-dashboard').classList.contains('active')) renderDashboard();
+  if (document.getElementById('page-security').classList.contains('active')) renderAuditLog();
+}
+
+/* ── Navigation ───────────────────────────────────────────────── */
+const PAGE_TITLES = { dashboard:'Dashboard', companies:'Company Management', users:'Users Management', billing:'Subscription & Billing', announcements:'Announcements', security:'Security & Audit Log', settings:'System Settings' };
+function goToPage(page){
+  $$('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === page));
+  $$('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + page));
+  $('#topbarTitle').textContent = PAGE_TITLES[page];
+  $('#sidebar').classList.remove('open');
+  if (page === 'dashboard') renderDashboard();
+  if (page === 'companies') renderCompanies();
+  if (page === 'users') renderUsers();
+  if (page === 'billing') renderBilling();
+  if (page === 'announcements') renderAnnouncements();
+  if (page === 'security') { renderAuditLog(); renderSessions(); }
+}
+$$('.nav-item').forEach(n => n.addEventListener('click', () => goToPage(n.dataset.page)));
+$('#menuToggle').addEventListener('click', () => $('#sidebar').classList.toggle('open'));
+$('#bellBtn').addEventListener('click', () => $('#bellPanel').classList.toggle('show'));
+document.addEventListener('click', e => { if (!e.target.closest('.bell-wrap')) $('#bellPanel').classList.remove('show'); });
+$('#logoutBtn').addEventListener('click', () => {
+  swalDark.fire({ icon:'question', title:'Sign Out?', text:'You will need to log in again to access the Super Admin panel.', showCancelButton:true, confirmButtonText:'Sign Out' })
+    .then(r => { if (r.isConfirmed) toast('success', 'Signed out successfully'); });
+});
+$('#lastLoginTime').textContent = fmtDateTime(new Date(Date.now() - 3*3600*1000));
+
+/* ── Modal helpers ────────────────────────────────────────────── */
+function openModal(id){ $('#' + id).classList.add('show'); }
+function closeModal(id){ $('#' + id).classList.remove('show'); }
+$$('[data-close]').forEach(b => b.addEventListener('click', () => closeModal(b.dataset.close)));
+$$('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+
+/* ── Dashboard ────────────────────────────────────────────────── */
+function renderDashboard(){
+  const active = companies.filter(c => c.status === 'Active').length;
+  const suspended = companies.filter(c => c.status === 'Suspended').length;
+  const totalUsers = users.length + 124; // sample table + rest of platform
+  const revenue = companies.filter(c => c.status === 'Active').reduce((s,c) => s + (PLAN_PRICE[c.plan] || 0), 0);
+  const newSignups = companies.filter(c => c.joined >= daysAgo(30)).length;
+
+  $('#dashboardStats').innerHTML = `
+    <div class="stat-card">
+      <span class="pill">Platform-Wide</span>
+      <div class="icon bg-purple"><i class="bi bi-building"></i></div>
+      <div class="val">${companies.length}</div><div class="lbl">Total Companies</div>
+      <div class="see-link" onclick="goToPage('companies')">See Companies <i class="bi bi-arrow-right"></i></div>
+    </div>
+    <div class="stat-card">
+      <span class="pill">Tenants</span>
+      <div class="icon bg-green"><i class="bi bi-check-circle"></i></div>
+      <div class="val">${active}</div><div class="lbl">Active Companies</div>
+      <div class="see-link" onclick="goToPage('companies')">See Companies <i class="bi bi-arrow-right"></i></div>
+    </div>
+    <div class="stat-card">
+      <span class="pill">Tenants</span>
+      <div class="icon bg-orange"><i class="bi bi-slash-circle"></i></div>
+      <div class="val">${suspended}</div><div class="lbl">Suspended Companies</div>
+      <div class="see-link" onclick="goToPage('companies')">See Companies <i class="bi bi-arrow-right"></i></div>
+    </div>
+    <div class="stat-card">
+      <span class="pill">All Tenants</span>
+      <div class="icon bg-blue"><i class="bi bi-people"></i></div>
+      <div class="val">${totalUsers}</div><div class="lbl">Total Users</div>
+      <div class="see-link" onclick="goToPage('users')">See Users <i class="bi bi-arrow-right"></i></div>
+    </div>
+    <div class="stat-card">
+      <span class="pill">Monthly</span>
+      <div class="icon bg-purple"><i class="bi bi-cash-stack"></i></div>
+      <div class="val">$${revenue.toLocaleString()}</div><div class="lbl">Total Revenue</div>
+      <div class="see-link" onclick="goToPage('billing')">See Billing <i class="bi bi-arrow-right"></i></div>
+    </div>
+    <div class="stat-card">
+      <span class="pill">This Month</span>
+      <div class="icon bg-green"><i class="bi bi-graph-up-arrow"></i></div>
+      <div class="val">${newSignups}</div><div class="lbl">New Signups</div>
+      <div class="see-link" onclick="goToPage('companies')">See Companies <i class="bi bi-arrow-right"></i></div>
+    </div>
+  `;
+
+  const pendingApprovals = companies.filter(c => c.status === 'Pending').length;
+  const refundsIssued = companies.filter(c => paymentStatusFor(c).label === 'Overdue').length;
+  $('#dashboardFillRow').innerHTML = `
+    <div class="fill-card fill-navy"><div class="icon"><i class="bi bi-person-plus"></i></div><div class="lbl-top">New Companies</div><div class="val">${newSignups}</div></div>
+    <div class="fill-card fill-lime"><div class="icon"><i class="bi bi-hourglass-split"></i></div><div class="lbl-top">Pending Approvals</div><div class="val">${pendingApprovals}</div></div>
+    <div class="fill-card fill-navy"><div class="icon"><i class="bi bi-cash-coin"></i></div><div class="lbl-top">Revenue Collected</div><div class="val">$${revenue.toLocaleString()}</div></div>
+    <div class="fill-card fill-lime"><div class="icon"><i class="bi bi-exclamation-triangle"></i></div><div class="lbl-top">Overdue Accounts</div><div class="val">${refundsIssued}</div></div>
+  `;
+
+  $('#recentActivityBody').innerHTML = activityLog.slice(0,10).map(a => `
+    <tr><td class="cell-sub">${fmtDateTime(a.time)}</td><td>${a.action}</td><td class="cell-main">${a.target}</td></tr>
+  `).join('');
+
+  const weekSignups = companies.filter(c => c.joined >= daysAgo(7)).sort((a,b) => b.joined - a.joined);
+  $('#newSignupsBody').innerHTML = weekSignups.length ? weekSignups.map(c => `
+    <tr><td class="cell-main">${c.name}</td><td><span class="badge badge-purple">${c.plan}</span></td><td class="cell-sub">${fmtDate(c.joined)}</td></tr>
+  `).join('') : `<tr><td colspan="3" style="text-align:center;color:var(--text-faint);">No new signups this week.</td></tr>`;
+}
+
+/* ── Companies ────────────────────────────────────────────────── */
+function statusBadge(status){
+  if (status === 'Active') return `<span class="badge badge-green"><i class="bi bi-check-circle"></i> Active</span>`;
+  if (status === 'Suspended') return `<span class="badge badge-orange"><i class="bi bi-slash-circle"></i> Suspended</span>`;
+  return `<span class="badge badge-blue"><i class="bi bi-hourglass-split"></i> Pending</span>`;
+}
+function getFilteredCompanies(){
+  const q = $('#companySearch').value.toLowerCase();
+  const plan = $('#planFilter').value, status = $('#statusFilter').value;
+  return companies.filter(c =>
+    (!q || c.name.toLowerCase().includes(q) || c.owner.toLowerCase().includes(q)) &&
+    (!plan || c.plan === plan) && (!status || c.status === status)
+  );
+}
+function renderCompanies(){
+  const rows = getFilteredCompanies();
+  $('#companiesBody').innerHTML = rows.length ? rows.map((c,i) => `
+    <tr>
+      <td><input type="checkbox" class="checkbox company-check" data-id="${c.id}" ${selectedCompanyIds.has(c.id)?'checked':''}></td>
+      <td class="cell-sub">${i+1}</td>
+      <td class="cell-main">${c.name}</td>
+      <td>${c.owner}</td>
+      <td class="cell-sub">${c.email}</td>
+      <td><span class="badge badge-purple">${c.plan}</span></td>
+      <td>${statusBadge(c.status)}</td>
+      <td class="cell-sub">${fmtDate(c.joined)}</td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn" data-tip="View" onclick="viewCompany(${c.id})"><i class="bi bi-eye"></i></button>
+          <button class="icon-btn" data-tip="Edit" onclick="editCompany(${c.id})"><i class="bi bi-pencil"></i></button>
+          <button class="icon-btn" data-tip="Manage Plan" onclick="managePlan(${c.id})"><i class="bi bi-credit-card"></i></button>
+          ${c.status === 'Suspended'
+            ? `<button class="icon-btn ok" data-tip="Reactivate" onclick="reactivateCompany(${c.id})"><i class="bi bi-play-circle"></i></button>`
+            : `<button class="icon-btn warn" data-tip="Suspend" onclick="suspendCompany(${c.id})"><i class="bi bi-pause-circle"></i></button>`}
+          <button class="icon-btn danger" data-tip="Delete" onclick="deleteCompany(${c.id})"><i class="bi bi-trash"></i></button>
+        </div>
+      </td>
+    </tr>
+  `).join('') : `<tr><td colspan="9" style="text-align:center;color:var(--text-faint);padding:30px;">No companies match your filters.</td></tr>`;
+
+  $$('.company-check').forEach(cb => cb.addEventListener('change', () => {
+    const id = Number(cb.dataset.id);
+    cb.checked ? selectedCompanyIds.add(id) : selectedCompanyIds.delete(id);
+  }));
+}
+$('#companySearch').addEventListener('input', renderCompanies);
+$('#planFilter').addEventListener('change', renderCompanies);
+$('#statusFilter').addEventListener('change', renderCompanies);
+$('#selectAllCompanies').addEventListener('change', e => {
+  getFilteredCompanies().forEach(c => e.target.checked ? selectedCompanyIds.add(c.id) : selectedCompanyIds.delete(c.id));
+  renderCompanies();
+});
+
+function viewCompany(id){
+  const c = companies.find(x => x.id === id);
+  $('#viewModalBody').innerHTML = `
+    <div class="profile-grid">
+      <div class="profile-section">
+        <h4>Company Info</h4>
+        <div class="profile-row"><span>Name</span><span>${c.name}</span></div>
+        <div class="profile-row"><span>Country</span><span>${c.country}</span></div>
+        <div class="profile-row"><span>DB Prefix</span><span>${c.prefix}</span></div>
+        <div class="profile-row"><span>Joined</span><span>${fmtDate(c.joined)}</span></div>
+        <div class="profile-row"><span>Status</span><span>${statusBadge(c.status)}</span></div>
+      </div>
+      <div class="profile-section">
+        <h4>Owner Details</h4>
+        <div class="profile-row"><span>Name</span><span>${c.owner}</span></div>
+        <div class="profile-row"><span>Email</span><span>${c.email}</span></div>
+        <div class="profile-row"><span>Phone</span><span>${c.phone}</span></div>
+        <div class="profile-row"><span>Plan</span><span class="badge badge-purple">${c.plan}</span></div>
+      </div>
+    </div>
+    <div class="usage-grid">
+      <div class="usage-box"><div class="n">${c.users}</div><div class="l">Users</div></div>
+      <div class="usage-box"><div class="n">${c.products}</div><div class="l">Products</div></div>
+      <div class="usage-box"><div class="n">${c.sales}</div><div class="l">Sales Recorded</div></div>
+    </div>
+    <div class="profile-section" style="margin-bottom:18px;">
+      <h4>Notes</h4>
+      <p style="font-size:13px;color:var(--text-dim);">${c.notes || 'No notes recorded for this account.'}</p>
+    </div>
+    <div class="profile-section">
+      <h4>Recent Login History</h4>
+      <div class="profile-row"><span>${c.owner}</span><span class="cell-sub">${fmtDateTime(daysAgo(0))}</span></div>
+      <div class="profile-row"><span>${c.owner}</span><span class="cell-sub">${fmtDateTime(daysAgo(1))}</span></div>
+      <div class="profile-row"><span>${c.owner}</span><span class="cell-sub">${fmtDateTime(daysAgo(3))}</span></div>
+    </div>
+  `;
+  openModal('modalView');
+}
+
+function editCompany(id){
+  const c = companies.find(x => x.id === id);
+  $('#editId').value = c.id;
+  $('#editName').value = c.name;
+  $('#editEmail').value = c.email;
+  $('#editPhone').value = c.phone;
+  $('#editPlan').value = c.plan;
+  openModal('modalEdit');
+}
+$('#saveEditBtn').addEventListener('click', () => {
+  const c = companies.find(x => x.id === Number($('#editId').value));
+  c.name = $('#editName').value.trim() || c.name;
+  c.email = $('#editEmail').value.trim() || c.email;
+  c.phone = $('#editPhone').value.trim() || c.phone;
+  c.plan = $('#editPlan').value;
+  closeModal('modalEdit');
+  renderCompanies();
+  logActivity('Company', 'Updated company details', c.name);
+  swalDark.fire({ icon:'success', title:'Company Updated', text:`${c.name}'s details have been saved.` });
+});
+
+function managePlan(id){
+  const c = companies.find(x => x.id === id);
+  swalDark.fire({
+    icon:'info', title:`Change Plan — ${c.name}`,
+    input:'select', inputValue:c.plan,
+    inputOptions:{ Free:'Free', Starter:'Starter', Pro:'Pro', Enterprise:'Enterprise' },
+    showCancelButton:true, confirmButtonText:'Save Plan',
+  }).then(r => {
+    if (!r.isConfirmed) return;
+    const oldPlan = c.plan;
+    c.plan = r.value;
+    renderCompanies();
+    logActivity('Company', 'Changed subscription plan', `${c.name} (${oldPlan} → ${c.plan})`);
+    swalDark.fire({ icon:'success', title:'Plan Changed', text:`${c.name} is now on the ${c.plan} plan.` });
+  });
+}
+
+function suspendCompany(id){
+  const c = companies.find(x => x.id === id);
+  swalDark.fire({
+    icon:'warning', title:'Suspend This Company?',
+    text:'Suspending this company will immediately lock out all its users. Continue?',
+    showCancelButton:true, confirmButtonColor:'#f59e0b', confirmButtonText:'Suspend',
+  }).then(r => {
+    if (!r.isConfirmed) return;
+    c.status = 'Suspended';
+    renderCompanies(); renderDashboard();
+    logActivity('Company', 'Suspended company', c.name);
+    swalDark.fire({ icon:'success', title:'Company Suspended', text:`${c.name} has been suspended — its users can no longer log in.` });
+  });
+}
+function reactivateCompany(id){
+  const c = companies.find(x => x.id === id);
+  swalDark.fire({
+    icon:'question', title:'Reactivate This Company?',
+    text:`Restore platform access for ${c.name}?`,
+    showCancelButton:true, confirmButtonText:'Reactivate',
+  }).then(r => {
+    if (!r.isConfirmed) return;
+    c.status = 'Active';
+    renderCompanies(); renderDashboard();
+    logActivity('Company', 'Reactivated company', c.name);
+    swalDark.fire({ icon:'success', title:'Company Reactivated', text:`${c.name} now has full access restored.` });
+  });
+}
+
+async function deleteCompany(id){
+  const c = companies.find(x => x.id === id);
+  const step1 = await swalDark.fire({
+    icon:'warning', title:'Delete Company?',
+    html:`This will permanently delete <strong>${c.name}</strong> and all of its data — products, sales, and users. This cannot be undone.`,
+    showCancelButton:true, confirmButtonColor:'#e11d48', confirmButtonText:'Continue',
+  });
+  if (!step1.isConfirmed) return;
+
+  const step2 = await swalDark.fire({
+    icon:'error', title:'Confirm Deletion',
+    html:`Type <strong>${c.name}</strong> below to confirm permanent deletion.`,
+    input:'text', inputPlaceholder:c.name,
+    showCancelButton:true, confirmButtonColor:'#e11d48', confirmButtonText:'Delete Permanently',
+    preConfirm:(val) => { if (val !== c.name) { Swal.showValidationMessage('Company name does not match.'); return false; } return true; },
+  });
+  if (!step2.isConfirmed) return;
+
+  companies = companies.filter(x => x.id !== id);
+  selectedCompanyIds.delete(id);
+  renderCompanies(); renderDashboard();
+  logActivity('Company', 'Deleted company', c.name);
+  swalDark.fire({ icon:'success', title:'Company Deleted', text:`${c.name} has been permanently removed from the platform.` });
+}
+
+$('#addCompanyBtn').addEventListener('click', () => {
+  $$('#modalAdd input, #modalAdd textarea').forEach(i => i.value = '');
+  $('#addPlan').value = 'Free';
+  $('#addCountry').value = 'Somalia';
+  $('#addActiveFrom').value = new Date().toISOString().split('T')[0];
+  openModal('modalAdd');
+});
+$('#addName').addEventListener('input', () => { if (!$('#addPrefix').dataset.touched) $('#addPrefix').value = slugify($('#addName').value || ''); });
+$('#addPrefix').addEventListener('input', () => { $('#addPrefix').dataset.touched = '1'; });
+$('#saveAddBtn').addEventListener('click', () => {
+  const name = $('#addName').value.trim(), owner = $('#addOwner').value.trim(), email = $('#addEmail').value.trim();
+  if (!name || !owner || !email) { toast('error', 'Company name, owner name and email are required.'); return; }
+  const c = {
+    id:nextCompanyId++, name, owner, email,
+    phone:$('#addPhone').value.trim() || '—', country:$('#addCountry').value, plan:$('#addPlan').value,
+    status:'Active', joined:new Date($('#addActiveFrom').value || Date.now()),
+    prefix:$('#addPrefix').value.trim() || slugify(name), notes:$('#addNotes').value.trim(),
+    users:1, products:0, sales:0, cycle:'Monthly', renewal:daysAgo(-30),
+  };
+  companies.unshift(c);
+  closeModal('modalAdd');
+  renderCompanies(); renderDashboard();
+  logActivity('Company', 'Created new company', c.name);
+  swalDark.fire({ icon:'success', title:'Company Created', html:`<strong>${c.name}</strong> has been created and the owner has been notified by email.` });
+});
+
+$('#applyBulkBtn').addEventListener('click', () => {
+  const action = $('#bulkAction').value;
+  const ids = Array.from(selectedCompanyIds);
+  if (!action) { toast('error', 'Choose a bulk action first.'); return; }
+  if (!ids.length) { toast('error', 'Select at least one company.'); return; }
+  const targets = companies.filter(c => ids.includes(c.id));
+
+  if (action === 'export') {
+    exportCSV(targets.map(c => [c.name,c.owner,c.email,c.plan,c.status,fmtDate(c.joined)]), ['Company','Owner','Email','Plan','Status','Joined'], 'companies_export.csv');
+    toast('success', `Exported ${targets.length} companies as CSV.`);
+    return;
+  }
+
+  const labels = { suspend:'Suspend', reactivate:'Reactivate', delete:'Delete' };
+  swalDark.fire({
+    icon:'warning', title:`${labels[action]} ${targets.length} Companies?`,
+    text:`This will ${action} the selected companies. Continue?`,
+    showCancelButton:true, confirmButtonColor: action==='delete' ? '#e11d48' : '#004161', confirmButtonText:labels[action],
+  }).then(r => {
+    if (!r.isConfirmed) return;
+    if (action === 'suspend') targets.forEach(c => c.status = 'Suspended');
+    if (action === 'reactivate') targets.forEach(c => c.status = 'Active');
+    if (action === 'delete') companies = companies.filter(c => !ids.includes(c.id));
+    selectedCompanyIds.clear();
+    renderCompanies(); renderDashboard();
+    logActivity('Company', `Bulk ${action} applied`, `${targets.length} companies`);
+    swalDark.fire({ icon:'success', title:'Bulk Action Applied', text:`${labels[action]} applied to ${targets.length} ${targets.length===1?'company':'companies'}.` });
+  });
+});
+
+function exportCSV(rows, headers, filename){
+  const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(','))].join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ── Users ────────────────────────────────────────────────────── */
+function populateUserCompanyFilter(){
+  $('#userCompanyFilter').innerHTML = '<option value="">All Companies</option>' + companies.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+  $('#annCompany').innerHTML = companies.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+}
+function renderUsers(){
+  const q = $('#userSearch').value.toLowerCase();
+  const company = $('#userCompanyFilter').value, role = $('#userRoleFilter').value, status = $('#userStatusFilter').value;
+  const rows = users.filter(u =>
+    (!q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)) &&
+    (!company || u.company === company) && (!role || u.role === role) && (!status || u.status === status)
+  );
+  $('#usersBody').innerHTML = rows.length ? rows.map((u,i) => `
+    <tr>
+      <td class="cell-sub">${i+1}</td>
+      <td class="cell-main">${u.name}</td>
+      <td class="cell-sub">${u.email}</td>
+      <td>${u.company}</td>
+      <td><span class="badge badge-gray">${u.role}</span></td>
+      <td>${u.status === 'Active' ? '<span class="badge badge-green"><i class="bi bi-check-circle"></i> Active</span>' : '<span class="badge badge-orange"><i class="bi bi-slash-circle"></i> Suspended</span>'}</td>
+      <td class="cell-sub">${fmtDateTime(u.lastLogin)}</td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn" data-tip="View Profile" onclick="viewUser(${u.id})"><i class="bi bi-eye"></i></button>
+          <button class="icon-btn" data-tip="Reset Password" onclick="resetUserPassword(${u.id})"><i class="bi bi-key"></i></button>
+          ${u.status === 'Active'
+            ? `<button class="icon-btn warn" data-tip="Suspend" onclick="toggleUserStatus(${u.id})"><i class="bi bi-pause-circle"></i></button>`
+            : `<button class="icon-btn ok" data-tip="Reactivate" onclick="toggleUserStatus(${u.id})"><i class="bi bi-play-circle"></i></button>`}
+          <button class="icon-btn danger" data-tip="Delete" onclick="deleteUser(${u.id})"><i class="bi bi-trash"></i></button>
+        </div>
+      </td>
+    </tr>
+  `).join('') : `<tr><td colspan="8" style="text-align:center;color:var(--text-faint);padding:30px;">No users match your filters.</td></tr>`;
+}
+['userSearch','userCompanyFilter','userRoleFilter','userStatusFilter'].forEach(id => $('#'+id).addEventListener('input', renderUsers));
+
+function viewUser(id){
+  const u = users.find(x => x.id === id);
+  swalDark.fire({
+    icon:'info', title:u.name,
+    html:`<div style="text-align:left;font-size:13.5px;line-height:1.9;">
+      <strong>Email:</strong> ${u.email}<br>
+      <strong>Company:</strong> ${u.company}<br>
+      <strong>Role:</strong> ${u.role}<br>
+      <strong>Status:</strong> ${u.status}<br>
+      <strong>Last Login:</strong> ${fmtDateTime(u.lastLogin)}
+    </div>`,
+  });
+}
+function resetUserPassword(id){
+  const u = users.find(x => x.id === id);
+  swalDark.fire({ icon:'warning', title:'Reset Password?', text:`Send a password reset link to ${u.email}?`, showCancelButton:true, confirmButtonText:'Send Reset Link' })
+    .then(r => { if (r.isConfirmed){ logActivity('User','Reset password for user', u.name); swalDark.fire({icon:'success', title:'Reset Link Sent', text:`A password reset link has been emailed to ${u.email}.`}); } });
+}
+function toggleUserStatus(id){
+  const u = users.find(x => x.id === id);
+  const suspending = u.status === 'Active';
+  swalDark.fire({
+    icon:'warning', title: suspending ? 'Suspend This User?' : 'Reactivate This User?',
+    text: suspending ? `${u.name} will immediately lose access.` : `Restore access for ${u.name}?`,
+    showCancelButton:true, confirmButtonColor: suspending ? '#f59e0b' : '#004161', confirmButtonText: suspending ? 'Suspend' : 'Reactivate',
+  }).then(r => {
+    if (!r.isConfirmed) return;
+    u.status = suspending ? 'Suspended' : 'Active';
+    renderUsers();
+    logActivity('User', suspending ? 'Suspended user account' : 'Reactivated user account', u.name);
+    swalDark.fire({ icon:'success', title: suspending ? 'User Suspended' : 'User Reactivated', text:`${u.name} is now ${u.status.toLowerCase()}.` });
+  });
+}
+function deleteUser(id){
+  const u = users.find(x => x.id === id);
+  swalDark.fire({ icon:'warning', title:'Delete User?', text:`Permanently delete ${u.name}? This cannot be undone.`, showCancelButton:true, confirmButtonColor:'#e11d48', confirmButtonText:'Delete' })
+    .then(r => {
+      if (!r.isConfirmed) return;
+      users = users.filter(x => x.id !== id);
+      renderUsers();
+      logActivity('User', 'Deleted user account', u.name);
+      swalDark.fire({ icon:'success', title:'User Deleted', text:`${u.name} has been removed.` });
+    });
+}
+
+/* ── Billing ──────────────────────────────────────────────────── */
+function paymentStatusFor(c){
+  if (c.status === 'Suspended') return { label:'Overdue', cls:'badge-red' };
+  if (c.renewal <= daysAgo(0)) return { label:'Due', cls:'badge-orange' };
+  return { label:'Paid', cls:'badge-green' };
+}
+function renderBilling(){
+  const mrr = companies.filter(c => c.status !== 'Suspended').reduce((s,c) => s + (PLAN_PRICE[c.plan]||0) / (c.cycle==='Yearly'?12:1), 0);
+  const overdue = companies.filter(c => paymentStatusFor(c).label !== 'Paid').length;
+  const expiring = companies.filter(c => c.renewal <= daysAgo(-30) && c.renewal > daysAgo(0)).length;
+  $('#billingStats').innerHTML = `
+    <div class="stat-card"><div class="icon bg-purple"><i class="bi bi-cash-coin"></i></div><div class="val">$${mrr.toLocaleString(undefined,{maximumFractionDigits:0})}</div><div class="lbl">Total MRR</div></div>
+    <div class="stat-card"><div class="icon bg-red"><i class="bi bi-exclamation-triangle"></i></div><div class="val">${overdue}</div><div class="lbl">Overdue Payments</div></div>
+    <div class="stat-card"><div class="icon bg-orange"><i class="bi bi-calendar-event"></i></div><div class="val">${expiring}</div><div class="lbl">Expiring This Month</div></div>
+  `;
+  $('#billingBody').innerHTML = companies.map(c => {
+    const ps = paymentStatusFor(c);
+    return `<tr>
+      <td class="cell-main">${c.name}</td>
+      <td><span class="badge badge-purple">${c.plan}</span></td>
+      <td class="cell-sub">${c.cycle}</td>
+      <td class="cell-sub">${fmtDate(c.renewal)}</td>
+      <td><span class="badge ${ps.cls}">${ps.label}</span></td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn" data-tip="Upgrade Plan" onclick="managePlan(${c.id})"><i class="bi bi-arrow-up-circle"></i></button>
+          <button class="icon-btn warn" data-tip="Cancel Subscription" onclick="cancelSubscription(${c.id})"><i class="bi bi-x-circle"></i></button>
+          <button class="icon-btn ok" data-tip="Mark as Paid" onclick="markPaid(${c.id})"><i class="bi bi-check2-circle"></i></button>
+          <button class="icon-btn" data-tip="Send Invoice" onclick="sendInvoice(${c.id})"><i class="bi bi-receipt"></i></button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+function cancelSubscription(id){
+  const c = companies.find(x => x.id === id);
+  swalDark.fire({ icon:'warning', title:'Cancel Subscription?', text:`${c.name} will lose access to paid features at the end of the billing period.`, showCancelButton:true, confirmButtonColor:'#e11d48', confirmButtonText:'Cancel Subscription' })
+    .then(r => { if (r.isConfirmed){ c.plan='Free'; renderBilling(); logActivity('Billing','Cancelled subscription', c.name); swalDark.fire({icon:'success', title:'Subscription Cancelled', text:`${c.name}'s subscription has been cancelled.`}); } });
+}
+function markPaid(id){
+  const c = companies.find(x => x.id === id);
+  c.renewal = daysAgo(c.cycle==='Yearly'?-365:-30);
+  renderBilling();
+  logActivity('Billing', 'Marked invoice as paid', c.name);
+  swalDark.fire({ icon:'success', title:'Marked as Paid', text:`${c.name}'s payment has been recorded.` });
+}
+function sendInvoice(id){
+  const c = companies.find(x => x.id === id);
+  logActivity('Billing', 'Sent invoice', c.name);
+  swalDark.fire({ icon:'success', title:'Invoice Sent', text:`An invoice has been emailed to ${c.email}.` });
+}
+
+/* ── Announcements ────────────────────────────────────────────── */
+$('#annTarget').addEventListener('change', () => { $('#annCompanyWrap').style.display = $('#annTarget').value === 'specific' ? 'block' : 'none'; });
+function renderAnnouncements(){
+  $('#announcementsBody').innerHTML = announcements.map(a => `
+    <tr>
+      <td class="cell-main">${a.title}</td>
+      <td class="cell-sub">${a.target}</td>
+      <td><span class="badge ${a.priority==='Critical'?'badge-red':a.priority==='Warning'?'badge-orange':'badge-blue'}">${a.priority}</span></td>
+      <td><span class="badge ${a.status==='Sent'?'badge-green':a.status==='Scheduled'?'badge-blue':'badge-gray'}">${a.status}</span></td>
+      <td class="cell-sub">${fmtDate(a.date)}</td>
+    </tr>
+  `).join('');
+}
+function composeAnnouncement(status){
+  const title = $('#annTitle').value.trim(), message = $('#annMessage').value.trim();
+  if (!title || !message) { toast('error', 'Title and message are required.'); return; }
+  const target = $('#annTarget').value === 'specific' ? $('#annCompany').value : 'All Companies';
+  const a = { title, target, priority: $('#annPriority').value, status, date: new Date() };
+  announcements.unshift(a);
+  $('#annTitle').value = ''; $('#annMessage').value = '';
+  renderAnnouncements();
+  logActivity('Announcement', status === 'Sent' ? 'Sent platform-wide announcement' : 'Saved announcement draft', target);
+  swalDark.fire({ icon:'success', title: status === 'Sent' ? 'Announcement Sent' : 'Draft Saved', text: status === 'Sent' ? `Your announcement was delivered to ${target}.` : 'Your announcement was saved as a draft.' });
+}
+$('#annSendBtn').addEventListener('click', () => composeAnnouncement('Sent'));
+$('#annDraftBtn').addEventListener('click', () => composeAnnouncement('Draft'));
+
+/* ── Security & Audit Log ─────────────────────────────────────── */
+function renderAuditLog(){
+  const type = $('#auditActionFilter').value;
+  const from = $('#auditFrom').value ? new Date($('#auditFrom').value) : null;
+  const to = $('#auditTo').value ? new Date($('#auditTo').value) : null;
+  const rows = activityLog.filter(a => (!type || a.type === type) && (!from || a.time >= from) && (!to || a.time <= to));
+  $('#auditLogBody').innerHTML = rows.length ? rows.map(a => `
+    <tr><td class="cell-sub">${fmtDateTime(a.time)}</td><td><span class="badge badge-purple">${a.type}</span></td><td>${a.action}</td><td class="cell-main">${a.target}</td><td class="cell-sub">${a.ip}</td></tr>
+  `).join('') : `<tr><td colspan="5" style="text-align:center;color:var(--text-faint);padding:30px;">No matching log entries.</td></tr>`;
+}
+['auditActionFilter','auditFrom','auditTo'].forEach(id => $('#'+id).addEventListener('input', renderAuditLog));
+$('#exportAuditBtn').addEventListener('click', () => {
+  exportCSV(activityLog.map(a => [fmtDateTime(a.time), a.type, a.action, a.target, a.ip]), ['Timestamp','Type','Action','Target','IP'], 'audit_log.csv');
+  toast('success', 'Audit log exported as CSV.');
+});
+function renderSessions(){
+  $('#sessionsBody').innerHTML = sessions.map((s,i) => `
+    <tr><td class="cell-main">${s.user}</td><td class="cell-sub">${s.device}</td><td class="cell-sub">${s.ip}</td><td class="cell-sub">${fmtDateTime(s.since)}</td>
+    <td><button class="icon-btn danger" data-tip="Force Logout" onclick="forceLogout(${i})"><i class="bi bi-power"></i></button></td></tr>
+  `).join('');
+}
+function forceLogout(idx){
+  const s = sessions[idx];
+  swalDark.fire({ icon:'warning', title:'Force Logout?', text:`End ${s.user}'s active session immediately?`, showCancelButton:true, confirmButtonColor:'#e11d48', confirmButtonText:'Force Logout' })
+    .then(r => { if (r.isConfirmed){ sessions.splice(idx,1); renderSessions(); logActivity('Settings','Forced session logout', s.user); swalDark.fire({icon:'success', title:'Session Ended', text:`${s.user}'s session has been terminated.`}); } });
+}
+
+/* ── Settings ─────────────────────────────────────────────────── */
+$('#saveGeneralBtn').addEventListener('click', () => { logActivity('Settings','Updated general settings','System Settings'); swalDark.fire({icon:'success', title:'Settings Saved', text:'General settings have been updated.'}); });
+$('#saveSmtpBtn').addEventListener('click', () => { logActivity('Settings','Updated SMTP configuration','System Settings'); swalDark.fire({icon:'success', title:'SMTP Settings Saved', text:'Outgoing email settings have been updated.'}); });
+$('#testSmtpBtn').addEventListener('click', () => { swalDark.fire({icon:'success', title:'Test Email Sent', text:`A test email was sent to ${$('#setSupportEmail').value}.`}); });
+$('#backupNowBtn').addEventListener('click', () => {
+  swalDark.fire({icon:'info', title:'Running Backup…', text:'This may take a few minutes.', timer:1600, showConfirmButton:false})
+    .then(() => { logActivity('Settings','Ran manual backup','System Settings'); swalDark.fire({icon:'success', title:'Backup Complete', text:'A fresh backup has been created and stored securely.'}); });
+});
+$('#restoreBtn').addEventListener('click', () => {
+  swalDark.fire({icon:'warning', title:'Restore From Backup?', text:'This will overwrite current data with the selected backup. This cannot be undone.', showCancelButton:true, confirmButtonColor:'#e11d48', confirmButtonText:'Restore'})
+    .then(r => { if (r.isConfirmed){ logActivity('Settings','Restored from backup','System Settings'); swalDark.fire({icon:'success', title:'Restore Complete', text:'The platform has been restored from the selected backup.'}); } });
+});
+$('#maintenanceToggle').addEventListener('change', e => {
+  const enabling = e.target.checked;
+  e.target.checked = !enabling; // revert until confirmed
+  swalDark.fire({
+    icon: enabling ? 'error' : 'question',
+    title: enabling ? 'Enable Maintenance Mode?' : 'Disable Maintenance Mode?',
+    text: enabling ? 'Every tenant will be locked out and shown a maintenance page until you disable this.' : 'Tenants will regain access to the platform immediately.',
+    showCancelButton:true, confirmButtonColor: enabling ? '#e11d48' : '#004161', confirmButtonText: enabling ? 'Enable Maintenance Mode' : 'Disable',
+  }).then(r => {
+    if (!r.isConfirmed) return;
+    e.target.checked = enabling;
+    logActivity('Settings', enabling ? 'Enabled maintenance mode' : 'Disabled maintenance mode', 'System Settings');
+    swalDark.fire({ icon:'success', title: enabling ? 'Maintenance Mode ON' : 'Maintenance Mode OFF', text: enabling ? 'The platform is now in maintenance mode.' : 'The platform is back online for all tenants.' });
+  });
+});
+
+/* ── Init ─────────────────────────────────────────────────────── */
+populateUserCompanyFilter();
+renderDashboard();
+</script>
+</body>
+</html>
