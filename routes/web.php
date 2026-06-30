@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 Route::get('/', function () { return redirect()->route('login'); })->name('landing');
+Route::get('/offline', fn() => view('offline'))->name('offline');
+Route::get('/manifest.json', fn() => response()->file(public_path('manifest.json'), ['Content-Type' => 'application/manifest+json']))->name('manifest');
+Route::get('/sw.js', fn() => response()->file(public_path('sw.js'), ['Content-Type' => 'application/javascript', 'Service-Worker-Allowed' => '/']))->name('sw');
 Route::get('/demo', [\App\Http\Controllers\DemoRequestController::class, 'index'])->name('demo.request');
 Route::post('/demo', [\App\Http\Controllers\DemoRequestController::class, 'store'])->name('demo.request.store');
 Route::get('/terms', function() { return view('terms'); })->name('terms');

@@ -32,6 +32,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('page_title', 'Dashboard') - {{ $company->name ?? 'Waafibook' }}</title>
+    {{-- PWA --}}
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#004161">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="WaafiBook">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
     
     <!-- Global CSS & JS (Vite) — Inter font is loaded via app.css -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -432,6 +440,51 @@
                 });
             }
         };
+    </script>
+
+    {{-- PWA Install Banner --}}
+    <div id="pwa-install-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;
+         background:#004161;color:#fff;padding:.75rem 1.25rem;
+         display:none;align-items:center;justify-content:space-between;gap:1rem;
+         box-shadow:0 -4px 20px rgba(0,0,0,.2);">
+        <div style="display:flex;align-items:center;gap:.75rem;">
+            <img src="/icons/icon-72.png" width="36" height="36" style="border-radius:8px;">
+            <div>
+                <div style="font-weight:700;font-size:.9rem;">Install WaafiBook</div>
+                <div style="font-size:.75rem;opacity:.75;">Add to home screen for faster offline access</div>
+            </div>
+        </div>
+        <div style="display:flex;gap:.5rem;flex-shrink:0;">
+            <button id="pwa-install-btn" style="background:#99CC33;color:#002d47;border:none;border-radius:8px;padding:.45rem 1rem;font-weight:700;cursor:pointer;">Install</button>
+            <button id="pwa-dismiss-btn" style="background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:8px;padding:.45rem .85rem;cursor:pointer;">✕</button>
+        </div>
+    </div>
+
+    {{-- PWA Service Worker + Install Prompt --}}
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                .catch(err => console.warn('SW registration failed:', err));
+        });
+    }
+    let _pwaPrompt = null;
+    const _banner  = document.getElementById('pwa-install-banner');
+    window.addEventListener('beforeinstallprompt', e => {
+        e.preventDefault();
+        _pwaPrompt = e;
+        if (!localStorage.getItem('pwa-dismissed')) _banner.style.display = 'flex';
+    });
+    document.getElementById('pwa-install-btn')?.addEventListener('click', () => {
+        _banner.style.display = 'none';
+        _pwaPrompt?.prompt();
+        _pwaPrompt?.userChoice.then(r => { if (r.outcome === 'accepted') localStorage.setItem('pwa-installed','1'); });
+    });
+    document.getElementById('pwa-dismiss-btn')?.addEventListener('click', () => {
+        _banner.style.display = 'none';
+        localStorage.setItem('pwa-dismissed','1');
+    });
+    window.addEventListener('appinstalled', () => { _banner.style.display = 'none'; localStorage.setItem('pwa-installed','1'); });
     </script>
 </body>
 </html>

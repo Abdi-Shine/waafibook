@@ -290,9 +290,49 @@
         function clearCart() {
             if (cart.length > 0) {
                 Swal.fire({ title: 'Clear Order?', icon: 'warning', showCancelButton: true }).then(r => {
-                    if (r.isConfirmed) { cart = []; updateCart(); }
+                    if (r.isConfirmed) { cart = []; updateCart(); saveCartToStorage(); }
                 });
             }
+        }
+
+        // ── PWA: IndexedDB cart persistence ──────────────────────────────
+        const CART_KEY = 'waafibook-pos-cart';
+        function saveCartToStorage() {
+            try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch(e) {}
+        }
+        function loadCartFromStorage() {
+            try {
+                const saved = localStorage.getItem(CART_KEY);
+                if (saved) { cart = JSON.parse(saved); updateCart(); }
+            } catch(e) {}
+        }
+        // Patch updateCart to also persist on every change
+        const _origUpdateCart = updateCart;
+        updateCart = function() { _origUpdateCart(); saveCartToStorage(); };
+        // Restore cart on load
+        window.addEventListener('DOMContentLoaded', loadCartFromStorage);
+
+        // ── PWA: offline sale queue with Background Sync ──────────────────
+        async function queueOfflineSale(data) {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open('waafibook-pos', 1);
+                req.onupgradeneeded = e => e.target.result.createObjectStore('offline_sales', { keyPath: 'id', autoIncrement: true });
+                req.onsuccess = e => {
+                    const tx = e.target.result.transaction('offline_sales', 'readwrite');
+                    tx.objectStore('offline_sales').add({ data, queuedAt: Date.now() });
+                    tx.oncomplete = resolve;
+                    tx.onerror = reject;
+                };
+                req.onerror = reject;
+            });
+        }
+        // Notify the user when a queued sale is synced
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', event => {
+                if (event.data?.type === 'SALE_SYNCED') {
+                    Swal.fire({ icon: 'success', title: 'Sale Synced!', text: 'Your offline sale has been saved to the server.', timer: 3000, showConfirmButton: false });
+                }
+            });
         }
     </script>
 @endpush
