@@ -129,14 +129,34 @@ class HostDashboardController extends Controller
 
     public function managePlan(Request $request, $id)
     {
-        $request->validate(['subscription_plan_id' => 'required|exists:subscription_plans,id']);
+        $request->validate([
+            'subscription_plan_id' => 'required|exists:subscription_plans,id',
+            'payment_amount'       => 'nullable|numeric|min:0.01',
+            'payment_method'       => 'nullable|string|max:50',
+            'payment_date'         => 'nullable|date',
+            'transaction_id'       => 'nullable|string|max:100',
+        ]);
 
         $company = Company::with('subscription')->findOrFail($id);
         $plan = $this->applyCompanyPlan($company, $request->subscription_plan_id);
 
+        // If the admin provided payment details, record them against the
+        // newly activated subscription so billing history stays accurate.
+        if ($request->filled('payment_amount') && $company->subscription) {
+            SubscriptionPayment::create([
+                'subscription_id' => $company->subscription->id,
+                'amount'          => $request->payment_amount,
+                'payment_date'    => $request->payment_date ?? now()->toDateString(),
+                'payment_method'  => $request->payment_method ?? 'Manual',
+                'transaction_id'  => $request->transaction_id,
+                'status'          => 'completed',
+            ]);
+            \App\Models\AuditLog::log('Billing', "Recorded payment of {$request->payment_amount} for {$company->name} ({$plan->name})", 'CREATE');
+        }
+
         \App\Models\AuditLog::log('Company', "Moved {$company->name} onto the {$plan->name} plan and marked the subscription active", 'UPDATE');
 
-        return redirect()->route('host.companies')->with('success', "{$company->name} is now on the {$plan->name} plan.");
+        return redirect()->route('host.companies')->with('success', "{$company->name} is now on the {$plan->name} plan." . ($request->filled('payment_amount') ? ' Payment recorded.' : ''));
     }
 
     public function toggleCompanyStatus($id)
