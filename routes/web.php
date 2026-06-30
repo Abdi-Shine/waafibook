@@ -127,10 +127,7 @@ Route::get('/dashboard', function () {
     $orderCount = $stats['orders_placed'];
     $customerCount = \App\Models\Customer::count();
 
-    $recentInvoices = \App\Models\SalesOrder::with('customer')
-        ->latest('invoice_date')->take(5)->get();
-
-    return view('admin.index', compact('stats', 'orderCount', 'customerCount', 'recentInvoices'));
+    return view('admin.index', compact('stats', 'orderCount', 'customerCount'));
 })->middleware(['auth', 'verified', 'permission:Dashboard'])->name('dashboard');
 
 Route::middleware(['auth', 'verified'])->group(function () {
