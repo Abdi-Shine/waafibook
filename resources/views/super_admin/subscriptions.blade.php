@@ -110,10 +110,10 @@
                             <button type="submit" class="sa-btn-icon warn" data-bs-toggle="tooltip" title="Cancel Subscription"><i class="bi bi-x-circle"></i></button>
                         </form>
                         @endif
-                        <form method="POST" action="{{ route('host.subscriptions.send-invoice', $sub->id) }}" class="d-inline">
-                            @csrf
-                            <button type="submit" class="sa-btn-icon" data-bs-toggle="tooltip" title="Send Invoice"><i class="bi bi-receipt"></i></button>
-                        </form>
+                        <a href="{{ route('host.subscriptions.invoice', $sub->id) }}" target="_blank"
+                           class="sa-btn-icon" data-bs-toggle="tooltip" title="View Invoice">
+                            <i class="bi bi-receipt"></i>
+                        </a>
                     </div>
                 </td>
             </tr>

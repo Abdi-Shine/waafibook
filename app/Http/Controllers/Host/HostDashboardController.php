@@ -450,6 +450,15 @@ class HostDashboardController extends Controller
         return redirect()->back()->with('success', "Invoice logged for {$subscription->company->name}.");
     }
 
+    public function viewInvoice($id)
+    {
+        $subscription = Subscription::with(['company', 'plan', 'payments'])->findOrFail($id);
+        $lastPayment  = $subscription->payments->where('status', 'completed')->sortByDesc('payment_date')->first();
+        $invoiceNo    = 'INV-SUB-' . str_pad($subscription->id, 5, '0', STR_PAD_LEFT);
+
+        return view('super_admin.subscription_invoice', compact('subscription', 'lastPayment', 'invoiceNo'));
+    }
+
     public function plans()
     {
         $plans = SubscriptionPlan::orderBy('price')->get();
