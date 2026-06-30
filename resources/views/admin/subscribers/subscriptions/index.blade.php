@@ -25,10 +25,13 @@
 
     @forelse($subscriptions as $sub)
     @php
-        $isActive  = $sub->status === 'active';
-        $isTrial   = $sub->status === 'trial';
-        $isExpired = $sub->status === 'expired';
-        $daysLeft  = $sub->ends_at ? now()->diffInDays($sub->ends_at, false) : null;
+        $isActive    = $sub->status === 'active';
+        $isTrial     = $sub->status === 'trial';
+        $isExpired   = $sub->status === 'expired';
+        $expiryDate  = $sub->expiry_date ? \Carbon\Carbon::parse($sub->expiry_date) : null;
+        $startDate   = $sub->start_date  ? \Carbon\Carbon::parse($sub->start_date)  : null;
+        $daysLeft    = $expiryDate ? now()->diffInDays($expiryDate, false) : null;
+        $lastPayment = $sub->payments()->where('status','completed')->latest('payment_date')->first();
     @endphp
     <div class="bg-white rounded-[1.2rem] border-2 {{ $isActive || $isTrial ? 'border-accent/40' : 'border-red-200' }} shadow-sm mb-6 overflow-hidden">
         <div class="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3
@@ -53,23 +56,32 @@
 
         <div class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             <div>
-                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Monthly Cost</p>
-                <p class="text-[18px] font-black text-primary-dark">
-                    ${{ number_format($sub->plan->price ?? 0, 2) }}
+                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                    {{ $lastPayment ? 'Last Payment' : 'Plan Price' }}
                 </p>
+                <p class="text-[18px] font-black text-primary-dark">
+                    ${{ $lastPayment ? number_format($lastPayment->amount, 2) : number_format($sub->plan->price ?? 0, 2) }}
+                </p>
+                @if($lastPayment)
+                    <p class="text-[10px] text-gray-400 mt-0.5">
+                        {{ $lastPayment->payment_method }} · {{ \Carbon\Carbon::parse($lastPayment->payment_date)->format('d M Y') }}
+                    </p>
+                @endif
             </div>
             <div>
                 <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Started</p>
                 <p class="text-[14px] font-semibold text-gray-700">
-                    {{ $sub->starts_at ? $sub->starts_at->format('d M Y') : '—' }}
+                    {{ $startDate ? $startDate->format('d M Y') : '—' }}
                 </p>
             </div>
             <div>
                 <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Renews / Expires</p>
                 <p class="text-[14px] font-semibold {{ $daysLeft !== null && $daysLeft <= 7 ? 'text-red-600' : 'text-gray-700' }}">
-                    {{ $sub->ends_at ? $sub->ends_at->format('d M Y') : '—' }}
+                    {{ $expiryDate ? $expiryDate->format('d M Y') : '—' }}
                     @if($daysLeft !== null && $daysLeft > 0)
                         <span class="text-[11px] text-gray-400">({{ $daysLeft }}d left)</span>
+                    @elseif($daysLeft !== null && $daysLeft <= 0)
+                        <span class="text-[11px] text-red-500">(Expired)</span>
                     @endif
                 </p>
             </div>

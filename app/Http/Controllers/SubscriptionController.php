@@ -194,7 +194,7 @@ class SubscriptionController extends Controller
     {
         $companyId     = auth()->user()->company_id;
         $subscriptions = Subscription::query()
-            ->with(['company', 'plan'])
+            ->with(['company', 'plan', 'payments'])
             ->where('company_id', $companyId)
             ->get();
         $plans = SubscriptionPlan::where('status', 'active')->orderBy('price')->get();
