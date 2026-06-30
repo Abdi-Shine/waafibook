@@ -479,6 +479,12 @@ class HostDashboardController extends Controller
         return view('super_admin.plans', compact('plans'));
     }
 
+    public function subscriptionPlans()
+    {
+        $plans = SubscriptionPlan::orderBy('price')->get();
+        return view('super_admin.subscription_plans', compact('plans'));
+    }
+
     public function storePlan(Request $request)
     {
         $request->validate([

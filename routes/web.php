@@ -521,6 +521,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/subscriptions/{id}/invoice', [App\Http\Controllers\Host\HostDashboardController::class, 'viewInvoice'])->name('host.subscriptions.invoice');
         Route::get('/subscriptions/{id}/invoice/pdf', [App\Http\Controllers\Host\HostDashboardController::class, 'downloadInvoicePdf'])->name('host.subscriptions.invoice.pdf');
         Route::get('/plans', [App\Http\Controllers\Host\HostDashboardController::class, 'plans'])->name('host.plans');
+        Route::get('/subscription-plans', [App\Http\Controllers\Host\HostDashboardController::class, 'subscriptionPlans'])->name('host.subscription-plans');
         Route::post('/plans', [App\Http\Controllers\Host\HostDashboardController::class, 'storePlan'])->name('host.plans.store');
         Route::put('/plans/{id}', [App\Http\Controllers\Host\HostDashboardController::class, 'updatePlan'])->name('host.plans.update');
         Route::delete('/plans/{id}', [App\Http\Controllers\Host\HostDashboardController::class, 'destroyPlan'])->name('host.plans.destroy');

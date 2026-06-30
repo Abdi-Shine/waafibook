@@ -73,6 +73,12 @@
                 </a>
             </li>
             <li>
+                <a href="{{ route('host.subscription-plans') }}"
+                   class="{{ request()->routeIs('host.subscription-plans*') ? 'active' : '' }}">
+                    <i class="bi bi-tags"></i> Subscription Plans
+                </a>
+            </li>
+            <li>
                 <a href="{{ route('host.settings') }}"
                    class="{{ request()->routeIs('host.settings*') ? 'active' : '' }}">
                     <i class="bi bi-gear"></i> System Settings
