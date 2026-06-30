@@ -46,18 +46,18 @@
                             @endphp
                             <img src="{{ $base64 }}" class="company-logo" style="width: 60px; height: 60px; border-radius: 12px;">
                         @elseif($company)
-                            {{ strtoupper(substr($company->company_name ?? 'B', 0, 1)) }}
+                            {{ strtoupper(substr($company->name ?? 'B', 0, 1)) }}
                         @else
                             B
                         @endif
                     @elseif($company)
-                        {{ strtoupper(substr($company->company_name ?? 'B', 0, 1)) }}
+                        {{ strtoupper(substr($company->name ?? 'B', 0, 1)) }}
                     @else
                         B
                     @endif
                 </div>
                 <div class="inline-block vertical-middle">
-                    <div class="company-name uppercase">{{ $company->company_name ?? 'Horntech LTD' }}</div>
+                    <div class="company-name uppercase">{{ $company->name ?? '' }}</div>
                     <div class="company-tagline">{{ $company->company_tagline ?? 'Your Trusted Business Partner' }}</div>
                 </div>
             </div>
@@ -186,7 +186,7 @@
         </table>
 
         <div class="footer-meta">
-            This is a computer-generated voucher. Generated on {{ date('d M, Y H:i A') }} • Powered by Horntech LTD
+            This is a computer-generated voucher. Generated on {{ date('d M, Y H:i A') }} • {{ $company->name ?? 'Waafibook' }}
         </div>
     </div>
 </body>

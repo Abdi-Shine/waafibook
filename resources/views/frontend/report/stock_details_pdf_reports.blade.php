@@ -61,7 +61,7 @@
             @else
                 <div class="logo-box">{{ substr($company->name ?? 'B', 0, 1) }}</div>
             @endif
-            <div class="company-name">{{ $company->name ?? 'Horntech LTD' }}</div>
+            <div class="company-name">{{ $company->name ?? '' }}</div>
             <div class="company-info">
                 {{ $company->address ?? 'Main Branch' }}<br>
                 Phone: {{ $company->phone ?? 'N/A' }} | Email: {{ $company->email ?? 'N/A' }}
@@ -150,7 +150,7 @@
     </div>
 
     <div class="footer">
-        &copy; {{ date('Y') }} {{ $company->name ?? 'Horntech LTD' }} | Stock Movement Details Report | Page 1
+        &copy; {{ date('Y') }} {{ $company->name ?? '' }} | Stock Movement Details Report | Page 1
     </div>
 </body>
 </html>

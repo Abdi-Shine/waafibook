@@ -26,7 +26,7 @@
                         @endif
                     </td>
                     <td class="exp-header-cell-right">
-                        <h1 class="exp-company-name">{{ $company_profile->name ?? 'Horntech LTD' }}</h1>
+                        <h1 class="exp-company-name">{{ $company_profile->name ?? '' }}</h1>
                         <div class="exp-company-contact">
                             Phone: {{ $company_profile->phone ?? '+252615539846' }} • Email: {{ $company_profile->email ?? 'info@horntech.com' }}
                         </div>

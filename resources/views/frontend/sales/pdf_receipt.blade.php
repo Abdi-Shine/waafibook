@@ -15,7 +15,7 @@
         <div class="receipt-header">
             <div class="receipt-badge">Payment Receipt</div>
             <h1 class="receipt-title uppercase">Official Confirmation</h1>
-            <p class="receipt-subtitle">Thank you for choosing {{ $company->company_name ?? 'Horntech LTD' }}</p>
+            <p class="receipt-subtitle">Thank you for choosing {{ $company->name ?? '' }}</p>
         </div>
 
         <div class="company-bar">
@@ -39,18 +39,18 @@
                             @endphp
                             <img src="{{ $base64 }}" class="company-logo">
                         @elseif($company)
-                            {{ strtoupper(substr($company->company_name ?? 'B', 0, 1)) }}
+                            {{ strtoupper(substr($company->name ?? 'B', 0, 1)) }}
                         @else
                             B
                         @endif
                     @elseif($company)
-                        {{ strtoupper(substr($company->company_name ?? 'B', 0, 1)) }}
+                        {{ strtoupper(substr($company->name ?? 'B', 0, 1)) }}
                     @else
                         B
                     @endif
                 </div>
                 <div class="inline-block vertical-middle">
-                    <div class="company-name text-primary uppercase">{{ $company->company_name ?? 'Horntech LTD' }}</div>
+                    <div class="company-name text-primary uppercase">{{ $company->name ?? '' }}</div>
                     <div class="company-tagline">{{ $company->company_tagline ?? 'Your Trusted Business Partner' }}</div>
                 </div>
             </div>
@@ -190,7 +190,7 @@
         </table>
 
         <div class="footer-meta">
-            This is a computer-generated receipt. Generated on {{ date('d M, Y H:i A') }} • Powered by Horntech LTD
+            This is a computer-generated receipt. Generated on {{ date('d M, Y H:i A') }} • {{ $company->name ?? 'Waafibook' }}
         </div>
     </div>
 </body>

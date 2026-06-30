@@ -22,7 +22,7 @@
 </head>
 <body>
     <div class="header">
-        <div class="company-name">{{ $company->name ?? 'Horntech LTD' }}</div>
+        <div class="company-name">{{ $company->name ?? '' }}</div>
         <div class="report-title">Sale/Purchase By Item Category</div>
     </div>
 
@@ -68,7 +68,7 @@
     </table>
 
     <div class="footer">
-        © {{ date('Y') }} {{ $company->name ?? 'Horntech LTD' }} | System Generated Financial Intelligence Report
+        © {{ date('Y') }} {{ $company->name ?? '' }} | System Generated Financial Intelligence Report
     </div>
 </body>
 </html>

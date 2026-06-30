@@ -60,11 +60,11 @@
                             <img src="{{ asset($company->logo) }}" alt="Logo" class="h-10 w-10 rounded-lg object-contain bg-white p-0.5">
                         @else
                             <div class="h-10 w-10 bg-white/20 rounded-lg flex items-center justify-center text-white font-black text-lg">
-                                {{ strtoupper(substr($company->company_name ?? 'B', 0, 1)) }}
+                                {{ strtoupper(substr($company->name ?? 'B', 0, 1)) }}
                             </div>
                         @endif
                         <div>
-                            <h2 class="text-[15px] font-black text-white leading-tight">{{ $company->company_name ?? 'Horntech LTD' }}</h2>
+                            <h2 class="text-[15px] font-black text-white leading-tight">{{ $company->name ?? '' }}</h2>
                             <p class="text-[10px] text-white/70 font-semibold">{{ $company->phone ?? '' }}</p>
                         </div>
                     </div>

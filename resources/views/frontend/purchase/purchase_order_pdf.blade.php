@@ -136,7 +136,7 @@
                 @endif
             </div>
             <div class="text-right">
-                <h1 class="text-2xl font-black text-[#0B5567] mb-1">{{ $company->name ?? 'Horntech LTD' }}</h1>
+                <h1 class="text-2xl font-black text-[#0B5567] mb-1">{{ $company->name ?? '' }}</h1>
                 <p class="text-xs font-semibold text-gray-400">
                     Phone: {{ $company->phone ?? '-' }} &bull; Email: {{ $company->email ?? '-' }}
                 </p>

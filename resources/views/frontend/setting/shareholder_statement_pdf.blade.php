@@ -156,7 +156,7 @@
                 <p class="font-bold">To Whom It May Concern,</p>
                 
                 <p>
-                    This is to certify that <span class="font-black text-gray-900 underline">{{ $shareholder->name }}</span> is a registered shareholder of <span class="font-bold text-primary">{{ $company->name ?? 'Horntech LTD' }}</span>, a {{ $company->legal_form ?? 'limited liability company' }} duly registered and operating under jurisdictional corporate laws.
+                    This is to certify that <span class="font-black text-gray-900 underline">{{ $shareholder->name }}</span> is a registered shareholder of <span class="font-bold text-primary">{{ $company->name ?? '' }}</span>, a {{ $company->legal_form ?? 'limited liability company' }} duly registered and operating under jurisdictional corporate laws.
                 </p>
 
                 <!-- Details Grid Box -->
@@ -227,7 +227,7 @@
                     <div>
                         <div class="signature-line mb-4"></div>
                         <p class="font-black text-gray-900 text-[12px] uppercase tracking-tight">Managing Director</p>
-                        <p class="text-[11px] text-gray-500 font-bold uppercase tracking-wider">{{ $company->name ?? 'Horntech LTD' }}</p>
+                        <p class="text-[11px] text-gray-500 font-bold uppercase tracking-wider">{{ $company->name ?? '' }}</p>
                     </div>
                     <div>
                         <div class="signature-line mb-4"></div>
@@ -261,7 +261,7 @@
                 <!-- Bottom Bar -->
                 <div class="text-center pt-10 pb-4 text-[11px] text-gray-400 font-medium">
                     <p class="mb-1 leading-relaxed">
-                        {{ $company->name ?? 'Horntech LTD' }} | {{ $company->address ?? 'King Fahd Road, Al Olaya District, Riyadh 12211, Saudi Arabia' }}
+                        {{ $company->name ?? '' }} | {{ $company->address ?? 'King Fahd Road, Al Olaya District, Riyadh 12211, Saudi Arabia' }}
                     </p>
                     <p class="tracking-wide">
                         Tel: {{ $company->phone ?? '+966 55 123 4567' }} | Email: {{ $company->email ?? 'info@horntech.com' }} | Web: {{ $company->website ?? 'www.horntech.com' }}

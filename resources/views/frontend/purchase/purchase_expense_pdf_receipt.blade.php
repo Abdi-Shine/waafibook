@@ -107,7 +107,7 @@
                 @endif
             </div>
             <div class="r-header-right">
-                <h1 class="r-company-name">{{ $company_profile->name ?? 'Horntech LTD' }}</h1>
+                <h1 class="r-company-name">{{ $company_profile->name ?? '' }}</h1>
                 <div class="r-company-contact">
                     Phone: {{ $company_profile->phone ?? '' }} &nbsp;•&nbsp; Email: {{ $company_profile->email ?? '' }}
                 </div>

@@ -25,12 +25,12 @@
             @if(isset($company_profile) && $company_profile->logo)
                 <img src="{{ public_path($company_profile->logo) }}" class="logo-h50" alt="Logo">
             @else
-                <h1 class="stmt-title">{{ $company_profile->name ?? 'Horntech LTD' }}</h1>
+                <h1 class="stmt-title">{{ $company_profile->name ?? '' }}</h1>
             @endif
         </div>
         <div class="stmt-header-right">
             @if(isset($company_profile) && $company_profile->logo)
-                <h1 class="stmt-title">{{ $company_profile->name ?? 'Horntech LTD' }}</h1>
+                <h1 class="stmt-title">{{ $company_profile->name ?? '' }}</h1>
             @endif
             <div class="stmt-company-info">
                 Phone: {{ $company_profile->phone ?? '-' }} | Email: {{ $company_profile->email ?? '-' }}

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Item Details Ledger — {{ $company->name ?? 'Horntech LTD' }}</title>
+    <title>Item Details Ledger — {{ $company->name ?? '' }}</title>
     <style>
         @page { size: A4 portrait; margin: 10mm; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -74,7 +74,7 @@
             @if($logoBase64)
                 <img src="{{ $logoBase64 }}" style="max-height: 40px; margin-bottom: 5px;">
             @endif
-            <div class="company-name">{{ $company->name ?? 'Horntech LTD' }}</div>
+            <div class="company-name">{{ $company->name ?? '' }}</div>
             <div class="company-info">
                 {{ $company->address ?? '' }} | Phone: {{ $company->phone ?? '' }}
             </div>

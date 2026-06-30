@@ -81,7 +81,7 @@
                 <span class="logo-initial">{{ strtoupper(substr($company->name ?? 'C', 0, 1)) }}</span>
             @endif
             <div class="company-details">
-                <div class="company-name">{{ $company->company_name ?? 'COMPANY NAME' }}</div>
+                <div class="company-name">{{ $company->name ?? '' }}</div>
                 <div class="company-info">
                     {{ $company->company_address ?? 'Company Address' }} | 
                     Tel: {{ $company->mobile_no ?? 'N/A' }} | 

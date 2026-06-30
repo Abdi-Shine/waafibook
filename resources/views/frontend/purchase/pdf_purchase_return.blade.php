@@ -177,7 +177,7 @@
 
     {{-- Footer --}}
     <div class="footer-meta">
-        <strong>{{ $company->name ?? 'Horntech LTD' }}</strong> &mdash;
+        <strong>{{ $company->name ?? '' }}</strong> &mdash;
         System-generated document. No physical signature required.<br>
         For queries: {{ $company->email ?? '' }} &nbsp;|&nbsp; {{ $company->phone ?? '' }}
         &nbsp;&mdash;&nbsp; Generated on {{ now()->format('d M Y, H:i') }}
