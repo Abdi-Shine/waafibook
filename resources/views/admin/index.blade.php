@@ -1,353 +1,193 @@
 @extends('admin.admin_master')
 @section('admin')
+@php
+    $user    = auth()->user();
+    $company = \App\Models\Company::find($user->company_id);
+    $symbol  = '$';
+    $firstName = explode(' ', $user->name ?? 'there')[0];
+@endphp
 
-    <main class="min-h-screen pb-12 bg-background">
-        <!-- CONTENT -->
-        <div class="p-4 md:p-8 content-wrapper mx-auto">
-            <!-- Quick Actions -->
-            <div class="flex items-center justify-end gap-4 mb-6">
-                <div class="flex items-center gap-3">
-                    <a href="{{ route('sales.invoice.create') }}"
-                        class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-accent text-white text-sm font-bold hover:opacity-90 transition-opacity">
-                        <i class="bi bi-plus-lg"></i> Add Sale
-                    </a>
-                    <a href="{{ route('purchase.bill.create') }}"
-                        class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-white text-sm font-bold hover:opacity-90 transition-opacity">
-                        <i class="bi bi-plus-lg"></i> Add Purchase
-                    </a>
-                    <a href="{{ route('sales.pos.view') }}"
-                        class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary-dark text-white text-sm font-bold hover:opacity-90 transition-opacity">
-                        <i class="bi bi-display"></i> POS Terminal
-                    </a>
-                </div>
-            </div>
+<div class="min-h-screen bg-[#f4f6fa] pb-24 font-inter">
 
-            <!-- Top 4 KPI Cards -->
-            @php
-                $formatKpi = fn($value) => ($value < 0 ? '-$' : '$') . number_format(abs($value), 2);
-            @endphp
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <!-- Cash on Hand (Assets) -->
-                <div class="kpi-card">
-                    <div class="w-full">
-                        <div class="flex items-start justify-between mb-3">
-                            <div class="kpi-icon-box bg-accent/10">
-                                <i class="bi bi-wallet2 text-accent text-lg"></i>
-                            </div>
-                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-wider">
-                                <i class="bi bi-diagram-3 text-[9px]"></i> For Branch
-                            </span>
-                        </div>
-                        <div class="kpi-title uppercase tracking-wider">Cash on Hand</div>
-                        <div class="kpi-value {{ $stats['cash_on_hand'] < 0 ? 'text-red-500' : '' }}">{{ $formatKpi($stats['cash_on_hand']) }}</div>
-                        <a href="{{ route('cash_in_hand.index') }}" class="kpi-link hover:text-accent">
-                            See Cash Amount<i class="bi bi-arrow-right text-[10px]"></i>
-                        </a>
-                    </div>
-                </div>
+    {{-- ── Welcome ─────────────────────────────────────────────────── --}}
+    <div class="px-5 pt-6 pb-2">
+        <h1 class="text-[24px] font-black text-primary-dark leading-tight">Hi, {{ $firstName }}</h1>
+        <p class="text-[13px] text-gray-400 font-medium mt-0.5">
+            Here's how <span class="font-bold text-primary">{{ $company->name ?? 'your business' }}</span> is doing this month.
+        </p>
+    </div>
 
-                <!-- Account Payable -->
-                <div class="kpi-card">
-                    <div class="w-full">
-                        <div class="flex items-start justify-between mb-3">
-                            <div class="kpi-icon-box bg-primary/10">
-                                <i class="bi bi-credit-card text-primary text-lg"></i>
-                            </div>
-                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">
-                                <i class="bi bi-truck text-[9px]"></i> For Suppliers
-                            </span>
-                        </div>
-                        <div class="kpi-title uppercase tracking-wider">Account Payable</div>
-                        <div class="kpi-value">{{ $formatKpi($stats['liabilities']) }}</div>
-                        <a href="{{ route('supplier.index') }}" class="kpi-link hover:text-primary">
-                            See Accounts <i class="bi bi-arrow-right text-[10px]"></i>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Account Receivable -->
-                <div class="kpi-card">
-                    <div class="w-full">
-                        <div class="flex items-start justify-between mb-3">
-                            <div class="kpi-icon-box bg-accent/10">
-                                <i class="bi bi-bank text-accent text-lg"></i>
-                            </div>
-                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-wider">
-                                <i class="bi bi-people text-[9px]"></i> For Customers
-                            </span>
-                        </div>
-                        <div class="kpi-title uppercase tracking-wider">Account Receivable</div>
-                        <div class="kpi-value">{{ $formatKpi($stats['accounts_receivable']) }}</div>
-                        <a href="{{ route('customer.index') }}" class="kpi-link hover:text-accent">
-                            See Accounts <i class="bi bi-arrow-right text-[10px]"></i>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Stock Values -->
-                <div class="kpi-card">
-                    <div class="w-full">
-                        <div class="flex items-start justify-between mb-3">
-                            <div class="kpi-icon-box bg-primary/10">
-                                <i class="bi bi-box-seam text-primary text-lg"></i>
-                            </div>
-                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">
-                                <i class="bi bi-diagram-3 text-[9px]"></i> For Branch
-                            </span>
-                        </div>
-                        <div class="kpi-title uppercase tracking-wider">Stock Values</div>
-                        <div class="kpi-value">{{ $formatKpi($stats['stock_value']) }}</div>
-                        <a href="{{ route('product.index') }}" class="kpi-link hover:text-primary">
-                            See Stock <i class="bi bi-arrow-right text-[10px]"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-
-
-            <!-- Main Dashboard Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
-                <!-- Visitor Stats (Doughnut) -->
-                <div class="lg:col-span-3 bg-white rounded-2xl p-6 shadow-sm border border-border">
-                <div class="flex items-center justify-between mb-8">
-                    <h3 class="text-sm font-bold text-text-primary">Total Sales Volume</h3>
-                    <div class="px-2 py-1 bg-background rounded-lg border border-border text-[9px] font-black text-primary uppercase tracking-widest">Live</div>
-                </div>
-
-                    <div class="relative py-4 flex justify-center h-48">
-                        <canvas id="visitorChart"></canvas>
-                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                            <div class="text-2xl font-extrabold text-text-primary leading-none">$
-                                {{ number_format($stats['total_sales_value'] / 1000, 1) }}k
-                            </div>
-                            <div class="text-[10px] text-text-secondary font-bold uppercase tracking-wider mt-1">Total Sales
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-wrap gap-2 justify-center mt-6">
-                        <div class="flex items-center gap-1 text-[10px] text-text-secondary font-bold">
-                            <div class="w-2 h-2 bg-primary rounded-full"></div><span>Paid</span>
-                        </div>
-                        <div class="flex items-center gap-1 text-[10px] text-text-secondary font-bold">
-                            <div class="w-2 h-2 bg-accent rounded-full"></div><span>Unpaid</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 4 Featured Cards Grid -->
-                <div class="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <!-- Order Placed -->
-                    <div class="featured-card bg-primary">
-                        <div class="featured-icon-box">
-                            <i class="bi bi-cart3 text-2xl"></i>
-                        </div>
-                        <div class="featured-title">SALES INVOICES</div>
-                        <div class="featured-value">{{ $stats['orders_placed'] }}</div>
-                        <i class="bi bi-cart3 featured-bg-icon"></i>
-                    </div>
-
-                    <!-- Purchase Bills -->
-                    <div class="featured-card featured-card-accent bg-accent">
-                        <div class="featured-icon-box">
-                            <i class="bi bi-receipt text-2xl"></i>
-                        </div>
-                        <div class="featured-title">PURCHASE BILLS</div>
-                        <div class="featured-value">{{ $stats['purchase_count'] }}</div>
-                        <i class="bi bi-receipt featured-bg-icon"></i>
-                    </div>
-
-                    <!-- On Shipping -->
-                    <div class="featured-card bg-primary">
-                        <div class="featured-icon-box">
-                            <i class="bi bi-truck text-2xl"></i>
-                        </div>
-                        <div class="featured-title">CASH RECEIVED</div>
-                        <div class="featured-value">
-                            {{ $stats['total_paid'] > 1000 ? '$ ' . number_format($stats['total_paid'] / 1000, 1) . 'k' : '$ ' . number_format($stats['total_paid'], 0) }}
-                        </div>
-                        <i class="bi bi-truck featured-bg-icon"></i>
-                    </div>
-
-                    <!-- Purchase Paid -->
-                    <div class="featured-card featured-card-accent bg-accent">
-                        <div class="featured-icon-box">
-                            <i class="bi bi-cash-stack text-2xl"></i>
-                        </div>
-                        <div class="featured-title">VENDOR PAID</div>
-                        <div class="featured-value">
-                            {{ $stats['purchase_paid'] > 1000 ? '$ ' . number_format($stats['purchase_paid'] / 1000, 1) . 'k' : '$ ' . number_format($stats['purchase_paid'], 0) }}
-                        </div>
-                        <i class="bi bi-cash-stack featured-bg-icon"></i>
-                    </div>
-                </div>
-
-                <!-- Purchase Volume Chart -->
-                <div class="lg:col-span-3 bg-white rounded-2xl p-6 shadow-sm border border-border">
-                    <div class="flex items-center justify-between mb-8">
-                        <h3 class="text-sm font-bold text-text-primary">Total Purchase Volume</h3>
-                        <div class="px-2 py-1 bg-background rounded-lg border border-border text-[9px] font-black text-accent uppercase tracking-widest">Live</div>
-                    </div>
-
-                    <div class="relative py-4 flex justify-center h-48">
-                        <canvas id="orderChart"></canvas>
-                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                            <div class="text-2xl font-extrabold text-text-primary leading-none">$
-                                {{ number_format($stats['purchase_total'] / 1000, 1) }}k
-                            </div>
-                            <div class="text-[10px] text-text-secondary font-bold uppercase tracking-wider mt-1">Total Purchase
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-wrap gap-2 justify-center mt-6">
-                        <div class="flex items-center gap-1 text-[10px] text-text-secondary font-bold">
-                            <div class="w-2 h-2 bg-primary rounded-full"></div><span>Paid</span>
-                        </div>
-                        <div class="flex items-center gap-1 text-[10px] text-text-secondary font-bold">
-                            <div class="w-2 h-2 bg-accent rounded-full"></div><span>Unpaid</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Selling Statistics (Bar Chart) -->
-            <div class="bg-white rounded-2xl p-8 shadow-sm border border-border">
-                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
-                    <h3 class="text-lg font-bold text-text-primary tracking-tight">Selling Statistics</h3>
-                    <div class="flex items-center gap-6">
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 bg-primary rounded-sm"></div>
-                            <span class="text-[11px] font-bold text-text-secondary uppercase tracking-widest">Total
-                                Sales</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 bg-accent rounded-sm"></div>
-                            <span class="text-[11px] font-bold text-text-secondary uppercase tracking-widest">Net
-                                Profit</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="h-80 w-full">
-                    <canvas id="sellingChart"></canvas>
-                </div>
-            </div>
+    {{-- ── KPI strip ────────────────────────────────────────────────── --}}
+    <div class="grid grid-cols-2 gap-3 px-5 mt-4">
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Total Sales</p>
+            <p class="text-[20px] font-black text-primary-dark">${{ number_format($stats['total_sales_value'], 0) }}</p>
+            <p class="text-[11px] text-accent font-bold mt-0.5">{{ $stats['orders_placed'] }} orders</p>
         </div>
-    </main>
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Balance Due</p>
+            <p class="text-[20px] font-black text-red-500">${{ number_format($stats['total_due'], 0) }}</p>
+            <p class="text-[11px] text-gray-400 font-bold mt-0.5">Pending collection</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Cash on Hand</p>
+            <p class="text-[20px] font-black text-primary-dark">${{ number_format($stats['cash_on_hand'], 0) }}</p>
+            <p class="text-[11px] text-gray-400 font-bold mt-0.5">Available balance</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Net Profit</p>
+            <p class="text-[20px] font-black {{ $stats['net_profit'] >= 0 ? 'text-accent' : 'text-red-500' }}">
+                ${{ number_format(abs($stats['net_profit']), 0) }}
+            </p>
+            <p class="text-[11px] text-gray-400 font-bold mt-0.5">This period</p>
+        </div>
+    </div>
 
-    <!-- Chart.js Logic -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Shared Chart.js Defaults
-            Chart.defaults.font.family = "'Inter', sans-serif";
-            Chart.defaults.font.weight = 'bold';
-            Chart.defaults.color = '#9CA3AF';
+    {{-- ── Quick Actions ────────────────────────────────────────────── --}}
+    <div class="px-5 mt-6">
+        <p class="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-4">Quick Actions</p>
+        <div class="grid grid-cols-4 gap-3">
+            <a href="{{ route('sales.invoice.create') }}" class="flex flex-col items-center gap-2 group">
+                <div class="w-14 h-14 rounded-full bg-primary flex items-center justify-content: center shadow-md group-hover:bg-primary-dark transition-colors" style="display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-file-earmark-text text-white text-xl"></i>
+                </div>
+                <span class="text-[11px] font-semibold text-gray-600 text-center leading-tight">New<br>Invoice</span>
+            </a>
+            <a href="{{ route('purchase.bill.create') }}" class="flex flex-col items-center gap-2 group">
+                <div class="w-14 h-14 rounded-full bg-primary flex items-center justify-content: center shadow-md group-hover:bg-primary-dark transition-colors" style="display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-clipboard-check text-white text-xl"></i>
+                </div>
+                <span class="text-[11px] font-semibold text-gray-600 text-center leading-tight">New<br>Bill</span>
+            </a>
+            <a href="{{ route('payment.in.index') }}" class="flex flex-col items-center gap-2 group">
+                <div class="w-14 h-14 rounded-full bg-primary flex items-center justify-content: center shadow-md group-hover:bg-primary-dark transition-colors" style="display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-arrow-down-circle text-white text-xl"></i>
+                </div>
+                <span class="text-[11px] font-semibold text-gray-600 text-center leading-tight">Record<br>Payment</span>
+            </a>
+            <a href="{{ route('expense.index') }}" class="flex flex-col items-center gap-2 group">
+                <div class="w-14 h-14 rounded-full bg-primary flex items-center justify-content: center shadow-md group-hover:bg-primary-dark transition-colors" style="display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-currency-dollar text-white text-xl"></i>
+                </div>
+                <span class="text-[11px] font-semibold text-gray-600 text-center leading-tight">New<br>Expense</span>
+            </a>
+        </div>
+    </div>
 
-            // Visitor Chart (Donut)
-        const ctxVisitor = document.getElementById('visitorChart').getContext('2d');
-        new Chart(ctxVisitor, {
-            type: 'doughnut',
-            data: {
-                labels: ['Paid', 'Unpaid'],
-                datasets: [{
-                    data: [{{ $stats['total_paid'] }}, {{ $stats['total_due'] }}],
-                    backgroundColor: ['#004161', '#F43F5E'], // Blue for Paid, Rose for Unpaid
-                    hoverBackgroundColor: ['#00314d', '#E11D48'],
-                    borderWidth: 0,
-                    cutout: '75%',
-                }]
-            },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                plugins: { 
-                    legend: { display: false },
-                    tooltip: {
-                        enabled: true,
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.label || '';
-                                let value = context.raw || 0;
-                                return label + ': $' + value.toLocaleString();
-                            }
-                        }
-                    }
-                } 
-            }
-        });
+    {{-- ── Recent Invoices ──────────────────────────────────────────── --}}
+    <div class="px-5 mt-6">
+        <div class="flex items-center justify-between mb-3">
+            <p class="text-[11px] font-black text-gray-400 uppercase tracking-widest">Recent Invoices</p>
+            <a href="{{ route('sales.invoice.view') }}" class="text-[12px] font-bold text-primary hover:underline">See all</a>
+        </div>
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            @forelse($recentInvoices as $inv)
+            @php
+                $statusLabel = match($inv->status) {
+                    'completed' => ['PAID',    'bg-accent/15 text-accent'],
+                    'partial'   => ['PARTIAL', 'bg-blue-50 text-blue-600'],
+                    'pending'   => ['UNPAID',  'bg-gray-100 text-gray-500'],
+                    'cancelled' => ['CANCELLED','bg-red-50 text-red-400'],
+                    default     => [strtoupper($inv->status), 'bg-gray-100 text-gray-500'],
+                };
+                $isOverdue = $inv->due_date && \Carbon\Carbon::parse($inv->due_date)->isPast() && $inv->status !== 'completed';
+                if ($isOverdue) $statusLabel = ['OVERDUE', 'bg-red-50 text-red-500'];
+            @endphp
+            <a href="{{ route('sales.invoice.detail', $inv->id) }}" class="flex items-center gap-3 px-4 py-3.5 border-b border-gray-50 hover:bg-gray-50/70 transition-colors last:border-b-0">
+                <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-content:center flex-shrink-0" style="display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-file-earmark-text text-primary text-base"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-[13px] font-bold text-primary-dark truncate">
+                        {{ $inv->customer->name ?? 'Walk-in Customer' }}
+                    </p>
+                    <p class="text-[11px] text-gray-400 mt-0.5">
+                        {{ $inv->invoice_no }}
+                        @if($inv->due_date)
+                            · Due {{ \Carbon\Carbon::parse($inv->due_date)->format('d M') }}
+                        @endif
+                    </p>
+                </div>
+                <div class="text-right flex-shrink-0">
+                    <p class="text-[14px] font-black text-primary-dark">${{ number_format($inv->total_amount, 2) }}</p>
+                    <span class="inline-block text-[10px] font-black px-2 py-0.5 rounded-full mt-0.5 {{ $statusLabel[1] }}">
+                        {{ $statusLabel[0] }}
+                    </span>
+                </div>
+            </a>
+            @empty
+            <div class="px-4 py-8 text-center text-gray-400 text-[13px]">
+                <i class="bi bi-file-earmark-x text-2xl block mb-2 opacity-30"></i>
+                No invoices yet.
+            </div>
+            @endforelse
+        </div>
+    </div>
 
-            // Purchase Chart (Donut)
-            const ctxOrder = document.getElementById('orderChart').getContext('2d');
-            new Chart(ctxOrder, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Paid', 'Unpaid'],
-                    datasets: [{
-                        data: [{{ $stats['purchase_paid'] }}, {{ $stats['purchase_due'] }}],
-                        backgroundColor: ['#004161', '#99CC33'], // Blue for Paid, Green for Unpaid
-                        borderWidth: 0,
-                        cutout: '75%',
-                    }]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    plugins: { 
-                        legend: { display: false },
-                        tooltip: {
-                            enabled: true,
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.label || '';
-                                    let value = context.raw || 0;
-                                    return label + ': $' + value.toLocaleString();
-                                }
-                            }
-                        }
-                    } 
-                }
-            });
+    {{-- ── Recent Purchases ─────────────────────────────────────────── --}}
+    @php
+        $recentBills = \App\Models\PurchaseBill::with('supplier')->latest()->take(3)->get();
+    @endphp
+    @if($recentBills->count())
+    <div class="px-5 mt-5">
+        <div class="flex items-center justify-between mb-3">
+            <p class="text-[11px] font-black text-gray-400 uppercase tracking-widest">Recent Purchases</p>
+            <a href="{{ route('purchase.bill.index') }}" class="text-[12px] font-bold text-primary hover:underline">See all</a>
+        </div>
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            @foreach($recentBills as $bill)
+            @php
+                $bStatus = match($bill->status) {
+                    'completed' => ['PAID',    'bg-accent/15 text-accent'],
+                    'partial'   => ['PARTIAL', 'bg-blue-50 text-blue-600'],
+                    default     => ['UNPAID',  'bg-gray-100 text-gray-500'],
+                };
+            @endphp
+            <div class="flex items-center gap-3 px-4 py-3.5 border-b border-gray-50 last:border-b-0">
+                <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-content:center flex-shrink-0" style="display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-bag-check text-amber-500 text-base"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-[13px] font-bold text-primary-dark truncate">{{ $bill->supplier->name ?? 'Unknown Supplier' }}</p>
+                    <p class="text-[11px] text-gray-400 mt-0.5">{{ $bill->bill_number }}</p>
+                </div>
+                <div class="text-right flex-shrink-0">
+                    <p class="text-[14px] font-black text-primary-dark">${{ number_format($bill->total_amount, 2) }}</p>
+                    <span class="inline-block text-[10px] font-black px-2 py-0.5 rounded-full mt-0.5 {{ $bStatus[1] }}">{{ $bStatus[0] }}</span>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
 
-            // Selling Statistics (Bar Chart)
-            const ctxSelling = document.getElementById('sellingChart').getContext('2d');
-            new Chart(ctxSelling, {
-                type: 'bar',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                    datasets: [
-                        {
-                            label: 'Total Sales',
-                            data: @json($stats['monthly_sales']),
-                            backgroundColor: '#004161',
-                            borderRadius: 4,
-                            barThickness: 12
-                        },
-                        {
-                            label: 'Net Profit',
-                            data: @json($stats['monthly_profit']),
-                            backgroundColor: '#99CC33',
-                            borderRadius: 4,
-                            barThickness: 12
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: {{ $stats['max_monthly_val'] * 1.1 }},
-                            grid: { borderDash: [5, 5], color: '#E5E7EB' },
-                            ticks: { stepSize: {{ ($stats['max_monthly_val'] * 1.1) / 4 }}, font: { size: 10 } }
-                        },
-                        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
-                    }
-                }
-            });
-        });
-    </script>
+</div>
+
+{{-- ── Bottom Navigation Bar ────────────────────────────────────────── --}}
+<nav class="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 shadow-lg safe-area-pb"
+     style="padding-bottom: env(safe-area-inset-bottom, 0);">
+    <div class="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
+        <a href="{{ route('dashboard') }}" class="flex flex-col items-center gap-0.5 min-w-0 flex-1 group">
+            <i class="bi bi-house-fill text-xl {{ request()->routeIs('dashboard') ? 'text-primary' : 'text-gray-400 group-hover:text-primary' }}"></i>
+            <span class="text-[10px] font-bold {{ request()->routeIs('dashboard') ? 'text-primary' : 'text-gray-400 group-hover:text-primary' }}">Home</span>
+        </a>
+        <a href="{{ route('sales.invoice.view') }}" class="flex flex-col items-center gap-0.5 min-w-0 flex-1 group">
+            <i class="bi bi-receipt text-xl {{ request()->routeIs('sales.invoice*') ? 'text-primary' : 'text-gray-400 group-hover:text-primary' }}"></i>
+            <span class="text-[10px] font-bold {{ request()->routeIs('sales.invoice*') ? 'text-primary' : 'text-gray-400 group-hover:text-primary' }}">Sales</span>
+        </a>
+        {{-- FAB --}}
+        <a href="{{ route('sales.invoice.create') }}" class="relative -top-4 w-14 h-14 rounded-full bg-primary shadow-xl flex items-center justify-content:center text-white hover:bg-primary-dark transition-colors flex-shrink-0" style="display:flex;align-items:center;justify-content:center;">
+            <i class="bi bi-plus-lg text-2xl"></i>
+        </a>
+        <a href="{{ route('report.profit.loss') }}" class="flex flex-col items-center gap-0.5 min-w-0 flex-1 group">
+            <i class="bi bi-bar-chart-line text-xl {{ request()->routeIs('report.*') ? 'text-primary' : 'text-gray-400 group-hover:text-primary' }}"></i>
+            <span class="text-[10px] font-bold {{ request()->routeIs('report.*') ? 'text-primary' : 'text-gray-400 group-hover:text-primary' }}">Reports</span>
+        </a>
+        <a href="#" onclick="document.querySelector('.sidebar')?.classList.toggle('show')" class="flex flex-col items-center gap-0.5 min-w-0 flex-1 group">
+            <i class="bi bi-grid text-xl text-gray-400 group-hover:text-primary"></i>
+            <span class="text-[10px] font-bold text-gray-400 group-hover:text-primary">Menu</span>
+        </a>
+    </div>
+</nav>
 
 @endsection
