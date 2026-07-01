@@ -84,42 +84,40 @@
 
         {{-- Recent Invoices --}}
         <div class="px-5 pb-28">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-[11px] font-black text-text-secondary uppercase tracking-widest">Recent Invoices</span>
+                <a href="{{ route('sales.invoice.view') }}" class="text-sm font-bold text-primary">See all</a>
+            </div>
             <div class="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
-                <div class="flex items-center justify-between px-4 pt-4 pb-3 border-b border-border">
-                    <span class="text-[11px] font-black text-text-secondary uppercase tracking-widest">Recent Invoices</span>
-                    <a href="{{ route('sales.invoice.view') }}" class="text-sm font-bold text-primary">See all</a>
-                </div>
                 @forelse($recentInvoices as $inv)
                     @php
                         $isOverdue = $inv->due_date && $inv->due_date->isPast() && $inv->status !== 'completed';
-                        $statusLabel = $isOverdue ? 'OVERDUE' : match($inv->status) {
-                            'completed' => 'PAID',
-                            'partial'   => 'PARTIAL',
-                            default     => 'UNPAID',
+                        $amtLabel = match(true) {
+                            $inv->status === 'completed' => 'Received',
+                            $inv->status === 'partial'   => 'Partial',
+                            $isOverdue                   => 'Overdue',
+                            default                      => "You'll Get",
                         };
-                        $statusClass = match(true) {
-                            $isOverdue             => 'dash-badge-overdue',
-                            $inv->status === 'completed' => 'dash-badge-paid',
-                            $inv->status === 'partial'   => 'dash-badge-partial',
-                            default                => 'dash-badge-unpaid',
+                        $amtLabelClass = match(true) {
+                            $inv->status === 'completed' => 'text-green-600',
+                            $isOverdue                   => 'text-red-500',
+                            $inv->status === 'partial'   => 'text-amber-500',
+                            default                      => 'text-accent',
                         };
                     @endphp
-                    <a href="{{ route('sales.invoice.show', $inv->id) }}" class="flex items-center gap-3 px-4 py-3.5 border-b border-gray-50 hover:bg-gray-50 transition-colors last:border-0">
-                        <div class="w-10 h-10 bg-primary/8 rounded-xl flex items-center justify-center shrink-0">
-                            <i class="bi bi-file-earmark-text text-primary"></i>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-bold text-text-primary truncate">{{ $inv->customer->name ?? 'Walk-in Customer' }}</p>
+                    <a href="{{ route('sales.invoice.show', $inv->id) }}"
+                       class="flex items-center justify-between px-4 py-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
+                        <div class="min-w-0">
+                            <p class="text-[15px] font-black text-text-primary uppercase tracking-wide truncate">
+                                {{ $inv->customer->name ?? 'Walk-in Customer' }}
+                            </p>
                             <p class="text-xs text-text-secondary mt-0.5">
-                                {{ $inv->invoice_no }}
-                                @if($inv->due_date)
-                                    · Due {{ $inv->due_date->format('j M') }}
-                                @endif
+                                {{ \Carbon\Carbon::parse($inv->invoice_date)->format('d M Y') }}
                             </p>
                         </div>
-                        <div class="text-right shrink-0">
-                            <p class="text-sm font-black text-text-primary font-mono">${{ number_format($inv->total_amount, 2) }}</p>
-                            <span class="dash-badge {{ $statusClass }}">{{ $statusLabel }}</span>
+                        <div class="text-right shrink-0 ml-4">
+                            <p class="text-[15px] font-black text-text-primary">${{ number_format($inv->total_amount, 2) }}</p>
+                            <p class="text-xs font-bold {{ $amtLabelClass }} mt-0.5">{{ $amtLabel }}</p>
                         </div>
                     </a>
                 @empty
