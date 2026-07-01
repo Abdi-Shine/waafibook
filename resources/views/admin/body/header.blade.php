@@ -14,22 +14,14 @@
     }
 @endphp
 
-<header class="bg-white border-b border-border h-20 sticky top-0 z-40 lg:ml-[260px] relative">
+<header class="bg-white border-b border-border h-20 sticky top-0 z-40 lg:ml-[260px]">
     <div class="flex items-center justify-between h-full px-4 md:px-8">
-        <!-- Left Section: Hamburger -->
-        <div class="flex items-center">
+        <!-- Left Section: Hamburger + Company Name -->
+        <div class="flex items-center gap-3">
             <button id="menuToggle" class="lg:hidden p-2 text-text-secondary hover:text-primary transition-colors">
                 <i class="bi bi-list text-2xl"></i>
             </button>
-            <!-- Desktop: company name left-aligned -->
-            <div class="hidden md:block ml-2">
-                <span class="text-[13px] font-bold text-primary-dark uppercase tracking-wide max-w-[180px] truncate">{{ $headerCompany->name ?? 'Waafibook' }}</span>
-            </div>
-        </div>
-
-        <!-- Mobile: company name centered absolutely -->
-        <div class="absolute left-1/2 -translate-x-1/2 md:hidden pointer-events-none">
-            <span class="text-[14px] font-black text-primary-dark uppercase tracking-wide whitespace-nowrap">{{ $headerCompany->name ?? 'Waafibook' }}</span>
+            <span class="text-[14px] font-black text-primary-dark uppercase tracking-wide max-w-[160px] truncate">{{ $headerCompany->name ?? 'Waafibook' }}</span>
         </div>
 
         <!-- Right Section -->
