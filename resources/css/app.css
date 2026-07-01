@@ -604,7 +604,10 @@
 
 /* ── Legacy POS (sales_pos.blade.php) ─────────────────── */
 .products-section { background: white; display: flex; flex-direction: column; overflow: hidden; border-right: 1px solid #e9ecef; min-height: 0; }
-.search-bar { padding: 1rem 1.5rem; border-bottom: 2px solid #e9ecef; background: #f8f9fa; }
+.search-bar { padding: 1rem 1.5rem; border-bottom: 2px solid #e9ecef; background: #f8f9fa; display: flex; align-items: center; gap: 0.75rem; }
+.pos-back-btn { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; background: #004161; color: #fff; font-size: 1rem; text-decoration: none; transition: background 0.2s; }
+.pos-back-btn:hover { background: #002f47; color: #fff; }
+.search-bar .search-input-group { flex: 1; }
 .search-input-group { position: relative; }
 .search-input { width: 100%; padding: 0.75rem 1rem 0.75rem 3rem; border: 2px solid #dee2e6; border-radius: 12px; font-size: 0.95rem; transition: all 0.3s; }
 .search-input:focus { outline: none; border-color: #99CC33; box-shadow: 0 0 0 0.2rem rgba(153,204,51,0.25); }

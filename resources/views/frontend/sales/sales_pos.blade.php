@@ -6,9 +6,12 @@
         <!-- Left Section - Products -->
         <div class="products-section">
             <div class="search-bar">
+                <a href="{{ route('sales.invoice.view') }}" class="pos-back-btn" title="Back to Sales">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
                 <div class="search-input-group">
                     <i class="bi bi-search search-icon"></i>
-                    <input type="text" class="search-input" id="searchInput" 
+                    <input type="text" class="search-input" id="searchInput"
                            placeholder="Search by name, SKU or scan barcode...">
                 </div>
             </div>
