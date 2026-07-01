@@ -234,6 +234,8 @@
     @yield('admin')
 </div>
 
+@include('admin.body.bottom_nav')
+
     @stack('scripts')
     <script>
         // Session Alerts Handler

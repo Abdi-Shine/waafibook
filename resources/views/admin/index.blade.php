@@ -1,353 +1,365 @@
 @extends('admin.admin_master')
 @section('admin')
 
-    <main class="min-h-screen pb-12 bg-background">
-        <!-- CONTENT -->
-        <div class="p-4 md:p-8 content-wrapper mx-auto">
-            <!-- Quick Actions -->
-            <div class="flex items-center justify-end gap-4 mb-6">
-                <div class="flex items-center gap-3">
-                    <a href="{{ route('sales.invoice.create') }}"
-                        class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-accent text-white text-sm font-bold hover:opacity-90 transition-opacity">
-                        <i class="bi bi-plus-lg"></i> Add Sale
-                    </a>
-                    <a href="{{ route('purchase.bill.create') }}"
-                        class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-white text-sm font-bold hover:opacity-90 transition-opacity">
-                        <i class="bi bi-plus-lg"></i> Add Purchase
-                    </a>
-                    <a href="{{ route('sales.pos.view') }}"
-                        class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary-dark text-white text-sm font-bold hover:opacity-90 transition-opacity">
-                        <i class="bi bi-display"></i> POS Terminal
-                    </a>
+<main class="min-h-screen bg-background">
+
+    {{-- ═══════════════════════════════════════════════════════════
+         MOBILE LAYOUT  (hidden on lg+)
+    ═══════════════════════════════════════════════════════════ --}}
+    <div class="lg:hidden dash-mobile-wrap">
+
+        {{-- Mobile Top Bar --}}
+        <div class="dash-mobile-topbar">
+            <button onclick="openSidebar()" class="dash-mobile-menu-btn">
+                <i class="bi bi-list text-xl"></i>
+            </button>
+            <div x-data="{ open: false }" class="relative ml-auto">
+                @php $totalNotifs = $lowStockAlerts->count() + $globalBackups->count(); @endphp
+                <button @click="open = !open" @click.away="open = false" class="dash-mobile-bell-btn">
+                    <i class="bi bi-bell text-xl"></i>
+                    @if($totalNotifs > 0)
+                        <span class="dash-mobile-bell-dot">{{ $totalNotifs }}</span>
+                    @endif
+                </button>
+            </div>
+        </div>
+
+        {{-- Greeting --}}
+        <div class="px-5 pt-4 pb-2">
+            <h1 class="text-2xl font-black text-text-primary leading-tight">
+                Hi, {{ explode(' ', auth()->user()->name)[0] }}
+            </h1>
+            <p class="text-sm text-text-secondary mt-0.5">
+                Here's how <span class="font-semibold text-primary">{{ $company->name ?? 'your business' }}</span> is doing this month.
+            </p>
+        </div>
+
+        {{-- Quick Actions --}}
+        <div class="px-5 pt-4 pb-2">
+            <p class="text-[11px] font-black text-text-secondary uppercase tracking-widest mb-4">Quick Actions</p>
+            <div class="grid grid-cols-4 gap-2">
+                <a href="{{ route('sales.invoice.create') }}" class="dash-quick-action">
+                    <div class="dash-quick-circle">
+                        <i class="bi bi-file-earmark-text text-xl text-white"></i>
+                    </div>
+                    <span class="dash-quick-label">New<br>Invoice</span>
+                </a>
+                <a href="{{ route('purchase.bill.create') }}" class="dash-quick-action">
+                    <div class="dash-quick-circle">
+                        <i class="bi bi-clipboard text-xl text-white"></i>
+                    </div>
+                    <span class="dash-quick-label">New<br>Bill</span>
+                </a>
+                <a href="{{ route('view_payment_in') }}" class="dash-quick-action">
+                    <div class="dash-quick-circle">
+                        <i class="bi bi-arrow-down-circle text-xl text-white"></i>
+                    </div>
+                    <span class="dash-quick-label">Record<br>Payment</span>
+                </a>
+                <a href="{{ route('expenses_view_all') }}" class="dash-quick-action">
+                    <div class="dash-quick-circle">
+                        <i class="bi bi-currency-dollar text-xl text-white"></i>
+                    </div>
+                    <span class="dash-quick-label">New<br>Expense</span>
+                </a>
+            </div>
+        </div>
+
+        {{-- KPI Strip --}}
+        @php $fmt = fn($v) => ($v < 0 ? '-$' : '$') . number_format(abs($v), 2); @endphp
+        <div class="px-5 py-4">
+            <div class="dash-kpi-strip">
+                <div class="dash-kpi-item">
+                    <span class="dash-kpi-label">Cash on Hand</span>
+                    <span class="dash-kpi-value {{ $stats['cash_on_hand'] < 0 ? 'text-red-500' : '' }}">{{ $fmt($stats['cash_on_hand']) }}</span>
+                </div>
+                <div class="dash-kpi-divider"></div>
+                <div class="dash-kpi-item">
+                    <span class="dash-kpi-label">Receivable</span>
+                    <span class="dash-kpi-value">{{ $fmt($stats['accounts_receivable']) }}</span>
+                </div>
+                <div class="dash-kpi-divider"></div>
+                <div class="dash-kpi-item">
+                    <span class="dash-kpi-label">Payable</span>
+                    <span class="dash-kpi-value">{{ $fmt($stats['liabilities']) }}</span>
+                </div>
+                <div class="dash-kpi-divider"></div>
+                <div class="dash-kpi-item">
+                    <span class="dash-kpi-label">Stock</span>
+                    <span class="dash-kpi-value">{{ $fmt($stats['stock_value']) }}</span>
                 </div>
             </div>
+        </div>
 
-            <!-- Top 4 KPI Cards -->
-            @php
-                $formatKpi = fn($value) => ($value < 0 ? '-$' : '$') . number_format(abs($value), 2);
-            @endphp
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <!-- Cash on Hand (Assets) -->
-                <div class="kpi-card">
-                    <div class="w-full">
-                        <div class="flex items-start justify-between mb-3">
-                            <div class="kpi-icon-box bg-accent/10">
-                                <i class="bi bi-wallet2 text-accent text-lg"></i>
-                            </div>
-                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-wider">
-                                <i class="bi bi-diagram-3 text-[9px]"></i> For Branch
-                            </span>
-                        </div>
-                        <div class="kpi-title uppercase tracking-wider">Cash on Hand</div>
-                        <div class="kpi-value {{ $stats['cash_on_hand'] < 0 ? 'text-red-500' : '' }}">{{ $formatKpi($stats['cash_on_hand']) }}</div>
-                        <a href="{{ route('cash_in_hand.index') }}" class="kpi-link hover:text-accent">
-                            See Cash Amount<i class="bi bi-arrow-right text-[10px]"></i>
-                        </a>
-                    </div>
+        {{-- Recent Invoices --}}
+        <div class="px-5 pb-28">
+            <div class="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                <div class="flex items-center justify-between px-4 pt-4 pb-3 border-b border-border">
+                    <span class="text-[11px] font-black text-text-secondary uppercase tracking-widest">Recent Invoices</span>
+                    <a href="{{ route('sales.invoice.view') }}" class="text-sm font-bold text-primary">See all</a>
                 </div>
-
-                <!-- Account Payable -->
-                <div class="kpi-card">
-                    <div class="w-full">
-                        <div class="flex items-start justify-between mb-3">
-                            <div class="kpi-icon-box bg-primary/10">
-                                <i class="bi bi-credit-card text-primary text-lg"></i>
-                            </div>
-                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">
-                                <i class="bi bi-truck text-[9px]"></i> For Suppliers
-                            </span>
+                @forelse($recentInvoices as $inv)
+                    @php
+                        $isOverdue = $inv->due_date && $inv->due_date->isPast() && $inv->status !== 'completed';
+                        $statusLabel = $isOverdue ? 'OVERDUE' : match($inv->status) {
+                            'completed' => 'PAID',
+                            'partial'   => 'PARTIAL',
+                            default     => 'UNPAID',
+                        };
+                        $statusClass = match(true) {
+                            $isOverdue             => 'dash-badge-overdue',
+                            $inv->status === 'completed' => 'dash-badge-paid',
+                            $inv->status === 'partial'   => 'dash-badge-partial',
+                            default                => 'dash-badge-unpaid',
+                        };
+                    @endphp
+                    <a href="{{ route('sales.invoice.show', $inv->id) }}" class="flex items-center gap-3 px-4 py-3.5 border-b border-gray-50 hover:bg-gray-50 transition-colors last:border-0">
+                        <div class="w-10 h-10 bg-primary/8 rounded-xl flex items-center justify-center shrink-0">
+                            <i class="bi bi-file-earmark-text text-primary"></i>
                         </div>
-                        <div class="kpi-title uppercase tracking-wider">Account Payable</div>
-                        <div class="kpi-value">{{ $formatKpi($stats['liabilities']) }}</div>
-                        <a href="{{ route('supplier.index') }}" class="kpi-link hover:text-primary">
-                            See Accounts <i class="bi bi-arrow-right text-[10px]"></i>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Account Receivable -->
-                <div class="kpi-card">
-                    <div class="w-full">
-                        <div class="flex items-start justify-between mb-3">
-                            <div class="kpi-icon-box bg-accent/10">
-                                <i class="bi bi-bank text-accent text-lg"></i>
-                            </div>
-                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-wider">
-                                <i class="bi bi-people text-[9px]"></i> For Customers
-                            </span>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-bold text-text-primary truncate">{{ $inv->customer->name ?? 'Walk-in Customer' }}</p>
+                            <p class="text-xs text-text-secondary mt-0.5">
+                                {{ $inv->invoice_no }}
+                                @if($inv->due_date)
+                                    · Due {{ $inv->due_date->format('j M') }}
+                                @endif
+                            </p>
                         </div>
-                        <div class="kpi-title uppercase tracking-wider">Account Receivable</div>
-                        <div class="kpi-value">{{ $formatKpi($stats['accounts_receivable']) }}</div>
-                        <a href="{{ route('customer.index') }}" class="kpi-link hover:text-accent">
-                            See Accounts <i class="bi bi-arrow-right text-[10px]"></i>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Stock Values -->
-                <div class="kpi-card">
-                    <div class="w-full">
-                        <div class="flex items-start justify-between mb-3">
-                            <div class="kpi-icon-box bg-primary/10">
-                                <i class="bi bi-box-seam text-primary text-lg"></i>
-                            </div>
-                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">
-                                <i class="bi bi-diagram-3 text-[9px]"></i> For Branch
-                            </span>
+                        <div class="text-right shrink-0">
+                            <p class="text-sm font-black text-text-primary font-mono">${{ number_format($inv->total_amount, 2) }}</p>
+                            <span class="dash-badge {{ $statusClass }}">{{ $statusLabel }}</span>
                         </div>
-                        <div class="kpi-title uppercase tracking-wider">Stock Values</div>
-                        <div class="kpi-value">{{ $formatKpi($stats['stock_value']) }}</div>
-                        <a href="{{ route('product.index') }}" class="kpi-link hover:text-primary">
-                            See Stock <i class="bi bi-arrow-right text-[10px]"></i>
-                        </a>
+                    </a>
+                @empty
+                    <div class="py-10 text-center">
+                        <i class="bi bi-file-earmark-text text-3xl text-gray-300"></i>
+                        <p class="text-sm text-text-secondary mt-2">No invoices yet</p>
                     </div>
+                @endforelse
+            </div>
+        </div>
+    </div>{{-- end mobile --}}
+
+
+    {{-- ═══════════════════════════════════════════════════════════
+         DESKTOP LAYOUT  (hidden on mobile)
+    ═══════════════════════════════════════════════════════════ --}}
+    <div class="hidden lg:block p-8 content-wrapper mx-auto pb-12">
+
+        {{-- Quick Actions --}}
+        @php $formatKpi = fn($value) => ($value < 0 ? '-$' : '$') . number_format(abs($value), 2); @endphp
+        <div class="flex items-center justify-end gap-4 mb-6">
+            <div class="flex items-center gap-3">
+                <a href="{{ route('sales.invoice.create') }}"
+                    class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-accent text-white text-sm font-bold hover:opacity-90 transition-opacity">
+                    <i class="bi bi-plus-lg"></i> Add Sale
+                </a>
+                <a href="{{ route('purchase.bill.create') }}"
+                    class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-white text-sm font-bold hover:opacity-90 transition-opacity">
+                    <i class="bi bi-plus-lg"></i> Add Purchase
+                </a>
+                <a href="{{ route('sales.pos.view') }}"
+                    class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary-dark text-white text-sm font-bold hover:opacity-90 transition-opacity">
+                    <i class="bi bi-display"></i> POS Terminal
+                </a>
+            </div>
+        </div>
+
+        {{-- Top 4 KPI Cards --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="kpi-card">
+                <div class="w-full">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="kpi-icon-box bg-accent/10"><i class="bi bi-wallet2 text-accent text-lg"></i></div>
+                        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-wider">
+                            <i class="bi bi-diagram-3 text-[9px]"></i> For Branch
+                        </span>
+                    </div>
+                    <div class="kpi-title uppercase tracking-wider">Cash on Hand</div>
+                    <div class="kpi-value {{ $stats['cash_on_hand'] < 0 ? 'text-red-500' : '' }}">{{ $formatKpi($stats['cash_on_hand']) }}</div>
+                    <a href="{{ route('cash_in_hand.index') }}" class="kpi-link hover:text-accent">See Cash Amount<i class="bi bi-arrow-right text-[10px]"></i></a>
                 </div>
             </div>
+            <div class="kpi-card">
+                <div class="w-full">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="kpi-icon-box bg-primary/10"><i class="bi bi-credit-card text-primary text-lg"></i></div>
+                        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">
+                            <i class="bi bi-truck text-[9px]"></i> For Suppliers
+                        </span>
+                    </div>
+                    <div class="kpi-title uppercase tracking-wider">Account Payable</div>
+                    <div class="kpi-value">{{ $formatKpi($stats['liabilities']) }}</div>
+                    <a href="{{ route('supplier.index') }}" class="kpi-link hover:text-primary">See Accounts <i class="bi bi-arrow-right text-[10px]"></i></a>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="w-full">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="kpi-icon-box bg-accent/10"><i class="bi bi-bank text-accent text-lg"></i></div>
+                        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-wider">
+                            <i class="bi bi-people text-[9px]"></i> For Customers
+                        </span>
+                    </div>
+                    <div class="kpi-title uppercase tracking-wider">Account Receivable</div>
+                    <div class="kpi-value">{{ $formatKpi($stats['accounts_receivable']) }}</div>
+                    <a href="{{ route('customer.index') }}" class="kpi-link hover:text-accent">See Accounts <i class="bi bi-arrow-right text-[10px]"></i></a>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="w-full">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="kpi-icon-box bg-primary/10"><i class="bi bi-box-seam text-primary text-lg"></i></div>
+                        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">
+                            <i class="bi bi-diagram-3 text-[9px]"></i> For Branch
+                        </span>
+                    </div>
+                    <div class="kpi-title uppercase tracking-wider">Stock Values</div>
+                    <div class="kpi-value">{{ $formatKpi($stats['stock_value']) }}</div>
+                    <a href="{{ route('product.index') }}" class="kpi-link hover:text-primary">See Stock <i class="bi bi-arrow-right text-[10px]"></i></a>
+                </div>
+            </div>
+        </div>
 
-
-
-            <!-- Main Dashboard Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
-                <!-- Visitor Stats (Doughnut) -->
-                <div class="lg:col-span-3 bg-white rounded-2xl p-6 shadow-sm border border-border">
+        {{-- Main Dashboard Grid --}}
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
+            {{-- Sales Doughnut --}}
+            <div class="lg:col-span-3 bg-white rounded-2xl p-6 shadow-sm border border-border">
                 <div class="flex items-center justify-between mb-8">
                     <h3 class="text-sm font-bold text-text-primary">Total Sales Volume</h3>
                     <div class="px-2 py-1 bg-background rounded-lg border border-border text-[9px] font-black text-primary uppercase tracking-widest">Live</div>
                 </div>
-
-                    <div class="relative py-4 flex justify-center h-48">
-                        <canvas id="visitorChart"></canvas>
-                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                            <div class="text-2xl font-extrabold text-text-primary leading-none">$
-                                {{ number_format($stats['total_sales_value'] / 1000, 1) }}k
-                            </div>
-                            <div class="text-[10px] text-text-secondary font-bold uppercase tracking-wider mt-1">Total Sales
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-wrap gap-2 justify-center mt-6">
-                        <div class="flex items-center gap-1 text-[10px] text-text-secondary font-bold">
-                            <div class="w-2 h-2 bg-primary rounded-full"></div><span>Paid</span>
-                        </div>
-                        <div class="flex items-center gap-1 text-[10px] text-text-secondary font-bold">
-                            <div class="w-2 h-2 bg-accent rounded-full"></div><span>Unpaid</span>
-                        </div>
+                <div class="relative py-4 flex justify-center h-48">
+                    <canvas id="visitorChart"></canvas>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <div class="text-2xl font-extrabold text-text-primary leading-none">$ {{ number_format($stats['total_sales_value'] / 1000, 1) }}k</div>
+                        <div class="text-[10px] text-text-secondary font-bold uppercase tracking-wider mt-1">Total Sales</div>
                     </div>
                 </div>
-
-                <!-- 4 Featured Cards Grid -->
-                <div class="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <!-- Order Placed -->
-                    <div class="featured-card bg-primary">
-                        <div class="featured-icon-box">
-                            <i class="bi bi-cart3 text-2xl"></i>
-                        </div>
-                        <div class="featured-title">SALES INVOICES</div>
-                        <div class="featured-value">{{ $stats['orders_placed'] }}</div>
-                        <i class="bi bi-cart3 featured-bg-icon"></i>
-                    </div>
-
-                    <!-- Purchase Bills -->
-                    <div class="featured-card featured-card-accent bg-accent">
-                        <div class="featured-icon-box">
-                            <i class="bi bi-receipt text-2xl"></i>
-                        </div>
-                        <div class="featured-title">PURCHASE BILLS</div>
-                        <div class="featured-value">{{ $stats['purchase_count'] }}</div>
-                        <i class="bi bi-receipt featured-bg-icon"></i>
-                    </div>
-
-                    <!-- On Shipping -->
-                    <div class="featured-card bg-primary">
-                        <div class="featured-icon-box">
-                            <i class="bi bi-truck text-2xl"></i>
-                        </div>
-                        <div class="featured-title">CASH RECEIVED</div>
-                        <div class="featured-value">
-                            {{ $stats['total_paid'] > 1000 ? '$ ' . number_format($stats['total_paid'] / 1000, 1) . 'k' : '$ ' . number_format($stats['total_paid'], 0) }}
-                        </div>
-                        <i class="bi bi-truck featured-bg-icon"></i>
-                    </div>
-
-                    <!-- Purchase Paid -->
-                    <div class="featured-card featured-card-accent bg-accent">
-                        <div class="featured-icon-box">
-                            <i class="bi bi-cash-stack text-2xl"></i>
-                        </div>
-                        <div class="featured-title">VENDOR PAID</div>
-                        <div class="featured-value">
-                            {{ $stats['purchase_paid'] > 1000 ? '$ ' . number_format($stats['purchase_paid'] / 1000, 1) . 'k' : '$ ' . number_format($stats['purchase_paid'], 0) }}
-                        </div>
-                        <i class="bi bi-cash-stack featured-bg-icon"></i>
-                    </div>
-                </div>
-
-                <!-- Purchase Volume Chart -->
-                <div class="lg:col-span-3 bg-white rounded-2xl p-6 shadow-sm border border-border">
-                    <div class="flex items-center justify-between mb-8">
-                        <h3 class="text-sm font-bold text-text-primary">Total Purchase Volume</h3>
-                        <div class="px-2 py-1 bg-background rounded-lg border border-border text-[9px] font-black text-accent uppercase tracking-widest">Live</div>
-                    </div>
-
-                    <div class="relative py-4 flex justify-center h-48">
-                        <canvas id="orderChart"></canvas>
-                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                            <div class="text-2xl font-extrabold text-text-primary leading-none">$
-                                {{ number_format($stats['purchase_total'] / 1000, 1) }}k
-                            </div>
-                            <div class="text-[10px] text-text-secondary font-bold uppercase tracking-wider mt-1">Total Purchase
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-wrap gap-2 justify-center mt-6">
-                        <div class="flex items-center gap-1 text-[10px] text-text-secondary font-bold">
-                            <div class="w-2 h-2 bg-primary rounded-full"></div><span>Paid</span>
-                        </div>
-                        <div class="flex items-center gap-1 text-[10px] text-text-secondary font-bold">
-                            <div class="w-2 h-2 bg-accent rounded-full"></div><span>Unpaid</span>
-                        </div>
-                    </div>
+                <div class="flex flex-wrap gap-2 justify-center mt-6">
+                    <div class="flex items-center gap-1 text-[10px] text-text-secondary font-bold"><div class="w-2 h-2 bg-primary rounded-full"></div><span>Paid</span></div>
+                    <div class="flex items-center gap-1 text-[10px] text-text-secondary font-bold"><div class="w-2 h-2 bg-accent rounded-full"></div><span>Unpaid</span></div>
                 </div>
             </div>
 
-            <!-- Selling Statistics (Bar Chart) -->
-            <div class="bg-white rounded-2xl p-8 shadow-sm border border-border">
-                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
-                    <h3 class="text-lg font-bold text-text-primary tracking-tight">Selling Statistics</h3>
-                    <div class="flex items-center gap-6">
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 bg-primary rounded-sm"></div>
-                            <span class="text-[11px] font-bold text-text-secondary uppercase tracking-widest">Total
-                                Sales</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 bg-accent rounded-sm"></div>
-                            <span class="text-[11px] font-bold text-text-secondary uppercase tracking-widest">Net
-                                Profit</span>
-                        </div>
+            {{-- 4 Featured Cards --}}
+            <div class="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div class="featured-card bg-primary">
+                    <div class="featured-icon-box"><i class="bi bi-cart3 text-2xl"></i></div>
+                    <div class="featured-title">SALES INVOICES</div>
+                    <div class="featured-value">{{ $stats['orders_placed'] }}</div>
+                    <i class="bi bi-cart3 featured-bg-icon"></i>
+                </div>
+                <div class="featured-card featured-card-accent bg-accent">
+                    <div class="featured-icon-box"><i class="bi bi-receipt text-2xl"></i></div>
+                    <div class="featured-title">PURCHASE BILLS</div>
+                    <div class="featured-value">{{ $stats['purchase_count'] }}</div>
+                    <i class="bi bi-receipt featured-bg-icon"></i>
+                </div>
+                <div class="featured-card bg-primary">
+                    <div class="featured-icon-box"><i class="bi bi-truck text-2xl"></i></div>
+                    <div class="featured-title">CASH RECEIVED</div>
+                    <div class="featured-value">{{ $stats['total_paid'] > 1000 ? '$ ' . number_format($stats['total_paid'] / 1000, 1) . 'k' : '$ ' . number_format($stats['total_paid'], 0) }}</div>
+                    <i class="bi bi-truck featured-bg-icon"></i>
+                </div>
+                <div class="featured-card featured-card-accent bg-accent">
+                    <div class="featured-icon-box"><i class="bi bi-cash-stack text-2xl"></i></div>
+                    <div class="featured-title">VENDOR PAID</div>
+                    <div class="featured-value">{{ $stats['purchase_paid'] > 1000 ? '$ ' . number_format($stats['purchase_paid'] / 1000, 1) . 'k' : '$ ' . number_format($stats['purchase_paid'], 0) }}</div>
+                    <i class="bi bi-cash-stack featured-bg-icon"></i>
+                </div>
+            </div>
+
+            {{-- Purchase Doughnut --}}
+            <div class="lg:col-span-3 bg-white rounded-2xl p-6 shadow-sm border border-border">
+                <div class="flex items-center justify-between mb-8">
+                    <h3 class="text-sm font-bold text-text-primary">Total Purchase Volume</h3>
+                    <div class="px-2 py-1 bg-background rounded-lg border border-border text-[9px] font-black text-accent uppercase tracking-widest">Live</div>
+                </div>
+                <div class="relative py-4 flex justify-center h-48">
+                    <canvas id="orderChart"></canvas>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <div class="text-2xl font-extrabold text-text-primary leading-none">$ {{ number_format($stats['purchase_total'] / 1000, 1) }}k</div>
+                        <div class="text-[10px] text-text-secondary font-bold uppercase tracking-wider mt-1">Total Purchase</div>
                     </div>
                 </div>
-                <div class="h-80 w-full">
-                    <canvas id="sellingChart"></canvas>
+                <div class="flex flex-wrap gap-2 justify-center mt-6">
+                    <div class="flex items-center gap-1 text-[10px] text-text-secondary font-bold"><div class="w-2 h-2 bg-primary rounded-full"></div><span>Paid</span></div>
+                    <div class="flex items-center gap-1 text-[10px] text-text-secondary font-bold"><div class="w-2 h-2 bg-accent rounded-full"></div><span>Unpaid</span></div>
                 </div>
             </div>
         </div>
-    </main>
 
-    <!-- Chart.js Logic -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Shared Chart.js Defaults
-            Chart.defaults.font.family = "'Inter', sans-serif";
-            Chart.defaults.font.weight = 'bold';
-            Chart.defaults.color = '#9CA3AF';
+        {{-- Selling Statistics Bar Chart --}}
+        <div class="bg-white rounded-2xl p-8 shadow-sm border border-border">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+                <h3 class="text-lg font-bold text-text-primary tracking-tight">Selling Statistics</h3>
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 bg-primary rounded-sm"></div>
+                        <span class="text-[11px] font-bold text-text-secondary uppercase tracking-widest">Total Sales</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 bg-accent rounded-sm"></div>
+                        <span class="text-[11px] font-bold text-text-secondary uppercase tracking-widest">Net Profit</span>
+                    </div>
+                </div>
+            </div>
+            <div class="h-80 w-full">
+                <canvas id="sellingChart"></canvas>
+            </div>
+        </div>
+    </div>{{-- end desktop --}}
 
-            // Visitor Chart (Donut)
-        const ctxVisitor = document.getElementById('visitorChart').getContext('2d');
-        new Chart(ctxVisitor, {
-            type: 'doughnut',
-            data: {
-                labels: ['Paid', 'Unpaid'],
-                datasets: [{
-                    data: [{{ $stats['total_paid'] }}, {{ $stats['total_due'] }}],
-                    backgroundColor: ['#004161', '#F43F5E'], // Blue for Paid, Rose for Unpaid
-                    hoverBackgroundColor: ['#00314d', '#E11D48'],
-                    borderWidth: 0,
-                    cutout: '75%',
-                }]
-            },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                plugins: { 
-                    legend: { display: false },
-                    tooltip: {
-                        enabled: true,
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.label || '';
-                                let value = context.raw || 0;
-                                return label + ': $' + value.toLocaleString();
-                            }
-                        }
-                    }
-                } 
+</main>
+
+{{-- Chart.js (desktop only — skip on mobile to save bandwidth) --}}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    if (window.innerWidth < 1024) return; // skip charts on mobile
+
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.font.weight = 'bold';
+    Chart.defaults.color = '#9CA3AF';
+
+    new Chart(document.getElementById('visitorChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Paid', 'Unpaid'],
+            datasets: [{ data: [{{ $stats['total_paid'] }}, {{ $stats['total_due'] }}], backgroundColor: ['#004161','#F43F5E'], borderWidth: 0, cutout: '75%' }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.label + ': $' + ctx.raw.toLocaleString() } } } }
+    });
+
+    new Chart(document.getElementById('orderChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Paid', 'Unpaid'],
+            datasets: [{ data: [{{ $stats['purchase_paid'] }}, {{ $stats['purchase_due'] }}], backgroundColor: ['#004161','#99CC33'], borderWidth: 0, cutout: '75%' }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.label + ': $' + ctx.raw.toLocaleString() } } } }
+    });
+
+    new Chart(document.getElementById('sellingChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+            datasets: [
+                { label: 'Total Sales', data: @json($stats['monthly_sales']), backgroundColor: '#004161', borderRadius: 4, barThickness: 12 },
+                { label: 'Net Profit',  data: @json($stats['monthly_profit']), backgroundColor: '#99CC33', borderRadius: 4, barThickness: 12 }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, max: {{ $stats['max_monthly_val'] * 1.1 }}, grid: { borderDash: [5,5], color: '#E5E7EB' }, ticks: { stepSize: {{ ($stats['max_monthly_val'] * 1.1) / 4 }}, font: { size: 10 } } },
+                x: { grid: { display: false }, ticks: { font: { size: 10 } } }
             }
-        });
-
-            // Purchase Chart (Donut)
-            const ctxOrder = document.getElementById('orderChart').getContext('2d');
-            new Chart(ctxOrder, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Paid', 'Unpaid'],
-                    datasets: [{
-                        data: [{{ $stats['purchase_paid'] }}, {{ $stats['purchase_due'] }}],
-                        backgroundColor: ['#004161', '#99CC33'], // Blue for Paid, Green for Unpaid
-                        borderWidth: 0,
-                        cutout: '75%',
-                    }]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    plugins: { 
-                        legend: { display: false },
-                        tooltip: {
-                            enabled: true,
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.label || '';
-                                    let value = context.raw || 0;
-                                    return label + ': $' + value.toLocaleString();
-                                }
-                            }
-                        }
-                    } 
-                }
-            });
-
-            // Selling Statistics (Bar Chart)
-            const ctxSelling = document.getElementById('sellingChart').getContext('2d');
-            new Chart(ctxSelling, {
-                type: 'bar',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                    datasets: [
-                        {
-                            label: 'Total Sales',
-                            data: @json($stats['monthly_sales']),
-                            backgroundColor: '#004161',
-                            borderRadius: 4,
-                            barThickness: 12
-                        },
-                        {
-                            label: 'Net Profit',
-                            data: @json($stats['monthly_profit']),
-                            backgroundColor: '#99CC33',
-                            borderRadius: 4,
-                            barThickness: 12
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: {{ $stats['max_monthly_val'] * 1.1 }},
-                            grid: { borderDash: [5, 5], color: '#E5E7EB' },
-                            ticks: { stepSize: {{ ($stats['max_monthly_val'] * 1.1) / 4 }}, font: { size: 10 } }
-                        },
-                        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
-                    }
-                }
-            });
-        });
-    </script>
+        }
+    });
+});
+</script>
 
 @endsection
