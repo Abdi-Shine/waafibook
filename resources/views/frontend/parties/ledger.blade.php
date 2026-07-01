@@ -287,10 +287,10 @@
 
                     {{-- Search Transactions --}}
                     <div class="px-4 mt-3">
-                        <div class="bg-white flex items-center gap-2 px-3 py-2.5 rounded-xl border border-gray-200 shadow-sm">
+                        <div class="bg-gray-100 flex items-center gap-2 px-3 py-2.5 rounded-xl">
                             <i class="bi bi-search text-gray-400 text-sm"></i>
                             <input type="text" x-model="txnSearch" placeholder="Search Transactions"
-                                class="flex-1 text-[14px] text-gray-700 outline-none font-medium placeholder-gray-400 bg-transparent">
+                                class="flex-1 text-[14px] text-gray-700 outline-none border-none ring-0 font-medium placeholder-gray-400 bg-transparent">
                             <button class="w-7 h-7 flex items-center justify-center text-gray-500">
                                 <i class="bi bi-funnel text-[14px]"></i>
                             </button>
