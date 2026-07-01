@@ -256,23 +256,6 @@
 </header>
 
 <div x-data="{ show: true, contactOpen: false }" @open-contact-support.window="contactOpen = true">
-    @if(!is_null($trialDaysLeft))
-        <div x-show="show" x-cloak
-            class="lg:ml-[260px] bg-amber-50 border-b border-amber-100 px-8 py-2.5 flex items-center justify-between gap-4">
-            <p class="text-[13px] font-semibold text-amber-700">
-                Your free trial ends in {{ $trialDaysLeft }} {{ Str::plural('day', $trialDaysLeft) }}. Subscribe now to keep
-                your books running smoothly.
-            </p>
-            <div class="flex items-center gap-4 shrink-0">
-                <a href="#" @click.prevent="contactOpen = true"
-                    class="text-[13px] font-bold text-amber-700 underline hover:text-amber-900 transition-colors">Contact
-                    us</a>
-                <button @click="show = false" class="text-amber-500 hover:text-amber-700 transition-colors">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </div>
-        </div>
-    @endif
 
     <!-- Support Contact Popup -->
     <div x-show="contactOpen" x-cloak @click.away="contactOpen = false"
