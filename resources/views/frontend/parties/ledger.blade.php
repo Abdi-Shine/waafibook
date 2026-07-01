@@ -1,5 +1,17 @@
 @extends('admin.admin_master')
 @section('page_title', 'Parties')
+
+@push('css')
+<style>
+    .ledger-mobile  { display: block; }
+    .ledger-desktop { display: none;  }
+    @media (min-width: 1024px) {
+        .ledger-mobile  { display: none  !important; }
+        .ledger-desktop { display: flex  !important; }
+    }
+</style>
+@endpush
+
 @section('admin')
 
 @php
@@ -167,7 +179,7 @@
 }">
 
     {{-- ═══════════════════════════ MOBILE LAYOUT ═══════════════════════════ --}}
-    <div class="lg:hidden min-h-screen bg-gray-100">
+    <div class="ledger-mobile min-h-screen bg-gray-100">
 
         {{-- ── Mobile: Party List View ── --}}
         <div x-show="mobileView === 'list'" x-cloak>
@@ -410,7 +422,7 @@
     </div>
 
     {{-- ═══════════════════════════ DESKTOP LAYOUT ═══════════════════════════ --}}
-    <div class="hidden lg:flex h-[calc(100vh-5rem)] bg-background">
+    <div class="ledger-desktop h-[calc(100vh-5rem)] bg-background">
 
         {{-- Left Sidebar - Party List --}}
         <div class="w-72 shrink-0 border-r border-gray-100 bg-white flex flex-col">
