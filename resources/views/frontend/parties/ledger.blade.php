@@ -77,7 +77,7 @@
             url = '{{ url('/sales/invoices') }}/' + txn.id;
         } else if (txn.type === 'Purchase' && txn.id) {
             url = '{{ url('/purchase/bills') }}/' + txn.id;
-        } else if (txn.type === 'Payment' && txn.id) {
+        } else if ((txn.type === 'Payment-In' || txn.type === 'Payment-Out') && txn.id) {
             url = isSupplier ? '{{ url('/payment-out/delete') }}/' + txn.id : '{{ url('/payment-in/delete') }}/' + txn.id;
         } else if (txn.type === 'Credit Note' && txn.id) {
             url = '{{ url('/sales-return') }}/' + txn.id;
@@ -112,12 +112,16 @@
 
     statusBadgeClass(status) {
         const s = (status || '').toLowerCase();
-        if (s === 'unpaid') return 'bg-red-100 text-red-600';
+        if (s === 'unpaid') return 'bg-amber-100 text-amber-700';
         if (s === 'paid') return 'bg-emerald-100 text-emerald-700';
         if (s === 'partial') return 'bg-orange-100 text-orange-600';
         if (s === 'unused') return 'bg-blue-100 text-blue-600';
         if (s === 'draft') return 'bg-gray-100 text-gray-500';
         return 'bg-gray-100 text-gray-600';
+    },
+
+    isPayment(type) {
+        return type === 'Payment-In' || type === 'Payment-Out';
     }
 }">
 
@@ -297,50 +301,58 @@
                     <div class="px-4 mt-3 pb-24 space-y-3">
                         <template x-for="txn in filteredTransactions" :key="txn.type + txn.number + txn.date">
                             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                                <div class="p-4">
-                                    <div class="flex items-start justify-between gap-2">
-                                        <div class="flex items-center gap-2 flex-wrap">
-                                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider text-white"
-                                                :class="txn.type_color"
-                                                x-text="txn.type"></span>
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider"
-                                                :class="statusBadgeClass(txn.status)"
-                                                x-text="txn.status"></span>
-                                        </div>
-                                        <div class="text-right shrink-0">
-                                            <p class="text-[13px] font-bold text-gray-500" x-text="txn.number ? '#' + txn.number : ''"></p>
-                                            <p class="text-[11px] text-gray-400 mt-0.5" x-text="txn.date"></p>
-                                        </div>
+                                {{-- Top: type name + number --}}
+                                <div class="px-4 pt-4 pb-0">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[13px] font-bold text-primary-dark" x-text="txn.type"></span>
+                                        <span class="text-[13px] font-bold text-gray-400" x-text="txn.number ? '#' + txn.number : ''"></span>
                                     </div>
-
-                                    <div class="flex items-center gap-8 mt-3.5">
-                                        <div>
-                                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Total</p>
-                                            <p class="text-[15px] font-black text-primary-dark mt-0.5"
-                                                x-text="'$ ' + parseFloat(txn.total).toFixed(2)"></p>
-                                        </div>
-                                        <div x-show="txn.balance != null">
-                                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest"
-                                                x-text="txn.type === 'Payment' ? 'Unused' : 'Balance'"></p>
-                                            <p class="text-[15px] font-black text-primary-dark mt-0.5"
-                                                x-text="'$ ' + parseFloat(txn.balance).toFixed(2)"></p>
-                                        </div>
+                                    {{-- Status badge + date --}}
+                                    <div class="flex items-center justify-between mt-1.5 pb-3">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider"
+                                            :class="statusBadgeClass(txn.status)"
+                                            x-text="txn.status"></span>
+                                        <span class="text-[11px] text-gray-400" x-text="txn.date"></span>
                                     </div>
                                 </div>
 
-                                <div class="border-t border-gray-50 px-4 py-2 flex items-center">
-                                    <button @click="window.print()"
-                                        class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-primary rounded-lg hover:bg-gray-50 transition-colors">
-                                        <i class="bi bi-printer text-[15px]"></i>
-                                    </button>
-                                    <a :href="'https://wa.me/' + (ledger.party.phone || '').replace(/[^0-9]/g, '')" target="_blank"
-                                        class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-green-600 rounded-lg hover:bg-gray-50 transition-colors">
-                                        <i class="bi bi-share text-[15px]"></i>
-                                    </a>
-                                    <button @click="deleteTransaction(txn)"
-                                        class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors ml-auto">
-                                        <i class="bi bi-trash3 text-[14px]"></i>
-                                    </button>
+                                {{-- Amounts + actions --}}
+                                <div class="border-t border-gray-100 px-4 py-3 flex items-center gap-6">
+                                    <div>
+                                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Total</p>
+                                        <p class="text-[14px] font-black text-primary-dark mt-0.5"
+                                            x-text="'$ ' + parseFloat(txn.total).toFixed(2)"></p>
+                                    </div>
+                                    <div x-show="txn.balance != null">
+                                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest"
+                                            x-text="isPayment(txn.type) ? 'Unused' : 'Balance'"></p>
+                                        <p class="text-[14px] font-black text-primary-dark mt-0.5"
+                                            x-text="'$ ' + parseFloat(txn.balance).toFixed(2)"></p>
+                                    </div>
+
+                                    <div class="ml-auto flex items-center gap-0.5">
+                                        <button @click="window.print()"
+                                            class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-primary rounded-lg transition-colors">
+                                            <i class="bi bi-printer text-[16px]"></i>
+                                        </button>
+                                        <a :href="'https://wa.me/' + (ledger.party.phone || '').replace(/[^0-9]/g, '')" target="_blank"
+                                            class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-green-600 rounded-lg transition-colors">
+                                            <i class="bi bi-share text-[15px]"></i>
+                                        </a>
+                                        <div x-data="{ open: false }" class="relative">
+                                            <button @click="open = !open" @click.away="open = false"
+                                                class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-primary-dark rounded-lg transition-colors">
+                                                <i class="bi bi-three-dots-vertical text-[15px]"></i>
+                                            </button>
+                                            <div x-show="open" x-cloak x-transition
+                                                class="absolute right-0 bottom-full mb-1 w-36 bg-white rounded-xl shadow-lg border border-gray-100 z-20 overflow-hidden">
+                                                <button @click="deleteTransaction(txn); open = false"
+                                                    class="w-full text-left px-4 py-2.5 text-[13px] font-semibold text-red-500 hover:bg-red-50 flex items-center gap-2">
+                                                    <i class="bi bi-trash3"></i> Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </template>

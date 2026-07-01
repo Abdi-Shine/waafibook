@@ -98,26 +98,30 @@ class PartiesController extends Controller
         $customer = Customer::query()->findOrFail($id);
         $statusLabels = ['completed' => 'Paid', 'partial' => 'Partial', 'pending' => 'Unpaid'];
 
+        $fmt = fn($date, $createdAt) => $date
+            ? $date->format('d M, y') . ($createdAt ? ' • ' . Carbon::parse($createdAt)->format('g:i A') : '')
+            : '-';
+
         $sales = SalesOrder::query()->where('customer_id', $id)->get()->map(fn($o) => [
             'id'         => $o->id,
             'type'       => 'Sale',
             'type_color' => 'bg-emerald-500',
             'number'     => $o->invoice_no,
-            'date'       => $o->invoice_date ? $o->invoice_date->format('d/m/Y') : '-',
+            'date'       => $fmt($o->invoice_date, $o->created_at),
             'sort_date'  => $o->invoice_date ? $o->invoice_date->timestamp : 0,
             'total'      => (float) $o->total_amount,
             'balance'    => (float) $o->due_amount,
             'status'     => $statusLabels[$o->status] ?? ucfirst($o->status),
         ]);
 
-        $payments = PaymentIn::query()->where('customer_id', $id)->get()->map(function($p) {
+        $payments = PaymentIn::query()->where('customer_id', $id)->get()->map(function($p) use ($fmt) {
             $date = $p->payment_date ? Carbon::parse($p->payment_date) : null;
             return [
                 'id'         => $p->id,
-                'type'       => 'Payment',
+                'type'       => 'Payment-In',
                 'type_color' => 'bg-blue-500',
                 'number'     => $p->receipt_no,
-                'date'       => $date ? $date->format('d/m/Y') : '-',
+                'date'       => $fmt($date, $p->created_at),
                 'sort_date'  => $date ? $date->timestamp : 0,
                 'total'      => (float) $p->amount,
                 'balance'    => 0,
@@ -125,14 +129,14 @@ class PartiesController extends Controller
             ];
         });
 
-        $returns = SalesReturn::query()->where('customer_id', $id)->get()->map(function($r) {
+        $returns = SalesReturn::query()->where('customer_id', $id)->get()->map(function($r) use ($fmt) {
             $date = $r->return_date ? Carbon::parse($r->return_date) : null;
             return [
                 'id'         => $r->id,
                 'type'       => 'Credit Note',
                 'type_color' => 'bg-orange-500',
                 'number'     => $r->credit_note_no,
-                'date'       => $date ? $date->format('d/m/Y') : '-',
+                'date'       => $fmt($date, $r->created_at),
                 'sort_date'  => $date ? $date->timestamp : 0,
                 'total'      => (float) $r->amount,
                 'balance'    => (float) $r->amount,
@@ -149,7 +153,7 @@ class PartiesController extends Controller
                 'type'       => 'Opening Balance',
                 'type_color' => 'bg-gray-800',
                 'number'     => null,
-                'date'       => $customer->created_at ? $customer->created_at->format('d/m/Y') : '-',
+                'date'       => $customer->created_at ? $customer->created_at->format('d M, y • g:i A') : '-',
                 'sort_date'  => $customer->created_at ? $customer->created_at->timestamp : 0,
                 'total'      => abs($openingBalance),
                 'balance'    => $openingBalance,
@@ -178,14 +182,18 @@ class PartiesController extends Controller
         $supplier = Supplier::query()->findOrFail($id);
         $statusLabels = ['paid' => 'Paid', 'partial' => 'Partial', 'pending' => 'Unpaid', 'draft' => 'Draft'];
 
-        $purchases = PurchaseBill::query()->where('supplier_id', $id)->get()->map(function($b) use ($statusLabels) {
+        $fmt = fn($date, $createdAt) => $date
+            ? $date->format('d M, y') . ($createdAt ? ' • ' . Carbon::parse($createdAt)->format('g:i A') : '')
+            : '-';
+
+        $purchases = PurchaseBill::query()->where('supplier_id', $id)->get()->map(function($b) use ($statusLabels, $fmt) {
             $date = $b->bill_date ? Carbon::parse($b->bill_date) : null;
             return [
                 'id'         => $b->id,
                 'type'       => 'Purchase',
                 'type_color' => 'bg-emerald-500',
                 'number'     => $b->bill_number,
-                'date'       => $date ? $date->format('d/m/Y') : '-',
+                'date'       => $fmt($date, $b->created_at),
                 'sort_date'  => $date ? $date->timestamp : 0,
                 'total'      => (float) $b->total_amount,
                 'balance'    => (float) $b->balance_amount,
@@ -193,14 +201,14 @@ class PartiesController extends Controller
             ];
         });
 
-        $payments = SupplierPayment::query()->where('supplier_id', $id)->get()->map(function($p) {
+        $payments = SupplierPayment::query()->where('supplier_id', $id)->get()->map(function($p) use ($fmt) {
             $date = $p->payment_date ? Carbon::parse($p->payment_date) : null;
             return [
                 'id'         => $p->id,
-                'type'       => 'Payment',
+                'type'       => 'Payment-Out',
                 'type_color' => 'bg-blue-500',
                 'number'     => $p->voucher_no,
-                'date'       => $date ? $date->format('d/m/Y') : '-',
+                'date'       => $fmt($date, $p->created_at),
                 'sort_date'  => $date ? $date->timestamp : 0,
                 'total'      => (float) $p->amount,
                 'balance'    => 0,
@@ -208,14 +216,14 @@ class PartiesController extends Controller
             ];
         });
 
-        $returns = PurchaseReturn::query()->where('supplier_id', $id)->get()->map(function($r) {
+        $returns = PurchaseReturn::query()->where('supplier_id', $id)->get()->map(function($r) use ($fmt) {
             $date = $r->return_date ? Carbon::parse($r->return_date) : null;
             return [
                 'id'         => $r->id,
                 'type'       => 'Debit Note',
                 'type_color' => 'bg-orange-500',
                 'number'     => $r->return_number,
-                'date'       => $date ? $date->format('d/m/Y') : '-',
+                'date'       => $fmt($date, $r->created_at),
                 'sort_date'  => $date ? $date->timestamp : 0,
                 'total'      => (float) $r->total_amount,
                 'balance'    => (float) $r->total_amount,
@@ -232,7 +240,7 @@ class PartiesController extends Controller
                 'type'       => 'Opening Balance',
                 'type_color' => 'bg-gray-800',
                 'number'     => null,
-                'date'       => $supplier->created_at ? $supplier->created_at->format('d/m/Y') : '-',
+                'date'       => $supplier->created_at ? $supplier->created_at->format('d M, y • g:i A') : '-',
                 'sort_date'  => $supplier->created_at ? $supplier->created_at->timestamp : 0,
                 'total'      => abs($openingBalance),
                 'balance'    => $openingBalance,
