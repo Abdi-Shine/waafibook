@@ -13,15 +13,9 @@
             <button onclick="openSidebar()" class="dash-mobile-menu-btn">
                 <i class="bi bi-list text-xl"></i>
             </button>
-            <div x-data="{ open: false }" class="relative ml-auto">
-                @php $totalNotifs = $lowStockAlerts->count() + $globalBackups->count(); @endphp
-                <button @click="open = !open" @click.away="open = false" class="dash-mobile-bell-btn">
-                    <i class="bi bi-bell text-xl"></i>
-                    @if($totalNotifs > 0)
-                        <span class="dash-mobile-bell-dot">{{ $totalNotifs }}</span>
-                    @endif
-                </button>
-            </div>
+            <a href="#" onclick="document.getElementById('notif-btn').click(); return false;" class="dash-mobile-bell-btn ml-auto">
+                <i class="bi bi-bell text-xl"></i>
+            </a>
         </div>
 
         {{-- Greeting --}}
