@@ -740,7 +740,7 @@
         background: #99CC33; color: #fff; font-size: 13px; font-weight: 900;
         cursor: pointer; display: flex; align-items: center;
         justify-content: center; gap: 6px; letter-spacing: 0.02em;
-        transition: opacity 0.2s;
+        transition: opacity 0.2s; margin-left: auto;
     }
     .pos-mobile-pay-btn:active { opacity: 0.85; }
 
