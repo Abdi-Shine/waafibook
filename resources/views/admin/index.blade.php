@@ -82,48 +82,40 @@
             </div>
         </div>
 
-        {{-- Recent Invoices --}}
+        {{-- Parties — You'll Get --}}
         <div class="px-5 pb-28">
             <div class="flex items-center justify-between mb-3">
-                <span class="text-[11px] font-black text-text-secondary uppercase tracking-widest">Recent Invoices</span>
-                <a href="{{ route('sales.invoice.view') }}" class="text-sm font-bold text-primary">See all</a>
+                <span class="text-[11px] font-black text-text-secondary uppercase tracking-widest">You'll Get</span>
+                <a href="{{ route('customer.index') }}" class="text-sm font-bold text-primary">See all</a>
             </div>
             <div class="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
-                @forelse($recentInvoices as $inv)
+                @forelse($recentParties as $inv)
                     @php
-                        $isOverdue = $inv->due_date && $inv->due_date->isPast() && $inv->status !== 'completed';
-                        $amtLabel = match(true) {
-                            $inv->status === 'completed' => 'Received',
-                            $inv->status === 'partial'   => 'Partial',
-                            $isOverdue                   => 'Overdue',
-                            default                      => "You'll Get",
-                        };
-                        $amtLabelClass = match(true) {
-                            $inv->status === 'completed' => 'text-green-600',
-                            $isOverdue                   => 'text-red-500',
-                            $inv->status === 'partial'   => 'text-amber-500',
-                            default                      => 'text-accent',
-                        };
+                        $isOverdue = $inv->due_date && $inv->due_date->isPast();
+                        $labelText  = $isOverdue ? "Overdue" : "You'll Get";
+                        $labelColor = $isOverdue ? 'text-red-500' : 'text-accent';
                     @endphp
                     <a href="{{ route('sales.invoice.show', $inv->id) }}"
-                       class="flex items-center justify-between px-4 py-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
-                        <div class="min-w-0">
-                            <p class="text-[15px] font-black text-text-primary uppercase tracking-wide truncate">
-                                {{ $inv->customer->name ?? 'Walk-in Customer' }}
+                       class="flex items-center justify-between px-4 py-4 border-b border-gray-100 last:border-0 active:bg-gray-50 transition-colors">
+                        <div class="min-w-0 pr-3">
+                            <p class="text-[15px] font-black text-text-primary leading-tight truncate">
+                                {{ strtoupper($inv->customer->name ?? 'WALK-IN CUSTOMER') }}
                             </p>
-                            <p class="text-xs text-text-secondary mt-0.5">
+                            <p class="text-xs text-text-secondary mt-1">
                                 {{ \Carbon\Carbon::parse($inv->invoice_date)->format('d M Y') }}
                             </p>
                         </div>
-                        <div class="text-right shrink-0 ml-4">
-                            <p class="text-[15px] font-black text-text-primary">${{ number_format($inv->total_amount, 2) }}</p>
-                            <p class="text-xs font-bold {{ $amtLabelClass }} mt-0.5">{{ $amtLabel }}</p>
+                        <div class="text-right shrink-0">
+                            <p class="text-[15px] font-black text-text-primary">
+                                $ {{ number_format($inv->due_amount, 2) }}
+                            </p>
+                            <p class="text-xs font-bold {{ $labelColor }} mt-1">{{ $labelText }}</p>
                         </div>
                     </a>
                 @empty
                     <div class="py-10 text-center">
-                        <i class="bi bi-file-earmark-text text-3xl text-gray-300"></i>
-                        <p class="text-sm text-text-secondary mt-2">No invoices yet</p>
+                        <i class="bi bi-people text-3xl text-gray-300"></i>
+                        <p class="text-sm text-text-secondary mt-2 font-semibold">All balances settled</p>
                     </div>
                 @endforelse
             </div>
