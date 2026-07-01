@@ -9,6 +9,7 @@
 @endphp
 
 <div x-data="{
+    companyName: @js($companyName),
     parties: @js($parties),
     search: '',
     typeFilter: 'all',
@@ -132,10 +133,10 @@
             Swal.fire({ icon: 'warning', title: 'No Phone Number', text: 'This party has no phone number saved. Please add one first.' });
             return;
         }
-        const name  = this.ledger.party.name;
-        const amt   = parseFloat(this.ledger.party.amount).toFixed(2);
-        const label = this.ledger.party.type === 'customer' ? 'you owe us' : 'we owe you';
-        const msg   = 'Hello ' + name + ',\n\nThis is a friendly reminder that your outstanding balance with {{ $companyName }} is $' + amt + ' (' + label + ').\n\nPlease settle at your earliest convenience.\n\nThank you!';
+        const name = this.ledger.party.name;
+        const amt  = parseFloat(this.ledger.party.amount).toFixed(2);
+        const co   = this.companyName;
+        const msg  = 'Dear ' + name + ',\n\nWe would like to kindly remind you that your outstanding balance with *' + co + '* is *$' + amt + '*.\n\nPlease arrange payment at your earliest convenience.\n\nThank you for your business!';
         window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
     },
 
@@ -148,14 +149,17 @@
         }
         const name  = this.ledger.party.name;
         const amt   = parseFloat(this.ledger.party.amount).toFixed(2);
+        const co    = this.companyName;
         const label = this.ledger.party.type === 'customer' ? 'Receivable' : 'Payable';
-        let msg = 'Hello ' + name + ',\n\nAccount statement with {{ $companyName }}:\nBalance: $' + amt + ' (' + label + ')\n\nTransactions:\n';
+        let msg = 'Dear ' + name + ',\n\nHere is your account statement with *' + co + '*:\n\n';
+        msg += '*Balance: $' + amt + '* (' + label + ')\n\n';
+        msg += '*Transactions:*\n';
         this.ledger.transactions.slice(0, 10).forEach(function(t) {
             msg += '- ' + t.type + ' #' + (t.number || '-') + ' | ' + t.date + ' | $' + parseFloat(t.total).toFixed(2) + ' | ' + t.status + '\n';
         });
         const extra = this.ledger.transactions.length - 10;
-        if (extra > 0) { msg += '...and ' + extra + ' more.\n'; }
-        msg += '\nThank you!';
+        if (extra > 0) { msg += '...and ' + extra + ' more transaction(s).\n'; }
+        msg += '\nThank you for your business!';
         window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
     }
 }">
