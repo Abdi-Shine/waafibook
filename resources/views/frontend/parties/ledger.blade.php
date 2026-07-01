@@ -147,19 +147,10 @@
             Swal.fire({ icon: 'warning', title: 'No Phone Number', text: 'This party has no phone number saved. Please add one first.' });
             return;
         }
-        const name  = this.ledger.party.name;
-        const amt   = parseFloat(this.ledger.party.amount).toFixed(2);
-        const co    = this.companyName;
-        const label = this.ledger.party.type === 'customer' ? 'Receivable' : 'Payable';
-        let msg = 'Dear ' + name + ',\n\nHere is your account statement with *' + co + '*:\n\n';
-        msg += '*Balance: $' + amt + '* (' + label + ')\n\n';
-        msg += '*Transactions:*\n';
-        this.ledger.transactions.slice(0, 10).forEach(function(t) {
-            msg += '- ' + t.type + ' #' + (t.number || '-') + ' | ' + t.date + ' | $' + parseFloat(t.total).toFixed(2) + ' | ' + t.status + '\n';
-        });
-        const extra = this.ledger.transactions.length - 10;
-        if (extra > 0) { msg += '...and ' + extra + ' more transaction(s).\n'; }
-        msg += '\nThank you for your business!';
+        const name = this.ledger.party.name;
+        const co   = this.companyName;
+        const url  = this.ledger.party.statement_url;
+        const msg  = 'Dear ' + name + ',\n\nPlease find your account statement with *' + co + '* at the link below:\n\n' + url + '\n\nThank you for your business!';
         window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
     }
 }">
