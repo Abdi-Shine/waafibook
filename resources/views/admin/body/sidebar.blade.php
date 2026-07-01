@@ -19,9 +19,8 @@
     <!-- Brand (fixed: always the software owner, never the tenant's own company) -->
     <div class="sticky top-0 bg-primary/95 backdrop-blur-sm z-10 px-6 py-6 border-b border-white/10">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
-                <img src="{{ asset('upload/horntechlogo/horntech_logo.jpg') }}" class="w-full h-full object-contain"
-                    alt="Waafibook Logo">
+            <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg overflow-hidden p-1">
+                @include('partials.logo_svg', ['width' => 36, 'height' => 36])
             </div>
             <div>
                 <h4 class="text-white text-lg font-bold tracking-tight">Waafi Book</h4>
