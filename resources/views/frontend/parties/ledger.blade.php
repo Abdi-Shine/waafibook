@@ -1,17 +1,6 @@
 @extends('admin.admin_master')
 @section('page_title', 'Parties')
 
-@push('css')
-<style>
-    .ledger-mobile  { display: block; }
-    .ledger-desktop { display: none;  }
-    @media (min-width: 1024px) {
-        .ledger-mobile  { display: none  !important; }
-        .ledger-desktop { display: flex  !important; }
-    }
-</style>
-@endpush
-
 @section('admin')
 
 @php
@@ -19,15 +8,6 @@
     $ledgerCompany = $company ?? \App\Models\Company::find(auth()->user()->company_id ?? 0);
     $initialMobileView = $ledger ? 'detail' : 'list';
 @endphp
-
-<style>
-    .ledger-mobile  { display: block !important; }
-    .ledger-desktop { display: none  !important; }
-    @media (min-width: 1024px) {
-        .ledger-mobile  { display: none !important; }
-        .ledger-desktop { display: flex !important; }
-    }
-</style>
 
 <script>
     window.__ledger = {
@@ -188,7 +168,7 @@
 }">
 
     {{-- ═══════════════════════════ MOBILE LAYOUT ═══════════════════════════ --}}
-    <div class="ledger-mobile min-h-screen bg-gray-100">
+    <div id="l-mobile" class="min-h-screen bg-gray-100" style="display:none">
 
         {{-- ── Mobile: Party List View ── --}}
         <div x-show="mobileView === 'list'" x-cloak>
@@ -431,7 +411,7 @@
     </div>
 
     {{-- ═══════════════════════════ DESKTOP LAYOUT ═══════════════════════════ --}}
-    <div class="ledger-desktop h-[calc(100vh-5rem)] bg-background">
+    <div id="l-desktop" class="h-[calc(100vh-5rem)] bg-background" style="display:flex">
 
         {{-- Left Sidebar - Party List --}}
         <div class="w-72 shrink-0 border-r border-gray-100 bg-white flex flex-col">
@@ -589,5 +569,24 @@
     </div>
 
 </div>
+
+<script>
+(function() {
+    var m = document.getElementById('l-mobile');
+    var d = document.getElementById('l-desktop');
+    function applyLayout() {
+        if (!m || !d) return;
+        if (window.innerWidth >= 1024) {
+            m.style.display = 'none';
+            d.style.display = 'flex';
+        } else {
+            m.style.display = 'block';
+            d.style.display = 'none';
+        }
+    }
+    applyLayout();
+    window.addEventListener('resize', applyLayout);
+})();
+</script>
 
 @endsection
