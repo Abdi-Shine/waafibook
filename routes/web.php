@@ -127,15 +127,36 @@ Route::get('/dashboard', function () {
     $orderCount = $stats['orders_placed'];
     $customerCount = \App\Models\Customer::count();
 
-    // All customers ordered by balance descending — shown in the mobile parties list.
-    $recentParties = \App\Models\Customer::addSelect([
-            'latest_invoice_date' => \App\Models\SalesOrder::select('invoice_date')
-                ->whereColumn('customer_id', 'customers.id')
-                ->latest('invoice_date')
-                ->limit(1),
-        ])
-        ->orderByDesc('amount_balance')
-        ->get();
+    // Combine customers + suppliers into one parties list for the mobile dashboard.
+    $customers = \App\Models\Customer::addSelect([
+        'latest_txn_date' => \App\Models\SalesOrder::select('invoice_date')
+            ->whereColumn('customer_id', 'customers.id')
+            ->latest('invoice_date')
+            ->limit(1),
+    ])->get()->map(fn($c) => (object)[
+        'id'             => $c->id,
+        'name'           => $c->name,
+        'amount_balance' => (float) $c->amount_balance,
+        'latest_date'    => $c->latest_txn_date ?? optional($c->created_at)->toDateString(),
+        'type'           => 'customer',
+    ]);
+
+    $suppliers = \App\Models\Supplier::addSelect([
+        'latest_txn_date' => \App\Models\PurchaseBill::select('bill_date')
+            ->whereColumn('supplier_id', 'suppliers.id')
+            ->latest('bill_date')
+            ->limit(1),
+    ])->get()->map(fn($s) => (object)[
+        'id'             => $s->id,
+        'name'           => $s->name,
+        'amount_balance' => (float) $s->amount_balance,
+        'latest_date'    => $s->latest_txn_date ?? optional($s->created_at)->toDateString(),
+        'type'           => 'supplier',
+    ]);
+
+    $recentParties = $customers->concat($suppliers)
+        ->sortByDesc(fn($p) => $p->amount_balance)
+        ->values();
 
     return view('admin.index', compact('stats', 'orderCount', 'customerCount', 'recentParties'));
 })->middleware(['auth', 'verified', 'permission:Dashboard'])->name('dashboard');

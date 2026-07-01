@@ -73,30 +73,38 @@
                 </button>
             </div>
 
-            {{-- Customer list --}}
+            {{-- Parties list (customers + suppliers) --}}
             <div class="bg-white border-t border-b border-gray-100">
                 @forelse($recentParties as $party)
-                    <a href="{{ route('customer.statement', $party->id) }}"
+                    @php
+                        $route = $party->type === 'supplier'
+                            ? route('supplier.statement', $party->id)
+                            : route('customer.statement', $party->id);
+
+                        // Customer: positive = we receive, Supplier: positive = we owe
+                        if ($party->type === 'customer') {
+                            $label      = $party->amount_balance > 0 ? "You'll Get" : ($party->amount_balance < 0 ? "You'll Pay" : 'Settled');
+                            $labelColor = $party->amount_balance > 0 ? 'text-accent'    : ($party->amount_balance < 0 ? 'text-red-500' : 'text-gray-400');
+                        } else {
+                            $label      = $party->amount_balance > 0 ? "You'll Pay" : ($party->amount_balance < 0 ? "You'll Get" : 'Settled');
+                            $labelColor = $party->amount_balance > 0 ? 'text-red-500' : ($party->amount_balance < 0 ? 'text-accent'   : 'text-gray-400');
+                        }
+                    @endphp
+                    <a href="{{ $route }}"
                        class="flex items-center justify-between px-5 py-4 border-b border-gray-100 last:border-0 active:bg-gray-50 transition-colors">
                         <div class="min-w-0 pr-3">
                             <p class="text-[15px] font-black text-text-primary leading-tight truncate">
                                 {{ strtoupper($party->name) }}
                             </p>
                             <p class="text-xs text-text-secondary mt-0.5">
-                                {{ $party->latest_invoice_date ? \Carbon\Carbon::parse($party->latest_invoice_date)->format('d M Y') : \Carbon\Carbon::parse($party->created_at)->format('d M Y') }}
+                                {{ $party->latest_date ? \Carbon\Carbon::parse($party->latest_date)->format('d M Y') : '—' }}
                             </p>
                         </div>
                         <div class="text-right shrink-0">
                             <p class="text-[15px] font-black text-text-primary">
-                                $ {{ number_format($party->amount_balance, 2) }}
+                                $ {{ number_format(abs($party->amount_balance), 2) }}
                             </p>
-                            @if($party->amount_balance > 0)
-                                <p class="text-xs font-bold text-accent mt-0.5">You'll Get</p>
-                            @elseif($party->amount_balance < 0)
-                                <p class="text-xs font-bold text-red-500 mt-0.5">You'll Pay</p>
-                            @else
-                                <p class="text-xs font-semibold text-gray-400 mt-0.5">Settled</p>
-                            @endif
+                            <p class="text-xs font-bold {{ $labelColor }} mt-0.5">{{ $label }}</p>
                         </div>
                     </a>
                 @empty
