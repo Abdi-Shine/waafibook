@@ -3,10 +3,28 @@
 
 @section('admin')
     <div class="pos-container">
+
+        {{-- ── MOBILE TAB BAR (hidden on desktop) ── --}}
+        <div class="pos-mobile-tabbar">
+            <a href="{{ route('sales.invoice.view') }}" class="pos-mobile-back-btn">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div class="pos-mobile-tabs">
+                <button class="pos-mobile-tab pos-tab-active" id="tabProducts" onclick="switchPosTab('products')">
+                    <i class="bi bi-grid-3x3-gap"></i> Products
+                </button>
+                <button class="pos-mobile-tab" id="tabCart" onclick="switchPosTab('cart')">
+                    <i class="bi bi-cart3"></i> Cart
+                    <span class="pos-cart-badge" id="cartBadge" style="display:none">0</span>
+                </button>
+            </div>
+        </div>
+
         <!-- Left Section - Products -->
-        <div class="products-section">
+        <div class="products-section" id="posPanelProducts">
+            {{-- Desktop back button (hidden on mobile — mobile tab bar handles it) --}}
             <div class="search-bar">
-                <a href="{{ route('sales.invoice.view') }}" class="pos-back-btn" title="Back to Sales">
+                <a href="{{ route('sales.invoice.view') }}" class="pos-back-btn pos-back-desktop" title="Back to Sales">
                     <i class="bi bi-arrow-left"></i>
                 </a>
                 <div class="search-input-group">
@@ -15,7 +33,7 @@
                            placeholder="Search by name, SKU or scan barcode...">
                 </div>
             </div>
-            
+
             <div class="categories-bar">
                 <button class="category-btn active" onclick="filterCategory('all', this)">
                     <i class="bi bi-grid"></i> All
@@ -26,20 +44,20 @@
                 </button>
                 @endforeach
             </div>
-            
+
             <div class="products-grid" id="productsGrid">
                 <!-- Products Loaded by JS -->
             </div>
         </div>
-        
+
         <!-- Right Section - Cart -->
-        <div class="cart-section">
+        <div class="cart-section" id="posPanelCart">
             <div class="cart-header">
                 <div class="cart-title">
                     <i class="bi bi-cart"></i> Current Order
                 </div>
             </div>
-            
+
             <div class="customer-info">
                 <select class="customer-input mb-2" id="customer_id">
                     <option value="">Walk-in Customer</option>
@@ -60,7 +78,7 @@
                     </select>
                 </div>
             </div>
-            
+
             <div class="cart-items" id="cartItems">
                 <div class="empty-cart">
                     <i class="bi bi-cart-x"></i>
@@ -68,7 +86,7 @@
                     <p class="text-sm">Click products to add them</p>
                 </div>
             </div>
-            
+
             <div class="cart-summary">
                 <div class="summary-row">
                     <span>Subtotal</span>
@@ -78,7 +96,6 @@
                     <span>Total</span>
                     <span id="totalAmount">0.00 {{ $company->currency ?? 'SAR' }}</span>
                 </div>
-                
                 <div class="payment-buttons">
                     <button class="btn btn-pos btn-complete" onclick="processPayment()">
                         <i class="bi bi-check-circle"></i> COMPLETE PAYMENT
@@ -89,6 +106,18 @@
                 </div>
             </div>
         </div>
+
+        {{-- ── MOBILE PAYMENT FOOTER (hidden on desktop) ── --}}
+        <div class="pos-mobile-footer">
+            <div class="pos-mobile-footer-total">
+                <span class="pos-mobile-footer-label">Total</span>
+                <span class="pos-mobile-footer-val" id="mobileTotalAmt">0.00 {{ $company->currency ?? 'SAR' }}</span>
+            </div>
+            <button class="pos-mobile-pay-btn" onclick="processPayment()">
+                <i class="bi bi-check-circle-fill"></i> Pay Now
+            </button>
+        </div>
+
     </div>
 @endsection
 
@@ -168,6 +197,8 @@
                     stock: stock,
                     code: p.product_code
                 });
+                // On mobile: auto-switch to cart tab when first item is added
+                if (window.innerWidth < 1024 && cart.length === 1) switchPosTab('cart');
             }
             updateCart();
         }
@@ -236,6 +267,26 @@
             const total = sub;
             document.getElementById('subtotal').innerText = sub.toFixed(2) + ' ' + CURRENCY;
             document.getElementById('totalAmount').innerText = total.toFixed(2) + ' ' + CURRENCY;
+
+            // Sync mobile elements
+            const totalQty = cart.reduce((s, i) => s + i.quantity, 0);
+            const badge = document.getElementById('cartBadge');
+            const mobileTotal = document.getElementById('mobileTotalAmt');
+            if (badge) { badge.textContent = totalQty; badge.style.display = totalQty > 0 ? 'inline-flex' : 'none'; }
+            if (mobileTotal) mobileTotal.textContent = total.toFixed(2) + ' ' + CURRENCY;
+        }
+
+        // ── Mobile tab switching ──────────────────────────────────────
+        function switchPosTab(tab) {
+            const panels  = { products: document.getElementById('posPanelProducts'), cart: document.getElementById('posPanelCart') };
+            const tabs    = { products: document.getElementById('tabProducts'),      cart: document.getElementById('tabCart') };
+            Object.keys(panels).forEach(k => {
+                const isCurrent = k === tab;
+                panels[k].classList.toggle('pos-panel-hidden', !isCurrent);
+                tabs[k].classList.toggle('pos-tab-active', isCurrent);
+            });
+            // Auto-switch to cart after adding first item on mobile
+            if (tab === 'cart') document.getElementById('posPanelCart').scrollTop = 0;
         }
 
         function processPayment() {
