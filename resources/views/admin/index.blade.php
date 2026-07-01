@@ -78,10 +78,10 @@
         }">
             <div class="flex items-center gap-2 px-5 mb-2">
                 {{-- Real search input — filters list, no navigation --}}
-                <div class="flex-1 flex items-center gap-2 px-3 py-2.5 bg-white border border-gray-200 rounded-xl">
+                <div class="flex-1 flex items-center gap-2 px-3 py-2.5 bg-gray-100 rounded-xl">
                     <i class="bi bi-search text-gray-400 text-sm"></i>
                     <input type="text" x-model="search" placeholder="SEARCH PARTY"
-                        class="flex-1 text-[13px] text-gray-700 font-medium tracking-wide placeholder-gray-400 outline-none bg-transparent"
+                        class="flex-1 text-[13px] text-gray-700 font-medium tracking-wide placeholder-gray-400 outline-none border-none ring-0 bg-transparent"
                         autocomplete="off">
                     <button x-show="search" @click="search = ''" class="text-gray-400 hover:text-gray-600">
                         <i class="bi bi-x text-base"></i>
