@@ -5,6 +5,7 @@
 @php
     $symbol = '$';
     $initialMobileView = $ledger ? 'detail' : 'list';
+    $companyName = $company->name ?? 'us';
 @endphp
 
 <div x-data="{
@@ -122,6 +123,36 @@
 
     isPayment(type) {
         return type === 'Payment-In' || type === 'Payment-Out';
+    },
+
+    reminderWhatsApp() {
+        if (!this.ledger) return '#';
+        const phone = (this.ledger.party.phone || '').replace(/[^0-9]/g, '');
+        const name  = this.ledger.party.name;
+        const amt   = parseFloat(this.ledger.party.amount).toFixed(2);
+        const label = this.ledger.party.type === 'customer' ? "you owe us" : "we owe you";
+        const msg   = `Hello ${name},\n\nThis is a friendly reminder that your outstanding balance with {{ $companyName }} is *$${amt}* (${label}).\n\nPlease settle at your earliest convenience.\n\nThank you!`;
+        return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    },
+
+    statementWhatsApp() {
+        if (!this.ledger) return '#';
+        const phone = (this.ledger.party.phone || '').replace(/[^0-9]/g, '');
+        const name  = this.ledger.party.name;
+        const amt   = parseFloat(this.ledger.party.amount).toFixed(2);
+        const label = this.ledger.party.type === 'customer' ? 'Receivable' : 'Payable';
+        let lines   = [`Hello ${name},\n\nHere is your account statement with *{{ $companyName }}*:\n`];
+        lines.push(`*Balance: $${amt}* (${label})\n`);
+        lines.push(`*Transactions:*`);
+        this.ledger.transactions.slice(0, 10).forEach(t => {
+            lines.push(`• ${t.type} #${t.number || '-'} | ${t.date} | $${parseFloat(t.total).toFixed(2)} | ${t.status}`);
+        });
+        if (this.ledger.transactions.length > 10) {
+            lines.push(`...and ${this.ledger.transactions.length - 10} more.`);
+        }
+        lines.push(`\nThank you!`);
+        const msg = lines.join('\n');
+        return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
     }
 }">
 
@@ -273,14 +304,13 @@
                         </div>
 
                         <div class="flex gap-2 mt-4">
-                            <a :href="'https://wa.me/' + (ledger.party.phone || '').replace(/[^0-9]/g, '')"
-                                target="_blank"
+                            <a :href="reminderWhatsApp()" target="_blank"
                                 class="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold text-primary-dark hover:bg-gray-100 transition-colors">
-                                <i class="bi bi-bell text-primary text-[14px]"></i> Send Reminder
+                                <i class="bi bi-whatsapp text-green-500 text-[15px]"></i> Send Reminder
                             </a>
-                            <a :href="ledger.party.type === 'supplier' ? '{{ url('/suppliers') }}/' + ledger.party.id + '/statement' : '{{ url('/customers') }}/' + ledger.party.id + '/statement'"
+                            <a :href="statementWhatsApp()" target="_blank"
                                 class="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold text-primary-dark hover:bg-gray-100 transition-colors">
-                                <i class="bi bi-file-earmark-text text-primary text-[14px]"></i> Send Statement
+                                <i class="bi bi-whatsapp text-green-500 text-[15px]"></i> Send Statement
                             </a>
                         </div>
                     </div>
