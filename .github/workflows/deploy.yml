@@ -1,92 +1,51 @@
-name: Deploy Horntech to Namecheap
+name: Deploy WaafiBook to Hostinger VPS
 
 on:
   push:
     branches: [ "main" ]
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # ── 1. Checkout code ───────────────────────────────────────────────────
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      # ── 2. Setup Node.js & build frontend assets ──────────────────────────
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install NPM dependencies
-        run: npm ci
-
-      - name: Build frontend assets (Vite)
-        run: npm run build
-
-      # ── 3. Setup PHP ───────────────────────────────────────────────────────
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          extensions: mbstring, pdo_mysql, openssl, tokenizer, xml, ctype, fileinfo, bcmath
-
-      # ── 4. Install Composer dependencies ──────────────────────────────────
-      - name: Install Composer dependencies
-        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
-
-      # ── 5. Deploy to Namecheap via SSH ────────────────────────────────────
-      - name: Upload files to server via rsync
-        uses: burnett01/rsync-deployments@7.0.1
-        with:
-          switches: -avzr --delete --exclude='.env' --exclude='storage/logs/*' --exclude='storage/framework/cache/*' --exclude='storage/framework/sessions/*' --exclude='storage/framework/views/*'
-          path: ./
-          remote_path: ${{ secrets.DEPLOY_PATH }}
-          remote_host: ${{ secrets.DEPLOY_HOST }}
-          remote_user: ${{ secrets.DEPLOY_USER }}
-          remote_key: ${{ secrets.DEPLOY_KEY }}
-          remote_port: 21098
-
-      # ── 6. Run post-deploy commands on server ─────────────────────────────
-      - name: Run post-deploy commands
+      # ── SSH into VPS, pull code, build, cache ──────────────────────────────
+      - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
+          host: 187.124.217.111
+          username: root
           key: ${{ secrets.DEPLOY_KEY }}
-          port: 21098
+          port: 22
           script: |
-            cd ${{ secrets.DEPLOY_PATH }}
+            set -e
+            cd /var/www/waafibook
 
-            echo "=== Running Migrations ==="
-            php8.2 artisan migrate --force 2>&1 || php8.2 artisan migrate:fresh --seed --force
+            echo "=== Pulling latest code ==="
+            git pull origin main
 
-            echo "=== Clearing & Caching Config ==="
-            php8.2 artisan config:clear
-            php8.2 artisan config:cache
+            echo "=== Composer ==="
+            composer install --no-dev --optimize-autoloader --no-interaction --quiet
 
-            echo "=== Caching Routes ==="
-            php8.2 artisan route:clear
-            php8.2 artisan route:cache
+            echo "=== Building frontend assets ==="
+            npm ci --prefer-offline 2>/dev/null || npm install --silent
+            npm run build
 
-            echo "=== Caching Views ==="
-            php8.2 artisan view:clear
-            php8.2 artisan view:cache
+            echo "=== Migrations ==="
+            php artisan migrate --force
 
-            echo "=== Setting Permissions ==="
+            echo "=== Cache rebuild ==="
+            php artisan config:clear && php artisan config:cache
+            php artisan route:clear  && php artisan route:cache
+            php artisan view:clear   && php artisan view:cache
+
+            echo "=== Permissions ==="
             chmod -R 775 storage bootstrap/cache
             chmod -R 755 public
 
-            echo "=== Deployment Complete ==="
+            echo "=== Deployment complete ==="
 
-      # ── 7. Bust PHP-FPM's opcode cache ─────────────────────────────────────
-      # On shared hosting, opcache often doesn't revalidate file timestamps
-      # promptly, so FPM workers can keep serving pre-deploy bytecode for a
-      # while after rsync + artisan caching above. Hit a standalone endpoint
-      # (outside the Laravel bootstrap) that resets it on the same workers
-      # serving real requests.
+      # ── Bust OPcache ───────────────────────────────────────────────────────
       - name: Reset OPcache
         run: |
           curl -fsS "https://ims.thehorntech.com/opcache-clear.php?token=horntech-deploy-cache-bust-7f3a91" || true
