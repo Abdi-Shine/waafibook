@@ -53,61 +53,66 @@
             </div>
         </div>
 
-        {{-- Parties List --}}
-        <div class="pb-28">
-            {{-- Search header matching Parties page --}}
+        {{-- Parties List with inline search --}}
+        <div class="pb-28" x-data="{
+            search: '',
+            parties: @js($recentParties->map(fn($p) => [
+                'id'      => $p->id,
+                'name'    => $p->name,
+                'amount'  => abs($p->amount_balance),
+                'date'    => $p->latest_date ? \Carbon\Carbon::parse($p->latest_date)->format('d M Y') : '—',
+                'type'    => $p->type,
+                'label'   => $p->type === 'customer'
+                    ? ($p->amount_balance > 0 ? 'You\'ll Get' : ($p->amount_balance < 0 ? 'You\'ll Pay' : 'Settled'))
+                    : ($p->amount_balance > 0 ? 'You\'ll Pay' : ($p->amount_balance < 0 ? 'You\'ll Get' : 'Settled')),
+                'labelColor' => $p->type === 'customer'
+                    ? ($p->amount_balance > 0 ? 'text-accent' : ($p->amount_balance < 0 ? 'text-red-500' : 'text-gray-400'))
+                    : ($p->amount_balance > 0 ? 'text-red-500' : ($p->amount_balance < 0 ? 'text-accent' : 'text-gray-400')),
+                'url'     => route('parties.ledger', ['type' => $p->type, 'id' => $p->id]),
+            ])),
+            get filtered() {
+                if (!this.search) return this.parties;
+                const q = this.search.toLowerCase();
+                return this.parties.filter(p => p.name.toLowerCase().includes(q));
+            }
+        }">
             <div class="flex items-center gap-2 px-5 mb-2">
-                <a href="{{ route('customer.index') }}" class="flex-1 flex items-center gap-2 px-3 py-2.5 bg-white border border-gray-200 rounded-xl">
+                {{-- Real search input — filters list, no navigation --}}
+                <div class="flex-1 flex items-center gap-2 px-3 py-2.5 bg-white border border-gray-200 rounded-xl">
                     <i class="bi bi-search text-gray-400 text-sm"></i>
-                    <span class="text-[13px] text-gray-400 font-medium tracking-wide">SEARCH PARTY</span>
-                </a>
-                <a href="{{ route('customer.index') }}" class="w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-xl shrink-0">
-                    <i class="bi bi-sliders text-gray-500"></i>
-                </a>
+                    <input type="text" x-model="search" placeholder="SEARCH PARTY"
+                        class="flex-1 text-[13px] text-gray-700 font-medium tracking-wide placeholder-gray-400 outline-none bg-transparent"
+                        autocomplete="off">
+                    <button x-show="search" @click="search = ''" class="text-gray-400 hover:text-gray-600">
+                        <i class="bi bi-x text-base"></i>
+                    </button>
+                </div>
                 <a href="{{ route('customer.index') }}?reopen_create=1"
                    class="flex items-center gap-1 px-3 py-2.5 bg-accent text-primary font-bold rounded-xl text-[13px] shrink-0 whitespace-nowrap">
                     <i class="bi bi-plus-lg text-base"></i> New Party
                 </a>
             </div>
 
-            {{-- Parties list (customers + suppliers) --}}
             <div class="bg-white border-t border-b border-gray-100">
-                @forelse($recentParties as $party)
-                    @php
-                        $route = route('parties.ledger', ['type' => $party->type, 'id' => $party->id]);
-
-                        // Customer: positive = we receive, Supplier: positive = we owe
-                        if ($party->type === 'customer') {
-                            $label      = $party->amount_balance > 0 ? "You'll Get" : ($party->amount_balance < 0 ? "You'll Pay" : 'Settled');
-                            $labelColor = $party->amount_balance > 0 ? 'text-accent'    : ($party->amount_balance < 0 ? 'text-red-500' : 'text-gray-400');
-                        } else {
-                            $label      = $party->amount_balance > 0 ? "You'll Pay" : ($party->amount_balance < 0 ? "You'll Get" : 'Settled');
-                            $labelColor = $party->amount_balance > 0 ? 'text-red-500' : ($party->amount_balance < 0 ? 'text-accent'   : 'text-gray-400');
-                        }
-                    @endphp
-                    <a href="{{ $route }}"
+                <template x-for="party in filtered" :key="party.type + party.id">
+                    <a :href="party.url"
                        class="flex items-center justify-between px-5 py-4 border-b border-gray-100 last:border-0 active:bg-gray-50 transition-colors">
                         <div class="min-w-0 pr-3">
-                            <p class="text-[15px] font-black text-text-primary leading-tight truncate">
-                                {{ strtoupper($party->name) }}
-                            </p>
-                            <p class="text-xs text-text-secondary mt-0.5">
-                                {{ $party->latest_date ? \Carbon\Carbon::parse($party->latest_date)->format('d M Y') : '—' }}
-                            </p>
+                            <p class="text-[15px] font-black text-text-primary leading-tight truncate" x-text="party.name.toUpperCase()"></p>
+                            <p class="text-xs text-text-secondary mt-0.5" x-text="party.date"></p>
                         </div>
                         <div class="text-right shrink-0">
-                            <p class="text-[15px] font-black text-text-primary">
-                                $ {{ number_format(abs($party->amount_balance), 2) }}
-                            </p>
-                            <p class="text-xs font-bold {{ $labelColor }} mt-0.5">{{ $label }}</p>
+                            <p class="text-[15px] font-black text-text-primary" x-text="'$ ' + parseFloat(party.amount).toFixed(2)"></p>
+                            <p class="text-xs font-bold mt-0.5" :class="party.labelColor" x-text="party.label"></p>
                         </div>
                     </a>
-                @empty
+                </template>
+                <template x-if="!filtered.length">
                     <div class="py-10 text-center">
                         <i class="bi bi-people text-3xl text-gray-300"></i>
-                        <p class="text-sm text-text-secondary mt-2 font-semibold">No parties yet</p>
+                        <p class="text-sm text-text-secondary mt-2 font-semibold" x-text="search ? 'No parties match your search' : 'No parties yet'"></p>
                     </div>
-                @endforelse
+                </template>
             </div>
         </div>
     </div>{{-- end mobile --}}
