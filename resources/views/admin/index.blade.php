@@ -23,9 +23,6 @@
             <h1 class="text-2xl font-black text-text-primary leading-tight">
                 Hi, {{ explode(' ', auth()->user()->name)[0] }}
             </h1>
-            <p class="text-sm text-text-secondary mt-0.5">
-                Here's how <span class="font-semibold text-primary">{{ $company->name ?? 'your business' }}</span> is doing this month.
-            </p>
         </div>
 
         {{-- Quick Actions --}}
