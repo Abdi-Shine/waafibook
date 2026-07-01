@@ -68,9 +68,6 @@
                    class="flex items-center gap-1 px-3 py-2.5 bg-accent text-primary font-bold rounded-xl text-[13px] shrink-0 whitespace-nowrap">
                     <i class="bi bi-plus-lg text-base"></i> New Party
                 </a>
-                <button type="button" class="w-9 h-9 flex items-center justify-center shrink-0">
-                    <i class="bi bi-three-dots-vertical text-gray-500 text-lg"></i>
-                </button>
             </div>
 
             {{-- Parties list (customers + suppliers) --}}
