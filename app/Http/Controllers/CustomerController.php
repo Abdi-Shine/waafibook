@@ -32,7 +32,12 @@ class CustomerController extends Controller
             $query->where('customer_type', $request->type);
         }
 
-        $customers = $query->paginate(10)->withQueryString();
+        $customers = $query->addSelect([
+            'latest_invoice_date' => \App\Models\SalesOrder::select('invoice_date')
+                ->whereColumn('customer_id', 'customers.id')
+                ->latest('invoice_date')
+                ->limit(1),
+        ])->paginate(10)->withQueryString();
 
         $stats = [
             'total'          => Customer::query()->count(),
@@ -182,21 +187,7 @@ class CustomerController extends Controller
     public function statement($id)
     {
         $customer = Customer::query()->findOrFail($id);
-        
-        // Assuming Order and Payment models are connected to the customer
-        // We'll load them if the relations exist, otherwise fallback to empty collections
-        if(method_exists($customer, 'orders')) {
-            $customer->load('orders');
-        } else {
-            $customer->setRelation('orders', collect());
-        }
-
-        if(method_exists($customer, 'payments')) {
-            $customer->load('payments');
-        } else {
-            $customer->setRelation('payments', collect());
-        }
-
+        $customer->load(['orders.items', 'payments']);
         $company_profile = Company::find(auth()->user()->company_id);
 
         return view('frontend.parties.customer_statement', compact('customer', 'company_profile'));
@@ -205,19 +196,7 @@ class CustomerController extends Controller
     public function downloadStatement($id)
     {
         $customer = Customer::query()->findOrFail($id);
-        
-        if(method_exists($customer, 'orders')) {
-            $customer->load('orders');
-        } else {
-            $customer->setRelation('orders', collect());
-        }
-
-        if(method_exists($customer, 'payments')) {
-            $customer->load('payments');
-        } else {
-            $customer->setRelation('payments', collect());
-        }
-
+        $customer->load(['orders.items', 'payments']);
         $company_profile = Company::find(auth()->user()->company_id);
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('frontend.parties.pdf_customer_statement', [
@@ -235,19 +214,7 @@ class CustomerController extends Controller
     public function publicStatement($id)
     {
         $customer = Customer::withoutGlobalScopes()->findOrFail($id);
-
-        if (method_exists($customer, 'orders')) {
-            $customer->load('orders');
-        } else {
-            $customer->setRelation('orders', collect());
-        }
-
-        if (method_exists($customer, 'payments')) {
-            $customer->load('payments');
-        } else {
-            $customer->setRelation('payments', collect());
-        }
-
+        $customer->load(['orders.items', 'payments']);
         $company_profile = Company::find($customer->company_id);
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('frontend.parties.pdf_customer_statement', [

@@ -116,8 +116,32 @@
                 }
             }">
 
-        <!-- Header Section -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+        <!-- Mobile Header (md:hidden) -->
+        <div class="md:hidden -mx-4 -mt-8 mb-4 sticky top-0 z-20 bg-white border-b border-gray-100 px-3 py-3">
+            <div class="flex items-center gap-2">
+                <form action="{{ route('customer.index') }}" method="GET" class="flex-1 min-w-0">
+                    <div class="relative">
+                        <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                        <input type="text" name="search" value="{{ request('search') }}"
+                            placeholder="SEARCH PARTY"
+                            class="w-full pl-9 pr-3 py-2.5 bg-gray-100 rounded-xl text-[13px] font-semibold text-gray-700 outline-none placeholder-gray-400 placeholder:font-medium">
+                    </div>
+                </form>
+                <button type="button" class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-xl shrink-0">
+                    <i class="bi bi-sliders text-gray-600 text-base"></i>
+                </button>
+                <button @click="openCreateModal()"
+                    class="flex items-center gap-1 px-3 py-2.5 bg-accent text-primary font-bold rounded-xl text-[13px] shrink-0 whitespace-nowrap">
+                    <i class="bi bi-plus-lg text-base"></i> New Party
+                </button>
+                <button type="button" class="w-9 h-9 flex items-center justify-center shrink-0">
+                    <i class="bi bi-three-dots-vertical text-gray-500 text-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Desktop Header (hidden on mobile) -->
+        <div class="hidden md:flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
             <div>
                 <h1 class="text-[20px] font-bold text-primary-dark">Customer Management</h1>
             </div>
@@ -137,8 +161,8 @@
             </div>
         </div>
 
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <!-- Stats Cards (desktop only) -->
+        <div class="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <!-- Total Customers -->
             <div class="bg-white p-5 rounded-[1rem] border border-gray-100 shadow-sm flex items-start justify-between hover:-translate-y-0.5 transition-transform duration-200">
                 <div>
@@ -192,8 +216,53 @@
             </div>
         </div>
 
-        <!-- Filter & Table Section -->
-        <div class="bg-white rounded-[1rem] border border-gray-200/80 shadow-sm overflow-hidden mb-6">
+        <!-- Mobile Customer List -->
+        <div class="md:hidden bg-white rounded-[1rem] border border-gray-200/80 shadow-sm overflow-hidden mb-6">
+            @forelse($customers as $customer)
+            <a href="{{ route('customer.statement', $customer->id) }}"
+               class="flex items-center justify-between px-4 py-4 border-b border-gray-100 last:border-0 active:bg-gray-50 transition-colors">
+                <div class="min-w-0 pr-3">
+                    <p class="text-[15px] font-black text-text-primary leading-tight truncate">{{ strtoupper($customer->name) }}</p>
+                    <p class="text-xs text-text-secondary mt-0.5">
+                        {{ $customer->latest_invoice_date
+                            ? \Carbon\Carbon::parse($customer->latest_invoice_date)->format('d M Y')
+                            : \Carbon\Carbon::parse($customer->created_at)->format('d M Y') }}
+                    </p>
+                </div>
+                <div class="text-right shrink-0">
+                    <p class="text-[15px] font-black text-text-primary">$ {{ number_format($customer->amount_balance, 2) }}</p>
+                    @if($customer->amount_balance > 0)
+                        <p class="text-xs font-bold text-accent mt-0.5">You'll Get</p>
+                    @elseif($customer->amount_balance < 0)
+                        <p class="text-xs font-bold text-red-500 mt-0.5">You'll Pay</p>
+                    @else
+                        <p class="text-xs font-semibold text-gray-400 mt-0.5">Settled</p>
+                    @endif
+                </div>
+            </a>
+            @empty
+            <div class="py-10 text-center">
+                <i class="bi bi-people text-3xl text-gray-300"></i>
+                <p class="text-sm text-text-secondary mt-2 font-semibold">No parties found</p>
+            </div>
+            @endforelse
+            @if($customers->hasPages())
+            <div class="px-4 py-3 bg-gray-50/50 border-t border-gray-100 flex justify-between items-center">
+                <p class="text-[11px] font-bold text-gray-400">{{ $customers->firstItem() }}–{{ $customers->lastItem() }} of {{ $customers->total() }}</p>
+                <div class="flex items-center gap-1">
+                    @if(!$customers->onFirstPage())
+                        <a href="{{ $customers->previousPageUrl() }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-400 text-xs"><i class="bi bi-chevron-left"></i></a>
+                    @endif
+                    @if($customers->hasMorePages())
+                        <a href="{{ $customers->nextPageUrl() }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-400 text-xs"><i class="bi bi-chevron-right"></i></a>
+                    @endif
+                </div>
+            </div>
+            @endif
+        </div>
+
+        <!-- Filter & Table Section (desktop only) -->
+        <div class="hidden md:block bg-white rounded-[1rem] border border-gray-200/80 shadow-sm overflow-hidden mb-6">
 
             <!-- Filters -->
             <form action="{{ route('customer.index') }}" method="GET"

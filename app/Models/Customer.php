@@ -69,4 +69,9 @@ class Customer extends Model
     {
         return $this->hasMany(PaymentIn::class);
     }
+
+    public function orders()
+    {
+        return $this->hasMany(\App\Models\SalesOrder::class, 'customer_id');
+    }
 }
