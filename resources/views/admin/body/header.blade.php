@@ -285,7 +285,7 @@
             <div class="flex items-center gap-3">
                 <div
                     class="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm overflow-hidden shrink-0">
-                    <img src="{{ asset('upload/horntechlogo/horntech_logo.jpg') }}"
+                    <img src="/icons/icon-192.png"
                         class="w-full h-full object-contain" alt="Waafibook">
                 </div>
                 <div class="leading-tight">

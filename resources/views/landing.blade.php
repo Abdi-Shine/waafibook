@@ -171,7 +171,7 @@
 <nav class="lp-nav navbar navbar-expand-lg">
     <div class="container">
         <a class="lp-brand" href="{{ route('landing') }}">
-            <img src="{{ asset('upload/horntechlogo/horntech_logo.jpg') }}" alt="Waafibook Logo" style="width:42px;height:42px;object-fit:contain;border-radius:8px;">
+            <img src="/icons/icon-192.png" alt="Waafibook Logo" style="width:42px;height:42px;object-fit:contain;border-radius:8px;">
             Waafibook
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#lpNav">
@@ -417,7 +417,7 @@
         <div class="row g-4">
             <div class="col-lg-4">
                 <a href="{{ route('landing') }}" style="display:flex;align-items:center;gap:.75rem;text-decoration:none;margin-bottom:1rem;">
-                    <img src="{{ asset('upload/horntechlogo/horntech_logo.jpg') }}" alt="Waafibook Logo" style="width:38px;height:38px;object-fit:contain;border-radius:8px;background:white;padding:2px;">
+                    <img src="/icons/icon-192.png" alt="Waafibook Logo" style="width:38px;height:38px;object-fit:contain;border-radius:8px;background:white;padding:2px;">
                     <span style="font-size:1.2rem;font-weight:800;color:white;">Waafibook</span>
                 </a>
                 <p style="color:rgba(255,255,255,.55);font-size:.88rem;line-height:1.65;">

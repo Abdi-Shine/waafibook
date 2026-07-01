@@ -44,8 +44,8 @@
     <aside class="sa-sidebar">
         <div class="sa-brand">
             <a href="{{ route('host.dashboard') }}">
-                <div class="sa-brand-logo">
-                    <img src="{{ asset('upload/horntechlogo/horntech_logo.jpg') }}" alt="Waafibook" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">
+                <div class="sa-brand-logo" style="display:flex;align-items:center;justify-content:center;">
+                    <img src="/icons/icon-192.png" alt="Waafibook" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">
                 </div>
                 <div>
                     <div class="sa-brand-text">Waafibook</div>

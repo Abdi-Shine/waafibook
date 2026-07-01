@@ -18,7 +18,7 @@
             <div class="auth-header-gradient auth-header-border p-6 py-5 text-center text-white">
                 <div class="auth-logo flex justify-center mb-6">
                     <div class="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-2xl overflow-hidden border-4 border-accent/30 p-2 transform hover:scale-110 transition-transform duration-300">
-                        <img src="{{ asset('upload/horntechlogo/horntech_logo.jpg') }}" class="w-full h-full object-contain" alt="Waafibook Logo">
+                        <img src="/icons/icon-192.png" class="w-full h-full object-contain" alt="Waafibook Logo">
                     </div>
                 </div>
                 <h1 class="auth-title text-2xl font-black tracking-tighter">Waafibook</h1>

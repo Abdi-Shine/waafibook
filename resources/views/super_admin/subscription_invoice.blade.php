@@ -98,7 +98,7 @@
     <div class="inv-header">
         <div class="inv-brand">
             <div class="inv-logo">
-                <img src="{{ asset('upload/horntechlogo/horntech_logo.jpg') }}" alt="Logo">
+                <img src="/icons/icon-192.png" alt="Logo" style="width:48px;height:48px;object-fit:contain;border-radius:8px;">
             </div>
             <div class="inv-brand-text">
                 <h2>Waafibook</h2>

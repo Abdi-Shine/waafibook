@@ -73,7 +73,7 @@
             <td style="vertical-align:middle; width:60%;">
                 <table><tr>
                     <td style="vertical-align:middle; padding-right:10px;">
-                        <img src="{{ public_path('upload/horntechlogo/horntech_logo.jpg') }}"
+                        <img src="{{ public_path('icons/icon-192.png') }}"
                              width="42" height="42"
                              style="border-radius:8px; background:#fff; display:block;">
                     </td>

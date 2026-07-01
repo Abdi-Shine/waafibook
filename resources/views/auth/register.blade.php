@@ -315,7 +315,7 @@
 
             <div class="registration-header">
                 <div class="logo-icon">
-                    <img src="{{ asset('upload/horntechlogo/horntech_logo.jpg') }}" alt="Waafibook Logo">
+                    <img src="/icons/icon-192.png" alt="Waafibook Logo" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">
                 </div>
                 <h1 class="registration-title">Create Your Account</h1>
                 <p class="registration-subtitle">Join thousands of businesses using Waafibook</p>
