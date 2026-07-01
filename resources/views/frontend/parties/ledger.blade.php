@@ -20,6 +20,15 @@
     $initialMobileView = $ledger ? 'detail' : 'list';
 @endphp
 
+<style>
+    .ledger-mobile  { display: block !important; }
+    .ledger-desktop { display: none  !important; }
+    @media (min-width: 1024px) {
+        .ledger-mobile  { display: none !important; }
+        .ledger-desktop { display: flex !important; }
+    }
+</style>
+
 <script>
     window.__ledger = {
         companyName:  @json($ledgerCompany->name ?? 'us'),
