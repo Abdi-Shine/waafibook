@@ -130,9 +130,9 @@
         const phone = (this.ledger.party.phone || '').replace(/[^0-9]/g, '');
         const name  = this.ledger.party.name;
         const amt   = parseFloat(this.ledger.party.amount).toFixed(2);
-        const label = this.ledger.party.type === 'customer' ? "you owe us" : "we owe you";
-        const msg   = `Hello ${name},\n\nThis is a friendly reminder that your outstanding balance with {{ $companyName }} is *$${amt}* (${label}).\n\nPlease settle at your earliest convenience.\n\nThank you!`;
-        return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+        const label = this.ledger.party.type === 'customer' ? 'you owe us' : 'we owe you';
+        const msg   = 'Hello ' + name + ',\n\nThis is a friendly reminder that your outstanding balance with {{ $companyName }} is $' + amt + ' (' + label + ').\n\nPlease settle at your earliest convenience.\n\nThank you!';
+        return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
     },
 
     statementWhatsApp() {
@@ -141,18 +141,14 @@
         const name  = this.ledger.party.name;
         const amt   = parseFloat(this.ledger.party.amount).toFixed(2);
         const label = this.ledger.party.type === 'customer' ? 'Receivable' : 'Payable';
-        let lines   = [`Hello ${name},\n\nHere is your account statement with *{{ $companyName }}*:\n`];
-        lines.push(`*Balance: $${amt}* (${label})\n`);
-        lines.push(`*Transactions:*`);
-        this.ledger.transactions.slice(0, 10).forEach(t => {
-            lines.push(`• ${t.type} #${t.number || '-'} | ${t.date} | $${parseFloat(t.total).toFixed(2)} | ${t.status}`);
+        let msg = 'Hello ' + name + ',\n\nAccount statement with {{ $companyName }}:\nBalance: $' + amt + ' (' + label + ')\n\nTransactions:\n';
+        this.ledger.transactions.slice(0, 10).forEach(function(t) {
+            msg += '- ' + t.type + ' #' + (t.number || '-') + ' | ' + t.date + ' | $' + parseFloat(t.total).toFixed(2) + ' | ' + t.status + '\n';
         });
-        if (this.ledger.transactions.length > 10) {
-            lines.push(`...and ${this.ledger.transactions.length - 10} more.`);
-        }
-        lines.push(`\nThank you!`);
-        const msg = lines.join('\n');
-        return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+        const extra = this.ledger.transactions.length - 10;
+        if (extra > 0) { msg += '...and ' + extra + ' more.\n'; }
+        msg += '\nThank you!';
+        return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
     }
 }">
 
