@@ -4,21 +4,32 @@
 
 @php
     $symbol = '$';
+    $ledgerCompany = $company ?? \App\Models\Company::find(auth()->user()->company_id ?? 0);
     $initialMobileView = $ledger ? 'detail' : 'list';
-    $companyName = $company->name ?? 'us';
 @endphp
 
+<script>
+    window.__ledger = {
+        companyName:  @json($ledgerCompany->name ?? 'us'),
+        parties:      @json($parties),
+        selectedType: @json($selectedType),
+        selectedId:   @json($selectedId ?? null),
+        ledger:       @json($ledger),
+        mobileView:   @json($initialMobileView),
+    };
+</script>
+
 <div x-data="{
-    companyName: @js($companyName),
-    parties: @js($parties),
+    companyName: window.__ledger.companyName,
+    parties:     window.__ledger.parties,
     search: '',
     typeFilter: 'all',
     txnSearch: '',
-    selectedType: '{{ $selectedType }}',
-    selectedId: {{ $selectedId ?? 'null' }},
-    ledger: @js($ledger),
+    selectedType: window.__ledger.selectedType,
+    selectedId:   window.__ledger.selectedId,
+    ledger:       window.__ledger.ledger,
     loading: false,
-    mobileView: '{{ $initialMobileView }}',
+    mobileView:   window.__ledger.mobileView,
 
     get filteredParties() {
         let list = this.parties;
