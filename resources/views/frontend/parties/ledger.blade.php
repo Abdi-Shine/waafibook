@@ -125,19 +125,27 @@
         return type === 'Payment-In' || type === 'Payment-Out';
     },
 
-    reminderWhatsApp() {
-        if (!this.ledger) return '#';
+    sendReminder() {
+        if (!this.ledger) return;
         const phone = (this.ledger.party.phone || '').replace(/[^0-9]/g, '');
+        if (!phone) {
+            Swal.fire({ icon: 'warning', title: 'No Phone Number', text: 'This party has no phone number saved. Please add one first.' });
+            return;
+        }
         const name  = this.ledger.party.name;
         const amt   = parseFloat(this.ledger.party.amount).toFixed(2);
         const label = this.ledger.party.type === 'customer' ? 'you owe us' : 'we owe you';
         const msg   = 'Hello ' + name + ',\n\nThis is a friendly reminder that your outstanding balance with {{ $companyName }} is $' + amt + ' (' + label + ').\n\nPlease settle at your earliest convenience.\n\nThank you!';
-        return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
+        window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
     },
 
-    statementWhatsApp() {
-        if (!this.ledger) return '#';
+    sendStatement() {
+        if (!this.ledger) return;
         const phone = (this.ledger.party.phone || '').replace(/[^0-9]/g, '');
+        if (!phone) {
+            Swal.fire({ icon: 'warning', title: 'No Phone Number', text: 'This party has no phone number saved. Please add one first.' });
+            return;
+        }
         const name  = this.ledger.party.name;
         const amt   = parseFloat(this.ledger.party.amount).toFixed(2);
         const label = this.ledger.party.type === 'customer' ? 'Receivable' : 'Payable';
@@ -148,7 +156,7 @@
         const extra = this.ledger.transactions.length - 10;
         if (extra > 0) { msg += '...and ' + extra + ' more.\n'; }
         msg += '\nThank you!';
-        return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
+        window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
     }
 }">
 
@@ -300,14 +308,14 @@
                         </div>
 
                         <div class="flex gap-2 mt-4">
-                            <a :href="reminderWhatsApp()" target="_blank"
+                            <button @click="sendReminder()"
                                 class="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold text-primary-dark hover:bg-gray-100 transition-colors">
                                 <i class="bi bi-whatsapp text-green-500 text-[15px]"></i> Send Reminder
-                            </a>
-                            <a :href="statementWhatsApp()" target="_blank"
+                            </button>
+                            <button @click="sendStatement()"
                                 class="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold text-primary-dark hover:bg-gray-100 transition-colors">
                                 <i class="bi bi-whatsapp text-green-500 text-[15px]"></i> Send Statement
-                            </a>
+                            </button>
                         </div>
                     </div>
 
