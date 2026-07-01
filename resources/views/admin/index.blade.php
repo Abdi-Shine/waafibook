@@ -20,7 +20,7 @@
                    class="flex-1 flex items-center justify-center gap-1.5 py-3 bg-primary text-white font-bold rounded-xl text-[13px] active:opacity-80 transition-opacity">
                     <i class="bi bi-plus-lg text-base"></i> Add Purchase
                 </a>
-                <a href="{{ route('sales.pos') }}"
+                <a href="{{ route('sales.pos.view') }}"
                    class="flex-1 flex items-center justify-center gap-1.5 py-3 bg-primary text-white font-bold rounded-xl text-[13px] active:opacity-80 transition-opacity">
                     <i class="bi bi-display text-base"></i> POS Terminal
                 </a>
