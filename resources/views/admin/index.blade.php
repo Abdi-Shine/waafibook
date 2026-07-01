@@ -68,7 +68,7 @@
                                 {{ strtoupper($party->name) }}
                             </p>
                             <p class="text-xs text-text-secondary mt-1">
-                                {{ $party->latest_invoice_date ? \Carbon\Carbon::parse($party->latest_invoice_date)->format('d M Y') : '—' }}
+                                {{ $party->latest_invoice_date ? \Carbon\Carbon::parse($party->latest_invoice_date)->format('d M Y') : \Carbon\Carbon::parse($party->created_at)->format('d M Y') }}
                             </p>
                         </div>
                         <div class="text-right shrink-0">
