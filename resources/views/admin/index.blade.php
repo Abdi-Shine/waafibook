@@ -53,21 +53,36 @@
             </div>
         </div>
 
-        {{-- Parties — You'll Get --}}
-        <div class="px-5 pb-28">
-            <div class="flex items-center justify-between mb-3">
-                <span class="text-[11px] font-black text-text-secondary uppercase tracking-widest">You'll Get</span>
-                <a href="{{ route('customer.index') }}" class="text-sm font-bold text-primary">See all</a>
+        {{-- Parties List --}}
+        <div class="pb-28">
+            {{-- Search header matching Parties page --}}
+            <div class="flex items-center gap-2 px-5 mb-2">
+                <a href="{{ route('customer.index') }}" class="flex-1 flex items-center gap-2 px-3 py-2.5 bg-white border border-gray-200 rounded-xl">
+                    <i class="bi bi-search text-gray-400 text-sm"></i>
+                    <span class="text-[13px] text-gray-400 font-medium tracking-wide">SEARCH PARTY</span>
+                </a>
+                <a href="{{ route('customer.index') }}" class="w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-xl shrink-0">
+                    <i class="bi bi-sliders text-gray-500"></i>
+                </a>
+                <a href="{{ route('customer.index') }}?reopen_create=1"
+                   class="flex items-center gap-1 px-3 py-2.5 bg-accent text-primary font-bold rounded-xl text-[13px] shrink-0 whitespace-nowrap">
+                    <i class="bi bi-plus-lg text-base"></i> New Party
+                </a>
+                <button type="button" class="w-9 h-9 flex items-center justify-center shrink-0">
+                    <i class="bi bi-three-dots-vertical text-gray-500 text-lg"></i>
+                </button>
             </div>
-            <div class="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+
+            {{-- Customer list --}}
+            <div class="bg-white border-t border-b border-gray-100">
                 @forelse($recentParties as $party)
-                    <a href="{{ route('customer.index') }}"
-                       class="flex items-center justify-between px-4 py-4 border-b border-gray-100 last:border-0 active:bg-gray-50 transition-colors">
+                    <a href="{{ route('customer.statement', $party->id) }}"
+                       class="flex items-center justify-between px-5 py-4 border-b border-gray-100 last:border-0 active:bg-gray-50 transition-colors">
                         <div class="min-w-0 pr-3">
                             <p class="text-[15px] font-black text-text-primary leading-tight truncate">
                                 {{ strtoupper($party->name) }}
                             </p>
-                            <p class="text-xs text-text-secondary mt-1">
+                            <p class="text-xs text-text-secondary mt-0.5">
                                 {{ $party->latest_invoice_date ? \Carbon\Carbon::parse($party->latest_invoice_date)->format('d M Y') : \Carbon\Carbon::parse($party->created_at)->format('d M Y') }}
                             </p>
                         </div>
@@ -75,13 +90,19 @@
                             <p class="text-[15px] font-black text-text-primary">
                                 $ {{ number_format($party->amount_balance, 2) }}
                             </p>
-                            <p class="text-xs font-bold text-accent mt-1">You'll Get</p>
+                            @if($party->amount_balance > 0)
+                                <p class="text-xs font-bold text-accent mt-0.5">You'll Get</p>
+                            @elseif($party->amount_balance < 0)
+                                <p class="text-xs font-bold text-red-500 mt-0.5">You'll Pay</p>
+                            @else
+                                <p class="text-xs font-semibold text-gray-400 mt-0.5">Settled</p>
+                            @endif
                         </div>
                     </a>
                 @empty
                     <div class="py-10 text-center">
                         <i class="bi bi-people text-3xl text-gray-300"></i>
-                        <p class="text-sm text-text-secondary mt-2 font-semibold">All balances settled</p>
+                        <p class="text-sm text-text-secondary mt-2 font-semibold">No parties yet</p>
                     </div>
                 @endforelse
             </div>

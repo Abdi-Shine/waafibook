@@ -127,10 +127,8 @@ Route::get('/dashboard', function () {
     $orderCount = $stats['orders_placed'];
     $customerCount = \App\Models\Customer::count();
 
-    // All customers with an outstanding balance (opening balance + invoices − payments)
-    // Attach the date of their most recent invoice for display purposes.
-    $recentParties = \App\Models\Customer::where('amount_balance', '>', 0)
-        ->addSelect([
+    // All customers ordered by balance descending — shown in the mobile parties list.
+    $recentParties = \App\Models\Customer::addSelect([
             'latest_invoice_date' => \App\Models\SalesOrder::select('invoice_date')
                 ->whereColumn('customer_id', 'customers.id')
                 ->latest('invoice_date')
