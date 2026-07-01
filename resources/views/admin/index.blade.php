@@ -8,22 +8,6 @@
     ═══════════════════════════════════════════════════════════ --}}
     <div class="lg:hidden dash-mobile-wrap">
 
-        {{-- Mobile Top Bar --}}
-        <div class="dash-mobile-topbar">
-            <button onclick="openSidebar()" class="dash-mobile-menu-btn">
-                <i class="bi bi-list text-xl"></i>
-            </button>
-            <a href="#" onclick="document.getElementById('notif-btn').click(); return false;" class="dash-mobile-bell-btn ml-auto">
-                <i class="bi bi-bell text-xl"></i>
-            </a>
-        </div>
-
-        {{-- Greeting --}}
-        <div class="px-5 pt-4 pb-2">
-            <h1 class="text-2xl font-black text-text-primary leading-tight">
-                Hi, {{ explode(' ', auth()->user()->name)[0] }}
-            </h1>
-        </div>
 
         {{-- Quick Actions --}}
         <div class="px-5 pt-4 pb-2">
