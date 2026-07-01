@@ -11,31 +11,18 @@
 
         {{-- Quick Actions --}}
         <div class="px-5 pt-4 pb-2">
-            <p class="text-[11px] font-black text-text-secondary uppercase tracking-widest mb-4">Quick Actions</p>
-            <div class="grid grid-cols-4 gap-2">
-                <a href="{{ route('sales.invoice.create') }}" class="dash-quick-action">
-                    <div class="dash-quick-circle">
-                        <i class="bi bi-file-earmark-text text-xl text-white"></i>
-                    </div>
-                    <span class="dash-quick-label">New<br>Invoice</span>
+            <div class="flex gap-2">
+                <a href="{{ route('sales.invoice.create') }}"
+                   class="flex-1 flex items-center justify-center gap-1.5 py-3 bg-accent text-primary font-bold rounded-xl text-[13px] active:opacity-80 transition-opacity">
+                    <i class="bi bi-plus-lg text-base"></i> Add Sale
                 </a>
-                <a href="{{ route('purchase.bill.create') }}" class="dash-quick-action">
-                    <div class="dash-quick-circle">
-                        <i class="bi bi-clipboard text-xl text-white"></i>
-                    </div>
-                    <span class="dash-quick-label">New<br>Bill</span>
+                <a href="{{ route('purchase.bill.create') }}"
+                   class="flex-1 flex items-center justify-center gap-1.5 py-3 bg-primary text-white font-bold rounded-xl text-[13px] active:opacity-80 transition-opacity">
+                    <i class="bi bi-plus-lg text-base"></i> Add Purchase
                 </a>
-                <a href="{{ route('view_payment_in') }}" class="dash-quick-action">
-                    <div class="dash-quick-circle">
-                        <i class="bi bi-arrow-down-circle text-xl text-white"></i>
-                    </div>
-                    <span class="dash-quick-label">Record<br>Payment</span>
-                </a>
-                <a href="{{ route('expenses_view_all') }}" class="dash-quick-action">
-                    <div class="dash-quick-circle">
-                        <i class="bi bi-currency-dollar text-xl text-white"></i>
-                    </div>
-                    <span class="dash-quick-label">New<br>Expense</span>
+                <a href="{{ route('sales.pos') }}"
+                   class="flex-1 flex items-center justify-center gap-1.5 py-3 bg-primary text-white font-bold rounded-xl text-[13px] active:opacity-80 transition-opacity">
+                    <i class="bi bi-display text-base"></i> POS Terminal
                 </a>
             </div>
         </div>
