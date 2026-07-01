@@ -184,7 +184,7 @@
                                     'status' => $order->status,
                                     'debit' => $order->total_amount,
                                     'credit' => 0,
-                                    'download_route' => route('sales.invoice.details', $order->id) 
+                                    'download_route' => route('sales.invoice.show', $order->id)
                                 ]);
                                 
                                 if($order->paid_amount > 0) {

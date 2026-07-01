@@ -161,11 +161,12 @@ class PartiesController extends Controller
 
         return [
             'party' => [
-                'type'   => 'customer',
-                'id'     => $customer->id,
-                'name'   => $customer->name,
-                'phone'  => $customer->phone,
-                'amount' => (float) $customer->amount_balance,
+                'type'         => 'customer',
+                'id'           => $customer->id,
+                'name'         => $customer->name,
+                'phone'        => $customer->phone,
+                'amount'       => (float) $customer->amount_balance,
+                'credit_limit' => $customer->credit_limit ? (float) $customer->credit_limit : null,
             ],
             'transactions' => $transactions,
         ];
@@ -243,11 +244,12 @@ class PartiesController extends Controller
 
         return [
             'party' => [
-                'type'   => 'supplier',
-                'id'     => $supplier->id,
-                'name'   => $supplier->name,
-                'phone'  => $supplier->phone,
-                'amount' => (float) $supplier->amount_balance,
+                'type'         => 'supplier',
+                'id'           => $supplier->id,
+                'name'         => $supplier->name,
+                'phone'        => $supplier->phone,
+                'amount'       => (float) $supplier->amount_balance,
+                'credit_limit' => null,
             ],
             'transactions' => $transactions,
         ];

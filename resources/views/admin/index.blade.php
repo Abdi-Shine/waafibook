@@ -77,9 +77,7 @@
             <div class="bg-white border-t border-b border-gray-100">
                 @forelse($recentParties as $party)
                     @php
-                        $route = $party->type === 'supplier'
-                            ? route('supplier.statement', $party->id)
-                            : route('customer.statement', $party->id);
+                        $route = route('parties.ledger', ['type' => $party->type, 'id' => $party->id]);
 
                         // Customer: positive = we receive, Supplier: positive = we owe
                         if ($party->type === 'customer') {
