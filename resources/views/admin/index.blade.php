@@ -89,27 +89,22 @@
                 <a href="{{ route('customer.index') }}" class="text-sm font-bold text-primary">See all</a>
             </div>
             <div class="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
-                @forelse($recentParties as $inv)
-                    @php
-                        $isOverdue = $inv->due_date && $inv->due_date->isPast();
-                        $labelText  = $isOverdue ? "Overdue" : "You'll Get";
-                        $labelColor = $isOverdue ? 'text-red-500' : 'text-accent';
-                    @endphp
-                    <a href="{{ route('sales.invoice.show', $inv->id) }}"
+                @forelse($recentParties as $party)
+                    <a href="{{ route('customer.index') }}"
                        class="flex items-center justify-between px-4 py-4 border-b border-gray-100 last:border-0 active:bg-gray-50 transition-colors">
                         <div class="min-w-0 pr-3">
                             <p class="text-[15px] font-black text-text-primary leading-tight truncate">
-                                {{ strtoupper($inv->customer->name ?? 'WALK-IN CUSTOMER') }}
+                                {{ strtoupper($party->name) }}
                             </p>
                             <p class="text-xs text-text-secondary mt-1">
-                                {{ \Carbon\Carbon::parse($inv->invoice_date)->format('d M Y') }}
+                                {{ $party->latest_invoice_date ? \Carbon\Carbon::parse($party->latest_invoice_date)->format('d M Y') : '—' }}
                             </p>
                         </div>
                         <div class="text-right shrink-0">
                             <p class="text-[15px] font-black text-text-primary">
-                                $ {{ number_format($inv->due_amount, 2) }}
+                                $ {{ number_format($party->amount_balance, 2) }}
                             </p>
-                            <p class="text-xs font-bold {{ $labelColor }} mt-1">{{ $labelText }}</p>
+                            <p class="text-xs font-bold text-accent mt-1">You'll Get</p>
                         </div>
                     </a>
                 @empty

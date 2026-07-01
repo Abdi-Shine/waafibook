@@ -127,12 +127,17 @@ Route::get('/dashboard', function () {
     $orderCount = $stats['orders_placed'];
     $customerCount = \App\Models\Customer::count();
 
-    $recentParties = \App\Models\SalesOrder::with('customer')
-        ->where('due_amount', '>', 0)
-        ->latest('invoice_date')
-        ->take(10)
-        ->get()
-        ->unique('customer_id');
+    // All customers with an outstanding balance (opening balance + invoices − payments)
+    // Attach the date of their most recent invoice for display purposes.
+    $recentParties = \App\Models\Customer::where('amount_balance', '>', 0)
+        ->addSelect([
+            'latest_invoice_date' => \App\Models\SalesOrder::select('invoice_date')
+                ->whereColumn('customer_id', 'customers.id')
+                ->latest('invoice_date')
+                ->limit(1),
+        ])
+        ->orderByDesc('amount_balance')
+        ->get();
 
     return view('admin.index', compact('stats', 'orderCount', 'customerCount', 'recentParties'));
 })->middleware(['auth', 'verified', 'permission:Dashboard'])->name('dashboard');
