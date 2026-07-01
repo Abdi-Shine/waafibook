@@ -20,15 +20,13 @@ Route::get('/invoice/{id}/view', [App\Http\Controllers\SalesController::class, '
     ->name('sales.invoice.public-pdf')
     ->middleware('signed');
 
-// Public, signed link so a customer can open their statement PDF (e.g. from WhatsApp) without logging in.
+// Public link so a customer can open their statement PDF from WhatsApp without logging in.
 Route::get('/statement/{id}/view', [App\Http\Controllers\CustomerController::class, 'publicStatement'])
-    ->name('customer.statement.public-pdf')
-    ->middleware('signed');
+    ->name('customer.statement.public-pdf');
 
-// Public, signed link so a supplier can open their statement PDF (e.g. from WhatsApp) without logging in.
+// Public link so a supplier can open their statement PDF from WhatsApp without logging in.
 Route::get('/supplier-statement/{id}/view', [App\Http\Controllers\SupplierController::class, 'publicStatement'])
-    ->name('supplier.statement.public-pdf')
-    ->middleware('signed');
+    ->name('supplier.statement.public-pdf');
 
 Route::get('/dashboard', function () {
     $accounts = \App\Models\Account::all();

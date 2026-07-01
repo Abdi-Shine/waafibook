@@ -165,12 +165,13 @@ class PartiesController extends Controller
 
         return [
             'party' => [
-                'type'         => 'customer',
-                'id'           => $customer->id,
-                'name'         => $customer->name,
-                'phone'        => $customer->phone,
-                'amount'       => (float) $customer->amount_balance,
-                'credit_limit' => $customer->credit_limit ? (float) $customer->credit_limit : null,
+                'type'          => 'customer',
+                'id'            => $customer->id,
+                'name'          => $customer->name,
+                'phone'         => $customer->phone,
+                'amount'        => (float) $customer->amount_balance,
+                'credit_limit'  => $customer->credit_limit ? (float) $customer->credit_limit : null,
+                'statement_url' => route('customer.statement.public-pdf', ['id' => $customer->id]),
             ],
             'transactions' => $transactions,
         ];
@@ -252,12 +253,13 @@ class PartiesController extends Controller
 
         return [
             'party' => [
-                'type'         => 'supplier',
-                'id'           => $supplier->id,
-                'name'         => $supplier->name,
-                'phone'        => $supplier->phone,
-                'amount'       => (float) $supplier->amount_balance,
-                'credit_limit' => null,
+                'type'          => 'supplier',
+                'id'            => $supplier->id,
+                'name'          => $supplier->name,
+                'phone'         => $supplier->phone,
+                'amount'        => (float) $supplier->amount_balance,
+                'credit_limit'  => null,
+                'statement_url' => route('supplier.statement.public-pdf', ['id' => $supplier->id]),
             ],
             'transactions' => $transactions,
         ];
