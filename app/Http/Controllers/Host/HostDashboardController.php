@@ -50,19 +50,15 @@ class HostDashboardController extends Controller
 
     public function manageCompanies(Request $request)
     {
-        $companies = Company::with(['subscription.plan', 'users' => fn ($q) => $q->withoutGlobalScopes()->where('role', 'admin')->orderByDesc('created_at')])
-            ->addSelect(['admin_email' => \App\Models\User::selectRaw('email')
-                ->withoutGlobalScopes()
-                ->whereColumn('company_id', 'companies.id')
-                ->orderBy('id')
-                ->limit(1)
-            ])
+        $companies = Company::query()
+            ->selectRaw('companies.*, (SELECT email FROM users WHERE users.company_id = companies.id ORDER BY users.id ASC LIMIT 1) AS admin_email')
+            ->with(['subscription.plan', 'users' => fn ($q) => $q->withoutGlobalScopes()->orderBy('id')])
             ->when($request->filled('search'), fn ($q) => $q->where(fn ($q2) => $q2
-                ->where('name', 'like', '%' . $request->search . '%')
-                ->orWhere('email', 'like', '%' . $request->search . '%')))
-            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
+                ->where('companies.name', 'like', '%' . $request->search . '%')
+                ->orWhere('companies.email', 'like', '%' . $request->search . '%')))
+            ->when($request->filled('status'), fn ($q) => $q->where('companies.status', $request->status))
             ->when($request->filled('plan'), fn ($q) => $q->whereHas('subscription.plan', fn ($q2) => $q2->where('name', $request->plan)))
-            ->orderByDesc('created_at')
+            ->orderByDesc('companies.created_at')
             ->paginate(20)
             ->withQueryString();
 
