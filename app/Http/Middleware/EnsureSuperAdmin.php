@@ -10,8 +10,14 @@ class EnsureSuperAdmin
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!auth()->check() || auth()->user()->role !== 'Super Admin') {
-            abort(403, 'Super Admin access required.');
+        if (!auth()->check()) {
+            return redirect()->route('host.login');
+        }
+
+        if (auth()->user()->role !== 'Super Admin') {
+            // Regular users who accidentally hit a super_admin URL go to their dashboard
+            return redirect()->route('dashboard')
+                ->withErrors(['auth' => 'Access denied. This area is for Super Admins only.']);
         }
 
         return $next($request);

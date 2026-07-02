@@ -83,9 +83,12 @@
                 </form>
             </div>
 
-            <div class="auth-footer py-4 px-6 text-center border-t border-gray-50 bg-gray-50/50">
-                <a href="{{ route('landing') }}" class="text-[0.75rem] font-bold text-primary/50 hover:text-primary transition-colors inline-block">
-                    <i class="bi bi-house-door me-1"></i> Return to Landing Page
+            <div class="auth-footer py-4 px-6 text-center border-t border-gray-50 bg-gray-50/50 flex items-center justify-between">
+                <a href="{{ route('landing') }}" class="text-[0.75rem] font-bold text-primary/50 hover:text-primary transition-colors">
+                    <i class="bi bi-house-door me-1"></i> Landing Page
+                </a>
+                <a href="{{ route('login') }}" class="text-[0.75rem] font-bold text-primary/50 hover:text-primary transition-colors">
+                    <i class="bi bi-people me-1"></i> Company User Login
                 </a>
             </div>
         </div>

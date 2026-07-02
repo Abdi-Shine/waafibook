@@ -14,18 +14,37 @@ class AuthenticatedSessionController extends Controller
 {
     /**
      * Display the login view.
+     * Super Admins who are already logged in get bounced to their portal.
      */
-    public function create(): View
+    public function create(): View|RedirectResponse
     {
+        if (Auth::check()) {
+            return Auth::user()->role === 'Super Admin'
+                ? redirect()->route('host.dashboard')
+                : redirect()->route('dashboard');
+        }
+
         return view('auth.login');
     }
 
     /**
      * Handle an incoming authentication request.
+     * Super Admins are rejected here — they must use /super_admin/login.
      */
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
+
+        // Block Super Admins from using the company portal
+        if (Auth::user()->role === 'Super Admin') {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return back()->withErrors([
+                'email' => 'Super Admin accounts must log in at /super_admin/login.',
+            ])->onlyInput('email');
+        }
 
         if ($request->user()->status === 'suspended') {
             Auth::guard('web')->logout();
@@ -47,11 +66,6 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         AuditLog::log('Authentication', 'User logged into the system', 'LOGIN');
-
-        // Super Admins belong in the host portal, not the company dashboard
-        if (auth()->user()->role === 'Super Admin') {
-            return redirect()->route('host.dashboard');
-        }
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

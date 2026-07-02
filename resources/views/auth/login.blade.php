@@ -96,6 +96,13 @@
                 <p class="text-center text-primary opacity-50 text-sm mt-4 mb-0">
                     &copy; {{ date('Y') }} Waafibook. All rights reserved. <a href="#" class="link-auth" onclick="switchTab('register'); return false;">Sign up</a>
                 </p>
+
+                <div class="mt-4 pt-3 border-t border-gray-100 text-center">
+                    <a href="{{ route('host.login') }}"
+                       class="inline-flex items-center gap-1.5 text-[0.72rem] font-bold text-gray-400 hover:text-primary transition-colors uppercase tracking-wider">
+                        <i class="bi bi-shield-lock"></i> Super Admin Portal
+                    </a>
+                </div>
             </div>
 
             <!-- ── Create Account Form ── -->
