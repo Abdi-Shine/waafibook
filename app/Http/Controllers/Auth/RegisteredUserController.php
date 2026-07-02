@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
@@ -78,12 +77,16 @@ class RegisteredUserController extends Controller
         ]);
 
         // Send customized activation email with credentials
-        Mail::to($user->email)->send(new AccountActivatedMail(
-            $company->name,
-            $user->email,
-            $request->password,
-            $user->name
-        ));
+        try {
+            Mail::to($user->email)->send(new AccountActivatedMail(
+                $company->name,
+                $user->email,
+                $request->password,
+                $user->name
+            ));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Signup email failed for ' . $user->email . ': ' . $e->getMessage());
+        }
 
         // Seed default roles for this company so the admin can assign them to staff
         $allActions = ['view', 'create', 'edit', 'delete'];
