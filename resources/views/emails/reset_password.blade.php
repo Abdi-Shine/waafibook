@@ -11,9 +11,8 @@
         .card { background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
 
         /* Header */
-        .header { background: #004161; padding: 28px 40px 24px; text-align: center; }
-        .header .logo-img { width: 64px; height: 64px; border-radius: 14px; object-fit: contain; background: #fff; padding: 4px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto; }
-        .header .logo-text { color: #ffffff; font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+        .header { background: #004161; padding: 32px 40px; text-align: center; }
+        .header .logo-text { color: #ffffff; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
         .header .logo-accent { color: #99CC33; }
         .header .tagline { color: rgba(255,255,255,0.65); font-size: 13px; margin-top: 4px; }
 
@@ -56,7 +55,6 @@
 
         {{-- Header --}}
         <div class="header">
-            <img src="{{ config('app.url') }}/icons/icon-192.png" alt="WaafiBook" class="logo-img">
             <div class="logo-text">Waafi<span class="logo-accent">Book</span></div>
             <div class="tagline">Accounting SaaS for modern teams</div>
         </div>
