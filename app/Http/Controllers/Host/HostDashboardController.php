@@ -51,7 +51,9 @@ class HostDashboardController extends Controller
     public function manageCompanies(Request $request)
     {
         $companies = Company::query()
-            ->selectRaw('companies.*, (SELECT email FROM users WHERE users.company_id = companies.id ORDER BY users.id ASC LIMIT 1) AS admin_email')
+            ->selectRaw('companies.*,
+                (SELECT email FROM users WHERE users.company_id = companies.id ORDER BY users.id ASC LIMIT 1) AS admin_email,
+                (SELECT COUNT(*) FROM subscription_payments sp JOIN subscriptions s ON sp.subscription_id = s.id WHERE s.company_id = companies.id) AS payments_count')
             ->with(['subscription.plan', 'users' => fn ($q) => $q->withoutGlobalScopes()->orderBy('id')])
             ->when($request->filled('search'), fn ($q) => $q->where(fn ($q2) => $q2
                 ->where('companies.name', 'like', '%' . $request->search . '%')
@@ -250,8 +252,17 @@ class HostDashboardController extends Controller
 
     public function destroyCompany($id)
     {
-        $company = Company::findOrFail($id);
+        $company = Company::with('subscription')->findOrFail($id);
         $name = $company->name;
+
+        $paymentsCount = $company->subscription
+            ? SubscriptionPayment::where('subscription_id', $company->subscription->id)->count()
+            : 0;
+
+        if ($paymentsCount > 0) {
+            return redirect()->route('host.companies')
+                ->with('error', "\"{$name}\" has {$paymentsCount} subscription payment record(s) and cannot be deleted.");
+        }
 
         \Illuminate\Support\Facades\DB::transaction(fn () => $company->delete());
 

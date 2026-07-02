@@ -144,7 +144,7 @@
                                 </form>
 
                                 <button type="button" class="sa-btn-icon danger" data-bs-toggle="tooltip" title="Delete"
-                                        onclick="deleteCompany({{ $company->id }}, '{{ addslashes($company->name) }}')"><i class="bi bi-trash"></i></button>
+                                        onclick="deleteCompany({{ $company->id }}, '{{ addslashes($company->name) }}', {{ (int)($company->payments_count ?? 0) }})"><i class="bi bi-trash"></i></button>
                             </div>
                         </td>
                     </tr>
@@ -399,7 +399,19 @@ function confirmToggle(form, action, name) {
     }).then((result) => { if (result.isConfirmed) form.submit(); });
 }
 
-function deleteCompany(id, name) {
+function deleteCompany(id, name, paymentsCount) {
+    if (paymentsCount > 0) {
+        Swal.fire({
+            title: 'Cannot Delete Company',
+            html: '<strong>' + name + '</strong> has <strong>' + paymentsCount + '</strong> subscription payment record' +
+                  (paymentsCount !== 1 ? 's' : '') +
+                  '.<br><br>Companies with payment history cannot be deleted to preserve billing records.',
+            icon: 'error',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#004161',
+        });
+        return;
+    }
     Swal.fire({
         title: 'Delete ' + name + '?',
         html: 'This will permanently remove the company and <strong>all its data</strong> — products, sales, and users.<br><br>' +
