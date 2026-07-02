@@ -54,8 +54,7 @@ class HostDashboardController extends Controller
             ->addSelect(['admin_email' => \App\Models\User::selectRaw('email')
                 ->withoutGlobalScopes()
                 ->whereColumn('company_id', 'companies.id')
-                ->where('role', 'admin')
-                ->orderByDesc('created_at')
+                ->orderBy('id')
                 ->limit(1)
             ])
             ->when($request->filled('search'), fn ($q) => $q->where(fn ($q2) => $q2
