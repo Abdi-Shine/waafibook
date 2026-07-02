@@ -94,6 +94,11 @@ class User extends Authenticatable
         ];
     }
 
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new \App\Notifications\ResetPasswordNotification($token));
+    }
+
     public function employee()
     {
         return $this->hasOne(Employee::class);
