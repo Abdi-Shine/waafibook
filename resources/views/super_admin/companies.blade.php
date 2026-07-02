@@ -131,14 +131,15 @@
                                 <button type="button" class="sa-btn-icon" data-bs-toggle="tooltip" title="Manage Plan"
                                         onclick="managePlan({{ $company->id }}, '{{ addslashes($company->name) }}', {{ $company->subscription->subscription_plan_id ?? 'null' }})"><i class="bi bi-credit-card"></i></button>
 
-                                <form method="POST" action="{{ route('host.companies.toggle-status', $company->id) }}" class="d-inline"
-                                      onsubmit="return confirm('{{ $company->status === 'suspended' ? 'Reactivate' : 'Suspend' }} {{ addslashes($company->name) }}?');">
+                                <form method="POST" action="{{ route('host.companies.toggle-status', $company->id) }}" class="d-inline toggle-status-form">
                                     @csrf
                                     @method('PATCH')
                                     @if($company->status === 'suspended')
-                                        <button type="submit" class="sa-btn-icon ok" data-bs-toggle="tooltip" title="Reactivate"><i class="bi bi-play-circle"></i></button>
+                                        <button type="button" class="sa-btn-icon ok" data-bs-toggle="tooltip" title="Reactivate"
+                                            onclick="confirmToggle(this.closest('form'), 'Reactivate', '{{ addslashes($company->name) }}')"><i class="bi bi-play-circle"></i></button>
                                     @else
-                                        <button type="submit" class="sa-btn-icon warn" data-bs-toggle="tooltip" title="Suspend"><i class="bi bi-pause-circle"></i></button>
+                                        <button type="button" class="sa-btn-icon warn" data-bs-toggle="tooltip" title="Suspend"
+                                            onclick="confirmToggle(this.closest('form'), 'Suspend', '{{ addslashes($company->name) }}')"><i class="bi bi-pause-circle"></i></button>
                                     @endif
                                 </form>
 
@@ -385,22 +386,61 @@ function updatePlanPrice(sel) {
     if (price && parseFloat(price) > 0) amtInput.placeholder = parseFloat(price).toFixed(2);
 }
 
+function confirmToggle(form, action, name) {
+    Swal.fire({
+        title: action + ' ' + name + '?',
+        text: action === 'Suspend'
+            ? 'Users of this company will not be able to log in until it is reactivated.'
+            : 'This company and its users will regain full access.',
+        icon: action === 'Suspend' ? 'warning' : 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, ' + action,
+        confirmButtonColor: action === 'Suspend' ? '#f59e0b' : '#004161',
+    }).then((result) => { if (result.isConfirmed) form.submit(); });
+}
+
 function deleteCompany(id, name) {
-    if (!confirm('Delete ' + name + '? This will permanently remove the company and all of its data — products, sales, and users. This cannot be undone.')) return;
-    const typed = prompt('Type "' + name + '" to confirm permanent deletion:');
-    if (typed !== name) { if (typed !== null) alert('Company name did not match. Deletion cancelled.'); return; }
-    const form = document.getElementById('deleteCompanyForm');
-    form.action = '/super_admin/companies/' + id;
-    form.submit();
+    Swal.fire({
+        title: 'Delete ' + name + '?',
+        html: 'This will permanently remove the company and <strong>all its data</strong> — products, sales, and users.<br><br>' +
+              'Type <strong>' + name + '</strong> below to confirm:',
+        input: 'text',
+        inputPlaceholder: 'Type company name to confirm',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Delete Permanently',
+        confirmButtonColor: '#e11d48',
+        cancelButtonText: 'Cancel',
+        inputValidator: (value) => {
+            if (!value) return 'Please type the company name.';
+            if (value !== name) return 'Company name does not match. Try again.';
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const form = document.getElementById('deleteCompanyForm');
+            form.action = '/super_admin/companies/' + id;
+            form.submit();
+        }
+    });
 }
 
 function confirmBulk(e) {
+    e.preventDefault();
     const action = document.querySelector('#bulkForm select[name="action"]').value;
     const checked = document.querySelectorAll('.company-check:checked').length;
-    if (!action) { alert('Choose a bulk action first.'); e.preventDefault(); return false; }
-    if (!checked) { alert('Select at least one company.'); e.preventDefault(); return false; }
-    if (action !== 'export' && !confirm(action.charAt(0).toUpperCase() + action.slice(1) + ' ' + checked + ' selected companies?')) { e.preventDefault(); return false; }
-    return true;
+    if (!action) { Swal.fire({ icon: 'warning', title: 'No Action', text: 'Choose a bulk action first.' }); return false; }
+    if (!checked) { Swal.fire({ icon: 'warning', title: 'None Selected', text: 'Select at least one company first.' }); return false; }
+    if (action === 'export') { document.getElementById('bulkForm').submit(); return; }
+    Swal.fire({
+        title: action.charAt(0).toUpperCase() + action.slice(1) + ' ' + checked + ' companies?',
+        text: 'This action will be applied to all selected companies.',
+        icon: action === 'delete' ? 'warning' : 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, ' + action,
+        confirmButtonColor: action === 'delete' ? '#e11d48' : '#004161',
+    }).then((result) => {
+        if (result.isConfirmed) document.getElementById('bulkForm').submit();
+    });
 }
 
 document.getElementById('selectAll').addEventListener('change', e => {
