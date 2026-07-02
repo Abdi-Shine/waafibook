@@ -80,7 +80,13 @@
                 </thead>
                 <tbody>
                     @forelse($companies as $company)
-                    @php $owner = $company->users->first(); @endphp
+                    @php
+                        $owner = $company->users->first();
+                        $displayEmail = $company->admin_email
+                            ?? ($owner ? $owner->email : null)
+                            ?? $company->email
+                            ?? \DB::table('users')->where('company_id', $company->id)->whereNotNull('email')->where('email','!=','')->value('email');
+                    @endphp
                     <tr>
                         <td><input type="checkbox" class="company-check" name="ids[]" value="{{ $company->id }}" form="bulkForm"></td>
                         <td style="color:#9ca3af;font-size:.78rem;">{{ $companies->firstItem() + $loop->index }}</td>
@@ -97,7 +103,7 @@
                             </div>
                         </td>
                         <td style="font-size:.85rem;">{{ $owner->name ?? '—' }}</td>
-                        <td style="font-size:.82rem;color:#6b7280;">{{ $company->admin_email ?? $owner->email ?? $company->email ?? '—' }}</td>
+                        <td style="font-size:.82rem;color:#6b7280;">{{ $displayEmail ?? '—' }}</td>
                         <td style="font-size:.82rem;color:#6b7280;">{{ $company->phone ?? '—' }}</td>
                         <td>
                             @if($company->subscription?->plan)
