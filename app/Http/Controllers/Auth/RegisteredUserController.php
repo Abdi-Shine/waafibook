@@ -32,10 +32,11 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'name'         => ['required', 'string', 'max:200'],
-            'email'        => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password'     => ['required', 'confirmed', Rules\Password::defaults()],
-            'company_name' => ['required', 'string', 'max:255', 'unique:companies,name'],
+            'name'          => ['required', 'string', 'max:200'],
+            'email'         => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'password'      => ['required', 'confirmed', Rules\Password::defaults()],
+            'company_name'  => ['required', 'string', 'max:255', 'unique:companies,name'],
+            'company_email' => ['nullable', 'email', 'max:255'],
         ]);
 
         // Ensure a free trial plan exists
@@ -53,7 +54,7 @@ class RegisteredUserController extends Controller
         // Create a new company (tenant) for this registrant
         $company = \App\Models\Company::create([
             'name'                => $request->company_name,
-            'email'               => $request->email,
+            'email'               => $request->company_email ?: $request->email,
             'industry'            => $request->industry,
             'registration_number' => $request->cr_number,
             'phone'               => $request->company_phone,

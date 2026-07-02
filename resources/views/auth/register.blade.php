@@ -391,6 +391,18 @@
                             <input type="text" name="city" class="form-control"
                                    placeholder="City" value="{{ old('city') }}">
                         </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Company Email</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-envelope-at"></i></span>
+                                <input type="email" name="company_email" class="form-control @error('company_email') is-invalid @enderror"
+                                       placeholder="info@company.com"
+                                       value="{{ old('company_email') }}">
+                            </div>
+                            @error('company_email')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
                     </div>
 
 
