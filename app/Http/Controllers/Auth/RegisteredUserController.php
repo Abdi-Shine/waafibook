@@ -53,6 +53,7 @@ class RegisteredUserController extends Controller
         // Create a new company (tenant) for this registrant
         $company = \App\Models\Company::create([
             'name'                => $request->company_name,
+            'email'               => $request->email,
             'industry'            => $request->industry,
             'registration_number' => $request->cr_number,
             'phone'               => $request->company_phone,
