@@ -550,7 +550,10 @@ class ProductController extends Controller
         $selectedId = $request->input('product_id', $products->first()->id ?? null);
         $ledger = $selectedId ? $this->buildLedgerData($selectedId) : null;
 
-        return view('frontend.product.ledger', compact('products', 'selectedId', 'ledger', 'type'));
+        $isMobile = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $request->userAgent() ?? '');
+        $view = $isMobile ? 'frontend.product.ledger_pwa' : 'frontend.product.ledger';
+
+        return view($view, compact('products', 'selectedId', 'ledger', 'type'));
     }
 
     public function ledgerData($id)
