@@ -32,7 +32,7 @@ class AccountActivatedMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Your HornTech ERP System has been Activated!',
+            subject: 'Your WaafiBook Account Has Been Created!',
         );
     }
 
