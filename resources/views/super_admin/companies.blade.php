@@ -97,7 +97,7 @@
                             </div>
                         </td>
                         <td style="font-size:.85rem;">{{ $owner->name ?? '—' }}</td>
-                        <td style="font-size:.82rem;color:#6b7280;">{{ $owner->email ?? $company->email ?? '—' }}</td>
+                        <td style="font-size:.82rem;color:#6b7280;">{{ $company->admin_email ?? $owner->email ?? $company->email ?? '—' }}</td>
                         <td style="font-size:.82rem;color:#6b7280;">{{ $company->phone ?? '—' }}</td>
                         <td>
                             @if($company->subscription?->plan)

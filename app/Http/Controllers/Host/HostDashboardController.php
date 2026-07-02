@@ -50,7 +50,14 @@ class HostDashboardController extends Controller
 
     public function manageCompanies(Request $request)
     {
-        $companies = Company::with(['subscription.plan', 'users' => fn ($q) => $q->orderByRaw("role = 'admin' desc")])
+        $companies = Company::with(['subscription.plan', 'users' => fn ($q) => $q->withoutGlobalScopes()->where('role', 'admin')->orderByDesc('created_at')])
+            ->addSelect(['admin_email' => \App\Models\User::selectRaw('email')
+                ->withoutGlobalScopes()
+                ->whereColumn('company_id', 'companies.id')
+                ->where('role', 'admin')
+                ->orderByDesc('created_at')
+                ->limit(1)
+            ])
             ->when($request->filled('search'), fn ($q) => $q->where(fn ($q2) => $q2
                 ->where('name', 'like', '%' . $request->search . '%')
                 ->orWhere('email', 'like', '%' . $request->search . '%')))
