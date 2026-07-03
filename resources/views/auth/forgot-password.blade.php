@@ -34,8 +34,8 @@
                         </div>
                     @endif
                 </div>
-                <h1 class="auth-title text-2xl font-black tracking-tighter">Reset Password</h1>
-                <p class="auth-subtitle text-sm opacity-90">We will send you a secure reset link</p>
+                <h1 class="auth-title text-2xl font-black tracking-tighter">Forgot Password?</h1>
+                <p class="auth-subtitle text-sm opacity-90">Contact your administrator for access</p>
             </div>
             
             <div class="auth-body p-5 py-4">
