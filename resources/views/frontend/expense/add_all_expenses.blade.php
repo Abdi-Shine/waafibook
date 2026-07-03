@@ -397,9 +397,7 @@
                                 <select name="bank_account_id" x-model="editData.bank_account_id" required
                                     class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none appearance-none transition-all">
                                     @foreach($bankAccounts as $account)
-                                        <option value="{{ $account->id }}" {{ ($cashOnHandAccount && $cashOnHandAccount->id == $account->id && !$editData) ? 'selected' : '' }}>
-                                            {{ $account->name }}
-                                        </option>
+                                        <option value="{{ $account->id }}">{{ $account->name }}</option>
                                     @endforeach
                                 </select>
                                 <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
