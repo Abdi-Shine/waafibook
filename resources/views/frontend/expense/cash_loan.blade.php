@@ -124,7 +124,6 @@
                         <th class="px-5 py-4 text-[11px] font-black text-primary-dark uppercase tracking-wider">Borrower</th>
                         <th class="px-5 py-4 text-[11px] font-black text-primary-dark uppercase tracking-wider">Type</th>
                         <th class="px-5 py-4 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right">Loan Amount</th>
-                        <th class="px-5 py-4 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right">Monthly</th>
                         <th class="px-5 py-4 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right">Paid</th>
                         <th class="px-5 py-4 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right">Balance</th>
                         <th class="px-5 py-4 text-[11px] font-black text-primary-dark uppercase tracking-wider text-center">Status</th>
@@ -168,9 +167,6 @@
                         </td>
                         <td class="px-5 py-4 text-right">
                             <span class="text-[13px] font-black text-primary-dark">{{ $currency }} {{ number_format($loan->amount, 2) }}</span>
-                        </td>
-                        <td class="px-5 py-4 text-right">
-                            <span class="text-[13px] font-bold text-gray-500">{{ $currency }} {{ number_format($loan->monthly_deduction, 2) }}</span>
                         </td>
                         <td class="px-5 py-4 text-right">
                             <span class="text-[13px] font-black text-primary-dark">{{ $currency }} {{ number_format($loan->recovered, 2) }}</span>
@@ -232,7 +228,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="px-5 py-12 text-center text-gray-400 italic text-xs">No loan records found.</td>
+                        <td colspan="8" class="px-5 py-12 text-center text-gray-400 italic text-xs">No loan records found.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -340,22 +336,14 @@
                             <div class="space-y-1.5">
                                 <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Loan Amount <span class="text-red-400">*</span></label>
                                 <input type="number" step="0.01" min="0" name="amount" x-model="loanData.amount"
-                                    @input="calculateDuration()" required placeholder="0.00"
+                                    required placeholder="0.00"
                                     class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
                             </div>
                             <div class="space-y-1.5">
-                                <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Monthly Repayment <span class="text-red-400">*</span></label>
-                                <input type="number" step="0.01" min="0" name="monthly_deduction" x-model="loanData.monthly_deduction"
-                                    @input="calculateDuration()" required placeholder="0.00"
-                                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
-                            </div>
-                            <div class="space-y-1.5">
-                                <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Start Date <span class="text-red-400">*</span></label>
+                                <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Loan Date <span class="text-red-400">*</span></label>
                                 <input type="date" name="start_date" x-model="loanData.start_date" required
                                     class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
                             </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div class="space-y-1.5">
                                 <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Loan Type</label>
                                 <div class="relative">
@@ -369,18 +357,12 @@
                                     <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
                                 </div>
                             </div>
-                            <div class="space-y-1.5">
-                                <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Duration (Months)</label>
-                                <input type="text" name="duration" x-model="loanData.duration" readonly
-                                    class="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-500 outline-none cursor-not-allowed">
-                                <p class="text-[9px] text-gray-400 italic">Auto-calculated</p>
-                            </div>
-                            <div class="space-y-1.5">
-                                <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Reason <span class="text-red-400">*</span></label>
-                                <input type="text" name="reason" x-model="loanData.reason" required
-                                    placeholder="Purpose of this loan"
-                                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
-                            </div>
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Reason <span class="text-red-400">*</span></label>
+                            <input type="text" name="reason" x-model="loanData.reason" required
+                                placeholder="Purpose of this loan"
+                                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
                         </div>
                     </div>
                 </form>
@@ -432,12 +414,8 @@
                         <p class="text-sm font-bold text-primary-dark" x-text="'{{ $currency }} ' + parseFloat(loanData.monthly_deduction || 0).toLocaleString(undefined,{minimumFractionDigits:2})"></p>
                     </div>
                     <div>
-                        <p class="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Start Date</p>
+                        <p class="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Loan Date</p>
                         <p class="text-sm font-bold text-primary-dark" x-text="loanData.start_date || '—'"></p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Duration</p>
-                        <p class="text-sm font-bold text-primary-dark" x-text="(loanData.duration || '—') + ' Months'"></p>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
@@ -485,17 +463,9 @@ document.addEventListener('alpine:init', () => {
             id: '', loan_id: '',
             borrower_name: '', borrower_type: 'individual', phone: '',
             employee_id: '', employee: null,
-            amount: '', monthly_deduction: '', start_date: '',
-            duration: '', type: 'personal', reason: '',
+            amount: '', start_date: '',
+            type: 'personal', reason: '',
             recovered: 0, balance: 0, status: ''
-        },
-
-        calculateDuration() {
-            if (this.loanData.amount > 0 && this.loanData.monthly_deduction > 0) {
-                this.loanData.duration = Math.ceil(this.loanData.amount / this.loanData.monthly_deduction);
-            } else {
-                this.loanData.duration = '';
-            }
         },
 
         openCreateModal() {
@@ -505,9 +475,9 @@ document.addEventListener('alpine:init', () => {
                 id: '', loan_id: '',
                 borrower_name: '', borrower_type: 'individual', phone: '',
                 employee_id: '', employee: null,
-                amount: '', monthly_deduction: '',
+                amount: '',
                 start_date: new Date().toISOString().split('T')[0],
-                duration: '', type: 'personal', reason: '',
+                type: 'personal', reason: '',
                 recovered: 0, balance: 0, status: ''
             };
             this.activeModal = 'loan-modal';

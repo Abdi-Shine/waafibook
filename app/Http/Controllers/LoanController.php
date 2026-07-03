@@ -61,9 +61,7 @@ class LoanController extends Controller
             'phone'             => 'nullable|string|max:30',
             'employee_id'       => 'nullable|exists:employees,id',
             'amount'            => 'required|numeric|min:1',
-            'monthly_deduction' => 'required|numeric|min:1',
             'start_date'        => 'required|date',
-            'duration'          => 'required|integer|min:1',
             'type'              => 'nullable|string',
             'reason'            => 'required|string',
         ]);
@@ -76,10 +74,10 @@ class LoanController extends Controller
             $loan->phone             = $validated['phone'] ?? null;
             $loan->employee_id       = $validated['employee_id'] ?? null;
             $loan->amount            = $validated['amount'];
-            $loan->monthly_deduction = $validated['monthly_deduction'];
+            $loan->monthly_deduction = $validated['amount']; // one-time full repayment
             $loan->start_date        = $validated['start_date'];
             $loan->balance           = $validated['amount'];
-            $loan->duration          = $validated['duration'];
+            $loan->duration          = 1;
             $loan->type              = $validated['type'] ?? 'personal';
             $loan->reason            = $validated['reason'];
             $loan->status            = 'pending';
@@ -106,9 +104,7 @@ class LoanController extends Controller
             'phone'             => 'nullable|string|max:30',
             'employee_id'       => 'nullable|exists:employees,id',
             'amount'            => 'required|numeric|min:1',
-            'monthly_deduction' => 'required|numeric|min:1',
             'start_date'        => 'required|date',
-            'duration'          => 'required|integer|min:1',
             'type'              => 'nullable|string',
             'reason'            => 'required|string',
         ]);
@@ -122,10 +118,10 @@ class LoanController extends Controller
         $loan->phone             = $validated['phone'] ?? null;
         $loan->employee_id       = $validated['employee_id'] ?? null;
         $loan->amount            = $validated['amount'];
-        $loan->monthly_deduction = $validated['monthly_deduction'];
+        $loan->monthly_deduction = $validated['amount'];
         $loan->start_date        = $validated['start_date'];
         $loan->balance           = $validated['amount'];
-        $loan->duration          = $validated['duration'];
+        $loan->duration          = 1;
         $loan->type              = $validated['type'] ?? 'personal';
         $loan->reason            = $validated['reason'];
         $loan->save();
