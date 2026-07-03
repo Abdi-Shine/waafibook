@@ -235,8 +235,14 @@
             </div>
 
             {{-- Form --}}
+            @php
+                $cashOnHandAccount = $bankAccounts->first(fn($a) => stripos($a->name, 'Cash on Hand') !== false)
+                    ?? $bankAccounts->first(fn($a) => ($a->type ?? '') === 'cash')
+                    ?? $bankAccounts->first();
+            @endphp
             <form action="{{ route('expenses.store') }}" method="POST" class="flex flex-col flex-1 overflow-hidden">
                 @csrf
+                <input type="hidden" name="payment_method" value="Cash">
                 <div class="px-8 py-6 overflow-y-auto flex-grow space-y-5">
 
                     {{-- Row 1: Name + Amount + Date --}}
@@ -281,9 +287,10 @@
                             <div class="relative">
                                 <select name="bank_account_id" required
                                     class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none appearance-none transition-all">
-                                    <option value="">-- Select Account --</option>
                                     @foreach($bankAccounts as $account)
-                                        <option value="{{ $account->id }}">{{ $account->name }}</option>
+                                        <option value="{{ $account->id }}" {{ ($cashOnHandAccount && $cashOnHandAccount->id == $account->id) ? 'selected' : '' }}>
+                                            {{ $account->name }}
+                                        </option>
                                     @endforeach
                                 </select>
                                 <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
@@ -291,30 +298,7 @@
                         </div>
                     </div>
 
-                    {{-- Row 3: Payment Method + Reference No. --}}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Payment Method</label>
-                            <div class="relative">
-                                <select name="payment_method"
-                                    class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none appearance-none transition-all">
-                                    <option value="Cash">Cash</option>
-                                    <option value="Bank Transfer">Bank Transfer</option>
-                                    <option value="Cheque">Cheque</option>
-                                    <option value="Credit Card">Credit Card</option>
-                                    <option value="Mobile Money">Mobile Money</option>
-                                </select>
-                                <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
-                            </div>
-                        </div>
-                        <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Reference No.</label>
-                            <input type="text" name="reference_no" placeholder="Invoice / Receipt #"
-                                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
-                        </div>
-                    </div>
-
-                    {{-- Row 4: Description (full width) --}}
+                    {{-- Description --}}
                     <div class="space-y-1.5">
                         <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Description <span class="text-red-400">*</span></label>
                         <textarea name="description" required rows="2" placeholder="Enter expense details or notes..."
@@ -368,6 +352,7 @@
             <form :action="editUrl" method="POST" class="flex flex-col flex-1 overflow-hidden">
                 @csrf
                 @method('PUT')
+                <input type="hidden" name="payment_method" value="Cash">
                 <div class="px-8 py-6 overflow-y-auto flex-grow space-y-5">
 
                     {{-- Row 1: Name + Amount + Date --}}
@@ -412,7 +397,9 @@
                                 <select name="bank_account_id" x-model="editData.bank_account_id" required
                                     class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none appearance-none transition-all">
                                     @foreach($bankAccounts as $account)
-                                        <option value="{{ $account->id }}">{{ $account->name }}</option>
+                                        <option value="{{ $account->id }}" {{ ($cashOnHandAccount && $cashOnHandAccount->id == $account->id && !$editData) ? 'selected' : '' }}>
+                                            {{ $account->name }}
+                                        </option>
                                     @endforeach
                                 </select>
                                 <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
@@ -420,30 +407,7 @@
                         </div>
                     </div>
 
-                    {{-- Row 3: Payment Method + Reference No. --}}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Payment Method</label>
-                            <div class="relative">
-                                <select name="payment_method" x-model="editData.payment_method"
-                                    class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none appearance-none transition-all">
-                                    <option value="Cash">Cash</option>
-                                    <option value="Bank Transfer">Bank Transfer</option>
-                                    <option value="Cheque">Cheque</option>
-                                    <option value="Credit Card">Credit Card</option>
-                                    <option value="Mobile Money">Mobile Money</option>
-                                </select>
-                                <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
-                            </div>
-                        </div>
-                        <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Reference No.</label>
-                            <input type="text" name="reference_no" x-model="editData.reference_no"
-                                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
-                        </div>
-                    </div>
-
-                    {{-- Row 4: Description (full width) --}}
+                    {{-- Description --}}
                     <div class="space-y-1.5">
                         <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Description <span class="text-red-400">*</span></label>
                         <textarea name="description" x-model="editData.description" required rows="2"
