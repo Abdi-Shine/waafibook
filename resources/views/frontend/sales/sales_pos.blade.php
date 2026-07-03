@@ -121,6 +121,17 @@
     </div>
 @endsection
 
+@push('styles')
+<style>
+    .swal-pos-popup  { border-radius: 20px !important; padding: 28px 24px 20px !important; max-width: 400px !important; }
+    .swal-pos-confirm { background: #99CC33 !important; color: #004161 !important; font-weight: 800 !important; font-size: 14px !important; border-radius: 10px !important; padding: 10px 22px !important; }
+    .swal-pos-cancel  { background: #f1f5f9 !important; color: #64748b !important; font-weight: 700 !important; font-size: 14px !important; border-radius: 10px !important; padding: 10px 22px !important; }
+    .swal-pos-confirm:hover { background: #8bb82e !important; }
+    .swal-pos-cancel:hover  { background: #e2e8f0 !important; color: #334155 !important; }
+    .swal2-actions { gap: 10px !important; margin-top: 4px !important; }
+</style>
+@endpush
+
 @push('scripts')
     <script>
         const CSRF_TOKEN = '{{ csrf_token() }}';
@@ -290,17 +301,53 @@
         }
 
         function processPayment() {
-            if (cart.length === 0) return Swal.fire('Error', 'Cart is empty', 'error');
+            if (cart.length === 0) return Swal.fire({
+                icon: 'warning',
+                title: 'Cart is Empty',
+                text: 'Please add at least one product before checking out.',
+                confirmButtonColor: '#004161',
+                confirmButtonText: 'Got it'
+            });
 
-            const total = cart.reduce((s, i) => s + (i.price * i.quantity), 0);
-            
+            const total    = cart.reduce((s, i) => s + (i.price * i.quantity), 0);
+            const itemCount = cart.reduce((s, i) => s + i.quantity, 0);
+            const itemRows  = cart.map(i => `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f1f5f9;">
+                    <span style="font-size:13px;color:#334155;font-weight:600;text-align:left;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${i.name}</span>
+                    <span style="font-size:12px;color:#64748b;margin:0 8px;">x${i.quantity}</span>
+                    <span style="font-size:13px;font-weight:800;color:#004161;">${(i.price * i.quantity).toFixed(2)} ${CURRENCY}</span>
+                </div>`).join('');
+
             Swal.fire({
-                title: 'Confirm Checkout',
-                html: `Total: <strong style="color:#004161">${total.toFixed(2)} ${CURRENCY}</strong>`,
-                icon: 'question',
+                html: `
+                    <div style="text-align:center;padding:4px 0 16px;">
+                        <div style="width:56px;height:56px;background:linear-gradient(135deg,#004161,#006a9e);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;box-shadow:0 8px 20px rgba(0,65,97,0.25);">
+                            <svg width="26" height="26" fill="none" stroke="#99CC33" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+                        </div>
+                        <h2 style="font-size:20px;font-weight:900;color:#004161;margin:0 0 2px;">Order Summary</h2>
+                        <p style="font-size:12px;color:#94a3b8;margin:0 0 16px;">${itemCount} item${itemCount !== 1 ? 's' : ''} in cart</p>
+
+                        <div style="background:#f8fafc;border-radius:12px;padding:12px 16px;margin-bottom:16px;text-align:left;">
+                            ${itemRows}
+                        </div>
+
+                        <div style="background:#004161;border-radius:12px;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1px;">Total Due</span>
+                            <span style="font-size:22px;font-weight:900;color:#99CC33;">${total.toFixed(2)} ${CURRENCY}</span>
+                        </div>
+                    </div>`,
                 showCancelButton: true,
-                confirmButtonText: 'Confirm',
-                footer: 'Inventory levels will be updated automatically.'
+                confirmButtonText: '<i class="bi bi-check-circle-fill"></i>&nbsp; Confirm & Pay',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#99CC33',
+                cancelButtonColor: '#e2e8f0',
+                customClass: {
+                    confirmButton: 'swal-pos-confirm',
+                    cancelButton:  'swal-pos-cancel',
+                    popup:         'swal-pos-popup'
+                },
+                showClass:  { popup: 'animate__animated animate__fadeInDown animate__faster' },
+                hideClass:  { popup: 'animate__animated animate__fadeOutUp animate__faster' },
             }).then(res => {
                 if (res.isConfirmed) {
                     Swal.showLoading();
