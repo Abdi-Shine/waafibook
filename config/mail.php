@@ -39,14 +39,32 @@ return [
 
         'smtp' => [
             'transport' => 'smtp',
-            'scheme' => env('MAIL_SCHEME'),
-            'url' => env('MAIL_URL'),
-            'host' => env('MAIL_HOST', '127.0.0.1'),
-            'port' => env('MAIL_PORT', 2525),
-            'username' => env('MAIL_USERNAME'),
-            'password' => env('MAIL_PASSWORD'),
-            'timeout' => null,
+            // MAIL_SCHEME takes priority; fall back to MAIL_ENCRYPTION for older .env files.
+            // Symfony Mailer uses "smtps" (not "ssl") for port-465 implicit TLS.
+            'scheme'    => (function () {
+                $s = env('MAIL_SCHEME');
+                if (!$s || $s === 'null') {
+                    $s = env('MAIL_ENCRYPTION');
+                }
+                if ($s === 'ssl' || $s === 'smtps') return 'smtps';
+                if ($s === 'tls') return 'smtp';
+                // Auto-detect: port 465 always requires implicit TLS (smtps)
+                if (!$s && (int) env('MAIL_PORT') === 465) return 'smtps';
+                return $s;
+            })(),
+            'url'       => env('MAIL_URL'),
+            'host'      => env('MAIL_HOST', '127.0.0.1'),
+            'port'      => env('MAIL_PORT', 2525),
+            'username'  => env('MAIL_USERNAME'),
+            'password'  => env('MAIL_PASSWORD'),
+            'timeout'   => null,
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+            'stream'    => [
+                'ssl' => [
+                    'verify_peer'      => env('MAIL_VERIFY_PEER', true),
+                    'verify_peer_name' => env('MAIL_VERIFY_PEER_NAME', true),
+                ],
+            ],
         ],
 
         'ses' => [
