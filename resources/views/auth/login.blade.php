@@ -22,15 +22,9 @@
         <!-- Header -->
         <div class="auth-header-gradient auth-header-border p-5 py-4 text-center text-white">
             <div class="auth-logo flex justify-center mb-4">
-                @if($company && $company->logo)
-                    <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-xl overflow-hidden border-4 border-accent/30 p-1.5">
-                        <img src="{{ asset($company->logo) }}" class="w-full h-full object-contain" alt="Logo">
-                    </div>
-                @else
-                    <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-xl border-4 border-accent/30 p-1.5">
-                        @include('partials.logo_svg', ['width' => 44, 'height' => 44])
-                    </div>
-                @endif
+                <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-xl border-4 border-accent/30 p-1.5">
+                    @include('partials.logo_svg', ['width' => 44, 'height' => 44])
+                </div>
             </div>
             <h1 class="text-2xl font-black tracking-tighter mb-0">Waafi Book</h1>
             <p class="text-white/60 text-sm mt-1 mb-3">Accounting SaaS for modern teams</p>
@@ -118,29 +112,30 @@
                         @enderror
                     </div>
 
-                    <div class="mb-4">
-                        <label class="block text-[11px] font-black text-primary uppercase tracking-wider mb-1.5">Company Telephone</label>
-                        <div class="relative">
-                            <i class="bi bi-telephone input-icon"></i>
-                            <input type="text" name="company_phone"
-                                   class="form-control"
-                                   placeholder="+252 61 00000000"
-                                   value="{{ old('company_phone') }}">
+                    <div class="mb-4 grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-black text-primary uppercase tracking-wider mb-1.5">Full Name <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <i class="bi bi-person input-icon"></i>
+                                <input type="text" name="name"
+                                       class="form-control @error('name') border-red-400 @enderror"
+                                       placeholder="Enter your full name"
+                                       value="{{ old('name') }}" required autocomplete="name">
+                            </div>
+                            @error('name')
+                                <p class="text-red-500 font-bold mt-1.5 uppercase text-[0.7rem]">{{ $message }}</p>
+                            @enderror
                         </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="block text-[11px] font-black text-primary uppercase tracking-wider mb-1.5">Full Name <span class="text-red-500">*</span></label>
-                        <div class="relative">
-                            <i class="bi bi-person input-icon"></i>
-                            <input type="text" name="name"
-                                   class="form-control @error('name') border-red-400 @enderror"
-                                   placeholder="Enter your full name"
-                                   value="{{ old('name') }}" required autocomplete="name">
+                        <div>
+                            <label class="block text-[11px] font-black text-primary uppercase tracking-wider mb-1.5">Company Telephone</label>
+                            <div class="relative">
+                                <i class="bi bi-telephone input-icon"></i>
+                                <input type="text" name="company_phone"
+                                       class="form-control"
+                                       placeholder="+252 61 00000000"
+                                       value="{{ old('company_phone') }}">
+                            </div>
                         </div>
-                        @error('name')
-                            <p class="text-red-500 font-bold mt-1.5 uppercase text-[0.7rem]">{{ $message }}</p>
-                        @enderror
                     </div>
 
                     <div class="mb-4">
