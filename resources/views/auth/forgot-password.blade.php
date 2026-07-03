@@ -35,23 +35,44 @@
                     @endif
                 </div>
                 <h1 class="auth-title text-2xl font-black tracking-tighter">Forgot Password?</h1>
-                <p class="auth-subtitle text-sm opacity-90">Contact your administrator for access</p>
+                <p class="auth-subtitle text-sm opacity-90">We will send you a secure reset link</p>
             </div>
             
             <div class="auth-body p-5 py-4">
-                <div class="text-center mb-4">
-                    <div style="width:64px;height:64px;background:rgba(0,65,97,0.08);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
-                        <i class="bi bi-shield-lock" style="font-size:28px;color:#004161;"></i>
-                    </div>
-                    <p class="fw-semibold mb-1" style="color:#004161;font-size:15px;">Password Reset Disabled</p>
-                    <p class="text-muted small leading-relaxed">
-                        Self-service password reset is not available.<br>
-                        Please contact your <strong style="color:#004161;">system administrator</strong> to reset your password.
-                    </p>
+                <div class="mb-4 text-sm text-center text-muted fw-medium leading-relaxed">
+                    Enter your admin email address and we will send you a password reset link.
                 </div>
-                <div class="alert border-0 rounded-4 small text-center" style="background:rgba(153,204,51,0.12);color:#004161;" role="alert">
-                    <i class="bi bi-info-circle-fill me-2" style="color:#99CC33;"></i>
-                    Your admin can reset your password from the user management panel.
+
+                @if (session('status'))
+                    <div class="alert alert-success border-0 rounded-4 mb-4 small fw-bold text-center" role="alert">
+                        <i class="bi bi-check-circle-fill me-2"></i>{{ session('status') }}
+                    </div>
+                @endif
+
+                @if ($errors->has('email'))
+                    <div class="alert border-0 rounded-4 mb-4 small fw-bold text-center" style="background:#fff0f0;color:#dc2626;" role="alert">
+                        <i class="bi bi-exclamation-circle-fill me-2"></i>{{ $errors->first('email') }}
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('password.email') }}">
+                    @csrf
+                    <div class="mb-4">
+                        <label for="email" class="form-label">Email Address</label>
+                        <div class="input-group">
+                            <i class="bi bi-envelope input-icon"></i>
+                            <input id="email" class="form-control" type="email" name="email"
+                                   value="{{ old('email') }}" required autofocus placeholder="name@company.com" />
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-auth">
+                        <i class="bi bi-send me-2"></i>Send Reset Link
+                    </button>
+                </form>
+
+                <div class="mt-3 text-center small text-muted">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Only company administrator accounts can reset password by email.
                 </div>
             </div>
             
