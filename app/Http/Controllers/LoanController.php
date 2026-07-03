@@ -56,7 +56,10 @@ class LoanController extends Controller
     public function storeLoan(Request $request)
     {
         $validated = $request->validate([
-            'employee_id'       => 'required|exists:employees,id',
+            'borrower_name'     => 'required|string|max:255',
+            'borrower_type'     => 'nullable|string',
+            'phone'             => 'nullable|string|max:30',
+            'employee_id'       => 'nullable|exists:employees,id',
             'amount'            => 'required|numeric|min:1',
             'monthly_deduction' => 'required|numeric|min:1',
             'start_date'        => 'required|date',
@@ -65,11 +68,13 @@ class LoanController extends Controller
             'reason'            => 'required|string',
         ]);
 
-        // Use DB::transaction to get a safe auto-incremented ID before saving
         DB::beginTransaction();
         try {
             $loan = new Loan();
-            $loan->employee_id       = $validated['employee_id'];
+            $loan->borrower_name     = $validated['borrower_name'];
+            $loan->borrower_type     = $validated['borrower_type'] ?? 'individual';
+            $loan->phone             = $validated['phone'] ?? null;
+            $loan->employee_id       = $validated['employee_id'] ?? null;
             $loan->amount            = $validated['amount'];
             $loan->monthly_deduction = $validated['monthly_deduction'];
             $loan->start_date        = $validated['start_date'];
@@ -80,7 +85,7 @@ class LoanController extends Controller
             $loan->status            = 'pending';
             $loan->save();
 
-            $loan->loan_id = 'SL-' . date('Y') . '-' . str_pad($loan->id, 3, '0', STR_PAD_LEFT);
+            $loan->loan_id = 'LN-' . date('Y') . '-' . str_pad($loan->id, 3, '0', STR_PAD_LEFT);
             $loan->save();
 
             DB::commit();
@@ -96,7 +101,10 @@ class LoanController extends Controller
         $loan = Loan::query()->findOrFail($id);
 
         $validated = $request->validate([
-            'employee_id'       => 'required|exists:employees,id',
+            'borrower_name'     => 'required|string|max:255',
+            'borrower_type'     => 'nullable|string',
+            'phone'             => 'nullable|string|max:30',
+            'employee_id'       => 'nullable|exists:employees,id',
             'amount'            => 'required|numeric|min:1',
             'monthly_deduction' => 'required|numeric|min:1',
             'start_date'        => 'required|date',
@@ -109,7 +117,10 @@ class LoanController extends Controller
             return redirect()->back()->with('error', 'Cannot edit a loan that is already active or settled.');
         }
 
-        $loan->employee_id       = $validated['employee_id'];
+        $loan->borrower_name     = $validated['borrower_name'];
+        $loan->borrower_type     = $validated['borrower_type'] ?? 'individual';
+        $loan->phone             = $validated['phone'] ?? null;
+        $loan->employee_id       = $validated['employee_id'] ?? null;
         $loan->amount            = $validated['amount'];
         $loan->monthly_deduction = $validated['monthly_deduction'];
         $loan->start_date        = $validated['start_date'];
