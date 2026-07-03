@@ -336,132 +336,96 @@
 
             const total    = cart.reduce((s, i) => s + (i.price * i.quantity), 0);
             const totalQty = cart.reduce((s, i) => s + i.quantity, 0);
-            const customerEl = document.getElementById('customer_id');
-            const accountEl  = document.getElementById('account_id');
+            const customerEl   = document.getElementById('customer_id');
+            const accountEl    = document.getElementById('account_id');
             const customerName = customerEl.options[customerEl.selectedIndex]?.text || 'Walk-in Customer';
             const accountName  = accountEl.options[accountEl.selectedIndex]?.text  || 'Cash on Hand';
 
-            // Build items table rows
             const itemRows = cart.map(i => `
                 <tr>
-                    <td style="padding:7px 10px; text-align:left; font-size:12px; color:#334155; border-bottom:1px solid #f1f5f9;">${i.name}</td>
-                    <td style="padding:7px 10px; text-align:center; font-size:12px; color:#64748b; border-bottom:1px solid #f1f5f9;">${i.quantity}</td>
-                    <td style="padding:7px 10px; text-align:right; font-size:12px; font-weight:700; color:#004161; border-bottom:1px solid #f1f5f9;">${parseFloat(i.price * i.quantity).toFixed(2)}</td>
-                </tr>
-            `).join('');
+                    <td style="padding:7px 10px;text-align:left;font-size:12px;color:#334155;border-bottom:1px solid #f1f5f9;">${i.name}</td>
+                    <td style="padding:7px 10px;text-align:center;font-size:12px;color:#64748b;border-bottom:1px solid #f1f5f9;">${i.quantity}</td>
+                    <td style="padding:7px 10px;text-align:right;font-size:12px;font-weight:700;color:#004161;border-bottom:1px solid #f1f5f9;">${(i.price * i.quantity).toFixed(2)}</td>
+                </tr>`).join('');
 
             Swal.fire({
                 title: '',
                 html: `
                     <div style="text-align:left;">
-                        <!-- Header -->
-                        <div style="background:#004161; border-radius:12px 12px 0 0; margin:-20px -20px 0; padding:18px 24px 16px; display:flex; align-items:center; justify-content:space-between;">
+                        <div style="background:#004161;border-radius:12px 12px 0 0;margin:-20px -20px 0;padding:18px 24px 16px;display:flex;align-items:center;justify-content:space-between;">
                             <div>
-                                <div style="font-size:11px; font-weight:700; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:2px; margin-bottom:2px;">Order Summary</div>
-                                <div style="font-size:20px; font-weight:900; color:#ffffff;">${totalQty} item${totalQty > 1 ? 's' : ''}</div>
+                                <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:2px;margin-bottom:2px;">Order Summary</div>
+                                <div style="font-size:20px;font-weight:900;color:#fff;">${totalQty} item${totalQty > 1 ? 's' : ''}</div>
                             </div>
                             <div style="text-align:right;">
-                                <div style="font-size:10px; color:rgba(255,255,255,0.45); margin-bottom:2px;">TOTAL DUE</div>
-                                <div style="font-size:26px; font-weight:900; color:#99CC33;">${total.toFixed(2)} <span style="font-size:14px;">${CURRENCY}</span></div>
+                                <div style="font-size:10px;color:rgba(255,255,255,0.45);margin-bottom:2px;">TOTAL DUE</div>
+                                <div style="font-size:26px;font-weight:900;color:#99CC33;">${total.toFixed(2)} <span style="font-size:14px;">${CURRENCY}</span></div>
                             </div>
                         </div>
-
-                        <!-- Meta strip -->
-                        <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:10px 16px; display:flex; justify-content:space-between; font-size:11px; margin-bottom:12px;">
-                            <div><span style="color:#94a3b8; font-weight:700; margin-right:6px;">Customer</span><span style="color:#004161; font-weight:800;">${customerName}</span></div>
-                            <div><span style="color:#94a3b8; font-weight:700; margin-right:6px;">Payment</span><span style="color:#004161; font-weight:800;">${accountName}</span></div>
+                        <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:10px 16px;display:flex;justify-content:space-between;font-size:11px;margin-bottom:12px;">
+                            <div><span style="color:#94a3b8;font-weight:700;margin-right:6px;">Customer</span><span style="color:#004161;font-weight:800;">${customerName}</span></div>
+                            <div><span style="color:#94a3b8;font-weight:700;margin-right:6px;">Payment</span><span style="color:#004161;font-weight:800;">${accountName}</span></div>
                         </div>
-
-                        <!-- Items table -->
-                        <table style="width:100%; border-collapse:collapse; font-size:12px;">
-                            <thead>
-                                <tr style="background:#f1f5f9;">
-                                    <th style="padding:7px 10px; text-align:left; font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:1px;">Product</th>
-                                    <th style="padding:7px 10px; text-align:center; font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:1px;">Qty</th>
-                                    <th style="padding:7px 10px; text-align:right; font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:1px;">Total</th>
-                                </tr>
-                            </thead>
+                        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                            <thead><tr style="background:#f1f5f9;">
+                                <th style="padding:7px 10px;text-align:left;font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Product</th>
+                                <th style="padding:7px 10px;text-align:center;font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Qty</th>
+                                <th style="padding:7px 10px;text-align:right;font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Total</th>
+                            </tr></thead>
                             <tbody>${itemRows}</tbody>
                         </table>
-
-                        <!-- Total row -->
-                        <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 10px; background:#004161; border-radius:0 0 10px 10px; margin-top:0;">
-                            <span style="font-size:13px; font-weight:900; color:rgba(255,255,255,0.7); text-transform:uppercase; letter-spacing:1px;">Grand Total</span>
-                            <span style="font-size:20px; font-weight:900; color:#99CC33;">${total.toFixed(2)} ${CURRENCY}</span>
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 10px;background:#004161;border-radius:0 0 10px 10px;">
+                            <span style="font-size:13px;font-weight:900;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1px;">Grand Total</span>
+                            <span style="font-size:20px;font-weight:900;color:#99CC33;">${total.toFixed(2)} ${CURRENCY}</span>
                         </div>
-                    </div>
-                `,
+                    </div>`,
                 showCancelButton: true,
                 confirmButtonText: '<i class="bi bi-check-circle-fill"></i> Confirm & Pay',
                 cancelButtonText: 'Cancel',
                 confirmButtonColor: '#99CC33',
                 cancelButtonColor: '#94a3b8',
-                customClass: {
-                    confirmButton: 'swal-confirm-lime',
-                    popup: 'swal-pos-popup'
-                },
                 width: '440px',
                 padding: '20px',
                 focusConfirm: false,
+                showLoaderOnConfirm: true,
+                allowOutsideClick: () => !Swal.isLoading(),
+                preConfirm: () => {
+                    const data = {
+                        _token: CSRF_TOKEN,
+                        customer_id: document.getElementById('customer_id').value,
+                        branch_id:   document.getElementById('branch_id').value,
+                        payment_account_id: document.getElementById('account_id').value,
+                        payment_method: 'Cash',
+                        invoice_date: new Date().toISOString().split('T')[0],
+                        due_date:     new Date().toISOString().split('T')[0],
+                        paid_amount: total,
+                        tax: 0,
+                        items: cart.map(i => ({
+                            product_id: i.id, product_name: i.name,
+                            product_code: i.code, quantity: i.quantity,
+                            unit_price: i.price, unit: 'Piece'
+                        }))
+                    };
+                    return fetch('{{ route("sales.invoice.store") }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        body: JSON.stringify(data)
+                    })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (!res.success) Swal.showValidationMessage(res.message || 'Payment failed. Please try again.');
+                        return res;
+                    })
+                    .catch(() => Swal.showValidationMessage('Network error. Please check your connection.'));
+                }
             }).then(result => {
-                if (!result.isConfirmed) return;
-
-                // Processing loader
-                Swal.fire({
-                    title: 'Processing...',
-                    html: '<div style="color:#004161; font-size:13px; margin-top:8px;">Recording your sale</div>',
-                    allowOutsideClick: false,
-                    didOpen: () => Swal.showLoading()
-                });
-
-                const data = {
-                    _token: CSRF_TOKEN,
-                    customer_id: document.getElementById('customer_id').value,
-                    branch_id: document.getElementById('branch_id').value,
-                    payment_account_id: document.getElementById('account_id').value,
-                    payment_method: 'Cash',
-                    invoice_date: new Date().toISOString().split('T')[0],
-                    due_date: new Date().toISOString().split('T')[0],
-                    paid_amount: total,
-                    tax: 0,
-                    items: cart.map(i => ({
-                        product_id: i.id,
-                        product_name: i.name,
-                        product_code: i.code,
-                        quantity: i.quantity,
-                        unit_price: i.price,
-                        unit: 'Piece'
-                    }))
-                };
-
-                fetch('{{ route("sales.invoice.store") }}', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                    body: JSON.stringify(data)
-                })
-                .then(r => r.json())
-                .then(res => {
-                    if (res.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Sale Complete!',
-                            html: `
-                                <div style="text-align:center;">
-                                    <div style="font-size:32px; font-weight:900; color:#004161; margin:8px 0;">${total.toFixed(2)} <span style="font-size:16px;">${CURRENCY}</span></div>
-                                    <div style="font-size:12px; color:#64748b; margin-bottom:4px;">Paid by <strong>${accountName}</strong></div>
-                                    <div style="font-size:12px; color:#64748b;">Customer: <strong>${customerName}</strong></div>
-                                </div>
-                            `,
-                            confirmButtonText: 'New Sale',
-                            confirmButtonColor: '#004161',
-                            showCancelButton: true,
-                            cancelButtonText: 'Close',
-                        }).then(() => window.location.reload());
-                    } else {
-                        Swal.fire({ icon: 'error', title: 'Payment Failed', text: res.message || 'Something went wrong.', confirmButtonColor: '#004161' });
-                    }
-                })
-                .catch(() => Swal.fire({ icon: 'error', title: 'Network Error', text: 'Could not reach the server. Please try again.', confirmButtonColor: '#004161' }));
+                if (result.isConfirmed && result.value?.success) {
+                    Swal.close();
+                    cart = [];
+                    localStorage.removeItem('waafibook-pos-cart');
+                    updateCart();
+                    window.location.reload();
+                }
             });
         }
 
