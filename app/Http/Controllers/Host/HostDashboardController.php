@@ -337,16 +337,13 @@ class HostDashboardController extends Controller
     {
         $user = User::withoutGlobalScopes()->findOrFail($id);
 
-        try {
-            \Illuminate\Support\Facades\Password::sendResetLink(['email' => $user->email]);
-        } catch (\Throwable $e) {
-            \App\Models\AuditLog::log('User', "Password reset email failed for: {$user->name}", 'UPDATE');
-            return redirect()->route('host.users')->with('error', "Could not send the reset email to {$user->email}.");
-        }
+        $tempPassword = \Illuminate\Support\Str::random(10);
+        $user->update(['password' => \Illuminate\Support\Facades\Hash::make($tempPassword)]);
 
-        \App\Models\AuditLog::log('User', "Sent password reset link to: {$user->name}", 'UPDATE');
+        \App\Models\AuditLog::log('User', "Reset password for: {$user->name}", 'UPDATE');
 
-        return redirect()->route('host.users')->with('success', "A password reset link has been emailed to {$user->email}.");
+        return redirect()->route('host.users')->with('success',
+            "Password for <strong>{$user->name}</strong> has been reset. Temporary password: <code style='background:#f1f5f9;padding:2px 8px;border-radius:4px;font-size:14px;'><strong>{$tempPassword}</strong></code> — share this with the user and ask them to change it after login.");
     }
 
     public function toggleUserStatus($id)
