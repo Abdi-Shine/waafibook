@@ -20,33 +20,19 @@
 
         <div class="company-bar">
             <div class="company-info-cell">
-                <div class="company-logo-placeholder{{ ($company && $company->logo) ? ' has-logo' : '' }}">
-                    @if($company && $company->logo)
-                        @php
-                            $logoPath = $company->logo;
-                            // Check if the logo path already starts with uploads/
-                            if (!str_starts_with($logoPath, 'uploads/')) {
-                                $logoPath = 'uploads/company/' . $logoPath;
-                            }
-                            $fullPath = public_path($logoPath);
-                        @endphp
-                        
-                        @if(file_exists($fullPath))
-                            @php
-                                $type = pathinfo($fullPath, PATHINFO_EXTENSION);
-                                $data = file_get_contents($fullPath);
-                                $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-                            @endphp
-                            <img src="{{ $base64 }}" class="company-logo">
-                        @elseif($company)
-                            {{ strtoupper(substr($company->name ?? 'B', 0, 1)) }}
-                        @else
-                            B
-                        @endif
-                    @elseif($company)
-                        {{ strtoupper(substr($company->name ?? 'B', 0, 1)) }}
-                    @else
-                        B
+                <div class="company-logo-placeholder has-logo">
+                    @php
+                        // Resolve logo path: company logo or fallback to WaafiBook logo
+                        $receiptLogoPath = (!empty($company->logo) && file_exists(public_path($company->logo)))
+                            ? public_path($company->logo)
+                            : public_path('upload/waafibooklogo/waafibook_logo.jpg');
+                        $receiptLogoExt  = pathinfo($receiptLogoPath, PATHINFO_EXTENSION) ?: 'jpg';
+                        $receiptLogoB64  = file_exists($receiptLogoPath)
+                            ? 'data:image/' . $receiptLogoExt . ';base64,' . base64_encode(file_get_contents($receiptLogoPath))
+                            : null;
+                    @endphp
+                    @if($receiptLogoB64)
+                        <img src="{{ $receiptLogoB64 }}" class="company-logo">
                     @endif
                 </div>
                 <div class="inline-block vertical-middle">

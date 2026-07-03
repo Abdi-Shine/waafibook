@@ -49,8 +49,16 @@
 <table class="outer">
     <tr class="header-row">
         <td class="logo-cell">
-            @if($company && $company->logo)
-                <img src="{{ public_path($company->logo) }}" alt="{{ $company->name }}">
+            @php
+                $posLogoSrc = null;
+                if (!empty($company->logo) && file_exists(public_path($company->logo))) {
+                    $posLogoSrc = public_path($company->logo);
+                } elseif (file_exists(public_path('upload/waafibooklogo/waafibook_logo.jpg'))) {
+                    $posLogoSrc = public_path('upload/waafibooklogo/waafibook_logo.jpg');
+                }
+            @endphp
+            @if($posLogoSrc)
+                <img src="{{ $posLogoSrc }}" alt="{{ $company->name ?? 'Logo' }}">
             @endif
         </td>
         <td>

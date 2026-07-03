@@ -430,6 +430,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/payroll/pay/{id}', [App\Http\Controllers\PayrollController::class, 'markAsPaid'])->name('payroll.pay')->middleware('tenant.owns:payrolls');
         Route::delete('/payroll/delete/{id}', [App\Http\Controllers\PayrollController::class, 'destroy'])->name('payroll.delete')->middleware(['tenant.owns:payrolls', 'permission:Expenses,delete', 'delete.password']);
         Route::post('/payroll/repost/{id}', [App\Http\Controllers\PayrollController::class, 'repostJournal'])->name('payroll.repost')->middleware('tenant.owns:payrolls');
+        Route::delete('/payroll/item/{id}', [App\Http\Controllers\PayrollController::class, 'destroyItem'])->name('payroll.item.delete')->middleware(['permission:Expenses,delete', 'delete.password']);
+        Route::get('/payroll/item/{id}/receipt', [App\Http\Controllers\PayrollController::class, 'receipt'])->name('payroll.item.receipt');
+        Route::put('/payroll/item/{id}', [App\Http\Controllers\PayrollController::class, 'updateItem'])->name('payroll.item.update');
         Route::post('/expenses/store', [App\Http\Controllers\ExpenseController::class, 'store'])->name('expenses.store');
         Route::get('/expenses/edit/{id}', [App\Http\Controllers\ExpenseController::class, 'edit'])->name('expenses.edit')->middleware('tenant.owns:expenses');
         Route::post('/expenses/update/{id}', [App\Http\Controllers\ExpenseController::class, 'update'])->name('expenses.update')->middleware('tenant.owns:expenses');

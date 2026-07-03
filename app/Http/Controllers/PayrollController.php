@@ -23,401 +23,211 @@ class PayrollController extends Controller
         return $map[$company->currency ?? ''] ?? ($company->currency ?? '$');
     }
 
+    // Single payroll page — shows all salary records + form to add new ones
     public function index()
     {
-        $payrolls = Payroll::with(['branch', 'approvedBy'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $branches = Branch::all();
-        $currency = $this->currencySymbol();
-
-        return view('frontend.expense.payroll_list', compact('payrolls', 'branches', 'currency'));
-    }
-
-    public function create()
-    {
-        $branches  = Branch::all();
+        $items     = PayrollItem::with(['employee', 'payroll'])
+                        ->orderBy('created_at', 'desc')
+                        ->get();
         $employees = Employee::where('status', 'active')->get();
         $currency  = $this->currencySymbol();
 
-        return view('frontend.expense.payroll_generate', compact('branches', 'employees', 'currency'));
+        $currentMonth      = now()->format('Y-m');
+        $paidThisMonth     = $items->filter(fn($i) => optional($i->payroll)->month_year === $currentMonth)->sum('net_salary');
+        $countThisMonth    = $items->filter(fn($i) => optional($i->payroll)->month_year === $currentMonth)->pluck('employee_id')->unique()->count();
+        $ytdTotal          = $items->sum('net_salary');
+
+        return view('frontend.expense.payroll_list', compact(
+            'items', 'employees', 'currency',
+            'paidThisMonth', 'countThisMonth', 'ytdTotal'
+        ));
     }
 
+    // Record a single employee's monthly salary
     public function store(Request $request)
     {
         $request->validate([
-            'month_year'              => 'required|string',
-            'branch_id'               => 'nullable|exists:branches,id',
-            'items'                   => 'required|array',
-            'items.*.employee_id'     => 'required|exists:employees,id',
+            'month_year'   => 'required|string|regex:/^\d{4}-\d{2}$/',
+            'employee_id'  => 'required|exists:employees,id',
+            'basic_salary' => 'required|numeric|min:0',
+            'bonus'        => 'nullable|numeric|min:0',
+            'overtime'     => 'nullable|numeric|min:0',
+            'deductions'   => 'nullable|numeric|min:0',
         ]);
+
+        $cid        = Auth::user()->company_id;
+        $basic      = (float) $request->basic_salary;
+        $bonus      = (float) ($request->bonus    ?? 0);
+        $ot         = (float) ($request->overtime ?? 0);
+        $deductions = (float) ($request->deductions ?? 0);
+        $gross      = $basic + $bonus + $ot;
+        $net        = $gross - $deductions;
+
+        // Prevent duplicate: same employee + same month
+        $duplicate = PayrollItem::whereHas('payroll', fn($q) =>
+                $q->where('month_year', $request->month_year)->where('company_id', $cid)
+            )->where('employee_id', $request->employee_id)->exists();
+
+        if ($duplicate) {
+            return back()->withInput()
+                ->with('error', 'A salary record for this employee in ' . $request->month_year . ' already exists.');
+        }
 
         try {
             DB::beginTransaction();
 
-            $cid           = Auth::user()->company_id;
-            $totalGross    = 0;
-            $totalDeductions = 0;
-            $totalNet      = 0;
+            // Find or create the monthly Payroll batch header
+            $payroll = Payroll::firstOrCreate(
+                ['month_year' => $request->month_year, 'company_id' => $cid, 'branch_id' => null],
+                ['total_employees' => 0, 'total_gross' => 0, 'total_deductions' => 0, 'total_net' => 0, 'status' => 'Paid', 'approved_by' => Auth::id(), 'paid_date' => now()]
+            );
 
-            foreach ($request->items as $item) {
-                $totalGross      += $item['gross_salary'] ?? 0;
-                $totalDeductions += $item['deductions']   ?? 0;
-                $totalNet        += $item['net_salary']   ?? 0;
-            }
-
-            $payroll = Payroll::create([
-                'month_year'       => $request->month_year,
-                'branch_id'        => $request->branch_id,
-                'total_employees'  => count($request->items),
-                'total_gross'      => $totalGross,
-                'total_deductions' => $totalDeductions,
-                'total_net'        => $totalNet,
-                'status'           => 'Draft',
-                'company_id'       => $cid,
+            // Create the individual item
+            PayrollItem::create([
+                'payroll_id'   => $payroll->id,
+                'employee_id'  => $request->employee_id,
+                'basic_salary' => $basic,
+                'bonus'        => $bonus,
+                'overtime'     => $ot,
+                'deductions'   => $deductions,
+                'gross_salary' => $gross,
+                'net_salary'   => $net,
+                'status'       => 'Paid',
+                'payment_date' => now(),
+                'company_id'   => $cid,
             ]);
 
-            foreach ($request->items as $item) {
-                PayrollItem::create([
-                    'payroll_id'   => $payroll->id,
-                    'employee_id'  => $item['employee_id'],
-                    'basic_salary' => $item['basic_salary'] ?? 0,
-                    'bonus'        => $item['bonus']        ?? 0,
-                    'overtime'     => $item['overtime']     ?? 0,
-                    'deductions'   => $item['deductions']   ?? 0,
-                    'gross_salary' => $item['gross_salary'] ?? 0,
-                    'net_salary'   => $item['net_salary']   ?? 0,
-                ]);
-            }
+            // Update batch totals
+            $payroll->increment('total_employees');
+            $payroll->increment('total_gross',      $gross);
+            $payroll->increment('total_deductions', $deductions);
+            $payroll->increment('total_net',        $net);
 
-            // Journal Entry on Draft creation:
-            // Dr Salaries Expense = total_gross
-            //   Cr Salaries Payable    = total_net
-            //   Cr Deductions Payable  = total_deductions (if > 0)
-            $salaryExpenseAccount = Account::query()
-                ->where('company_id', $cid)
+            // GL: Dr Salary Expense / Cr Cash on Hand
+            $salaryAccount = Account::where('company_id', $cid)
                 ->where('category', 'expenses')
                 ->where(function ($q) {
-                    $q->where('code', '5210')
-                      ->orWhere('code', '5100')
-                      ->orWhere('name', 'like', '%Salaries%')
-                      ->orWhere('name', 'like', '%Salary%')
-                      ->orWhere('name', 'like', '%Wages%');
-                })
-                ->first();
+                    $q->where('code', '5210')->orWhere('code', '5100')
+                      ->orWhere('name', 'like', '%Salaries%')->orWhere('name', 'like', '%Wages%');
+                })->first();
 
-            $salariesPayableAccount = Account::query()
-                ->where('company_id', $cid)
-                ->where(function ($q) {
-                    $q->where('code', '2140')
-                      ->orWhere('code', '2200')
-                      ->orWhere('name', 'like', '%Accrued Salaries%')
-                      ->orWhere('name', 'like', '%Salaries Payable%')
-                      ->orWhere('name', 'like', '%Wages Payable%');
-                })
-                ->first();
-
-            $deductionsPayableAccount = Account::query()
-                ->where('company_id', $cid)
-                ->where(function ($q) {
-                    $q->where('code', '2210')
-                      ->orWhere('name', 'like', '%Deductions Payable%')
-                      ->orWhere('name', 'like', '%Payroll Deductions%');
-                })
-                ->first();
-
-            if ($salaryExpenseAccount && $salariesPayableAccount) {
-                $entry = JournalEntry::query()->create([
-                    'entry_number' => 'JE-PR-' . date('Ymd') . '-' . str_pad($payroll->id, 5, '0', STR_PAD_LEFT),
-                    'date'         => now()->toDateString(),
-                    'reference'    => 'PAY-' . $payroll->id,
-                    'description'  => 'Payroll: ' . $payroll->month_year,
-                    'status'       => 'posted',
-                    'total_amount' => $totalGross,
-                    'company_id'   => $cid,
-                    'created_by'   => Auth::id(),
-                    'branch_id'    => $request->branch_id,
-                ]);
-
-                // Dr Salaries Expense = total_gross
-                JournalItem::query()->create([
-                    'journal_entry_id' => $entry->id,
-                    'account_id'       => $salaryExpenseAccount->id,
-                    'company_id'       => $cid,
-                    'description'      => 'Payroll expense ' . $payroll->month_year,
-                    'debit'            => $totalGross,
-                    'credit'           => 0,
-                ]);
-
-                // Cr Salaries Payable = total_net
-                JournalItem::query()->create([
-                    'journal_entry_id' => $entry->id,
-                    'account_id'       => $salariesPayableAccount->id,
-                    'company_id'       => $cid,
-                    'description'      => 'Net salaries payable ' . $payroll->month_year,
-                    'debit'            => 0,
-                    'credit'           => $totalNet,
-                ]);
-
-                // Cr Deductions Payable = total_deductions (if account exists and deductions > 0)
-                if ($totalDeductions > 0 && $deductionsPayableAccount) {
-                    JournalItem::query()->create([
-                        'journal_entry_id' => $entry->id,
-                        'account_id'       => $deductionsPayableAccount->id,
-                        'company_id'       => $cid,
-                        'description'      => 'Payroll deductions payable ' . $payroll->month_year,
-                        'debit'            => 0,
-                        'credit'           => $totalDeductions,
-                    ]);
-                } elseif ($totalDeductions > 0) {
-                    // Fallback: add deductions to salaries payable credit
-                    JournalItem::query()->create([
-                        'journal_entry_id' => $entry->id,
-                        'account_id'       => $salariesPayableAccount->id,
-                        'company_id'       => $cid,
-                        'description'      => 'Payroll deductions ' . $payroll->month_year,
-                        'debit'            => 0,
-                        'credit'           => $totalDeductions,
-                    ]);
-                }
-            }
-
-            DB::commit();
-            return redirect()->route('payroll.index')->with('success', 'Payroll generated successfully.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Error generating payroll: ' . $e->getMessage());
-        }
-    }
-
-    public function show($id)
-    {
-        $payroll  = Payroll::with(['items.employee', 'branch', 'approvedBy'])->findOrFail($id);
-        $currency = $this->currencySymbol();
-
-        return view('frontend.expense.payroll_detail', compact('payroll', 'currency'));
-    }
-
-    public function approve($id)
-    {
-        $payroll = Payroll::findOrFail($id);
-        $payroll->update([
-            'status'      => 'Approved',
-            'approved_by' => Auth::id(),
-        ]);
-
-        return back()->with('success', 'Payroll approved successfully.');
-    }
-
-    public function markAsPaid($id)
-    {
-        try {
-            DB::beginTransaction();
-
-            $payroll = Payroll::with('items')->findOrFail($id);
-            $cid     = Auth::user()->company_id;
-
-            $payroll->update([
-                'status'    => 'Paid',
-                'paid_date' => now(),
-            ]);
-
-            $payroll->items()->update(['status' => 'Paid', 'payment_date' => now()]);
-
-            // Find Cash on Hand (1110) — search without extra company_id filter
-            // since TenantScope already applies it globally
-            $cashAccount = Account::withoutGlobalScopes()
-                ->where('company_id', $cid)
+            $cashAccount = Account::where('company_id', $cid)
                 ->where(function ($q) {
                     $q->where('code', '1110')
                       ->orWhere('type', 'cash')
                       ->orWhere('name', 'like', '%Cash on Hand%');
-                })
-                ->orderByRaw("CASE WHEN code = '1110' THEN 0 WHEN type = 'cash' THEN 1 ELSE 2 END")
+                })->orderByRaw("CASE WHEN code='1110' THEN 0 ELSE 1 END")
                 ->first();
 
-            // Find debit account: Accrued Salaries, then Salary Expense
-            $debitAccount = Account::withoutGlobalScopes()
-                ->where('company_id', $cid)
-                ->where(function ($q) {
-                    $q->where('code', '2140')
-                      ->orWhere('code', '2200')
-                      ->orWhere('name', 'like', '%Accrued Salaries%')
-                      ->orWhere('name', 'like', '%Salaries Payable%');
-                })
-                ->first();
-
-            if (!$debitAccount) {
-                $debitAccount = Account::withoutGlobalScopes()
-                    ->where('company_id', $cid)
-                    ->where(function ($q) {
-                        $q->where('code', '5210')
-                          ->orWhere('code', '5100')
-                          ->orWhere('name', 'like', '%Salaries%')
-                          ->orWhere('name', 'like', '%Wages%');
-                    })
-                    ->where('category', 'expenses')
-                    ->first();
-            }
-
-            if ($cashAccount) {
-                $entry = JournalEntry::query()->create([
-                    'entry_number' => 'JE-PP-' . date('Ymd') . '-' . str_pad($payroll->id, 5, '0', STR_PAD_LEFT),
+            if ($salaryAccount && $cashAccount) {
+                $employee = Employee::find($request->employee_id);
+                $entry = JournalEntry::create([
+                    'entry_number' => 'JE-SAL-' . date('Ymd') . '-' . str_pad($payroll->id, 4, '0', STR_PAD_LEFT),
                     'date'         => now()->toDateString(),
-                    'reference'    => 'PAY-PAID-' . $payroll->id,
-                    'description'  => 'Payroll payment: ' . $payroll->month_year,
+                    'reference'    => 'SAL-' . $request->month_year . '-EMP' . $request->employee_id,
+                    'description'  => 'Salary: ' . ($employee->full_name ?? '') . ' — ' . $request->month_year,
                     'status'       => 'posted',
-                    'total_amount' => $payroll->total_net,
+                    'total_amount' => $net,
                     'company_id'   => $cid,
                     'created_by'   => Auth::id(),
                 ]);
-
-                // Dr debit account (if found)
-                if ($debitAccount) {
-                    JournalItem::query()->create([
-                        'journal_entry_id' => $entry->id,
-                        'account_id'       => $debitAccount->id,
-                        'company_id'       => $cid,
-                        'description'      => 'Payroll payment ' . $payroll->month_year,
-                        'debit'            => $payroll->total_net,
-                        'credit'           => 0,
-                    ]);
-                }
-
-                // Cr Cash on Hand — always
-                JournalItem::query()->create([
-                    'journal_entry_id' => $entry->id,
-                    'account_id'       => $cashAccount->id,
-                    'company_id'       => $cid,
-                    'description'      => 'Payroll payment ' . $payroll->month_year,
-                    'debit'            => 0,
-                    'credit'           => $payroll->total_net,
-                ]);
+                JournalItem::create(['journal_entry_id' => $entry->id, 'account_id' => $salaryAccount->id, 'company_id' => $cid, 'description' => 'Salary expense', 'debit' => $net, 'credit' => 0]);
+                JournalItem::create(['journal_entry_id' => $entry->id, 'account_id' => $cashAccount->id,   'company_id' => $cid, 'description' => 'Salary paid',    'debit' => 0, 'credit' => $net]);
             }
 
             DB::commit();
-            return back()->with('success', 'Payroll marked as paid.');
+            return back()->with('success', 'Salary payment recorded successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Error marking payroll as paid: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Error: ' . $e->getMessage());
         }
     }
 
-    public function repostJournal($id)
+    // Delete a single PayrollItem (individual salary record)
+    public function destroyItem($id)
     {
         try {
             DB::beginTransaction();
-            $payroll = Payroll::findOrFail($id);
-            $cid     = Auth::user()->company_id;
 
-            // Delete existing payment journal entry if it exists
-            $existing = JournalEntry::withoutGlobalScopes()
-                ->where('reference', 'PAY-PAID-' . $payroll->id)
-                ->where('company_id', $cid)
-                ->first();
-            if ($existing) {
-                foreach ($existing->items as $item) { $item->delete(); }
-                $existing->delete();
+            $item = PayrollItem::where('company_id', Auth::user()->company_id)->findOrFail($id);
+            $payroll = $item->payroll;
+
+            $item->delete();
+
+            // Adjust batch totals
+            if ($payroll) {
+                $payroll->decrement('total_employees');
+                $payroll->decrement('total_gross',      $item->gross_salary);
+                $payroll->decrement('total_deductions', $item->deductions);
+                $payroll->decrement('total_net',        $item->net_salary);
+
+                // Remove empty batch
+                if ($payroll->items()->count() === 0) {
+                    $payroll->delete();
+                }
             }
-
-            // Find Cash on Hand
-            $cashAccount = Account::withoutGlobalScopes()
-                ->where('company_id', $cid)
-                ->where(function ($q) {
-                    $q->where('code', '1110')
-                      ->orWhere('type', 'cash')
-                      ->orWhere('name', 'like', '%Cash on Hand%');
-                })
-                ->orderByRaw("CASE WHEN code = '1110' THEN 0 WHEN type = 'cash' THEN 1 ELSE 2 END")
-                ->first();
-
-            if (!$cashAccount) {
-                DB::rollBack();
-                return back()->with('error', 'Cash on Hand account (1110) not found.');
-            }
-
-            // Find debit account
-            $debitAccount = Account::withoutGlobalScopes()
-                ->where('company_id', $cid)
-                ->where(function ($q) {
-                    $q->where('code', '2140')->orWhere('name', 'like', '%Accrued Salaries%');
-                })
-                ->first()
-                ?? Account::withoutGlobalScopes()
-                    ->where('company_id', $cid)
-                    ->where('category', 'expenses')
-                    ->where(function ($q) {
-                        $q->where('code', '5210')->orWhere('name', 'like', '%Salaries%')->orWhere('name', 'like', '%Wages%');
-                    })
-                    ->first();
-
-            $entry = JournalEntry::query()->create([
-                'entry_number' => 'JE-PP-' . date('Ymd') . '-' . str_pad($payroll->id, 5, '0', STR_PAD_LEFT),
-                'date'         => now()->toDateString(),
-                'reference'    => 'PAY-PAID-' . $payroll->id,
-                'description'  => 'Payroll payment (reposted): ' . $payroll->month_year,
-                'status'       => 'posted',
-                'total_amount' => $payroll->total_net,
-                'company_id'   => $cid,
-                'created_by'   => Auth::id(),
-            ]);
-
-            if ($debitAccount) {
-                JournalItem::query()->create([
-                    'journal_entry_id' => $entry->id,
-                    'account_id'       => $debitAccount->id,
-                    'company_id'       => $cid,
-                    'description'      => 'Payroll payment ' . $payroll->month_year,
-                    'debit'            => $payroll->total_net,
-                    'credit'           => 0,
-                ]);
-            }
-
-            JournalItem::query()->create([
-                'journal_entry_id' => $entry->id,
-                'account_id'       => $cashAccount->id,
-                'company_id'       => $cid,
-                'description'      => 'Payroll payment ' . $payroll->month_year,
-                'debit'            => 0,
-                'credit'           => $payroll->total_net,
-            ]);
 
             DB::commit();
-            return back()->with('success', 'Journal entry reposted. Cash on Hand reduced by $' . number_format($payroll->total_net, 2) . '.');
+            return back()->with('success', 'Salary record deleted.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Error: ' . $e->getMessage());
         }
     }
 
-    public function destroy($id)
+    // Print receipt / payslip for a single PayrollItem
+    public function receipt($id)
     {
+        $item = PayrollItem::with(['employee', 'payroll'])
+                    ->where('company_id', Auth::user()->company_id)
+                    ->findOrFail($id);
+        $currency = $this->currencySymbol();
+        $company  = Company::find(Auth::user()->company_id);
+        return view('frontend.expense.payroll_receipt', compact('item', 'currency', 'company'));
+    }
+
+    // Update a single PayrollItem's salary amount
+    public function updateItem(Request $request, $id)
+    {
+        $request->validate([
+            'basic_salary' => 'required|numeric|min:0',
+        ]);
+
         try {
             DB::beginTransaction();
 
-            $payroll = Payroll::findOrFail($id);
+            $item    = PayrollItem::where('company_id', Auth::user()->company_id)->findOrFail($id);
+            $payroll = $item->payroll;
+            $oldNet  = $item->net_salary;
+            $newNet  = (float) $request->basic_salary;
 
-            if ($payroll->status == 'Paid') {
-                return back()->with('error', 'Cannot delete a paid payroll.');
+            // Adjust batch totals
+            if ($payroll) {
+                $diff = $newNet - $oldNet;
+                $payroll->increment('total_gross', $diff);
+                $payroll->increment('total_net',   $diff);
             }
 
-            // Reverse journal entries if they exist
-            $entry = JournalEntry::query()->where('reference', 'PAY-' . $payroll->id)->first();
-            if ($entry) {
-                foreach ($entry->items as $item) {
-                    $item->delete();
-                }
-                $entry->delete();
-            }
-
-            $payroll->delete();
+            $item->update([
+                'basic_salary' => $newNet,
+                'gross_salary' => $newNet,
+                'net_salary'   => $newNet,
+            ]);
 
             DB::commit();
-            return back()->with('success', 'Payroll deleted.');
+            return back()->with('success', 'Salary record updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Error deleting payroll: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Error: ' . $e->getMessage());
         }
     }
+
+    // ── Legacy methods kept for any existing links ──────────────────────────
+
+    public function create()   { return redirect()->route('payroll.index'); }
+    public function show($id)  { return redirect()->route('payroll.index'); }
+    public function approve($id) { return redirect()->route('payroll.index'); }
+    public function markAsPaid($id) { return redirect()->route('payroll.index'); }
+    public function repostJournal($id) { return redirect()->route('payroll.index'); }
+    public function destroy($id) { return redirect()->route('payroll.index'); }
 }

@@ -56,13 +56,12 @@
                 {{-- Brand Header Bar --}}
                 <div class="px-6 py-5 flex items-center justify-between border-b border-gray-100 bg-gradient-to-r from-primary to-primary/80">
                     <div class="flex items-center gap-3">
-                        @if($company && $company->logo)
-                            <img src="{{ asset($company->logo) }}" alt="Logo" class="h-10 w-10 rounded-lg object-contain bg-white p-0.5">
-                        @else
-                            <div class="h-10 w-10 bg-white/20 rounded-lg flex items-center justify-center text-white font-black text-lg">
-                                {{ strtoupper(substr($company->name ?? 'B', 0, 1)) }}
-                            </div>
-                        @endif
+                        @php
+                            $invLogoSrc = (!empty($company->logo) && file_exists(public_path($company->logo)))
+                                ? asset($company->logo)
+                                : asset('upload/waafibooklogo/waafibook_logo.jpg');
+                        @endphp
+                        <img src="{{ $invLogoSrc }}" alt="{{ $company->name ?? 'Logo' }}" class="h-10 w-10 rounded-lg object-contain bg-white p-0.5">
                         <div>
                             <h2 class="text-[15px] font-black text-white leading-tight">{{ $company->name ?? '' }}</h2>
                             <p class="text-[10px] text-white/70 font-semibold">{{ $company->phone ?? '' }}</p>

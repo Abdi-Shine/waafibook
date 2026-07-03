@@ -100,11 +100,12 @@
         {{-- ── HEADER ── --}}
         <div class="r-header">
             <div>
-                @if(isset($company_profile) && $company_profile->logo)
-                    <img src="{{ asset($company_profile->logo) }}" class="r-logo" alt="Logo">
-                @else
-                    <div class="r-logo-placeholder"></div>
-                @endif
+                @php
+                    $purLogoSrc = (!empty($company_profile->logo) && file_exists(public_path($company_profile->logo)))
+                        ? asset($company_profile->logo)
+                        : asset('upload/waafibooklogo/waafibook_logo.jpg');
+                @endphp
+                <img src="{{ $purLogoSrc }}" class="r-logo" alt="{{ $company_profile->name ?? 'Logo' }}">
             </div>
             <div class="r-header-right">
                 <h1 class="r-company-name">{{ $company_profile->name ?? '' }}</h1>

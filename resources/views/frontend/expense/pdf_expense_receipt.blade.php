@@ -19,10 +19,16 @@
             <table>
                 <tr>
                     <td class="exp-td-60">
-                        @if(isset($company_profile) && $company_profile->logo)
-                            <img src="{{ public_path($company_profile->logo) }}" class="exp-logo" alt="Logo">
-                        @else
-                            <div class="company-logo-placeholder"></div>
+                        @php
+                            $expLogoSrc = null;
+                            if (!empty($company_profile->logo) && file_exists(public_path($company_profile->logo))) {
+                                $expLogoSrc = public_path($company_profile->logo);
+                            } elseif (file_exists(public_path('upload/waafibooklogo/waafibook_logo.jpg'))) {
+                                $expLogoSrc = public_path('upload/waafibooklogo/waafibook_logo.jpg');
+                            }
+                        @endphp
+                        @if($expLogoSrc)
+                            <img src="{{ $expLogoSrc }}" class="exp-logo" alt="{{ $company_profile->name ?? 'Logo' }}">
                         @endif
                     </td>
                     <td class="exp-header-cell-right">
