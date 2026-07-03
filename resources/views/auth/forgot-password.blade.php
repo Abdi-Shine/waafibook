@@ -39,65 +39,41 @@
             </div>
             
             <div class="auth-body p-5 py-4">
+                <div class="mb-4 text-sm text-center text-muted fw-medium leading-relaxed">
+                    Forgot your password? Enter your admin email and we will send you a reset link.
+                </div>
 
-                @if (session('temp_password'))
-                    {{-- Show temp password on screen — no email sent --}}
-                    <div class="text-center mb-3">
-                        <div style="width:56px;height:56px;background:#dcfce7;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
-                            <i class="bi bi-unlock-fill" style="font-size:24px;color:#16a34a;"></i>
-                        </div>
-                        <p class="fw-bold mb-1" style="color:#004161;font-size:15px;">Your Temporary Password</p>
-                        <p class="text-muted small mb-3">Use this to log in, then change your password from your profile.</p>
-                        <div style="background:#f0fdf4;border:2px dashed #86efac;border-radius:12px;padding:16px 20px;margin-bottom:16px;">
-                            <div style="font-size:11px;font-weight:700;color:#16a34a;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">Temporary Password</div>
-                            <div id="tmpPwd" style="font-size:26px;font-weight:900;color:#004161;letter-spacing:3px;font-family:monospace;">{{ session('temp_password') }}</div>
-                        </div>
-                        <button onclick="navigator.clipboard.writeText('{{ session('temp_password') }}').then(()=>this.innerHTML='<i class=\'bi bi-check2\' ></i> Copied!')"
-                                class="btn btn-sm btn-outline-success rounded-pill px-4 fw-bold mb-3">
-                            <i class="bi bi-clipboard"></i> Copy Password
-                        </button>
-                        <div class="alert border-0 rounded-3 small text-start" style="background:#fff7ed;color:#9a3412;">
-                            <i class="bi bi-exclamation-triangle-fill me-1" style="color:#f97316;"></i>
-                            <strong>Important:</strong> This password is shown only once. Please copy it now and log in immediately.
-                        </div>
-                        <a href="{{ route('login') }}" class="btn-auth d-block text-center text-decoration-none">
-                            <i class="bi bi-box-arrow-in-right me-2"></i>Go to Login
-                        </a>
+                @if (session('status'))
+                    <div class="alert alert-success border-0 rounded-4 mb-4 small fw-bold text-center" role="alert">
+                        <i class="bi bi-check-circle-fill me-2"></i>{{ session('status') }}
                     </div>
-
-                @else
-
-                    <div class="mb-4 text-sm text-center text-muted fw-medium leading-relaxed">
-                        Enter your admin email address to get a temporary password.
-                    </div>
-
-                    @if ($errors->has('email'))
-                        <div class="alert border-0 rounded-4 mb-4 small fw-bold text-center" style="background:#fff0f0;color:#dc2626;" role="alert">
-                            <i class="bi bi-exclamation-circle-fill me-2"></i>{{ $errors->first('email') }}
-                        </div>
-                    @endif
-
-                    <form method="POST" action="{{ route('password.email') }}">
-                        @csrf
-                        <div class="mb-4">
-                            <label for="email" class="form-label">Email Address</label>
-                            <div class="input-group">
-                                <i class="bi bi-envelope input-icon"></i>
-                                <input id="email" class="form-control" type="email" name="email"
-                                       value="{{ old('email') }}" required autofocus placeholder="name@company.com" />
-                            </div>
-                        </div>
-                        <button type="submit" class="btn-auth">
-                            <i class="bi bi-key me-2"></i>Get Temporary Password
-                        </button>
-                    </form>
-
-                    <div class="mt-3 text-center small text-muted">
-                        <i class="bi bi-info-circle me-1"></i>
-                        Only company administrator accounts can use this feature.
-                    </div>
-
                 @endif
+
+                @if ($errors->has('email'))
+                    <div class="alert border-0 rounded-4 mb-4 small fw-bold text-center" style="background:#fff0f0;color:#dc2626;" role="alert">
+                        <i class="bi bi-exclamation-circle-fill me-2"></i>{{ $errors->first('email') }}
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('password.email') }}">
+                    @csrf
+                    <div class="mb-4">
+                        <label for="email" class="form-label">Email Address</label>
+                        <div class="input-group">
+                            <i class="bi bi-envelope input-icon"></i>
+                            <input id="email" class="form-control" type="email" name="email"
+                                   value="{{ old('email') }}" required autofocus placeholder="name@company.com" />
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-auth">
+                        <i class="bi bi-send me-2"></i>Send Reset Link
+                    </button>
+                </form>
+
+                <div class="mt-3 text-center small text-muted">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Only company administrator accounts can reset password by email.
+                </div>
             </div>
             
             <div class="auth-footer py-1 px-5 text-center">

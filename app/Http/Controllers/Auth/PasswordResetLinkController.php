@@ -6,8 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Password;
 use Illuminate\View\View;
 
 class PasswordResetLinkController extends Controller
@@ -30,12 +29,14 @@ class PasswordResetLinkController extends Controller
         if (!$user || $user->role !== 'admin') {
             return back()
                 ->withInput($request->only('email'))
-                ->withErrors(['email' => 'No administrator account found with that email address. Please contact WaafiBook support.']);
+                ->withErrors(['email' => 'No administrator account found with that email address. Please contact your administrator.']);
         }
 
-        $tempPassword = Str::random(10);
-        $user->update(['password' => Hash::make($tempPassword)]);
+        $status = Password::sendResetLink($request->only('email'));
 
-        return back()->with('temp_password', $tempPassword);
+        return $status == Password::RESET_LINK_SENT
+            ? back()->with('status', 'Password reset link sent! Please check your email inbox.')
+            : back()->withInput($request->only('email'))
+                ->withErrors(['email' => 'Unable to send the reset link. Please try again.']);
     }
 }
