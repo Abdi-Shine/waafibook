@@ -213,10 +213,16 @@
                                         <i class="bi bi-eye text-xs"></i>
                                     </button>
                                     <a href="{{ route('loan.payslip', $loan->id) }}" target="_blank"
-                                        class="w-7 h-7 rounded-lg border border-gray-200 text-gray-400 hover:text-primary hover:border-primary/40 hover:bg-primary/5 flex items-center justify-center transition-all" title="Print">
+                                        class="w-7 h-7 rounded-lg border border-gray-200 text-gray-400 hover:text-primary hover:border-primary/40 hover:bg-primary/5 flex items-center justify-center transition-all" title="Print Receipt">
                                         <i class="bi bi-printer text-xs"></i>
                                     </a>
-                                    @if($loan->status == 'rejected')
+                                    @if($loan->status == 'active')
+                                    <button @click="openPaymentModal({{ $loan->id }}, '{{ addslashes($loan->borrower_name ?: ($loan->employee->full_name ?? 'Borrower')) }}', {{ $loan->balance }}, {{ $loan->amount }})"
+                                        class="w-7 h-7 rounded-lg border border-accent/40 bg-accent/5 text-accent hover:bg-accent hover:text-primary flex items-center justify-center transition-all font-bold" title="Receive Payment">
+                                        <i class="bi bi-cash-coin text-xs"></i>
+                                    </button>
+                                    @endif
+                                    @if(in_array($loan->status, ['rejected', 'settled']))
                                     <button @click="confirmDelete({{ $loan->id }})"
                                         class="w-7 h-7 rounded-lg border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 flex items-center justify-center transition-all" title="Delete">
                                         <i class="bi bi-trash text-xs"></i>
@@ -443,6 +449,100 @@
         </div>
     </div>
 
+    {{-- ══ RECEIVE PAYMENT MODAL ══ --}}
+    <div x-show="activeModal === 'payment-modal'" x-cloak
+        x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+        x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+        class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+
+        <div class="bg-white rounded-[1.5rem] w-full max-w-md shadow-2xl flex flex-col overflow-hidden" @click.away="activeModal = null">
+
+            {{-- Header --}}
+            <div class="px-8 py-6 bg-primary relative overflow-hidden shrink-0">
+                <div class="absolute right-0 top-0 w-36 h-36 rounded-full bg-white/5 -translate-y-1/2 translate-x-1/3"></div>
+                <div class="flex items-center justify-between relative z-10">
+                    <div class="flex items-center gap-4">
+                        <div class="w-11 h-11 bg-accent/20 border border-accent/30 rounded-xl flex items-center justify-center text-accent text-xl">
+                            <i class="bi bi-cash-coin"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-white">Receive Payment</h2>
+                            <p class="text-[11px] text-white/50 mt-0.5" x-text="'From: ' + paymentData.borrowerName"></p>
+                        </div>
+                    </div>
+                    <button @click="activeModal = null" class="w-8 h-8 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all flex items-center justify-center">
+                        <i class="bi bi-x-lg text-xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Body --}}
+            <div class="px-8 py-6">
+                {{-- Balance summary --}}
+                <div class="flex items-center justify-between mb-6 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                    <div>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Outstanding Balance</p>
+                        <p class="text-xl font-black text-primary" x-text="'{{ $currency }} ' + parseFloat(paymentData.balance).toLocaleString(undefined,{minimumFractionDigits:2})"></p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Loan Amount</p>
+                        <p class="text-sm font-bold text-gray-600" x-text="'{{ $currency }} ' + parseFloat(paymentData.totalAmount).toLocaleString(undefined,{minimumFractionDigits:2})"></p>
+                    </div>
+                </div>
+
+                <form :action="'/loans/payment/' + paymentData.loanId" method="POST" id="paymentForm">
+                    @csrf
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">
+                            Amount Received <span class="text-red-400">*</span>
+                        </label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">{{ $currency }}</span>
+                            <input type="number" name="amount" step="0.01" min="0.01"
+                                :max="paymentData.balance"
+                                x-model="paymentData.payAmount"
+                                required placeholder="0.00"
+                                class="w-full pl-10 pr-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-[15px] font-bold text-gray-800 focus:bg-white focus:border-accent outline-none transition-all">
+                        </div>
+                        <div class="flex gap-2 mt-2">
+                            <button type="button" @click="paymentData.payAmount = paymentData.balance"
+                                class="px-3 py-1.5 text-[11px] font-bold text-accent border border-accent/30 bg-accent/5 rounded-lg hover:bg-accent/10 transition-all">
+                                Full Amount
+                            </button>
+                            <button type="button" @click="paymentData.payAmount = (paymentData.balance / 2).toFixed(2)"
+                                class="px-3 py-1.5 text-[11px] font-bold text-gray-500 border border-gray-200 bg-white rounded-lg hover:bg-gray-50 transition-all">
+                                Half
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- After-payment preview --}}
+                    <div class="mt-4 p-3 bg-primary/5 border border-primary/10 rounded-xl" x-show="paymentData.payAmount > 0">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Balance After Payment</p>
+                        <p class="text-base font-black text-primary"
+                            x-text="'{{ $currency }} ' + Math.max(0, paymentData.balance - parseFloat(paymentData.payAmount || 0)).toLocaleString(undefined,{minimumFractionDigits:2})">
+                        </p>
+                        <p class="text-[10px] text-accent font-bold mt-1" x-show="parseFloat(paymentData.payAmount || 0) >= paymentData.balance">
+                            &#10003; This will fully settle the loan
+                        </p>
+                    </div>
+                </form>
+            </div>
+
+            {{-- Footer --}}
+            <div class="px-8 py-4 border-t border-gray-100 bg-gray-50/60 flex items-center justify-between shrink-0">
+                <button type="button" @click="activeModal = null"
+                    class="px-5 py-2.5 bg-white border border-gray-200 text-gray-600 font-semibold rounded-lg hover:bg-gray-50 transition-all text-[13px]">
+                    Cancel
+                </button>
+                <button type="submit" form="paymentForm"
+                    class="px-6 py-2.5 bg-accent text-primary font-bold rounded-lg hover:bg-accent/90 transition-all text-[13px] shadow-sm flex items-center gap-2">
+                    <i class="bi bi-cash-coin"></i> Confirm Receipt
+                </button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 @endsection
@@ -466,6 +566,20 @@ document.addEventListener('alpine:init', () => {
             amount: '', start_date: '',
             type: 'personal', reason: '',
             recovered: 0, balance: 0, status: ''
+        },
+
+        paymentData: {
+            loanId: null, borrowerName: '', balance: 0, totalAmount: 0, payAmount: ''
+        },
+
+        openPaymentModal(id, name, balance, total) {
+            this.paymentData = {
+                loanId: id, borrowerName: name,
+                balance: parseFloat(balance),
+                totalAmount: parseFloat(total),
+                payAmount: parseFloat(balance).toFixed(2)
+            };
+            this.activeModal = 'payment-modal';
         },
 
         openCreateModal() {

@@ -446,6 +446,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/loans/status/{id}', [App\Http\Controllers\LoanController::class, 'changeStatus'])->name('loan.status.update');
         Route::delete('/loans/delete/{id}', [App\Http\Controllers\LoanController::class, 'deleteLoan'])->name('loan.delete')->middleware(['permission:Expenses,delete', 'delete.password']);
         Route::get('/loans/payslip/{id}', [App\Http\Controllers\LoanController::class, 'loanPayslip'])->name('loan.payslip');
+        Route::post('/loans/payment/{id}', [App\Http\Controllers\LoanController::class, 'receivePayment'])->name('loan.payment');
     });
 
     Route::middleware('permission:Reports')->group(function () {

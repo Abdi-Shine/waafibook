@@ -215,6 +215,102 @@ class LoanController extends Controller
         }
     }
 
+    public function receivePayment(Request $request, $id)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $loan   = Loan::query()->findOrFail($id);
+            $cid    = auth()->user()->company_id;
+            $amount = min((float) $request->amount, (float) $loan->balance);
+
+            if ($amount <= 0) {
+                return redirect()->back()->with('error', 'Loan is already fully settled.');
+            }
+
+            $loan->recovered = (float) $loan->recovered + $amount;
+            $loan->balance   = (float) $loan->balance   - $amount;
+
+            if ($loan->balance <= 0.005) {
+                $loan->balance = 0;
+                $loan->status  = 'settled';
+            }
+            $loan->save();
+
+            // GL: Dr Cash on Hand (money returned) / Cr Loans Receivable
+            $cashAccount = Account::withoutGlobalScopes()
+                ->where('company_id', $cid)
+                ->where(function ($q) {
+                    $q->where('code', '1110')
+                      ->orWhere('type', 'cash')
+                      ->orWhere('name', 'like', '%Cash on Hand%');
+                })
+                ->orderByRaw("CASE WHEN code = '1110' THEN 0 WHEN type = 'cash' THEN 1 ELSE 2 END")
+                ->first();
+
+            $loansReceivableAccount = Account::withoutGlobalScopes()
+                ->where('company_id', $cid)
+                ->where(function ($q) {
+                    $q->where('code', '1300')
+                      ->orWhere('name', 'like', '%Employee Loan%')
+                      ->orWhere('name', 'like', '%Staff Loan%')
+                      ->orWhere('name', 'like', '%Loans Receivable%');
+                })
+                ->first();
+
+            if ($cashAccount) {
+                $borrowerName = $loan->borrower_name ?: ($loan->employee->full_name ?? 'Borrower');
+                $entry = JournalEntry::query()->create([
+                    'entry_number' => 'JE-LNR-' . date('Ymd') . '-' . str_pad($loan->id, 5, '0', STR_PAD_LEFT),
+                    'date'         => now()->toDateString(),
+                    'reference'    => 'LOANPAY-' . $loan->loan_id,
+                    'description'  => 'Loan repayment received: ' . $borrowerName . ' (' . $loan->loan_id . ')',
+                    'status'       => 'posted',
+                    'total_amount' => $amount,
+                    'company_id'   => $cid,
+                    'created_by'   => Auth::id(),
+                ]);
+
+                // Dr Cash on Hand
+                JournalItem::query()->create([
+                    'journal_entry_id' => $entry->id,
+                    'account_id'       => $cashAccount->id,
+                    'company_id'       => $cid,
+                    'description'      => 'Loan repayment from ' . $borrowerName,
+                    'debit'            => $amount,
+                    'credit'           => 0,
+                ]);
+
+                // Cr Loans Receivable
+                if ($loansReceivableAccount) {
+                    JournalItem::query()->create([
+                        'journal_entry_id' => $entry->id,
+                        'account_id'       => $loansReceivableAccount->id,
+                        'company_id'       => $cid,
+                        'description'      => 'Loan repayment ' . $loan->loan_id,
+                        'debit'            => 0,
+                        'credit'           => $amount,
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            $msg = $loan->status === 'settled'
+                ? 'Loan fully settled! Cash on Hand has been updated.'
+                : 'Payment of ' . number_format($amount, 2) . ' recorded. Remaining balance: ' . number_format($loan->balance, 2);
+
+            return redirect()->back()->with('success', $msg);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Error recording payment: ' . $e->getMessage());
+        }
+    }
+
     public function deleteLoan($id)
     {
         $loan = Loan::query()->findOrFail($id);
