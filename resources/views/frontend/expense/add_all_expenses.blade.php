@@ -2,208 +2,272 @@
 @section('page_title', 'Expenses')
 
 @section('admin')
-<div class="px-4 py-8 md:px-8 md:py-10 bg-background min-h-screen" x-data="expenseManagement()">
+@php
+    $totalThisMonth = $expenses->where('expense_date', '>=', now()->startOfMonth()->toDateString())->sum('amount');
+    $totalAll       = $expenses->sum('amount');
+    $pendingCount   = $expenses->where('status', 'Pending')->count();
+    $approvedSum    = $expenses->where('status', 'Approved')->sum('amount');
+    $daysInMonth    = now()->day ?: 1;
+    $avgDaily       = $totalThisMonth / $daysInMonth;
+    $totalCount     = $expenses->count();
+@endphp
 
-    <!-- Page Header -->
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
-        <div>
-            <h1 class="text-[20px] font-bold text-primary-dark">Expenses Management</h1>
-        </div>
-        <div class="flex items-center gap-3">
-            <button @click="openModal = 'add-expense'" class="flex items-center gap-2 px-5 py-2.5 bg-primary text-white font-semibold rounded-[0.5rem] hover:bg-primary/90 transition-all text-[13px] shadow-sm uppercase">
-                <i class="bi bi-plus-lg"></i>
-                Add New Expense
+<div class="min-h-screen bg-gray-50/60" x-data="expenseManagement()">
+
+    {{-- ── Hero Header ── --}}
+    <div class="bg-primary relative overflow-hidden">
+        <div class="absolute inset-0 opacity-10" style="background-image:radial-gradient(circle at 80% 50%, #99CC33 0%, transparent 60%)"></div>
+        <div class="relative z-10 px-6 md:px-10 py-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center text-white text-2xl">
+                    <i class="bi bi-receipt-cutoff"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black text-white tracking-tight">Expenses Management</h1>
+                    <p class="text-white/50 text-xs mt-0.5">Track and manage all business expenses</p>
+                </div>
+            </div>
+            <button @click="openModal = 'add-expense'"
+                class="flex items-center gap-2 px-5 py-2.5 bg-accent text-primary font-bold rounded-xl hover:bg-accent/90 transition-all text-[13px] shadow-lg shadow-accent/20 shrink-0">
+                <i class="bi bi-plus-lg text-sm"></i> Add New Expense
             </button>
         </div>
-    </div>
 
-    <!-- Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        @php
-            $totalThisMonth = $expenses->where('expense_date', '>=', now()->startOfMonth())->sum('amount');
-            $pendingCount = $expenses->where('status', 'Pending')->count();
-            $approvedSum = $expenses->where('status', 'Approved')->sum('amount');
-            $daysInMonth = now()->day;
-            $avgDaily = $daysInMonth > 0 ? $totalThisMonth / $daysInMonth : 0;
-        @endphp
-
-        <div class="bg-white p-5 rounded-[1rem] border border-gray-100 shadow-sm flex items-start justify-between hover:-translate-y-0.5 transition-transform duration-200">
-            <div>
-                <p class="text-[12px] text-gray-400 font-medium mb-1">Total Expenses</p>
-                <h3 class="text-[18px] font-black text-primary">{{ $curr }} {{ number_format($totalThisMonth, 2) }}</h3>
-                <p class="text-xs font-bold text-primary-dark mt-1.5 flex items-center gap-1">
-                    <i class="bi bi-calendar-check-fill text-[10px]"></i> This Month
-                </p>
-            </div>
-            <div class="w-11 h-11 bg-primary/10 rounded-[0.6rem] flex items-center justify-center text-primary flex-shrink-0">
-                <i class="bi bi-wallet2 text-lg"></i>
-            </div>
-        </div>
-
-        <div class="bg-white p-5 rounded-[1rem] border border-gray-100 shadow-sm flex items-start justify-between hover:-translate-y-0.5 transition-transform duration-200">
-            <div>
-                <p class="text-[12px] text-gray-400 font-medium mb-1">Pending Review</p>
-                <h3 class="text-[18px] font-black text-primary">{{ $pendingCount }} Items</h3>
-                <p class="text-xs font-bold text-primary-dark mt-1.5 flex items-center gap-1">
-                    <i class="bi bi-hourglass-split text-[10px]"></i> Awaiting Action
-                </p>
-            </div>
-            <div class="w-11 h-11 bg-primary/10 rounded-[0.6rem] flex items-center justify-center text-primary flex-shrink-0">
-                <i class="bi bi-exclamation-octagon-fill text-lg"></i>
-            </div>
-        </div>
-
-        <div class="bg-white p-5 rounded-[1rem] border border-gray-100 shadow-sm flex items-start justify-between hover:-translate-y-0.5 transition-transform duration-200">
-            <div>
-                <p class="text-[12px] text-gray-400 font-medium mb-1">Verified Total</p>
-                <h3 class="text-[18px] font-black text-primary">{{ $curr }} {{ number_format($approvedSum, 2) }}</h3>
-                <p class="text-xs font-bold text-primary-dark mt-1.5 flex items-center gap-1">
-                    <i class="bi bi-patch-check-fill text-[10px]"></i> Approved Payments
-                </p>
-            </div>
-            <div class="w-11 h-11 bg-accent/10 rounded-[0.6rem] flex items-center justify-center text-accent flex-shrink-0">
-                <i class="bi bi-check-circle-fill text-lg"></i>
-            </div>
-        </div>
-
-        <div class="bg-white p-5 rounded-[1rem] border border-gray-100 shadow-sm flex items-start justify-between hover:-translate-y-0.5 transition-transform duration-200">
-            <div>
-                <p class="text-[12px] text-gray-400 font-medium mb-1">Avg. Burn Rate</p>
-                <h3 class="text-[18px] font-black text-primary">{{ $curr }} {{ number_format($avgDaily, 2) }}</h3>
-                <p class="text-xs font-bold text-primary-dark mt-1.5">Daily Average</p>
-            </div>
-            <div class="w-11 h-11 bg-accent/10 rounded-[0.6rem] flex items-center justify-center text-accent flex-shrink-0">
-                <i class="bi bi-speedometer2 text-lg"></i>
+        {{-- Stats strip --}}
+        <div class="relative z-10 px-6 md:px-10 pb-0">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pb-0">
+                {{-- Card 1 --}}
+                <div class="bg-white/10 backdrop-blur-sm border border-white/10 rounded-t-2xl px-5 pt-4 pb-5">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] font-bold text-white/50 uppercase tracking-widest">This Month</span>
+                        <div class="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-accent text-xs">
+                            <i class="bi bi-calendar3"></i>
+                        </div>
+                    </div>
+                    <p class="text-[20px] font-black text-white leading-none">{{ $curr }} {{ number_format($totalThisMonth, 2) }}</p>
+                    <p class="text-[10px] text-white/40 mt-1.5">Total spent this month</p>
+                </div>
+                {{-- Card 2 --}}
+                <div class="bg-white/10 backdrop-blur-sm border border-white/10 rounded-t-2xl px-5 pt-4 pb-5">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] font-bold text-white/50 uppercase tracking-widest">Approved</span>
+                        <div class="w-7 h-7 rounded-lg bg-accent/20 flex items-center justify-center text-accent text-xs">
+                            <i class="bi bi-patch-check-fill"></i>
+                        </div>
+                    </div>
+                    <p class="text-[20px] font-black text-white leading-none">{{ $curr }} {{ number_format($approvedSum, 2) }}</p>
+                    <p class="text-[10px] text-white/40 mt-1.5">Verified payments</p>
+                </div>
+                {{-- Card 3 --}}
+                <div class="bg-white/10 backdrop-blur-sm border border-white/10 rounded-t-2xl px-5 pt-4 pb-5">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] font-bold text-white/50 uppercase tracking-widest">Pending</span>
+                        <div class="w-7 h-7 rounded-lg bg-yellow-400/20 flex items-center justify-center text-yellow-300 text-xs">
+                            <i class="bi bi-hourglass-split"></i>
+                        </div>
+                    </div>
+                    <p class="text-[20px] font-black text-white leading-none">{{ $pendingCount }} <span class="text-sm font-semibold text-white/50">items</span></p>
+                    <p class="text-[10px] text-white/40 mt-1.5">Awaiting review</p>
+                </div>
+                {{-- Card 4 --}}
+                <div class="bg-white/10 backdrop-blur-sm border border-white/10 rounded-t-2xl px-5 pt-4 pb-5">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] font-bold text-white/50 uppercase tracking-widest">Daily Avg</span>
+                        <div class="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-white/60 text-xs">
+                            <i class="bi bi-speedometer2"></i>
+                        </div>
+                    </div>
+                    <p class="text-[20px] font-black text-white leading-none">{{ $curr }} {{ number_format($avgDaily, 2) }}</p>
+                    <p class="text-[10px] text-white/40 mt-1.5">Burn rate / day</p>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Filter & Table Section -->
-    <div class="bg-white rounded-[1rem] border border-gray-200/80 shadow-sm overflow-hidden mb-6">
-        <!-- Filter Bar -->
-        <div class="p-4 border-b border-gray-100 flex items-center gap-3 overflow-x-auto custom-scrollbar whitespace-nowrap">
-            <div class="relative group min-w-[250px] flex-1">
-                <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm group-focus-within:text-primary transition-colors"></i>
-                <input type="text" x-model="searchQuery" placeholder="Search by name, reference or description..."
-                    class="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-[0.5rem] text-[13px] font-medium text-gray-700 focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder-gray-400">
+    {{-- ── Main Content ── --}}
+    <div class="px-6 md:px-10 py-6">
+
+        {{-- Flash Messages --}}
+        @if(session('success'))
+            <div class="mb-4 flex items-center gap-3 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-[13px] font-semibold">
+                <i class="bi bi-check-circle-fill text-green-500"></i> {{ session('success') }}
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="mb-4 flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-[13px] font-semibold">
+                <i class="bi bi-exclamation-triangle-fill text-red-500"></i> {{ session('error') }}
+            </div>
+        @endif
+
+        {{-- Table Card --}}
+        <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
+
+            {{-- Toolbar --}}
+            <div class="px-5 py-4 border-b border-gray-100 flex flex-col md:flex-row items-start md:items-center gap-3">
+                {{-- Search --}}
+                <div class="relative flex-1 min-w-0">
+                    <i class="bi bi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                    <input type="text" x-model="searchQuery" placeholder="Search expenses..."
+                        class="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                </div>
+                {{-- Category Filter --}}
+                <div class="relative min-w-[160px]">
+                    <select x-model="filterCategory"
+                        class="w-full pl-3.5 pr-8 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-medium text-gray-600 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none appearance-none transition-all">
+                        <option value="">All Categories</option>
+                        @foreach($expenseAccounts as $acc)
+                            <option value="{{ $acc->id }}">{{ $acc->name }}</option>
+                        @endforeach
+                    </select>
+                    <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-[10px]"></i>
+                </div>
+                {{-- Status Filter --}}
+                <div class="relative min-w-[140px]">
+                    <select x-model="filterStatus"
+                        class="w-full pl-3.5 pr-8 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-medium text-gray-600 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none appearance-none transition-all">
+                        <option value="">All Status</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Pending">Pending</option>
+                    </select>
+                    <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-[10px]"></i>
+                </div>
+                {{-- Count badge --}}
+                <div class="shrink-0 px-3 py-2 bg-primary/5 rounded-xl border border-primary/10 text-[12px] font-black text-primary whitespace-nowrap">
+                    {{ $totalCount }} Records
+                </div>
             </div>
 
-            <div class="flex items-center gap-2 bg-gray-50/50 px-3 py-1.5 rounded-lg border border-gray-100 shrink-0">
-                <input type="date" class="bg-transparent border-none text-[12px] font-bold text-primary-dark outline-none p-0 focus:ring-0 w-24">
-                <span class="text-gray-300">-</span>
-                <input type="date" class="bg-transparent border-none text-[12px] font-bold text-primary-dark outline-none p-0 focus:ring-0 w-24">
-            </div>
-
-            <div class="relative min-w-[160px]">
-                <select class="w-full pl-3 pr-8 py-2 bg-white border border-gray-200 rounded-[0.5rem] text-[13px] font-medium text-gray-600 focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
-                    <option value="">All Categories</option>
-                    @foreach($expenseAccounts as $acc)
-                        <option value="{{ $acc->id }}">{{ $acc->name }}</option>
-                    @endforeach
-                </select>
-                <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[10px]"></i>
-            </div>
-
-            <div class="relative min-w-[140px]">
-                <select class="w-full pl-3 pr-8 py-2 bg-white border border-gray-200 rounded-[0.5rem] text-[13px] font-medium text-gray-600 focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
-                    <option value="">All Status</option>
-                    <option value="Approved">Verified</option>
-                    <option value="Pending">Pending</option>
-                </select>
-                <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[10px]"></i>
-            </div>
-        </div>
-
-        <!-- Table Title Bar -->
-        <div class="px-5 py-3 flex items-center gap-2 border-b border-gray-100 bg-background/50">
-            <i class="bi bi-list-ul text-primary text-sm"></i>
-            <h2 class="text-[13px] font-black text-primary-dark uppercase tracking-wider">Expense Records</h2>
-        </div>
-
-        <div class="overflow-x-auto">
-            <table class="w-full whitespace-nowrap text-left">
-                <thead>
-                    <tr class="bg-white border-b border-gray-100">
-                        <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider w-16 text-center">#</th>
-                        <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Date</th>
-                        <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Ref No.</th>
-                        <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Category</th>
-                        <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Description</th>
-                        <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Pay Method</th>
-                        <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-right">Amount</th>
-                        <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Status</th>
-                        <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    @forelse($expenses as $expense)
-                        <tr x-show="searchExpense('{{ addslashes($expense->description) }} {{ addslashes($expense->expense_name) }}')"
-                            class="hover:bg-gray-50/60 transition-colors bg-white group">
-                            <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark text-center">
-                                {{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}
-                            </td>
-                            <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark">
-                                {{ $expense->expense_date ? \Carbon\Carbon::parse($expense->expense_date)->format('d Mar Y') : 'N/A' }}
-                            </td>
-                            <td class="px-5 py-4 text-[12px] font-semibold text-primary">
-                                #{{ $expense->reference_no ?? 'EXP-'.$expense->id }}
-                            </td>
-                            <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark">
-                                {{ $expense->account->name ?? 'N/A' }}
-                            </td>
-                            <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark">
-                                {{ $expense->expense_name }}
-                            </td>
-                            <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark capitalize">
-                                {{ $expense->payment_method ?? $expense->bankAccount->name ?? 'N/A' }}
-                            </td>
-                            <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark text-right font-black">
-                                {{ $curr }} {{ number_format($expense->amount, 2) }}
-                            </td>
-                            <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark text-center">
-                                {{ $expense->status }}
-                            </td>
-                            <td class="px-5 py-4">
-                                <div class="flex items-center justify-end gap-1.5">
-                                    <a href="{{ route('expenses.receipt', $expense->id) }}" target="_blank" class="btn-action-view" title="View Receipt">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                    <button @click="editExpense({{ json_encode($expense) }})" class="btn-action-edit" title="Edit Entry">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <button @click="confirmDelete('{{ route('expenses.delete', $expense->id) }}')" class="btn-action-delete" title="Delete Entry">
-                                        <i class="bi bi-trash3"></i>
-                                    </button>
-                                </div>
-                            </td>
+            {{-- Table --}}
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-gray-50/80 border-b border-gray-100">
+                            <th class="px-5 py-3.5 text-[11px] font-black text-gray-500 uppercase tracking-wider w-12 text-center">#</th>
+                            <th class="px-5 py-3.5 text-[11px] font-black text-gray-500 uppercase tracking-wider">Expense</th>
+                            <th class="px-5 py-3.5 text-[11px] font-black text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-5 py-3.5 text-[11px] font-black text-gray-500 uppercase tracking-wider">Category</th>
+                            <th class="px-5 py-3.5 text-[11px] font-black text-gray-500 uppercase tracking-wider">Paid From</th>
+                            <th class="px-5 py-3.5 text-[11px] font-black text-gray-500 uppercase tracking-wider text-right">Amount</th>
+                            <th class="px-5 py-3.5 text-[11px] font-black text-gray-500 uppercase tracking-wider text-center">Status</th>
+                            <th class="px-5 py-3.5 text-[11px] font-black text-gray-500 uppercase tracking-wider text-right">Actions</th>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="9" class="px-5 py-16 text-center text-gray-400">
-                                <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
-                                    <i class="bi bi-inbox text-2xl text-accent"></i>
-                                </div>
-                                <p class="text-[13px] font-bold uppercase tracking-widest text-gray-400">No expenses found</p>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @forelse($expenses as $expense)
+                            @php
+                                $expAccId = $expense->expense_account_id ?? null;
+                            @endphp
+                            <tr x-show="matchExpense('{{ addslashes($expense->expense_name) }}', '{{ addslashes($expense->description) }}', '{{ $expense->expense_account_id }}', '{{ $expense->status }}')"
+                                class="hover:bg-gray-50/70 transition-colors group">
 
-        <!-- Pagination -->
-        <div class="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="text-[11px] font-black text-gray-400 uppercase tracking-widest">
-                Showing 1 to {{ count($expenses) }} of {{ count($expenses) }} entries
+                                {{-- # --}}
+                                <td class="px-5 py-4 text-center">
+                                    <span class="text-[11px] font-black text-gray-400">{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
+                                </td>
+
+                                {{-- Expense name + description --}}
+                                <td class="px-5 py-4">
+                                    <p class="text-[13px] font-bold text-primary-dark leading-tight">{{ $expense->expense_name }}</p>
+                                    @if($expense->description)
+                                        <p class="text-[11px] text-gray-400 mt-0.5 truncate max-w-[180px]">{{ $expense->description }}</p>
+                                    @endif
+                                </td>
+
+                                {{-- Date --}}
+                                <td class="px-5 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-8 h-8 rounded-lg bg-primary/5 flex flex-col items-center justify-center leading-none shrink-0">
+                                            <span class="text-[9px] font-black text-primary/50 uppercase">{{ $expense->expense_date ? \Carbon\Carbon::parse($expense->expense_date)->format('M') : '' }}</span>
+                                            <span class="text-[13px] font-black text-primary leading-none">{{ $expense->expense_date ? \Carbon\Carbon::parse($expense->expense_date)->format('d') : 'N/A' }}</span>
+                                        </div>
+                                        <span class="text-[12px] font-semibold text-gray-500">{{ $expense->expense_date ? \Carbon\Carbon::parse($expense->expense_date)->format('Y') : '' }}</span>
+                                    </div>
+                                </td>
+
+                                {{-- Category --}}
+                                <td class="px-5 py-4">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/5 text-primary rounded-lg text-[11px] font-bold">
+                                        <i class="bi bi-tag-fill text-[9px]"></i>
+                                        {{ $expense->account->name ?? 'Uncategorised' }}
+                                    </span>
+                                </td>
+
+                                {{-- Paid From --}}
+                                <td class="px-5 py-4">
+                                    <span class="text-[12px] font-semibold text-gray-600">
+                                        {{ $expense->bankAccount->name ?? ($expense->payment_method ?? 'Cash') }}
+                                    </span>
+                                </td>
+
+                                {{-- Amount --}}
+                                <td class="px-5 py-4 text-right whitespace-nowrap">
+                                    <span class="text-[14px] font-black text-primary-dark">{{ $curr }} {{ number_format($expense->amount, 2) }}</span>
+                                </td>
+
+                                {{-- Status --}}
+                                <td class="px-5 py-4 text-center">
+                                    @if(strtolower($expense->status) === 'approved')
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full text-[11px] font-bold">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Approved
+                                        </span>
+                                    @elseif(strtolower($expense->status) === 'pending')
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-full text-[11px] font-bold">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-yellow-500"></span> Pending
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-600 border border-gray-200 rounded-full text-[11px] font-bold">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span> {{ $expense->status }}
+                                        </span>
+                                    @endif
+                                </td>
+
+                                {{-- Actions --}}
+                                <td class="px-5 py-4">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <a href="{{ route('expenses.receipt', $expense->id) }}" target="_blank"
+                                            class="w-8 h-8 rounded-lg bg-primary/5 hover:bg-primary hover:text-white text-primary flex items-center justify-center transition-all" title="View Receipt">
+                                            <i class="bi bi-eye text-sm"></i>
+                                        </a>
+                                        <button @click="editExpense({{ json_encode($expense) }})"
+                                            class="w-8 h-8 rounded-lg bg-accent/10 hover:bg-accent text-primary flex items-center justify-center transition-all" title="Edit">
+                                            <i class="bi bi-pencil text-sm"></i>
+                                        </button>
+                                        <button @click="confirmDelete('{{ route('expenses.delete', $expense->id) }}')"
+                                            class="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-500 hover:text-white text-red-500 flex items-center justify-center transition-all" title="Delete">
+                                            <i class="bi bi-trash3 text-sm"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="8" class="py-20 text-center">
+                                    <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                        <i class="bi bi-receipt text-2xl text-gray-400"></i>
+                                    </div>
+                                    <p class="text-[13px] font-bold text-gray-400 uppercase tracking-widest">No expenses recorded yet</p>
+                                    <p class="text-[12px] text-gray-300 mt-1">Click "Add New Expense" to get started</p>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
-            <div class="flex items-center gap-2">
-                <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-300 cursor-not-allowed shadow-sm">
-                    <i class="bi bi-chevron-left text-[10px]"></i>
-                </button>
-                <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-white font-black text-xs shadow-md shadow-primary/20">1</button>
-                <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-300 cursor-not-allowed shadow-sm">
-                    <i class="bi bi-chevron-right text-[10px]"></i>
-                </button>
+
+            {{-- Footer --}}
+            <div class="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between">
+                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+                    Showing {{ $totalCount }} {{ Str::plural('record', $totalCount) }}
+                </p>
+                <div class="flex items-center gap-2">
+                    <button class="w-8 h-8 rounded-lg border border-gray-200 bg-white text-gray-300 flex items-center justify-center cursor-not-allowed">
+                        <i class="bi bi-chevron-left text-[10px]"></i>
+                    </button>
+                    <button class="w-8 h-8 rounded-lg bg-primary text-white font-black text-xs shadow-md shadow-primary/20">1</button>
+                    <button class="w-8 h-8 rounded-lg border border-gray-200 bg-white text-gray-300 flex items-center justify-center cursor-not-allowed">
+                        <i class="bi bi-chevron-right text-[10px]"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -489,12 +553,17 @@ function expenseManagement() {
     return {
         openModal: null,
         searchQuery: '',
+        filterCategory: '',
+        filterStatus: '',
         editData: {},
         editUrl: '',
 
-        searchExpense(content) {
-            if (!this.searchQuery) return true;
-            return content.toLowerCase().includes(this.searchQuery.toLowerCase());
+        matchExpense(name, desc, accountId, status) {
+            const q = this.searchQuery.toLowerCase();
+            if (q && !name.toLowerCase().includes(q) && !desc.toLowerCase().includes(q)) return false;
+            if (this.filterCategory && accountId != this.filterCategory) return false;
+            if (this.filterStatus && status.toLowerCase() !== this.filterStatus.toLowerCase()) return false;
+            return true;
         },
 
         editExpense(expense) {
