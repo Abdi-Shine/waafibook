@@ -118,28 +118,14 @@
                         @enderror
                     </div>
 
-                    <div class="mb-4 grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-[11px] font-black text-primary uppercase tracking-wider mb-1.5">Country</label>
-                            <div class="relative">
-                                <i class="bi bi-globe input-icon"></i>
-                                <select name="country" class="form-control">
-                                    @foreach(['Djibouti','Ethiopia','Kenya','Somalia','Tanzania','Uganda', 'Rwanda', 'Burundi', 'South Sudan', 'Sudan', 'Eritrea', 'Other'] as $c)
-                                        <option value="{{ $c }}" {{ old('country', 'Somalia') === $c ? 'selected' : '' }}>{{ $c }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-[11px] font-black text-primary uppercase tracking-wider mb-1.5">Company Telephone</label>
-                            <div class="relative">
-                                <i class="bi bi-telephone input-icon"></i>
-                                <input type="text" name="company_phone"
-                                       class="form-control"
-                                       placeholder="+252 61 00000000"
-                                       value="{{ old('company_phone') }}">
-                            </div>
+                    <div class="mb-4">
+                        <label class="block text-[11px] font-black text-primary uppercase tracking-wider mb-1.5">Company Telephone</label>
+                        <div class="relative">
+                            <i class="bi bi-telephone input-icon"></i>
+                            <input type="text" name="company_phone"
+                                   class="form-control"
+                                   placeholder="+252 61 00000000"
+                                   value="{{ old('company_phone') }}">
                         </div>
                     </div>
 
