@@ -14,78 +14,83 @@
 
 <div class="min-h-screen bg-gray-50/60" x-data="expenseManagement()">
 
-    {{-- ── Hero Header ── --}}
-    <div class="bg-primary relative overflow-hidden">
-        <div class="absolute inset-0 opacity-10" style="background-image:radial-gradient(circle at 80% 50%, #99CC33 0%, transparent 60%)"></div>
-        <div class="relative z-10 px-6 md:px-10 py-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center text-white text-2xl">
-                    <i class="bi bi-receipt-cutoff"></i>
-                </div>
-                <div>
-                    <h1 class="text-xl font-black text-white tracking-tight">Expenses Management</h1>
-                    <p class="text-white/50 text-xs mt-0.5">Track and manage all business expenses</p>
-                </div>
-            </div>
-            <button @click="openModal = 'add-expense'"
-                class="flex items-center gap-2 px-5 py-2.5 bg-accent text-primary font-bold rounded-xl hover:bg-accent/90 transition-all text-[13px] shadow-lg shadow-accent/20 shrink-0">
-                <i class="bi bi-plus-lg text-sm"></i> Add New Expense
-            </button>
+    {{-- ── Page Header ── --}}
+    <div class="px-6 md:px-10 pt-8 pb-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-[22px] font-black text-primary-dark tracking-tight">Expenses Management</h1>
+            <p class="text-[13px] text-gray-400 mt-0.5">Track and manage all business expenses</p>
         </div>
+        <button @click="openModal = 'add-expense'"
+            class="flex items-center gap-2 px-5 py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-all text-[13px] shadow-sm shrink-0">
+            <i class="bi bi-plus-lg"></i> Add New Expense
+        </button>
+    </div>
 
-        {{-- Stats strip --}}
-        <div class="relative z-10 px-6 md:px-10 pb-0">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pb-0">
-                {{-- Card 1 --}}
-                <div class="bg-white/10 backdrop-blur-sm border border-white/10 rounded-t-2xl px-5 pt-4 pb-5">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-[10px] font-bold text-white/50 uppercase tracking-widest">This Month</span>
-                        <div class="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-accent text-xs">
-                            <i class="bi bi-calendar3"></i>
-                        </div>
-                    </div>
-                    <p class="text-[20px] font-black text-white leading-none">{{ $curr }} {{ number_format($totalThisMonth, 2) }}</p>
-                    <p class="text-[10px] text-white/40 mt-1.5">Total spent this month</p>
+    {{-- ── Stats Cards ── --}}
+    <div class="px-6 md:px-10 pb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+            {{-- Card 1: This Month --}}
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-start justify-between hover:-translate-y-0.5 transition-transform duration-200">
+                <div>
+                    <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">This Month</p>
+                    <h3 class="text-[20px] font-black text-primary leading-none">{{ $curr }} {{ number_format($totalThisMonth, 2) }}</h3>
+                    <p class="text-[11px] text-gray-400 mt-2 flex items-center gap-1">
+                        <i class="bi bi-calendar-check-fill text-primary/40 text-[10px]"></i> Total spent this month
+                    </p>
                 </div>
-                {{-- Card 2 --}}
-                <div class="bg-white/10 backdrop-blur-sm border border-white/10 rounded-t-2xl px-5 pt-4 pb-5">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-[10px] font-bold text-white/50 uppercase tracking-widest">Approved</span>
-                        <div class="w-7 h-7 rounded-lg bg-accent/20 flex items-center justify-center text-accent text-xs">
-                            <i class="bi bi-patch-check-fill"></i>
-                        </div>
-                    </div>
-                    <p class="text-[20px] font-black text-white leading-none">{{ $curr }} {{ number_format($approvedSum, 2) }}</p>
-                    <p class="text-[10px] text-white/40 mt-1.5">Verified payments</p>
-                </div>
-                {{-- Card 3 --}}
-                <div class="bg-white/10 backdrop-blur-sm border border-white/10 rounded-t-2xl px-5 pt-4 pb-5">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-[10px] font-bold text-white/50 uppercase tracking-widest">Pending</span>
-                        <div class="w-7 h-7 rounded-lg bg-yellow-400/20 flex items-center justify-center text-yellow-300 text-xs">
-                            <i class="bi bi-hourglass-split"></i>
-                        </div>
-                    </div>
-                    <p class="text-[20px] font-black text-white leading-none">{{ $pendingCount }} <span class="text-sm font-semibold text-white/50">items</span></p>
-                    <p class="text-[10px] text-white/40 mt-1.5">Awaiting review</p>
-                </div>
-                {{-- Card 4 --}}
-                <div class="bg-white/10 backdrop-blur-sm border border-white/10 rounded-t-2xl px-5 pt-4 pb-5">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-[10px] font-bold text-white/50 uppercase tracking-widest">Daily Avg</span>
-                        <div class="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-white/60 text-xs">
-                            <i class="bi bi-speedometer2"></i>
-                        </div>
-                    </div>
-                    <p class="text-[20px] font-black text-white leading-none">{{ $curr }} {{ number_format($avgDaily, 2) }}</p>
-                    <p class="text-[10px] text-white/40 mt-1.5">Burn rate / day</p>
+                <div class="w-11 h-11 bg-primary/8 rounded-xl flex items-center justify-center text-primary shrink-0" style="background:rgba(0,65,97,0.08)">
+                    <i class="bi bi-wallet2 text-lg"></i>
                 </div>
             </div>
+
+            {{-- Card 2: Approved --}}
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-start justify-between hover:-translate-y-0.5 transition-transform duration-200">
+                <div>
+                    <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Approved</p>
+                    <h3 class="text-[20px] font-black text-primary leading-none">{{ $curr }} {{ number_format($approvedSum, 2) }}</h3>
+                    <p class="text-[11px] text-gray-400 mt-2 flex items-center gap-1">
+                        <i class="bi bi-patch-check-fill text-green-400 text-[10px]"></i> Verified payments
+                    </p>
+                </div>
+                <div class="w-11 h-11 bg-green-50 rounded-xl flex items-center justify-center text-green-500 shrink-0">
+                    <i class="bi bi-check-circle-fill text-lg"></i>
+                </div>
+            </div>
+
+            {{-- Card 3: Pending --}}
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-start justify-between hover:-translate-y-0.5 transition-transform duration-200">
+                <div>
+                    <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Pending</p>
+                    <h3 class="text-[20px] font-black text-primary leading-none">{{ $pendingCount }} <span class="text-[13px] font-semibold text-gray-400">items</span></h3>
+                    <p class="text-[11px] text-gray-400 mt-2 flex items-center gap-1">
+                        <i class="bi bi-hourglass-split text-yellow-400 text-[10px]"></i> Awaiting review
+                    </p>
+                </div>
+                <div class="w-11 h-11 bg-yellow-50 rounded-xl flex items-center justify-center text-yellow-500 shrink-0">
+                    <i class="bi bi-exclamation-octagon-fill text-lg"></i>
+                </div>
+            </div>
+
+            {{-- Card 4: Daily Avg --}}
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-start justify-between hover:-translate-y-0.5 transition-transform duration-200">
+                <div>
+                    <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Daily Avg</p>
+                    <h3 class="text-[20px] font-black text-primary leading-none">{{ $curr }} {{ number_format($avgDaily, 2) }}</h3>
+                    <p class="text-[11px] text-gray-400 mt-2 flex items-center gap-1">
+                        <i class="bi bi-speedometer2 text-accent text-[10px]"></i> Burn rate / day
+                    </p>
+                </div>
+                <div class="w-11 h-11 rounded-xl flex items-center justify-center text-accent shrink-0" style="background:rgba(153,204,51,0.12)">
+                    <i class="bi bi-speedometer2 text-lg"></i>
+                </div>
+            </div>
+
         </div>
     </div>
 
     {{-- ── Main Content ── --}}
-    <div class="px-6 md:px-10 py-6">
+    <div class="px-6 md:px-10 pb-8">
 
         {{-- Flash Messages --}}
         @if(session('success'))
