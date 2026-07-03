@@ -1,213 +1,390 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Loan Deduction Voucher - {{ $loan->employee->full_name ?? 'Employee' }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#0B5567',
-                        'primary-dark': '#094555',
-                        accent: '#A4D65E',
-                    }
-                }
-            }
-        }
-    </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Loan Receipt — {{ $loan->borrower_name ?? ($loan->employee->full_name ?? 'Borrower') }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        * { font-family: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            background: #e8eef4;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px 60px;
+        }
+
+        /* ── Print bar ── */
+        .print-bar {
+            width: 600px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; font-size: 13px; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; text-decoration: none; }
+        .btn-primary { background: #004161; color: #fff; }
+        .btn-primary:hover { background: #005a85; }
+        .btn-secondary { background: #fff; color: #475569; border: 1px solid #e2e8f0; }
+        .btn-secondary:hover { background: #f8fafc; }
+
+        /* ── Card ── */
+        .card {
+            width: 600px;
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,65,97,0.15);
+        }
+
+        /* ── HEADER ── */
+        .header {
+            background-color: #004161;
+            background-image: radial-gradient(ellipse at top right, #005a85 0%, #004161 60%);
+            padding: 32px 40px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .header::before {
+            content: '';
+            position: absolute; right: -30px; top: -30px;
+            width: 200px; height: 200px; border-radius: 50%;
+            background: rgba(255,255,255,0.04);
+        }
+        .header::after {
+            content: '';
+            position: absolute; right: 70px; top: 60px;
+            width: 90px; height: 90px; border-radius: 50%;
+            background: rgba(153,204,51,0.10);
+        }
+
+        .header-top { display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 1; }
+
+        .logo-area { display: flex; align-items: center; gap: 14px; }
+        .logo-img  { height: 52px; width: auto; max-width: 160px; object-fit: contain; }
+        .company-name-wrap { }
+        .company-name { font-size: 17px; font-weight: 900; color: #fff; letter-spacing: -0.3px; }
+        .company-sub  { font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 2px; }
+
+        .doc-badge {
+            background: #99CC33;
+            color: #004161;
+            font-size: 9px; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 2px;
+            padding: 6px 16px; border-radius: 20px;
+        }
+
+        /* ── Meta row ── */
+        .meta-row { display: flex; gap: 0; margin-top: 26px; position: relative; z-index: 1; }
+        .meta-cell {
+            flex: 1; padding-bottom: 22px;
+            border-right: 1px solid rgba(255,255,255,0.08);
+            padding-right: 18px; padding-left: 4px;
+        }
+        .meta-cell:first-child { padding-left: 0; }
+        .meta-cell:last-child  { border-right: none; }
+        .meta-label { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 5px; }
+        .meta-value { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.92); }
+        .meta-value.lime { color: #99CC33; }
+
+        /* ── Borrower band ── */
+        .borrower-band {
+            background: rgba(255,255,255,0.07);
+            border-top: 1px solid rgba(255,255,255,0.08);
+            padding: 18px 40px;
+            display: flex; align-items: center; gap: 18px;
+            position: relative; z-index: 1;
+        }
+        .borrower-avatar {
+            width: 50px; height: 50px; border-radius: 50%;
+            background: #99CC33;
+            border: 2px solid rgba(153,204,51,0.4);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; font-weight: 900; color: #004161;
+            flex-shrink: 0;
+        }
+        .borrower-name { font-size: 17px; font-weight: 800; color: #fff; }
+        .borrower-type { font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 3px; font-weight: 600; text-transform: capitalize; }
+        .borrower-phone { font-size: 10px; color: rgba(153,204,51,0.8); margin-top: 2px; font-weight: 600; }
+
+        /* ── Tear line ── */
+        .tearline { display: flex; align-items: center; background: #e8eef4; }
+        .tearline-circle { width: 28px; height: 28px; border-radius: 50%; background: #e8eef4; flex-shrink: 0; }
+        .tearline-dashes  { flex: 1; border-top: 2px dashed #cbd5e1; }
+
+        /* ── Body ── */
+        .body { padding: 30px 40px; }
+
+        .section-title {
+            font-size: 9px; font-weight: 800; color: #94a3b8;
+            text-transform: uppercase; letter-spacing: 2px;
+            margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .section-title::after { content: ''; flex: 1; height: 1px; background: #f1f5f9; }
+
+        /* ── Loan summary table ── */
+        .info-table { width: 100%; border-collapse: collapse; }
+        .info-table tr { border-bottom: 1px solid #f8fafc; }
+        .info-table tr:last-child { border-bottom: none; }
+        .info-table td { padding: 11px 0; font-size: 13px; }
+        .info-table .label { font-weight: 600; color: #64748b; }
+        .info-table .value { font-weight: 700; color: #1e293b; text-align: right; }
+        .info-table .value.lime { color: #4a7c12; }
+        .info-table .value.red  { color: #e11d48; }
+
+        /* ── Reason box ── */
+        .reason-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-left: 3px solid #99CC33;
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-top: 18px;
+        }
+        .reason-label { font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 5px; }
+        .reason-text  { font-size: 13px; font-weight: 600; color: #334155; }
+
+        /* ── Amount box ── */
+        .amount-box {
+            background-color: #004161;
+            background-image: linear-gradient(135deg, #004161 0%, #005a85 100%);
+            border-radius: 14px;
+            padding: 22px 28px;
+            display: flex; align-items: center; justify-content: space-between;
+            margin-top: 22px;
+        }
+        .amount-left  { }
+        .amount-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.55); text-transform: uppercase; letter-spacing: 1.5px; }
+        .amount-sub   { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 4px; font-weight: 500; }
+        .amount-value { font-size: 34px; font-weight: 900; color: #99CC33; letter-spacing: -1px; line-height: 1; }
+        .amount-currency { font-size: 18px; vertical-align: super; font-weight: 700; }
+
+        /* ── Progress bar ── */
+        .progress-section { margin-top: 20px; }
+        .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .progress-label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; }
+        .progress-pct   { font-size: 11px; font-weight: 800; color: #004161; }
+        .progress-track { height: 8px; background: #f1f5f9; border-radius: 10px; overflow: hidden; }
+        .progress-fill  { height: 100%; background: linear-gradient(90deg, #99CC33, #7aad1a); border-radius: 10px; transition: width 0.3s; }
+
+        /* ── Stats grid ── */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; }
+        .stat-cell  { background: #f8fafc; border: 1px solid #e8eef4; border-radius: 12px; padding: 14px 16px; text-align: center; }
+        .stat-label { font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+        .stat-value { font-size: 16px; font-weight: 900; color: #1e293b; }
+        .stat-value.lime  { color: #4a7c12; }
+        .stat-value.navy  { color: #004161; }
+        .stat-value.slate { color: #64748b; }
+
+        /* ── Status + Signature ── */
+        .bottom-row { display: flex; align-items: center; justify-content: space-between; margin-top: 24px; padding-top: 20px; border-top: 1px solid #f1f5f9; }
+        .status-pill { display: inline-flex; align-items: center; gap: 7px; border-radius: 20px; padding: 7px 16px; border: 1.5px solid; }
+        .status-pill.active   { background: rgba(153,204,51,0.1); border-color: rgba(153,204,51,0.35); }
+        .status-pill.pending  { background: rgba(234,179,8,0.1); border-color: rgba(234,179,8,0.35); }
+        .status-pill.settled  { background: rgba(100,116,139,0.1); border-color: rgba(100,116,139,0.3); }
+        .status-pill.rejected { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); }
+        .status-dot  { width: 8px; height: 8px; border-radius: 50%; }
+        .status-dot.active   { background: #99CC33; }
+        .status-dot.pending  { background: #eab308; }
+        .status-dot.settled  { background: #64748b; }
+        .status-dot.rejected { background: #ef4444; }
+        .status-text { font-size: 11px; font-weight: 800; color: #004161; text-transform: uppercase; letter-spacing: 1px; }
+
+        .sig-area   { text-align: right; }
+        .sig-line   { border-top: 1.5px solid #cbd5e1; width: 130px; margin-left: auto; padding-top: 6px; }
+        .sig-label  { font-size: 9px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* ── Footer ── */
+        .footer { background: #f8fafc; border-top: 1px dashed #e2e8f0; padding: 14px 40px; display: flex; align-items: center; justify-content: space-between; }
+        .footer p  { font-size: 10px; color: #94a3b8; font-weight: 500; line-height: 1.6; }
+        .footer strong { color: #004161; font-weight: 700; }
+        .footer-stamp { width: 44px; height: 44px; border-radius: 50%; border: 2px dashed rgba(153,204,51,0.5); display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 800; color: rgba(153,204,51,0.7); text-transform: uppercase; letter-spacing: 1px; text-align: center; line-height: 1.3; }
+
         @media print {
-            .no-print { display: none !important; }
-            body { background: white; }
-            .shadow-lg { shadow: none !important; border: 1px solid #e5e7eb !important; }
+            body { background: #fff; padding: 0; }
+            .card { box-shadow: none; border-radius: 0; width: 100%; }
+            .print-bar { display: none; }
+            .tearline { background: #fff; }
+            .tearline-circle { background: #fff; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
     </style>
 </head>
-<body class="bg-gray-50">
-    <div class="min-h-screen">
-        <!-- Header -->
-        <header class="bg-white border-b border-gray-200 no-print">
-            <div class="px-8 py-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h1 class="text-2xl font-bold text-gray-900">Loan Deduction Preview</h1>
-                        <p class="text-sm text-gray-600 mt-1">Review the payslip format below</p>
-                    </div>
-                    <div class="flex gap-3">
-                        <button onclick="window.print()" class="bg-primary text-white px-6 py-2.5 rounded-lg font-bold hover:bg-primary-dark transition-all flex items-center gap-2">
-                            <i class="bi bi-printer"></i>
-                            Print / Download PDF
-                        </button>
-                        <a href="{{ route('loan.view') }}" class="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-bold hover:bg-gray-200 transition-all">
-                            Back to List
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </header>
+<body>
 
-        <main class="max-w-4xl mx-auto p-4 md:p-8">
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden">
-                <!-- Company Header -->
-                <div class="bg-primary p-10 text-white relative">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16"></div>
-                    <div class="flex items-center justify-between relative z-10">
-                        <div class="flex items-center gap-4">
-                            @if(!empty($company->logo))
-                                <div class="w-16 h-16 bg-white rounded-xl flex items-center justify-center overflow-hidden p-1 shadow-md">
-                                    <img src="{{ asset($company->logo) }}" class="w-full h-full object-contain" alt="{{ $company->name }}">
-                                </div>
-                            @endif
-                            <div>
-                                <h2 class="text-3xl font-black mb-1 uppercase tracking-tighter italic">{{ $company->name ?? 'HORNTECH LTD' }}</h2>
-                                <p class="text-[11px] text-white/60 mt-1 uppercase tracking-widest font-bold">{{ $company->city ?? 'Riyadh' }} • {{ $company->country ?? 'Saudi Arabia' }}</p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-[10px] text-primary uppercase font-black tracking-widest">Document Type</p>
-                            <p class="text-xl font-bold">LOAN PAYSLIP</p>
-                            <p class="text-xs text-primary mt-1">{{ date('F Y') }}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Employee Details -->
-                <div class="p-8 border-b border-gray-100 bg-gray-50/30">
-                    <div class="flex items-center gap-2 mb-6">
-                        <div class="h-4 w-1 bg-accent rounded-full"></div>
-                        <h3 class="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Employee Profile</h3>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <div>
-                            <p class="text-[10px] text-gray-400 uppercase font-bold mb-1">Full Name</p>
-                            <p class="text-sm font-bold text-gray-900">{{ $loan->employee->full_name ?? 'N/A' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-[10px] text-gray-400 uppercase font-bold mb-1">Employee ID</p>
-                            <p class="text-sm font-bold text-gray-900">{{ $loan->employee->employee_id ?? 'N/A' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-[10px] text-gray-400 uppercase font-bold mb-1">Designation</p>
-                            <p class="text-sm font-bold text-gray-900">{{ $loan->employee->designation ?? 'Staff Member' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-[10px] text-gray-400 uppercase font-bold mb-1">Branch</p>
-                            <p class="text-sm font-bold text-gray-900">{{ $loan->employee->branch ?? 'Main Branch' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-[10px] text-gray-400 uppercase font-bold mb-1">Department</p>
-                            <p class="text-sm font-bold text-gray-900">{{ $loan->employee->department ?? 'General' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-[10px] text-gray-400 uppercase font-bold mb-1">Issue Date</p>
-                            <p class="text-sm font-bold text-gray-900">{{ now()->format('d M, Y') }}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 divide-x divide-gray-100">
-                    <!-- Earnings Section -->
-                    <div class="p-8">
-                        <div class="flex items-center gap-2 mb-6">
-                            <div class="h-4 w-1 bg-accent/10 rounded-full"></div>
-                            <h3 class="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Earnings Summary</h3>
-                        </div>
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between">
-                                <p class="text-sm font-medium text-gray-600">Basic Monthly Salary</p>
-                                <p class="text-sm font-bold text-gray-900">{{ $currency }} {{ number_format($loan->employee->salary ?? 0, 2) }}</p>
-                            </div>
-                            <!-- Static for design consistency as placeholders -->
-                            <div class="flex items-center justify-between">
-                                <p class="text-sm font-medium text-gray-600">Allowances (Estimate)</p>
-                                <p class="text-sm font-bold text-gray-900">{{ $currency }} 0.00</p>
-                            </div>
-                            <div class="pt-4 border-t border-gray-100 flex items-center justify-between">
-                                <p class="text-sm font-black text-gray-900 uppercase">Gross Salary</p>
-                                <p class="text-lg font-black text-accent">{{ $currency }} {{ number_format($loan->employee->salary ?? 0, 2) }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Deductions Section -->
-                    <div class="p-8 bg-gray-50/50">
-                        <div class="flex items-center gap-2 mb-6">
-                            <div class="h-4 w-1 bg-primary/10 rounded-full"></div>
-                            <h3 class="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Loan Deductions</h3>
-                        </div>
-                        <div class="space-y-4">
-                            <div class="bg-white border border-primary/20 rounded-xl p-5 shadow-sm">
-                                <div class="flex items-center justify-between mb-2">
-                                    <p class="text-xs font-black text-primary uppercase tracking-wider">Current Deduction</p>
-                                    <span class="text-xl font-black text-gray-800">{{ $currency }} {{ number_format($loan->monthly_deduction, 2) }}</span>
-                                </div>
-                                <div class="flex items-center justify-between text-[11px] pt-3 border-t border-primary/20 mt-3">
-                                    <p class="text-primary font-bold uppercase tracking-tight">Loan Balance After This Pay</p>
-                                    <p class="font-black text-primary">{{ $currency }} {{ number_format(max(0, $loan->balance - $loan->monthly_deduction), 2) }}</p>
-                                </div>
-                                <p class="text-[9px] text-primary mt-2 font-bold uppercase tracking-widest italic">REF: {{ $loan->loan_id }} • {{ $loan->type }} LOAN</p>
-                            </div>
-                            
-                            <div class="flex items-center justify-between pt-2">
-                                <p class="text-gray-500 font-medium">This is a system-generated loan deduction voucher. The amount of <span class="font-bold text-gray-800">{{ $currency }} {{ number_format($loan->monthly_deduction, 2) }}</span> will be deducted from the employee's monthly salary until the balance is cleared.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Final Calculation -->
-                <div class="p-10 bg-gradient-to-br from-primary-dark to-primary text-white text-center">
-                    <p class="text-[10px] text-primary uppercase font-black tracking-[0.3em] mb-3">Estimated Net Monthly Payout</p>
-                    <div class="flex items-center justify-center gap-4">
-                        <div class="h-px w-12 bg-white/20"></div>
-                        <h4 class="text-5xl font-black tracking-tighter italic">{{ $currency }} {{ number_format(($loan->employee->salary ?? 0) - $loan->monthly_deduction, 2) }}</h4>
-                        <div class="h-px w-12 bg-white/20"></div>
-                    </div>
-                    <p class="text-[11px] text-primary mt-4 lowercase italic font-medium">calculated as: gross salary ({{ number_format($loan->employee->salary ?? 0, 2) }}) - current loan deduction ({{ number_format($loan->monthly_deduction, 2) }})</p>
-                </div>
-
-                <!-- Detailed Summary -->
-                <div class="p-8 bg-white grid grid-cols-2 md:grid-cols-4 gap-6 border-t border-gray-100">
-                    <div class="text-center">
-                        <p class="text-[10px] uppercase font-bold text-gray-400 mb-1">Total Loan Amount</p>
-                        <p class="text-lg font-black text-gray-800">{{ $currency }} {{ number_format($loan->amount, 2) }}</p>
-                    </div>
-                    <div class="text-center">
-                        <p class="text-[10px] text-gray-400 uppercase font-black mb-1">Total Paid</p>
-                        <p class="text-sm font-bold text-accent">{{ $currency }} {{ number_format($loan->recovered, 2) }}</p>
-                    </div>
-                    <div class="text-center">
-                        <p class="text-[10px] text-gray-400 uppercase font-black mb-1">Installments</p>
-                        <p class="text-sm font-bold text-gray-900">{{ $loan->duration }} Months</p>
-                    </div>
-                    <div class="text-center">
-                        <p class="text-[10px] uppercase font-bold text-gray-400 mb-1">Remaining Balance</p>
-                        <p class="text-lg font-black text-primary">{{ $currency }} {{ number_format($loan->balance, 2) }}</p>
-                    </div>
-                </div>
-
-                <!-- Signature Footer -->
-                <div class="px-8 py-12 flex justify-between items-end border-t border-gray-100 bg-gray-50/20">
-                    <div class="text-center">
-                        <div class="border-b border-gray-400 w-48 mb-2"></div>
-                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Employee Signature</p>
-                    </div>
-                    <div class="text-center">
-                        <p class="text-[10px] text-gray-400 font-medium mb-10">Electronically generated by {{ $company->name ?? 'Waafibook' }}</p>
-                        <div class="border-b border-gray-400 w-48 mb-2"></div>
-                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">HR/Finance Authority</p>
-                    </div>
-                </div>
-            </div>
-            
-            <p class="text-[10px] text-center text-gray-400 mt-8 italic">This document serves as a notification of loan deduction and salary estimation. Official payslip might include GOSI and other variables.</p>
-        </main>
+    <div class="print-bar">
+        <a href="{{ route('loan.view') }}" class="btn btn-secondary">&#8592; Back to Loans</a>
+        <button onclick="window.print()" class="btn btn-primary">&#128438; Print / Save PDF</button>
     </div>
+
+    <div class="card">
+
+        {{-- ══ HEADER ══ --}}
+        <div class="header">
+            <div class="header-top">
+                <div class="logo-area">
+                    @php
+                        $loanLogoSrc = (!empty($company->logo) && file_exists(public_path($company->logo)))
+                            ? asset($company->logo)
+                            : asset('upload/waafibooklogo/waafibook_logo.jpg');
+                    @endphp
+                    <img src="{{ $loanLogoSrc }}" alt="{{ $company->name ?? 'Logo' }}" class="logo-img">
+                    <div class="company-name-wrap">
+                        <div class="company-name">{{ $company->name ?? 'WaafiBook' }}</div>
+                        <div class="company-sub">{{ $company->city ?? '' }}{{ ($company->city && $company->country) ? ' • ' : '' }}{{ $company->country ?? 'ERP System' }}</div>
+                    </div>
+                </div>
+                <span class="doc-badge">Loan Receipt</span>
+            </div>
+
+            <div class="meta-row">
+                <div class="meta-cell">
+                    <div class="meta-label">Loan Reference</div>
+                    <div class="meta-value">{{ $loan->loan_id ?? 'LN-' . str_pad($loan->id, 5, '0', STR_PAD_LEFT) }}</div>
+                </div>
+                <div class="meta-cell">
+                    <div class="meta-label">Issue Date</div>
+                    <div class="meta-value">{{ \Carbon\Carbon::parse($loan->start_date)->format('d M Y') }}</div>
+                </div>
+                <div class="meta-cell">
+                    <div class="meta-label">Loan Type</div>
+                    <div class="meta-value" style="text-transform:capitalize;">{{ $loan->type ?? 'Personal' }}</div>
+                </div>
+                <div class="meta-cell">
+                    <div class="meta-label">Status</div>
+                    <div class="meta-value lime">&#10003; {{ ucfirst($loan->status ?? 'Pending') }}</div>
+                </div>
+            </div>
+
+            <div class="borrower-band">
+                @php $borrowerName = $loan->borrower_name ?: ($loan->employee->full_name ?? 'Unknown'); @endphp
+                <div class="borrower-avatar">{{ strtoupper(substr($borrowerName, 0, 1)) }}</div>
+                <div>
+                    <div class="borrower-name">{{ $borrowerName }}</div>
+                    <div class="borrower-type">{{ ucfirst($loan->borrower_type ?? 'Individual') }}</div>
+                    @if($loan->phone)
+                    <div class="borrower-phone">{{ $loan->phone }}</div>
+                    @elseif($loan->employee)
+                    <div class="borrower-phone">{{ $loan->employee->designation ?? '' }}</div>
+                    @endif
+                </div>
+                <div style="margin-left:auto; text-align:right;">
+                    <div style="font-size:9px;color:rgba(255,255,255,0.4);font-weight:700;text-transform:uppercase;letter-spacing:1px;">Total Loan</div>
+                    <div style="font-size:22px;font-weight:900;color:#fff;margin-top:4px;">{{ $currency }} {{ number_format($loan->amount, 2) }}</div>
+                </div>
+            </div>
+        </div>
+
+        {{-- ══ TEAR LINE ══ --}}
+        <div class="tearline">
+            <div class="tearline-circle" style="margin-left:-14px;"></div>
+            <div class="tearline-dashes"></div>
+            <div class="tearline-circle" style="margin-right:-14px;"></div>
+        </div>
+
+        {{-- ══ BODY ══ --}}
+        <div class="body">
+
+            <div class="section-title">Loan Details</div>
+
+            <table class="info-table">
+                <tr>
+                    <td class="label">Loan Amount</td>
+                    <td class="value">{{ $currency }} {{ number_format($loan->amount, 2) }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Amount Paid</td>
+                    <td class="value lime">{{ $currency }} {{ number_format($loan->recovered, 2) }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Remaining Balance</td>
+                    <td class="value {{ $loan->balance > 0 ? 'red' : 'lime' }}">{{ $currency }} {{ number_format($loan->balance, 2) }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Loan Date</td>
+                    <td class="value">{{ \Carbon\Carbon::parse($loan->start_date)->format('d M Y') }}</td>
+                </tr>
+            </table>
+
+            @if($loan->reason)
+            <div class="reason-box">
+                <div class="reason-label">Purpose / Reason</div>
+                <div class="reason-text">{{ $loan->reason }}</div>
+            </div>
+            @endif
+
+            {{-- ── Balance box ── --}}
+            <div class="amount-box">
+                <div class="amount-left">
+                    <div class="amount-label">Outstanding Balance</div>
+                    <div class="amount-sub">{{ $borrowerName }} &bull; {{ $loan->loan_id ?? '' }}</div>
+                </div>
+                <div class="amount-value">
+                    <span class="amount-currency">{{ $currency }}</span> {{ number_format($loan->balance, 2) }}
+                </div>
+            </div>
+
+            {{-- ── Recovery progress ── --}}
+            @php
+                $pct = $loan->amount > 0 ? min(100, round(($loan->recovered / $loan->amount) * 100)) : 0;
+            @endphp
+            <div class="progress-section">
+                <div class="progress-header">
+                    <span class="progress-label">Recovery Progress</span>
+                    <span class="progress-pct">{{ $pct }}% recovered</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" style="width: {{ $pct }}%;"></div>
+                </div>
+            </div>
+
+            {{-- ── Stats grid ── --}}
+            <div class="stats-grid">
+                <div class="stat-cell">
+                    <div class="stat-label">Loan Amount</div>
+                    <div class="stat-value navy">{{ $currency }} {{ number_format($loan->amount, 2) }}</div>
+                </div>
+                <div class="stat-cell">
+                    <div class="stat-label">Total Paid</div>
+                    <div class="stat-value lime">{{ $currency }} {{ number_format($loan->recovered, 2) }}</div>
+                </div>
+                <div class="stat-cell">
+                    <div class="stat-label">Balance Due</div>
+                    <div class="stat-value {{ $loan->balance > 0 ? 'navy' : 'lime' }}">{{ $currency }} {{ number_format($loan->balance, 2) }}</div>
+                </div>
+            </div>
+
+            {{-- ── Status + Signature ── --}}
+            <div class="bottom-row">
+                @php $st = $loan->status ?? 'pending'; @endphp
+                <div class="status-pill {{ $st }}">
+                    <div class="status-dot {{ $st }}"></div>
+                    <span class="status-text">{{ ucfirst($st) }}</span>
+                </div>
+                <div class="sig-area">
+                    <div class="sig-line">
+                        <div class="sig-label">Authorized Signature</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        {{-- ══ FOOTER ══ --}}
+        <div class="footer">
+            <div>
+                <p>Generated by <strong>WaafiBook ERP</strong> &bull; {{ now()->format('d M Y, H:i') }}</p>
+                <p>This is a system-generated loan receipt. Ref: <strong>{{ $loan->loan_id ?? '—' }}</strong></p>
+            </div>
+            <div class="footer-stamp">ISSUED<br>✓</div>
+        </div>
+
+    </div>
+
 </body>
 </html>
-
