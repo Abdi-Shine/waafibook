@@ -333,10 +333,16 @@
                     .then(res => {
                         if (res.success) {
                             Swal.fire('Success', 'Transaction Complete', 'success').then(() => {
+                                // Deduct sold quantities from local stock so cards refresh immediately
+                                cart.forEach(item => {
+                                    const p = products.find(prod => prod.id === item.id);
+                                    if (p) p.stocks_sum_quantity = Math.max(0, (p.stocks_sum_quantity || 0) - item.quantity);
+                                });
                                 cart = [];
                                 updateCart();
                                 saveCartToStorage();
                                 document.getElementById('customer_id').value = '';
+                                displayProducts(products);
                                 switchPosTab('products');
                             });
                         } else {
@@ -386,6 +392,14 @@
                 req.onerror = reject;
             });
         }
+        // Re-initialize when browser serves page from bfcache (back/forward navigation)
+        window.addEventListener('pageshow', (e) => {
+            if (e.persisted) {
+                displayProducts(products);
+                loadCartFromStorage();
+            }
+        });
+
         // Notify the user when a queued sale is synced
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.addEventListener('message', event => {
