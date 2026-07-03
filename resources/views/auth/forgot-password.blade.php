@@ -72,7 +72,7 @@
 
                 <div class="mt-3 text-center small text-muted">
                     <i class="bi bi-info-circle me-1"></i>
-                    Only company administrator accounts can reset password by email.
+                    A reset link will be sent to your registered email address.
                 </div>
             </div>
             

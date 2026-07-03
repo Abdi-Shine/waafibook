@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
@@ -22,21 +21,11 @@ class PasswordResetLinkController extends Controller
             'email' => ['required', 'email'],
         ]);
 
-        $user = User::withoutGlobalScopes()
-            ->where('email', $request->email)
-            ->first();
-
-        if (!$user || $user->role !== 'admin') {
-            return back()
-                ->withInput($request->only('email'))
-                ->withErrors(['email' => 'No administrator account found with that email address. Please contact your administrator.']);
-        }
-
         $status = Password::sendResetLink($request->only('email'));
 
         return $status == Password::RESET_LINK_SENT
             ? back()->with('status', 'Password reset link sent! Please check your email inbox.')
             : back()->withInput($request->only('email'))
-                ->withErrors(['email' => 'Unable to send the reset link. Please try again.']);
+                ->withErrors(['email' => 'We could not find an account with that email address.']);
     }
 }
