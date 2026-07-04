@@ -20,6 +20,7 @@
             category_id:    @js($product->category_id ?? ''),
             product_type:   @js($product->product_type ?? 'product'),
             description:    @js($product->description ?? ''),
+            quantity:       @js($ledger['product']['stock_quantity'] ?? 0),
         },
         ledger: @js($ledger),
         get filteredTransactions() {
@@ -43,9 +44,11 @@
                 });
                 const json = await res.json();
                 if (json.success) {
-                    this.ledger.product.name          = this.editData.product_name;
+                    this.ledger.product.name           = this.editData.product_name;
                     this.ledger.product.selling_price  = parseFloat(this.editData.selling_price);
                     this.ledger.product.purchase_price = parseFloat(this.editData.purchase_price);
+                    this.ledger.product.stock_quantity = parseFloat(this.editData.quantity);
+                    this.ledger.product.stock_value    = parseFloat(this.editData.quantity) * parseFloat(this.editData.purchase_price);
                     this.editOpen = false;
                     Swal.fire({ icon:'success', title:'Updated', text:'Product saved.', timer:1500, showConfirmButton:false, confirmButtonColor:'#004161' });
                 } else {
@@ -98,88 +101,112 @@
         </div>
 
         {{-- Edit Bottom Sheet --}}
-        <div x-show="editOpen" x-transition:enter="transition ease-out duration-300"
+        <div x-show="editOpen"
+             x-transition:enter="transition ease-out duration-200"
              x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave="transition ease-in duration-150"
              x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-             class="fixed inset-0 bg-black/40 z-50 flex items-end"
+             class="fixed inset-0 bg-black/50 z-50 flex items-end"
              @click.self="editOpen = false">
             <div x-show="editOpen"
                  x-transition:enter="transition ease-out duration-300"
                  x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0"
                  x-transition:leave="transition ease-in duration-200"
                  x-transition:leave-start="translate-y-0" x-transition:leave-end="translate-y-full"
-                 class="w-full bg-white rounded-t-[1.5rem] shadow-2xl max-h-[90vh] overflow-y-auto">
+                 class="w-full bg-white rounded-t-3xl shadow-2xl max-h-[92vh] flex flex-col">
+
+                {{-- Drag handle --}}
+                <div class="flex justify-center pt-3 pb-1 shrink-0">
+                    <div class="w-10 h-1 bg-gray-200 rounded-full"></div>
+                </div>
 
                 {{-- Sheet header --}}
-                <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-[1.5rem] z-10">
-                    <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 bg-primary rounded-xl flex items-center justify-center">
-                            <i class="bi bi-pencil-square text-white text-sm"></i>
-                        </div>
-                        <span class="text-[15px] font-black text-gray-900">Edit Product</span>
+                <div class="flex items-center justify-between px-5 py-3 shrink-0">
+                    <div>
+                        <p class="text-[16px] font-black text-gray-900">Edit Product</p>
+                        <p class="text-[12px] text-gray-400 mt-0.5" x-text="editData.product_name"></p>
                     </div>
-                    <button @click="editOpen = false" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500">
+                    <button @click="editOpen = false"
+                        class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 active:bg-gray-200">
                         <i class="bi bi-x-lg text-sm"></i>
                     </button>
                 </div>
 
                 {{-- Edit Form --}}
-                <form id="mobileEditForm" @submit.prevent="submitEdit()" class="px-5 py-4 space-y-4">
+                <form id="mobileEditForm" @submit.prevent="submitEdit()" class="overflow-y-auto flex-1 px-5 pb-6 pt-2 space-y-3">
                     @csrf
                     <input type="hidden" name="_method" value="PUT">
                     <input type="hidden" name="product_type" x-model="editData.product_type">
 
+                    {{-- Product Name --}}
                     <div>
-                        <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Product Name <span class="text-red-400">*</span></label>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Product Name <span class="text-red-400">*</span></label>
                         <input type="text" name="product_name" x-model="editData.product_name" required
-                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[14px] text-gray-800 font-medium focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+                            class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-[14px] text-gray-800 font-medium focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
                     </div>
 
-                    <div>
-                        <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Product Code <span class="text-red-400">*</span></label>
-                        <input type="text" name="product_code" x-model="editData.product_code" required
-                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[14px] text-gray-800 font-medium focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
-                    </div>
-
+                    {{-- Code + Category --}}
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Sale Price <span class="text-red-400">*</span></label>
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Code <span class="text-red-400">*</span></label>
+                            <input type="text" name="product_code" x-model="editData.product_code" required
+                                class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-[13px] text-gray-800 font-medium focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Category</label>
+                            <select name="category_id" x-model="editData.category_id"
+                                class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-[13px] text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none">
+                                <option value="">None</option>
+                                @foreach($categories as $cat)
+                                    <option value="{{ $cat->id }}"
+                                        {{ ($product && $product->category_id == $cat->id) ? 'selected' : '' }}>
+                                        {{ $cat->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    {{-- Prices --}}
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Sale Price <span class="text-red-400">*</span></label>
                             <div class="relative">
-                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[13px]">$</span>
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[12px]">$</span>
                                 <input type="number" name="selling_price" x-model="editData.selling_price" step="0.01" min="0" required
-                                    class="w-full pl-7 pr-3 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[14px] text-gray-800 font-bold focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+                                    class="w-full pl-6 pr-2 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-[14px] text-gray-800 font-bold focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
                             </div>
                         </div>
                         <div>
-                            <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Purchase Price</label>
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Purchase Price</label>
                             <div class="relative">
-                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[13px]">$</span>
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[12px]">$</span>
                                 <input type="number" name="purchase_price" x-model="editData.purchase_price" step="0.01" min="0"
-                                    class="w-full pl-7 pr-3 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[14px] text-gray-800 font-bold focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+                                    class="w-full pl-6 pr-2 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-[14px] text-gray-800 font-bold focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
                             </div>
                         </div>
                     </div>
 
+                    {{-- Quantity --}}
                     <div>
-                        <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Category</label>
-                        <select name="category_id" x-model="editData.category_id"
-                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[14px] text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
-                            <option value="">No Category</option>
-                            @foreach($categories as $cat)
-                                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                            @endforeach
-                        </select>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Stock Quantity</label>
+                        <div class="relative">
+                            <i class="bi bi-boxes absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                            <input type="number" name="stock_products" x-model="editData.quantity" step="0.01" min="0"
+                                class="w-full pl-9 pr-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-[14px] text-gray-800 font-bold focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                        </div>
                     </div>
 
+                    {{-- Description --}}
                     <div>
-                        <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Description</label>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Description</label>
                         <textarea name="description" x-model="editData.description" rows="2"
-                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[14px] text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none"></textarea>
+                            class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-[13px] text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none"></textarea>
                     </div>
 
+                    {{-- Save Button --}}
                     <button type="submit" :disabled="saving"
-                        class="w-full py-4 bg-primary text-white font-black rounded-2xl text-[15px] tracking-wide active:opacity-80 transition-all flex items-center justify-center gap-2"
+                        class="w-full py-3.5 bg-primary text-white font-black rounded-2xl text-[15px] active:opacity-80 transition-all flex items-center justify-center gap-2 mt-1"
                         :class="saving ? 'opacity-60 cursor-not-allowed' : ''">
                         <i class="bi" :class="saving ? 'bi-arrow-repeat animate-spin' : 'bi-check2-circle'"></i>
                         <span x-text="saving ? 'Saving...' : 'Save Changes'"></span>
@@ -213,12 +240,12 @@
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4 flex justify-between items-center">
                 <div>
                     <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wide">Stock Quantity</p>
-                    <p class="text-[16px] font-black text-gray-900 mt-0.5">{{ $ledger['product']['stock_quantity'] }}</p>
+                    <p class="text-[16px] font-black text-gray-900 mt-0.5" x-text="parseFloat(ledger.product.stock_quantity).toFixed(2)"></p>
                 </div>
                 <div class="w-px h-10 bg-gray-100"></div>
                 <div class="text-right">
                     <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wide">Stock Value</p>
-                    <p class="text-[16px] font-black text-gray-900 mt-0.5">{{ $symbol }} {{ number_format($ledger['product']['stock_value'], 2) }}</p>
+                    <p class="text-[16px] font-black text-gray-900 mt-0.5" x-text="'{{ $symbol }} ' + parseFloat(ledger.product.stock_value).toFixed(2)"></p>
                 </div>
             </div>
         </div>
