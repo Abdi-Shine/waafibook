@@ -555,9 +555,11 @@ class ProductController extends Controller
             // Mobile: the item list is its own screen; the ledger detail
             // screen only appears once an item is explicitly tapped.
             $selectedId = $request->input('product_id');
-            $ledger = $selectedId ? $this->buildLedgerData($selectedId) : null;
+            $ledger     = $selectedId ? $this->buildLedgerData($selectedId) : null;
+            $product    = $selectedId ? Product::query()->with('category')->find($selectedId) : null;
+            $categories = Category::query()->orderBy('name')->get();
 
-            return view('frontend.product.ledger_product_pwa', compact('products', 'type', 'selectedId', 'ledger'));
+            return view('frontend.product.ledger_product_pwa', compact('products', 'type', 'selectedId', 'ledger', 'product', 'categories'));
         }
 
         $selectedId = $request->input('product_id', $products->first()->id ?? null);

@@ -10,6 +10,17 @@
     {{-- DETAIL SCREEN --}}
     <div class="flex flex-col bg-gray-50 min-h-screen pb-24" x-data="{
         txnSearch: '',
+        editOpen: false,
+        saving: false,
+        editData: {
+            product_name:   @js($product->product_name ?? ''),
+            product_code:   @js($product->product_code ?? ''),
+            selling_price:  @js($product->selling_price ?? 0),
+            purchase_price: @js($product->purchase_price ?? 0),
+            category_id:    @js($product->category_id ?? ''),
+            product_type:   @js($product->product_type ?? 'product'),
+            description:    @js($product->description ?? ''),
+        },
         ledger: @js($ledger),
         get filteredTransactions() {
             if (!this.txnSearch) return this.ledger.transactions;
@@ -19,6 +30,31 @@
                 (t.name || '').toLowerCase().includes(term) ||
                 String(t.ref || '').toLowerCase().includes(term)
             );
+        },
+        async submitEdit() {
+            this.saving = true;
+            const form = document.getElementById('mobileEditForm');
+            const data = new FormData(form);
+            try {
+                const res = await fetch('{{ url('/products/update') }}/{{ $selectedId }}', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                    body: data
+                });
+                const json = await res.json();
+                if (json.success) {
+                    this.ledger.product.name          = this.editData.product_name;
+                    this.ledger.product.selling_price  = parseFloat(this.editData.selling_price);
+                    this.ledger.product.purchase_price = parseFloat(this.editData.purchase_price);
+                    this.editOpen = false;
+                    Swal.fire({ icon:'success', title:'Updated', text:'Product saved.', timer:1500, showConfirmButton:false, confirmButtonColor:'#004161' });
+                } else {
+                    Swal.fire({ icon:'error', title:'Error', text: json.message || 'Could not save.', confirmButtonColor:'#004161' });
+                }
+            } catch(e) {
+                Swal.fire({ icon:'error', title:'Error', text:'Network error.', confirmButtonColor:'#004161' });
+            }
+            this.saving = false;
         },
         deleteProductItem(id, name) {
             deleteRecordWithPassword('{{ url('/products/delete') }}/' + id, name, {
@@ -48,28 +84,119 @@
                class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 text-gray-700 shrink-0">
                 <i class="bi bi-arrow-left text-base"></i>
             </a>
-            <h1 class="flex-1 text-[16px] font-bold text-gray-900 uppercase truncate">
+            <h1 class="flex-1 text-[16px] font-bold text-gray-900 uppercase truncate" x-text="ledger.product.name">
                 {{ $ledger['product']['name'] }}
             </h1>
-            <a href="{{ route('product.index', ['action' => 'edit', 'id' => $selectedId]) }}"
-               class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 shrink-0">
+            <button @click="editOpen = true"
+               class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 shrink-0 active:bg-primary active:text-white transition-colors">
                 <i class="bi bi-pencil text-sm"></i>
-            </a>
+            </button>
             <button @click="deleteProductItem({{ $selectedId }}, {{ Js::from($ledger['product']['name']) }})"
                 class="w-9 h-9 flex items-center justify-center rounded-full bg-red-50 text-red-400 shrink-0">
                 <i class="bi bi-trash3 text-sm"></i>
             </button>
         </div>
 
+        {{-- Edit Bottom Sheet --}}
+        <div x-show="editOpen" x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-black/40 z-50 flex items-end"
+             @click.self="editOpen = false">
+            <div x-show="editOpen"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="translate-y-0" x-transition:leave-end="translate-y-full"
+                 class="w-full bg-white rounded-t-[1.5rem] shadow-2xl max-h-[90vh] overflow-y-auto">
+
+                {{-- Sheet header --}}
+                <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-[1.5rem] z-10">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 bg-primary rounded-xl flex items-center justify-center">
+                            <i class="bi bi-pencil-square text-white text-sm"></i>
+                        </div>
+                        <span class="text-[15px] font-black text-gray-900">Edit Product</span>
+                    </div>
+                    <button @click="editOpen = false" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500">
+                        <i class="bi bi-x-lg text-sm"></i>
+                    </button>
+                </div>
+
+                {{-- Edit Form --}}
+                <form id="mobileEditForm" @submit.prevent="submitEdit()" class="px-5 py-4 space-y-4">
+                    @csrf
+                    <input type="hidden" name="_method" value="PUT">
+                    <input type="hidden" name="product_type" x-model="editData.product_type">
+
+                    <div>
+                        <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Product Name <span class="text-red-400">*</span></label>
+                        <input type="text" name="product_name" x-model="editData.product_name" required
+                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[14px] text-gray-800 font-medium focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+                    </div>
+
+                    <div>
+                        <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Product Code <span class="text-red-400">*</span></label>
+                        <input type="text" name="product_code" x-model="editData.product_code" required
+                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[14px] text-gray-800 font-medium focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Sale Price <span class="text-red-400">*</span></label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[13px]">$</span>
+                                <input type="number" name="selling_price" x-model="editData.selling_price" step="0.01" min="0" required
+                                    class="w-full pl-7 pr-3 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[14px] text-gray-800 font-bold focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Purchase Price</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[13px]">$</span>
+                                <input type="number" name="purchase_price" x-model="editData.purchase_price" step="0.01" min="0"
+                                    class="w-full pl-7 pr-3 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[14px] text-gray-800 font-bold focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Category</label>
+                        <select name="category_id" x-model="editData.category_id"
+                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[14px] text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+                            <option value="">No Category</option>
+                            @foreach($categories as $cat)
+                                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Description</label>
+                        <textarea name="description" x-model="editData.description" rows="2"
+                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[14px] text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none"></textarea>
+                    </div>
+
+                    <button type="submit" :disabled="saving"
+                        class="w-full py-4 bg-primary text-white font-black rounded-2xl text-[15px] tracking-wide active:opacity-80 transition-all flex items-center justify-center gap-2"
+                        :class="saving ? 'opacity-60 cursor-not-allowed' : ''">
+                        <i class="bi" :class="saving ? 'bi-arrow-repeat animate-spin' : 'bi-check2-circle'"></i>
+                        <span x-text="saving ? 'Saving...' : 'Save Changes'"></span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
         {{-- Price cards row --}}
         <div class="grid grid-cols-2 gap-3 px-4 pt-4">
             <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
                 <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Sale Price</p>
-                <p class="text-[18px] font-black text-accent">{{ $symbol }} {{ number_format($ledger['product']['selling_price'], 2) }}</p>
+                <p class="text-[18px] font-black text-accent" x-text="'{{ $symbol }} ' + parseFloat(ledger.product.selling_price).toFixed(2)"></p>
             </div>
             <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
                 <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Purchase Price</p>
-                <p class="text-[18px] font-black text-accent">{{ $symbol }} {{ number_format($ledger['product']['purchase_price'], 2) }}</p>
+                <p class="text-[18px] font-black text-accent" x-text="'{{ $symbol }} ' + parseFloat(ledger.product.purchase_price).toFixed(2)"></p>
             </div>
         </div>
 
