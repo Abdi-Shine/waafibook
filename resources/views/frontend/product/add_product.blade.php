@@ -365,7 +365,7 @@
         </div>
 
         <!-- Table -->
-        <div class="overflow-y-auto overflow-x-hidden" style="max-height:75vh;">
+        <div class="overflow-y-auto overflow-x-auto" style="max-height:75vh;">
             <table class="w-full whitespace-nowrap text-left">
                 <thead>
                     <tr class="bg-white border-b border-gray-100">
