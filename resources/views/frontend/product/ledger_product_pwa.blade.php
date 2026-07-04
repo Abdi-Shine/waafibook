@@ -100,112 +100,143 @@
             </button>
         </div>
 
-        {{-- Edit Bottom Sheet --}}
+        {{-- Edit Modal (centered dialog) --}}
         <div x-show="editOpen"
              x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+             x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
              x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-             class="fixed inset-0 bg-black/50 z-50 flex items-end"
+             x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+             class="fixed inset-0 z-50 flex items-center justify-center px-4"
+             style="background: rgba(0,0,0,0.55); backdrop-filter: blur(3px);"
              @click.self="editOpen = false">
 
-            <div x-show="editOpen"
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0"
-                 x-transition:leave="transition ease-in duration-200"
-                 x-transition:leave-start="translate-y-0" x-transition:leave-end="translate-y-full"
-                 class="w-full bg-white rounded-t-3xl shadow-2xl flex flex-col"
-                 style="max-height: 88vh;">
+            <div class="w-full bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden"
+                 style="max-width:420px; max-height:82vh;">
 
-                {{-- Fixed top: drag handle + header --}}
-                <div class="shrink-0">
-                    <div class="flex justify-center pt-2.5 pb-1">
-                        <div class="w-9 h-1 bg-gray-300 rounded-full"></div>
-                    </div>
-                    <div class="flex items-center justify-between px-5 py-2.5 border-b border-gray-100">
-                        <div>
-                            <p class="text-[15px] font-black text-gray-900">Edit Product</p>
-                            <p class="text-[11px] text-gray-400 truncate max-w-[220px]" x-text="editData.product_name"></p>
+                {{-- Header --}}
+                <div class="shrink-0 px-5 py-4" style="background: linear-gradient(135deg,#004161 0%,#005a85 100%);">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0" style="background:rgba(255,255,255,0.15);">
+                                <i class="bi bi-pencil-square text-white text-base"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-white font-black text-[15px] leading-tight">Edit Product</p>
+                                <p class="text-[11px] truncate" style="color:rgba(255,255,255,0.6); max-width:190px;" x-text="editData.product_name"></p>
+                            </div>
                         </div>
                         <button type="button" @click="editOpen = false"
-                            class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 active:bg-gray-200 shrink-0">
-                            <i class="bi bi-x-lg text-sm"></i>
+                            class="w-8 h-8 flex items-center justify-center rounded-full shrink-0 active:opacity-70"
+                            style="background:rgba(255,255,255,0.15);">
+                            <i class="bi bi-x-lg text-white text-sm"></i>
                         </button>
                     </div>
                 </div>
 
-                {{-- Scrollable fields --}}
+                {{-- Form --}}
                 <form id="mobileEditForm" @submit.prevent="submitEdit()" class="flex flex-col flex-1 min-h-0">
                     @csrf
                     <input type="hidden" name="_method" value="PUT">
                     <input type="hidden" name="product_type" x-model="editData.product_type">
+                    <input type="hidden" name="product_code" x-model="editData.product_code">
 
-                    <div class="overflow-y-auto flex-1 px-4 py-3 space-y-2.5">
+                    {{-- Scrollable fields --}}
+                    <div class="flex-1 overflow-y-auto px-5 py-4 space-y-3.5">
 
                         {{-- Product Name --}}
                         <div>
-                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Product Name <span class="text-red-400">*</span></label>
+                            <label class="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style="color:#004161;">
+                                Product Name <span class="text-red-400">*</span>
+                            </label>
                             <input type="text" name="product_name" x-model="editData.product_name" required
-                                class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] text-gray-800 font-medium focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                                placeholder="Enter product name"
+                                class="w-full px-4 py-2.5 rounded-xl text-[14px] text-gray-800 font-medium outline-none transition-all"
+                                style="background:#f5f7fa; border:1.5px solid #e5e9ef;"
+                                onfocus="this.style.borderColor='#004161'; this.style.background='#fff';"
+                                onblur="this.style.borderColor='#e5e9ef'; this.style.background='#f5f7fa';">
                         </div>
-
-                        {{-- hidden: keep product_code unchanged --}}
-                        <input type="hidden" name="product_code" x-model="editData.product_code">
 
                         {{-- Category --}}
                         <div>
-                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Category</label>
-                            <select name="category_id" x-model="editData.category_id"
-                                class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
-                                <option value="">None</option>
-                                @foreach($categories as $cat)
-                                    <option value="{{ $cat->id }}"
-                                        {{ ($product && $product->category_id == $cat->id) ? 'selected' : '' }}>
-                                        {{ $cat->name }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <label class="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style="color:#004161;">
+                                Category
+                            </label>
+                            <div class="relative">
+                                <i class="bi bi-tag absolute left-3.5 top-1/2 -translate-y-1/2 text-sm" style="color:#99CC33;"></i>
+                                <select name="category_id" x-model="editData.category_id"
+                                    class="w-full pl-9 pr-4 py-2.5 rounded-xl text-[14px] text-gray-800 outline-none appearance-none transition-all"
+                                    style="background:#f5f7fa; border:1.5px solid #e5e9ef;"
+                                    onfocus="this.style.borderColor='#004161'; this.style.background='#fff';"
+                                    onblur="this.style.borderColor='#e5e9ef'; this.style.background='#f5f7fa';">
+                                    <option value="">No Category</option>
+                                    @foreach($categories as $cat)
+                                        <option value="{{ $cat->id }}"
+                                            {{ ($product && $product->category_id == $cat->id) ? 'selected' : '' }}>
+                                            {{ $cat->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <i class="bi bi-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none"></i>
+                            </div>
                         </div>
 
-                        {{-- Sale Price + Purchase Price --}}
-                        <div class="grid grid-cols-2 gap-2">
+                        {{-- Sale Price + Purchase Price (2-col) --}}
+                        <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Sale Price <span class="text-red-400">*</span></label>
+                                <label class="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style="color:#004161;">
+                                    Sale Price <span class="text-red-400">*</span>
+                                </label>
                                 <div class="relative">
-                                    <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[11px]">$</span>
-                                    <input type="number" name="selling_price" x-model="editData.selling_price" step="0.01" min="0" required
-                                        class="w-full pl-5 pr-2 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] text-gray-800 font-bold focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-black" style="color:#99CC33;">$</span>
+                                    <input type="number" name="selling_price" x-model="editData.selling_price"
+                                        step="0.01" min="0" required
+                                        class="w-full pl-6 pr-2 py-2.5 rounded-xl text-[14px] text-gray-800 font-bold outline-none transition-all"
+                                        style="background:#f5f7fa; border:1.5px solid #e5e9ef;"
+                                        onfocus="this.style.borderColor='#004161'; this.style.background='#fff';"
+                                        onblur="this.style.borderColor='#e5e9ef'; this.style.background='#f5f7fa';">
                                 </div>
                             </div>
                             <div>
-                                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Purchase Price</label>
+                                <label class="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style="color:#004161;">
+                                    Cost Price
+                                </label>
                                 <div class="relative">
-                                    <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[11px]">$</span>
-                                    <input type="number" name="purchase_price" x-model="editData.purchase_price" step="0.01" min="0"
-                                        class="w-full pl-5 pr-2 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] text-gray-800 font-bold focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-black" style="color:#99CC33;">$</span>
+                                    <input type="number" name="purchase_price" x-model="editData.purchase_price"
+                                        step="0.01" min="0"
+                                        class="w-full pl-6 pr-2 py-2.5 rounded-xl text-[14px] text-gray-800 font-bold outline-none transition-all"
+                                        style="background:#f5f7fa; border:1.5px solid #e5e9ef;"
+                                        onfocus="this.style.borderColor='#004161'; this.style.background='#fff';"
+                                        onblur="this.style.borderColor='#e5e9ef'; this.style.background='#f5f7fa';">
                                 </div>
                             </div>
                         </div>
 
                         {{-- Stock Quantity --}}
                         <div>
-                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Stock Quantity</label>
+                            <label class="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style="color:#004161;">
+                                Stock Quantity
+                            </label>
                             <div class="relative">
-                                <i class="bi bi-boxes absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                                <input type="number" name="stock_products" x-model="editData.quantity" step="0.01" min="0"
-                                    class="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] text-gray-800 font-bold focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                                <i class="bi bi-boxes absolute left-3.5 top-1/2 -translate-y-1/2 text-sm" style="color:#004161;"></i>
+                                <input type="number" name="stock_products" x-model="editData.quantity"
+                                    step="0.01" min="0"
+                                    class="w-full pl-9 pr-4 py-2.5 rounded-xl text-[14px] text-gray-800 font-bold outline-none transition-all"
+                                    style="background:#f5f7fa; border:1.5px solid #e5e9ef;"
+                                    onfocus="this.style.borderColor='#004161'; this.style.background='#fff';"
+                                    onblur="this.style.borderColor='#e5e9ef'; this.style.background='#f5f7fa';">
                             </div>
                         </div>
 
-
                     </div>
 
-                    {{-- Save button — always visible at bottom --}}
-                    <div class="shrink-0 px-4 py-3 border-t border-gray-100 bg-white">
+                    {{-- Save button — pinned, always visible --}}
+                    <div class="shrink-0 px-5 pb-5 pt-3 bg-white border-t border-gray-100">
                         <button type="submit" :disabled="saving"
-                            class="w-full py-3 bg-primary text-white font-black rounded-2xl text-[15px] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-                            :class="saving ? 'opacity-60 cursor-not-allowed' : ''">
-                            <i class="bi" :class="saving ? 'bi-arrow-repeat animate-spin' : 'bi-check2-circle'"></i>
+                            class="w-full py-3.5 font-black rounded-2xl text-[15px] flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                            style="background:#004161; color:#fff;"
+                            :style="saving ? 'opacity:0.65; cursor:not-allowed;' : ''">
+                            <i class="bi text-base" :class="saving ? 'bi-arrow-repeat animate-spin' : 'bi-check2-circle'"></i>
                             <span x-text="saving ? 'Saving...' : 'Save Changes'"></span>
                         </button>
                     </div>
