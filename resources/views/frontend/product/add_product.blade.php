@@ -372,7 +372,7 @@
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider w-16 text-center">#</th>
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider leading-tight">Product</th>
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Category</th>
-                        <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Branch</th>
+                        {{-- Branch column hidden --}}
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-right">Selling Price</th>
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-right">Purchase Price</th>
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Stock</th>
@@ -399,23 +399,7 @@
                         <td class="px-5 py-4">
                             <span class="text-[12px] font-semibold text-primary-dark">{{ $product->category->name ?? 'General' }}</span>
                         </td>
-                        <td class="px-5 py-4">
-                            @if($product->stocks->count() > 0)
-                                @php $stock = $product->stocks->firstWhere('branch_id', '!=', null) ?? $product->stocks->first(); $extra = $product->stocks->count() - 1; @endphp
-                                <div class="flex items-center gap-1 text-[12px] font-semibold text-primary-dark">
-                                    @if($stock->branch_id && $stock->branch)
-                                        <span>{{ $stock->branch->name }}</span>
-                                    @else
-                                        <span class="text-gray-300">—</span>
-                                    @endif
-                                    @if($extra > 0)
-                                        <span class="text-gray-400 font-medium" title="{{ $extra }} more locations">(+{{ $extra }})</span>
-                                    @endif
-                                </div>
-                            @else
-                                <span class="text-[12px] font-semibold text-gray-300">-</span>
-                            @endif
-                        </td>
+                        {{-- Branch cell hidden --}}
                         <td class="px-5 py-4 text-right">
                             <span class="text-[12px] font-semibold text-primary-dark">{{ $symbol }} {{ number_format($product->selling_price, 2) }}</span>
                         </td>
