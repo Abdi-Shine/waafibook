@@ -233,10 +233,10 @@
                     {{-- Save button — pinned, always visible --}}
                     <div class="shrink-0 px-5 pb-5 pt-3 bg-white border-t border-gray-100">
                         <button type="submit" :disabled="saving"
-                            class="w-full py-3.5 font-black rounded-2xl text-[15px] flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-                            style="background:#99CC33; color:#004161;"
-                            :style="saving ? 'opacity:0.65; cursor:not-allowed;' : ''">
-                            <i class="bi text-base" :class="saving ? 'bi-arrow-repeat animate-spin' : 'bi-check2-circle'"></i>
+                            class="w-full py-4 font-black rounded-2xl text-[16px] flex items-center justify-center gap-2.5 transition-all active:scale-[0.97] active:brightness-95 shadow-lg"
+                            :class="saving ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'"
+                            style="background:#99CC33; color:#004161; box-shadow: 0 4px 14px rgba(153,204,51,0.45);">
+                            <i class="bi text-lg" :class="saving ? 'bi-arrow-repeat animate-spin' : 'bi-check-circle-fill'"></i>
                             <span x-text="saving ? 'Saving...' : 'Save Changes'"></span>
                         </button>
                     </div>
