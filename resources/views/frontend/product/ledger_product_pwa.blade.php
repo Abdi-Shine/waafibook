@@ -223,7 +223,7 @@
         {{-- Floating Add Product button --}}
         <div class="fixed bottom-20 left-1/2 -translate-x-1/2 z-50">
             <a href="{{ route('product.index', ['action' => 'create']) }}"
-                class="flex items-center gap-2 px-6 py-3.5 bg-red-500 text-white font-bold rounded-full shadow-xl text-[14px] active:scale-95 transition-transform">
+                class="flex items-center gap-2 px-6 py-3.5 bg-accent text-primary font-bold rounded-full shadow-xl text-[14px] active:scale-95 transition-transform">
                 <i class="bi bi-plus-lg text-lg"></i> Add Product
             </a>
         </div>
