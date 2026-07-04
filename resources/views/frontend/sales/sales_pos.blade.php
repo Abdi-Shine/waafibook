@@ -88,10 +88,6 @@
             </div>
 
             <div class="cart-summary">
-                <div class="summary-row">
-                    <span>Subtotal</span>
-                    <span id="subtotal">0.00 {{ $company->currency ?? 'SAR' }}</span>
-                </div>
                 <div class="summary-row total">
                     <span>Total</span>
                     <span id="totalAmount">0.00 {{ $company->currency ?? 'SAR' }}</span>
@@ -265,7 +261,6 @@
             }
             const sub = cart.reduce((s, i) => s + (i.price * i.quantity), 0);
             const total = sub;
-            document.getElementById('subtotal').innerText = sub.toFixed(2) + ' ' + CURRENCY;
             document.getElementById('totalAmount').innerText = total.toFixed(2) + ' ' + CURRENCY;
 
             // Sync mobile elements
