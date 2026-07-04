@@ -230,7 +230,7 @@
     @endforeach
 @endauth
 
-<div class="main-content @auth lg:ml-[260px] @endauth min-h-screen transition-all duration-300">
+<div class="main-content @auth lg:ml-[260px] @endauth min-h-screen transition-all duration-300 overflow-x-hidden">
     @yield('admin')
 </div>
 
