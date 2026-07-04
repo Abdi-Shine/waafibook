@@ -197,12 +197,6 @@
                             </div>
                         </div>
 
-                        {{-- Description --}}
-                        <div>
-                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Description</label>
-                            <textarea name="description" x-model="editData.description" rows="2"
-                                class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none"></textarea>
-                        </div>
 
                     </div>
 
