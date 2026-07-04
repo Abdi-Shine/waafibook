@@ -88,6 +88,10 @@
             </div>
 
             <div class="cart-summary">
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span id="subtotal">0.00 {{ $company->currency ?? 'SAR' }}</span>
+                </div>
                 <div class="summary-row total">
                     <span>Total</span>
                     <span id="totalAmount">0.00 {{ $company->currency ?? 'SAR' }}</span>
@@ -222,10 +226,7 @@
                 return;
             }
 
-            // The field edits this line's total, not the per-unit price, so
-            // back it out across the current quantity (qty stays controlled
-            // by the +/- buttons; only the per-unit price implicitly changes).
-            item.price = item.quantity > 0 ? (amount / item.quantity) : amount;
+            item.price = amount;
             updateCart();
         }
 
@@ -251,16 +252,23 @@
                                 <span class="qty-display">${i.quantity}</span>
                                 <button class="qty-btn" onclick="updateQuantity(${i.id}, 1)">+</button>
                             </div>
-                            <input type="number" class="item-price-input" min="0" step="0.01"
-                                   value="${(i.price * i.quantity).toFixed(2)}"
-                                   onchange="updateItemAmount(${i.id}, this.value)"
-                                   onclick="this.select()">
+                            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+                                <input type="number" class="item-price-input" min="0" step="0.01"
+                                       value="${i.price.toFixed(2)}"
+                                       onchange="updateItemAmount(${i.id}, this.value)"
+                                       onclick="this.select()"
+                                       title="Unit sale price">
+                                <span style="font-size:11px;color:#888;font-weight:600;">
+                                    Total: ${(i.price * i.quantity).toFixed(2)}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 `).join('');
             }
             const sub = cart.reduce((s, i) => s + (i.price * i.quantity), 0);
             const total = sub;
+            document.getElementById('subtotal').innerText = sub.toFixed(2) + ' ' + CURRENCY;
             document.getElementById('totalAmount').innerText = total.toFixed(2) + ' ' + CURRENCY;
 
             // Sync mobile elements
