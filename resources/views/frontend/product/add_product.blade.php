@@ -462,19 +462,31 @@
         
         <div class="bg-white rounded-[1.25rem] w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col relative">
 
-            <div class="px-6 py-6 bg-primary relative overflow-hidden shrink-0">
-                <div class="flex items-center justify-between relative z-10">
-                    <div class="flex items-center gap-4 text-white">
-                        <div class="w-12 h-12 bg-white/10 border border-white/10 rounded-xl flex items-center justify-center text-xl shadow-inner backdrop-blur-md">
-                            <i :class="editMode ? 'bi bi-pencil-square' : 'bi bi-box-seam'"></i>
-                        </div>
-                        <div class="flex flex-col">
-                            <h2 class="text-xl font-bold tracking-tight" x-text="editMode ? 'Edit Product' : 'Add New Product'"></h2>
-                            <p class="text-xs text-primary font-medium mt-0.5">Fill in the required product details below</p>
-                        </div>
-                    </div>
+            {{-- Header — Sale Invoice style --}}
+            <div class="px-5 py-3 bg-primary flex items-center gap-4 shrink-0">
+                {{-- Icon + Title --}}
+                <div class="flex items-center gap-3 text-white">
+                    <i class="bi bi-box-seam text-lg"></i>
+                    <span class="text-[15px] font-bold tracking-tight" x-text="editMode ? 'Edit Product' : 'Add New Product'"></span>
+                </div>
 
-                    <button @click="activeModal = null" class="w-8 h-8 bg-white/10 border border-white/10 text-white rounded-lg hover:bg-white/20 transition-all flex items-center justify-center shadow-sm">
+                {{-- Product | Service toggle --}}
+                <div class="flex items-center gap-2 ml-2">
+                    <span class="text-[13px] font-bold transition-colors"
+                          :class="productData.product_type === 'product' ? 'text-accent' : 'text-white/50'">Product</span>
+                    <button type="button"
+                        @click="productData.product_type = productData.product_type === 'product' ? 'service' : 'product'"
+                        class="relative inline-flex items-center w-11 h-6 rounded-full transition-colors focus:outline-none"
+                        :class="productData.product_type === 'service' ? 'bg-accent' : 'bg-white/20'">
+                        <span class="inline-block w-4 h-4 bg-white rounded-full shadow transition-transform"
+                              :class="productData.product_type === 'service' ? 'translate-x-6' : 'translate-x-1'"></span>
+                    </button>
+                    <span class="text-[13px] font-bold transition-colors"
+                          :class="productData.product_type === 'service' ? 'text-accent' : 'text-white/50'">Service</span>
+                </div>
+
+                <div class="ml-auto">
+                    <button @click="activeModal = null" class="w-8 h-8 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all flex items-center justify-center">
                         <i class="bi bi-x-lg text-xs"></i>
                     </button>
                 </div>
@@ -500,10 +512,7 @@
                     </template>
                     
                     <div class="flex flex-col gap-4">
-                        <!-- Top Row: Switch and Photo -->
-                        <div class="flex items-center justify-between pb-2">
-                            <input type="hidden" name="product_type" value="product">
-                        </div>
+                        <input type="hidden" name="product_type" :value="productData.product_type">
 
                          <!-- Bottom: Form Fields (3-Column Grid) -->
                          <!-- Bottom: Form Fields (3-Column Grid) -->
@@ -606,7 +615,7 @@
 
 
                                 <!-- Row 3 -->
-                                <div class="space-y-1.5 md:col-span-2">
+                                <div class="space-y-1.5" :class="productData.product_type === 'service' ? 'md:col-span-1' : 'md:col-span-2'">
                                     <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Description</label>
                                     <textarea name="description" x-model="productData.description" placeholder="Enter product details..." rows="1"
                                         class="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all min-h-[44px] resize-none overflow-hidden"
