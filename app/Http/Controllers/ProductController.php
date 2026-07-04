@@ -57,7 +57,7 @@ class ProductController extends Controller
         $products = $query->withSum(['stocks' => function($q) use ($userBranchId) {
             /** @var \Illuminate\Database\Eloquent\Relations\HasMany $q */
             if ($userBranchId) $q->where('branch_id', $userBranchId);
-        }], 'quantity')->latest()->paginate(10);
+        }], 'quantity')->latest()->paginate(9999);
 
         $totalProducts = (clone $query)->count();
 
@@ -547,13 +547,21 @@ class ProductController extends Controller
             ->orderBy('product_name')
             ->get();
 
+        $isMobile = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $request->userAgent() ?? '');
+
+        if ($isMobile) {
+            // Mobile: the item list is its own screen; the ledger detail
+            // screen only appears once an item is explicitly tapped.
+            $selectedId = $request->input('product_id');
+            $ledger = $selectedId ? $this->buildLedgerData($selectedId) : null;
+
+            return view('frontend.product.ledger_product_pwa', compact('products', 'type', 'selectedId', 'ledger'));
+        }
+
         $selectedId = $request->input('product_id', $products->first()->id ?? null);
         $ledger = $selectedId ? $this->buildLedgerData($selectedId) : null;
 
-        $isMobile = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $request->userAgent() ?? '');
-        $view = $isMobile ? 'frontend.product.ledger_pwa' : 'frontend.product.ledger';
-
-        return view($view, compact('products', 'selectedId', 'ledger', 'type'));
+        return view('frontend.product.ledger', compact('products', 'selectedId', 'ledger', 'type'));
     }
 
     public function ledgerData($id)

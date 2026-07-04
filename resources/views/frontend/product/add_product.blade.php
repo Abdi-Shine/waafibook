@@ -365,7 +365,7 @@
         </div>
 
         <!-- Table -->
-        <div class="overflow-x-auto">
+        <div class="overflow-y-auto overflow-x-hidden" style="max-height:75vh;">
             <table class="w-full whitespace-nowrap text-left">
                 <thead>
                     <tr class="bg-white border-b border-gray-100">
@@ -444,51 +444,10 @@
         </div>
 
         @if($products->count() > 0)
-            <!-- Pagination -->
-            <div class="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
-                <div class="text-[11px] font-black text-gray-400 uppercase tracking-widest">
-                    Showing {{ $products->firstItem() }} to {{ $products->lastItem() }} of {{ $products->total() }} entries
-                </div>
-                <div class="flex items-center gap-1">
-                    {{-- Previous Page Link --}}
-                    @if ($products->onFirstPage())
-                        <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-300 cursor-not-allowed shadow-sm" disabled>
-                            <i class="bi bi-chevron-left text-[10px]"></i>
-                        </button>
-                    @else
-                        <a href="{{ $products->previousPageUrl() }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-400 hover:bg-gray-50 transition-all shadow-sm">
-                            <i class="bi bi-chevron-left text-[10px]"></i>
-                        </a>
-                    @endif
-
-                    {{-- Pagination Elements --}}
-                    @foreach ($products->links()->elements as $element)
-                        @if (is_string($element))
-                            <span class="px-1 text-gray-400 text-xs">{{ $element }}</span>
-                        @endif
-
-                        @if (is_array($element))
-                            @foreach ($element as $page => $url)
-                                @if ($page == $products->currentPage())
-                                    <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-white font-black text-xs shadow-md shadow-primary/20">{{ $page }}</button>
-                                @else
-                                    <a href="{{ $url }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-400 hover:bg-gray-50 transition-all shadow-sm">{{ $page }}</a>
-                                @endif
-                            @endforeach
-                        @endif
-                    @endforeach
-
-                    {{-- Next Page Link --}}
-                    @if ($products->hasMorePages())
-                        <a href="{{ $products->nextPageUrl() }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-400 hover:bg-gray-50 transition-all shadow-sm">
-                            <i class="bi bi-chevron-right text-[10px]"></i>
-                        </a>
-                    @else
-                        <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-300 cursor-not-allowed shadow-sm" disabled>
-                            <i class="bi bi-chevron-right text-[10px]"></i>
-                        </button>
-                    @endif
-                </div>
+            <div class="px-6 py-3 bg-gray-50/50 border-t border-gray-100">
+                <span class="text-[11px] font-black text-gray-400 uppercase tracking-widest">
+                    Showing {{ $products->total() }} entries
+                </span>
             </div>
         @endif
     </div>
