@@ -91,8 +91,9 @@ class BankTransactionController extends Controller
     public function index(Request $request)
     {
         // 1. Get Accounts
-        $bankAccounts = Account::query()->whereIn('type', ['bank', 'cash'])->where('is_active', 1)->get();
-        $accountCategories = Account::query()->whereNotIn('type', ['parent', 'bank', 'cash'])->get();
+        $cid = auth()->user()->company_id;
+        $bankAccounts = Account::query()->where('company_id', $cid)->whereIn('type', ['bank', 'cash'])->where('is_active', 1)->get();
+        $accountCategories = Account::query()->where('company_id', $cid)->whereIn('code', ['3110', '1140', '2210'])->get();
         $parentAccounts = Account::query()->whereNull('parent_id')->orderBy('code')->get();
         
         // Stats
