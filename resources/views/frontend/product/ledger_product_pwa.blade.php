@@ -108,110 +108,119 @@
              x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
              class="fixed inset-0 bg-black/50 z-50 flex items-end"
              @click.self="editOpen = false">
+
             <div x-show="editOpen"
                  x-transition:enter="transition ease-out duration-300"
                  x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0"
                  x-transition:leave="transition ease-in duration-200"
                  x-transition:leave-start="translate-y-0" x-transition:leave-end="translate-y-full"
-                 class="w-full bg-white rounded-t-3xl shadow-2xl max-h-[92vh] flex flex-col">
+                 class="w-full bg-white rounded-t-3xl shadow-2xl flex flex-col"
+                 style="max-height: 88vh;">
 
-                {{-- Drag handle --}}
-                <div class="flex justify-center pt-3 pb-1 shrink-0">
-                    <div class="w-10 h-1 bg-gray-200 rounded-full"></div>
-                </div>
-
-                {{-- Sheet header --}}
-                <div class="flex items-center justify-between px-5 py-3 shrink-0">
-                    <div>
-                        <p class="text-[16px] font-black text-gray-900">Edit Product</p>
-                        <p class="text-[12px] text-gray-400 mt-0.5" x-text="editData.product_name"></p>
+                {{-- Fixed top: drag handle + header --}}
+                <div class="shrink-0">
+                    <div class="flex justify-center pt-2.5 pb-1">
+                        <div class="w-9 h-1 bg-gray-300 rounded-full"></div>
                     </div>
-                    <button @click="editOpen = false"
-                        class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 active:bg-gray-200">
-                        <i class="bi bi-x-lg text-sm"></i>
-                    </button>
+                    <div class="flex items-center justify-between px-5 py-2.5 border-b border-gray-100">
+                        <div>
+                            <p class="text-[15px] font-black text-gray-900">Edit Product</p>
+                            <p class="text-[11px] text-gray-400 truncate max-w-[220px]" x-text="editData.product_name"></p>
+                        </div>
+                        <button type="button" @click="editOpen = false"
+                            class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 active:bg-gray-200 shrink-0">
+                            <i class="bi bi-x-lg text-sm"></i>
+                        </button>
+                    </div>
                 </div>
 
-                {{-- Edit Form --}}
-                <form id="mobileEditForm" @submit.prevent="submitEdit()" class="overflow-y-auto flex-1 px-5 pb-6 pt-2 space-y-3">
+                {{-- Scrollable fields --}}
+                <form id="mobileEditForm" @submit.prevent="submitEdit()" class="flex flex-col flex-1 min-h-0">
                     @csrf
                     <input type="hidden" name="_method" value="PUT">
                     <input type="hidden" name="product_type" x-model="editData.product_type">
 
-                    {{-- Product Name --}}
-                    <div>
-                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Product Name <span class="text-red-400">*</span></label>
-                        <input type="text" name="product_name" x-model="editData.product_name" required
-                            class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-[14px] text-gray-800 font-medium focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
-                    </div>
+                    <div class="overflow-y-auto flex-1 px-4 py-3 space-y-2.5">
 
-                    {{-- Code + Category --}}
-                    <div class="grid grid-cols-2 gap-3">
+                        {{-- Product Name --}}
                         <div>
-                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Code <span class="text-red-400">*</span></label>
-                            <input type="text" name="product_code" x-model="editData.product_code" required
-                                class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-[13px] text-gray-800 font-medium focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Product Name <span class="text-red-400">*</span></label>
+                            <input type="text" name="product_name" x-model="editData.product_name" required
+                                class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] text-gray-800 font-medium focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
                         </div>
-                        <div>
-                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Category</label>
-                            <select name="category_id" x-model="editData.category_id"
-                                class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-[13px] text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none">
-                                <option value="">None</option>
-                                @foreach($categories as $cat)
-                                    <option value="{{ $cat->id }}"
-                                        {{ ($product && $product->category_id == $cat->id) ? 'selected' : '' }}>
-                                        {{ $cat->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
 
-                    {{-- Prices --}}
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Sale Price <span class="text-red-400">*</span></label>
-                            <div class="relative">
-                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[12px]">$</span>
-                                <input type="number" name="selling_price" x-model="editData.selling_price" step="0.01" min="0" required
-                                    class="w-full pl-6 pr-2 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-[14px] text-gray-800 font-bold focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                        {{-- Code + Category --}}
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Code <span class="text-red-400">*</span></label>
+                                <input type="text" name="product_code" x-model="editData.product_code" required
+                                    class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] text-gray-800 font-medium focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Category</label>
+                                <select name="category_id" x-model="editData.category_id"
+                                    class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                                    <option value="">None</option>
+                                    @foreach($categories as $cat)
+                                        <option value="{{ $cat->id }}"
+                                            {{ ($product && $product->category_id == $cat->id) ? 'selected' : '' }}>
+                                            {{ $cat->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
-                        <div>
-                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Purchase Price</label>
-                            <div class="relative">
-                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[12px]">$</span>
-                                <input type="number" name="purchase_price" x-model="editData.purchase_price" step="0.01" min="0"
-                                    class="w-full pl-6 pr-2 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-[14px] text-gray-800 font-bold focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+
+                        {{-- Sale Price + Purchase Price --}}
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Sale Price <span class="text-red-400">*</span></label>
+                                <div class="relative">
+                                    <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[11px]">$</span>
+                                    <input type="number" name="selling_price" x-model="editData.selling_price" step="0.01" min="0" required
+                                        class="w-full pl-5 pr-2 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] text-gray-800 font-bold focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Purchase Price</label>
+                                <div class="relative">
+                                    <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[11px]">$</span>
+                                    <input type="number" name="purchase_price" x-model="editData.purchase_price" step="0.01" min="0"
+                                        class="w-full pl-5 pr-2 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] text-gray-800 font-bold focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {{-- Quantity --}}
-                    <div>
-                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Stock Quantity</label>
-                        <div class="relative">
-                            <i class="bi bi-boxes absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                            <input type="number" name="stock_products" x-model="editData.quantity" step="0.01" min="0"
-                                class="w-full pl-9 pr-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-[14px] text-gray-800 font-bold focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                        {{-- Stock Quantity --}}
+                        <div>
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Stock Quantity</label>
+                            <div class="relative">
+                                <i class="bi bi-boxes absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                                <input type="number" name="stock_products" x-model="editData.quantity" step="0.01" min="0"
+                                    class="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] text-gray-800 font-bold focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                            </div>
                         </div>
+
+                        {{-- Description --}}
+                        <div>
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Description</label>
+                            <textarea name="description" x-model="editData.description" rows="2"
+                                class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none"></textarea>
+                        </div>
+
                     </div>
 
-                    {{-- Description --}}
-                    <div>
-                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Description</label>
-                        <textarea name="description" x-model="editData.description" rows="2"
-                            class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-[13px] text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none"></textarea>
+                    {{-- Save button — always visible at bottom --}}
+                    <div class="shrink-0 px-4 py-3 border-t border-gray-100 bg-white">
+                        <button type="submit" :disabled="saving"
+                            class="w-full py-3 bg-primary text-white font-black rounded-2xl text-[15px] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                            :class="saving ? 'opacity-60 cursor-not-allowed' : ''">
+                            <i class="bi" :class="saving ? 'bi-arrow-repeat animate-spin' : 'bi-check2-circle'"></i>
+                            <span x-text="saving ? 'Saving...' : 'Save Changes'"></span>
+                        </button>
                     </div>
-
-                    {{-- Save Button --}}
-                    <button type="submit" :disabled="saving"
-                        class="w-full py-3.5 bg-primary text-white font-black rounded-2xl text-[15px] active:opacity-80 transition-all flex items-center justify-center gap-2 mt-1"
-                        :class="saving ? 'opacity-60 cursor-not-allowed' : ''">
-                        <i class="bi" :class="saving ? 'bi-arrow-repeat animate-spin' : 'bi-check2-circle'"></i>
-                        <span x-text="saving ? 'Saving...' : 'Save Changes'"></span>
-                    </button>
                 </form>
+
             </div>
         </div>
 
