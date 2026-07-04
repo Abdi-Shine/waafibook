@@ -8,10 +8,9 @@
 
 @if($selectedId && $ledger)
     {{-- DETAIL SCREEN --}}
-    <div x-data="{
+    <div class="flex flex-col bg-gray-50 min-h-screen pb-24" x-data="{
         txnSearch: '',
         ledger: @js($ledger),
-
         get filteredTransactions() {
             if (!this.txnSearch) return this.ledger.transactions;
             const term = this.txnSearch.toLowerCase();
@@ -21,109 +20,126 @@
                 String(t.ref || '').toLowerCase().includes(term)
             );
         },
-
         deleteProductItem(id, name) {
             deleteRecordWithPassword('{{ url('/products/delete') }}/' + id, name, {
                 title: 'Delete Item?',
                 text: `Are you sure you want to delete ${name}? This action cannot be undone.`,
-                onBlocked: () => Swal.fire({
-                    icon: 'error',
-                    title: 'Cannot Delete',
-                    text: 'This product cannot be deleted as it is already used in transactions. Please delete all related transactions before deleting this product.',
-                    confirmButtonColor: '#004161'
-                }),
+                onBlocked: () => Swal.fire({ icon:'error', title:'Cannot Delete', text:'This product is used in transactions.', confirmButtonColor:'#004161' }),
                 onSuccess: () => { window.location = '{{ route('product.ledger', ['type' => $type ?? 'product']) }}'; }
             });
         },
-
         deleteTransaction(txn) {
             let url = null;
-            if (txn.type === 'Sale' && txn.ref) {
-                url = '{{ url('/sales/invoices') }}/' + txn.ref;
-            } else if (txn.type === 'Purchase Order' && txn.ref) {
-                url = '{{ url('/purchase/bills') }}/' + txn.ref;
-            } else if (txn.type === 'Opening Stock') {
-                url = '{{ url('/products') }}/{{ $selectedId }}/opening-stock';
-            }
+            if (txn.type === 'Sale' && txn.ref) url = '{{ url('/sales/invoices') }}/' + txn.ref;
+            else if (txn.type === 'Purchase Order' && txn.ref) url = '{{ url('/purchase/bills') }}/' + txn.ref;
+            else if (txn.type === 'Opening Stock') url = '{{ url('/products') }}/{{ $selectedId }}/opening-stock';
             if (!url) return;
-
             deleteRecordWithPassword(url, txn.type, {
                 title: 'Delete Transaction?',
-                text: `Are you sure you want to delete this ${txn.type.toLowerCase()}? This action cannot be undone.`,
+                text: `Delete this ${txn.type.toLowerCase()}? This cannot be undone.`,
                 onSuccess: () => window.location.reload()
             });
         }
     }">
-        <div class="p-4 flex items-center gap-3 bg-white border-b border-gray-100">
-            <a href="{{ route('product.ledger', ['type' => $type ?? 'product']) }}" class="w-8 h-8 flex items-center justify-center text-primary-dark shrink-0">
-                <i class="bi bi-arrow-left text-lg"></i>
+
+        {{-- Top bar --}}
+        <div class="flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-100 sticky top-0 z-10">
+            <a href="{{ route('product.ledger', ['type' => $type ?? 'product']) }}"
+               class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 text-gray-700 shrink-0">
+                <i class="bi bi-arrow-left text-base"></i>
             </a>
-            <h1 class="text-[15px] font-bold text-primary-dark uppercase tracking-wide truncate">{{ $ledger['product']['name'] }}</h1>
-            <button @click="deleteProductItem({{ $selectedId }}, {{ Js::from($ledger['product']['name']) }})" title="Delete Item" class="ml-auto w-8 h-8 flex items-center justify-center text-primary hover:text-red-500 transition-colors shrink-0">
-                <i class="bi bi-trash3"></i>
+            <h1 class="flex-1 text-[16px] font-bold text-gray-900 uppercase truncate">
+                {{ $ledger['product']['name'] }}
+            </h1>
+            <a href="{{ route('product.index', ['action' => 'edit', 'id' => $selectedId]) }}"
+               class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 shrink-0">
+                <i class="bi bi-pencil text-sm"></i>
+            </a>
+            <button @click="deleteProductItem({{ $selectedId }}, {{ Js::from($ledger['product']['name']) }})"
+                class="w-9 h-9 flex items-center justify-center rounded-full bg-red-50 text-red-400 shrink-0">
+                <i class="bi bi-trash3 text-sm"></i>
             </button>
         </div>
 
-        <div class="p-4 bg-white border-b border-gray-100">
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wide">Sale Price</p>
-                    <p class="text-[14px] font-bold text-accent">{{ $symbol }} {{ number_format($ledger['product']['selling_price'], 2) }}</p>
-                </div>
-                <div>
-                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wide">Purchase Price</p>
-                    <p class="text-[14px] font-bold text-accent">{{ $symbol }} {{ number_format($ledger['product']['purchase_price'], 2) }}</p>
-                </div>
-                <div>
-                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wide">Stock Quantity</p>
-                    <p class="text-[14px] font-bold text-primary-dark">{{ $ledger['product']['stock_quantity'] }}</p>
-                </div>
-                <div>
-                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wide">Stock Value</p>
-                    <p class="text-[14px] font-bold text-primary-dark">{{ $symbol }} {{ number_format($ledger['product']['stock_value'], 2) }}</p>
-                </div>
+        {{-- Price cards row --}}
+        <div class="grid grid-cols-2 gap-3 px-4 pt-4">
+            <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+                <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Sale Price</p>
+                <p class="text-[18px] font-black text-accent">{{ $symbol }} {{ number_format($ledger['product']['selling_price'], 2) }}</p>
             </div>
+            <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+                <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Purchase Price</p>
+                <p class="text-[18px] font-black text-accent">{{ $symbol }} {{ number_format($ledger['product']['purchase_price'], 2) }}</p>
+            </div>
+        </div>
 
+        {{-- Adjust Item button --}}
+        <div class="px-4 pt-3">
             <a href="{{ route('stock-adjustment.view') }}"
-                class="mt-4 flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-primary text-white font-bold rounded-[0.5rem] text-[12px] uppercase tracking-wide hover:bg-primary/90 transition-all">
-                <i class="bi bi-sliders"></i> Adjust Item
+               class="flex items-center justify-center gap-2 w-full py-3 bg-primary text-white font-bold rounded-2xl text-[13px] uppercase tracking-wide shadow-sm active:opacity-80 transition-opacity">
+                <i class="bi bi-sliders text-base"></i> Adjust Item
             </a>
         </div>
 
-        <div class="p-4">
+        {{-- Stock info --}}
+        <div class="px-4 pt-3">
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4 flex justify-between items-center">
+                <div>
+                    <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wide">Stock Quantity</p>
+                    <p class="text-[16px] font-black text-gray-900 mt-0.5">{{ $ledger['product']['stock_quantity'] }}</p>
+                </div>
+                <div class="w-px h-10 bg-gray-100"></div>
+                <div class="text-right">
+                    <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wide">Stock Value</p>
+                    <p class="text-[16px] font-black text-gray-900 mt-0.5">{{ $symbol }} {{ number_format($ledger['product']['stock_value'], 2) }}</p>
+                </div>
+            </div>
+        </div>
+
+        {{-- Transactions --}}
+        <div class="px-4 pt-4">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-[13px] font-black text-gray-700 uppercase tracking-wider">Transactions</h2>
+            </div>
+
             <div class="relative mb-3">
-                <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-blue-400 text-sm"></i>
                 <input type="text" x-model="txnSearch" placeholder="Search transactions..."
-                    class="w-full pl-9 pr-3 py-2.5 bg-white border border-gray-200 rounded-[0.5rem] text-[13px] font-medium text-gray-700 focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                    class="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-[13px] text-gray-700 focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
             </div>
 
             <div class="space-y-2">
                 <template x-for="txn in filteredTransactions" :key="txn.type + txn.ref + txn.date">
-                    <div class="bg-white rounded-[0.75rem] border border-gray-200/80 p-3.5">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-2 min-w-0">
-                                <span class="w-2 h-2 rounded-full shrink-0" :class="txn.type_color"></span>
-                                <span class="text-[13px] font-bold text-primary-dark truncate" x-text="txn.type"></span>
-                                <span class="text-[12px] text-gray-400" x-text="txn.ref ? '#' + txn.ref : ''"></span>
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full shrink-0 mt-0.5" :class="txn.type_color"></span>
+                                    <span class="text-[14px] font-bold text-gray-900" x-text="txn.type"></span>
+                                    <span class="text-[12px] text-gray-400 font-medium" x-text="txn.ref ? '#' + txn.ref : ''"></span>
+                                </div>
+                                <p class="text-[12px] text-gray-500 mt-1 ml-4 truncate" x-text="txn.name"></p>
                             </div>
-                            <button @click="deleteTransaction(txn)" title="Delete Transaction" class="shrink-0 text-primary hover:text-red-500 transition-colors">
-                                <i class="bi bi-trash3"></i>
+                            <button @click="deleteTransaction(txn)" class="shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-red-50 text-red-400">
+                                <i class="bi bi-trash3 text-xs"></i>
                             </button>
                         </div>
-                        <p class="text-[12px] text-gray-500 mt-1 truncate" x-text="txn.name"></p>
-                        <div class="flex items-center justify-between mt-2 text-[12px]">
-                            <span class="text-gray-400" x-text="txn.date"></span>
-                            <span class="text-gray-700" x-text="'Qty: ' + txn.quantity"></span>
-                            <span class="text-gray-700" x-text="txn.price !== null ? '{{ $symbol }} ' + parseFloat(txn.price).toFixed(2) : '-'"></span>
-                            <span class="font-bold text-primary-dark" x-text="txn.status ?? ''"></span>
+                        <div class="mt-3 flex items-center gap-3 flex-wrap text-[12px]">
+                            <span class="px-2 py-1 bg-gray-100 text-gray-500 rounded-lg font-medium" x-text="txn.date"></span>
+                            <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-lg font-bold" x-text="'Qty: ' + txn.quantity"></span>
+                            <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-lg font-bold" x-text="txn.price !== null ? '{{ $symbol }} ' + parseFloat(txn.price).toFixed(2) : '-'"></span>
+                            <template x-if="txn.status">
+                                <span class="px-2 py-1 bg-accent/10 text-primary rounded-lg font-bold" x-text="txn.status"></span>
+                            </template>
                         </div>
                     </div>
                 </template>
                 <template x-if="!filteredTransactions.length">
-                    <p class="py-10 text-center text-[13px] text-gray-400">No transactions found for this item.</p>
+                    <p class="py-16 text-center text-[13px] text-gray-400">No transactions found.</p>
                 </template>
             </div>
         </div>
+
     </div>
 @else
     {{-- LIST SCREEN --}}

@@ -417,7 +417,9 @@
                         </td>
                         <td class="px-5 py-4 text-right">
                             <div class="flex items-center justify-end gap-1.5 transition-opacity">
-                                <a href="{{ route('product.ledger', ['product_id' => $product->id]) }}" class="btn-action-edit" title="View Transactions">
+                                <a href="{{ route('product.ledger', ['product_id' => $product->id]) }}"
+                                   onclick="if(window.innerWidth<1024){this.href=this.href+(this.href.includes('?')?'&':'?')+'mobile=1';}"
+                                   class="btn-action-edit" title="View Transactions">
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 <button @click="openEditModal(@js($product))" class="btn-action-edit" title="Edit Product">
