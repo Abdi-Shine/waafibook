@@ -234,7 +234,7 @@
                     <div class="shrink-0 px-5 pb-5 pt-3 bg-white border-t border-gray-100">
                         <button type="submit" :disabled="saving"
                             class="w-full py-3.5 font-black rounded-2xl text-[15px] flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-                            style="background:#004161; color:#fff;"
+                            style="background:#99CC33; color:#004161;"
                             :style="saving ? 'opacity:0.65; cursor:not-allowed;' : ''">
                             <i class="bi text-base" :class="saving ? 'bi-arrow-repeat animate-spin' : 'bi-check2-circle'"></i>
                             <span x-text="saving ? 'Saving...' : 'Save Changes'"></span>
