@@ -763,10 +763,10 @@ class ProductController extends Controller
                     
                     $cleanPurchase = preg_replace('/[^-0-9.]/', '', $data[4] ?? '0');
                     $cleanSelling = preg_replace('/[^-0-9.]/', '', $data[5] ?? '0');
-                    $cleanStock = preg_replace('/[^0-9]/', '', $data[6] ?? '0');
+                    $cleanStock = preg_replace('/[^0-9.]/', '', $data[6] ?? '0');
 
                     $category = Category::query()->firstOrCreate(['name' => $categoryName]);
-                    $stockQty = (int) $cleanStock;
+                    $stockQty = (float) $cleanStock;
 
                     // stock_products isn't a real column on products — it's a
                     // transient form field that store()/update() translate
