@@ -191,37 +191,7 @@
                     </div>
                 </div>
             @endif
-
-            <!-- 6. Services -->
-            @if(Auth::user()->hasPermission('Services'))
-                <div class="space-y-1">
-                    <button @click="toggleMenu('services')"
-                        class="flex items-center gap-3 px-4 py-3 text-white/70 hover:bg-white/5 hover:text-white rounded-xl font-semibold text-[14px] transition-all duration-200 w-full"
-                        :class="isOpen('services') ? 'bg-white/5 text-white' : ''">
-                        <i class="bi bi-tools text-lg"></i>
-                        <span>Services</span>
-                        <i class="bi bi-chevron-down ml-auto text-[10px] transition-transform duration-200"
-                            :class="isOpen('services') ? 'rotate-180' : ''"></i>
-                    </button>
-                    <div x-show="isOpen('services')" x-transition:enter="transition ease-out duration-200"
-                        x-transition:enter-start="opacity-0 max-h-0" x-transition:enter-end="opacity-100 max-h-[500px]"
-                        x-transition:leave="transition ease-in duration-150"
-                        x-transition:leave-start="opacity-100 max-h-[500px]" x-transition:leave-end="opacity-0 max-h-0"
-                        class="space-y-1 overflow-hidden transition-all duration-300">
-                        <a href="{{ route('service-orders.index') }}"
-                            class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('service-orders.*') ? 'text-white bg-white/5' : '' }}">
-                            <i class="bi bi-plus text-lg"></i> Service Orders</a>
-                        <a href="{{ route('service-quotations.index') }}"
-                            class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('service-quotations.*') ? 'text-white bg-white/5' : '' }}">
-                            <i class="bi bi-plus text-lg"></i> Quotations</a>
-                        <a href="{{ route('service-schedules.index') }}"
-                            class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('service-schedules.*') ? 'text-white bg-white/5' : '' }}">
-                            <i class="bi bi-plus text-lg"></i> Recurring Schedules</a>
-                    </div>
-                </div>
-            @endif
-
-            <!-- 7. Expenses & Payroll -->
+            <!-- 6. Expenses & Payroll -->
             @if(Auth::user()->hasPermission('Expenses'))
                 <div class="space-y-1">
                     <button @click="toggleMenu('users')"
@@ -335,19 +305,6 @@
                         <a href="{{ route('reports.sales_purchase_by_party') }}"
                             class="flex items-center gap-3 pl-8 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('reports.sales_purchase_by_party') ? 'text-white bg-white/5' : '' }}">
                             <i class="bi bi-plus text-lg"></i> Party Trade</a>
-
-                        {{-- Service Reports --}}
-                        @if(Auth::user()->hasPermission('Services'))
-                        <a href="{{ route('reports.service-revenue') }}"
-                            class="flex items-center gap-3 pl-8 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('reports.service-revenue') ? 'text-white bg-white/5' : '' }}">
-                            <i class="bi bi-plus text-lg"></i> Service Revenue</a>
-                        <a href="{{ route('reports.technician-performance') }}"
-                            class="flex items-center gap-3 pl-8 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('reports.technician-performance') ? 'text-white bg-white/5' : '' }}">
-                            <i class="bi bi-plus text-lg"></i> Technician Performance</a>
-                        <a href="{{ route('reports.overdue-services') }}"
-                            class="flex items-center gap-3 pl-8 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('reports.overdue-services') ? 'text-white bg-white/5' : '' }}">
-                            <i class="bi bi-plus text-lg"></i> Overdue Services</a>
-                        @endif
                     </div>
                 </div>
             @endif
