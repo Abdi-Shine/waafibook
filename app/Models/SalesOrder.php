@@ -91,6 +91,11 @@ class SalesOrder extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function serviceOrder()
+    {
+        return $this->hasOne(\App\Models\ServiceOrder::class);
+    }
+
     public function getStatusLabelAttribute()
     {
         return match($this->status) {
