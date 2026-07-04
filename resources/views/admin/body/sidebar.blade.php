@@ -230,9 +230,11 @@
                         x-transition:leave="transition ease-in duration-150"
                         x-transition:leave-start="opacity-100 max-h-[500px]" x-transition:leave-end="opacity-0 max-h-0"
                         class="space-y-1 overflow-hidden transition-all duration-300">
+                        @if(Auth::user()->role === 'admin')
                         <a href="{{ route('account.index') }}"
                             class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200"><i
                                 class="bi bi-plus text-lg"></i> Chart of Accounts</a>
+                        @endif
                         <a href="{{ route('account_management.index') }}"
                             class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200"><i
                                 class="bi bi-plus text-lg"></i> Accounts</a>
