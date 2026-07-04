@@ -149,26 +149,22 @@
                                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] text-gray-800 font-medium focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
                         </div>
 
-                        {{-- Code + Category --}}
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Code <span class="text-red-400">*</span></label>
-                                <input type="text" name="product_code" x-model="editData.product_code" required
-                                    class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] text-gray-800 font-medium focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
-                            </div>
-                            <div>
-                                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Category</label>
-                                <select name="category_id" x-model="editData.category_id"
-                                    class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
-                                    <option value="">None</option>
-                                    @foreach($categories as $cat)
-                                        <option value="{{ $cat->id }}"
-                                            {{ ($product && $product->category_id == $cat->id) ? 'selected' : '' }}>
-                                            {{ $cat->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
+                        {{-- hidden: keep product_code unchanged --}}
+                        <input type="hidden" name="product_code" x-model="editData.product_code">
+
+                        {{-- Category --}}
+                        <div>
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Category</label>
+                            <select name="category_id" x-model="editData.category_id"
+                                class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                                <option value="">None</option>
+                                @foreach($categories as $cat)
+                                    <option value="{{ $cat->id }}"
+                                        {{ ($product && $product->category_id == $cat->id) ? 'selected' : '' }}>
+                                        {{ $cat->name }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
 
                         {{-- Sale Price + Purchase Price --}}
