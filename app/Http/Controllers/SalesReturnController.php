@@ -165,6 +165,7 @@ class SalesReturnController extends Controller
             'reason'      => 'required|string|max:255',
             'return_date' => 'required|date',
             'notes'       => 'nullable|string',
+            'status'      => 'required|in:approved,pending,rejected',
         ]);
 
         /** @var SalesReturn $return */
@@ -173,6 +174,7 @@ class SalesReturnController extends Controller
             'reason'      => $request->reason,
             'return_date' => $request->return_date,
             'notes'       => $request->notes,
+            'status'      => $request->status,
         ]);
 
         return response()->json(['success' => true, 'message' => 'Credit note updated successfully.']);

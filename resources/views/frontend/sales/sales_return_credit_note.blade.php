@@ -18,6 +18,7 @@
             editReason: '',
             editDate: '',
             editNotes: '',
+            editStatus: 'approved',
             isEditSubmitting: false,
 
             openViewModal(r) { this.activeReturn = r; this.showViewModal = true; },
@@ -26,6 +27,7 @@
                 this.editReason = r.reason;
                 this.editDate   = r.return_date;
                 this.editNotes  = r.notes ?? '';
+                this.editStatus = r.status ?? 'approved';
                 this.showEditModal = true;
             },
             async submitEdit() {
@@ -35,6 +37,7 @@
                         reason: this.editReason,
                         return_date: this.editDate,
                         notes: this.editNotes,
+                        status: this.editStatus,
                         _token: document.querySelector('meta[name=csrf-token]').content,
                     });
                     Swal.fire('Updated', res.data?.message || 'Credit note updated.', 'success')
@@ -469,16 +472,30 @@
 
                 <!-- Body -->
                 <div class="px-6 py-6 space-y-5">
-                    <div class="space-y-1.5">
-                        <label class="block text-[11px] font-black text-primary uppercase tracking-wider">Return Reason <span class="text-primary">*</span></label>
-                        <div class="relative">
-                            <select x-model="editReason" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-primary focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
-                                <option value="Defective">Defective Product</option>
-                                <option value="Wrong">Wrong Item Delivered</option>
-                                <option value="Damaged">Damaged in Transit</option>
-                                <option value="Other">Other Reason</option>
-                            </select>
-                            <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div class="space-y-1.5">
+                            <label class="block text-[11px] font-black text-primary uppercase tracking-wider">Return Reason <span class="text-primary">*</span></label>
+                            <div class="relative">
+                                <select x-model="editReason" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-primary focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+                                    <option value="Defective">Defective Product</option>
+                                    <option value="Wrong">Wrong Item Delivered</option>
+                                    <option value="Damaged">Damaged in Transit</option>
+                                    <option value="Other">Other Reason</option>
+                                </select>
+                                <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="block text-[11px] font-black text-primary uppercase tracking-wider">Status <span class="text-primary">*</span></label>
+                            <div class="relative">
+                                <select x-model="editStatus" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-primary focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+                                    <option value="approved">Approved</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="rejected">Rejected</option>
+                                </select>
+                                <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+                            </div>
                         </div>
                     </div>
 
