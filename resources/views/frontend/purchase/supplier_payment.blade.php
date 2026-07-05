@@ -167,7 +167,7 @@
                         </td>
                         <td class="px-5 py-4">
                             <span class="text-[12px] font-black text-primary-dark block">{{ $item->voucher_no }}</span>
-                            <span class="text-[11px] font-semibold text-gray-400 block mt-0.5">{{ $item->supplier->name ?? 'N/A' }}</span>
+                            <span class="text-[12px] font-semibold text-primary block mt-0.5">{{ $item->supplier->name ?? 'N/A' }}</span>
                         </td>
                         <td class="px-5 py-4">
                             <div class="flex flex-col gap-1 max-w-[200px]">
