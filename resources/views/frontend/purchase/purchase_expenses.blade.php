@@ -168,9 +168,13 @@
                                 {{ $expense->expense_date ? \Carbon\Carbon::parse($expense->expense_date)->format('d M Y') : 'N/A' }}
                             </td>
                             <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark">
-                                <a href="{{ route('purchase.bill.show', $expense->purchase_id) }}" class="hover:text-primary transition-colors">
-                                    #{{ $expense->purchase->bill_number ?? 'N/A' }}
-                                </a>
+                                @if($expense->purchase_id)
+                                    <a href="{{ route('purchase.bill.show', $expense->purchase_id) }}" class="hover:text-primary transition-colors">
+                                        #{{ $expense->purchase->bill_number ?? 'N/A' }}
+                                    </a>
+                                @else
+                                    <span class="text-gray-400">—</span>
+                                @endif
                             </td>
                             <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark">{{ $expense->expense_name }}</td>
                             <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark">
