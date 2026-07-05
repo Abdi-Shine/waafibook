@@ -398,6 +398,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/payment-in/store', [App\Http\Controllers\PaymentInController::class, 'store'])->name('payment_in.store');
         Route::get('/payment-in/view/{id}', [App\Http\Controllers\PaymentInController::class, 'view'])->name('payment_in.view')->middleware('tenant.owns:payment_ins');
         Route::get('/payment-in/download/{id}', [App\Http\Controllers\PaymentInController::class, 'download'])->name('payment_in.download')->middleware('tenant.owns:payment_ins');
+        Route::get('/payment-in/print/{id}', [App\Http\Controllers\PaymentInController::class, 'printReceipt'])->name('payment_in.print')->middleware('tenant.owns:payment_ins');
         Route::delete('/payment-in/delete/{id}', [App\Http\Controllers\PaymentInController::class, 'delete'])->name('payment_in.delete')->middleware(['tenant.owns:payment_ins', 'permission:Sales & POS,delete', 'delete.password']);
         Route::post('/payment-in/update-status/{id}', [App\Http\Controllers\PaymentInController::class, 'updateStatus'])->name('payment_in.update-status')->middleware('tenant.owns:payment_ins');
 
@@ -515,31 +516,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/reports/expense-item/excel', [App\Http\Controllers\ReportController::class, 'exportExpenseItemExcel'])->name('reports.expense_item_report.excel');
 
         Route::get('/audit-logs', [App\Http\Controllers\CompanyController::class, 'auditLogs'])->name('audit-logs');
-
-        // Service Module
-        // Service Orders
-        Route::resource('service-orders', App\Http\Controllers\ServiceOrderController::class)->middleware('permission:Services');
-        Route::patch('/service-orders/{id}/status', [App\Http\Controllers\ServiceOrderController::class, 'updateStatus'])->name('service-orders.update-status')->middleware('permission:Services');
-        Route::post('/service-orders/{id}/generate-invoice', [App\Http\Controllers\ServiceOrderController::class, 'generateInvoice'])->name('service-orders.generate-invoice')->middleware('permission:Services');
-        Route::get('/service-orders/{id}/pdf', [App\Http\Controllers\ServiceOrderController::class, 'pdf'])->name('service-orders.pdf')->middleware('permission:Services');
-
-        // Service Quotations
-        Route::resource('service-quotations', App\Http\Controllers\ServiceQuotationController::class)->middleware('permission:Services');
-        Route::post('/service-quotations/{id}/convert', [App\Http\Controllers\ServiceQuotationController::class, 'convertToOrder'])->name('service-quotations.convert')->middleware('permission:Services');
-        Route::get('/service-quotations/{id}/pdf', [App\Http\Controllers\ServiceQuotationController::class, 'pdf'])->name('service-quotations.pdf')->middleware('permission:Services');
-
-        // Service Schedules (handled by ServiceQuotationController schedule methods)
-        Route::get('/service-schedules', [App\Http\Controllers\ServiceQuotationController::class, 'schedules'])->name('service-schedules.index')->middleware('permission:Services');
-        Route::get('/service-schedules/create', [App\Http\Controllers\ServiceQuotationController::class, 'createSchedule'])->name('service-schedules.create')->middleware('permission:Services');
-        Route::post('/service-schedules', [App\Http\Controllers\ServiceQuotationController::class, 'storeSchedule'])->name('service-schedules.store')->middleware('permission:Services');
-        Route::get('/service-schedules/{id}/edit', [App\Http\Controllers\ServiceQuotationController::class, 'editSchedule'])->name('service-schedules.edit')->middleware('permission:Services');
-        Route::put('/service-schedules/{id}', [App\Http\Controllers\ServiceQuotationController::class, 'updateSchedule'])->name('service-schedules.update')->middleware('permission:Services');
-        Route::delete('/service-schedules/{id}', [App\Http\Controllers\ServiceQuotationController::class, 'destroySchedule'])->name('service-schedules.destroy')->middleware('permission:Services');
-
-        // Service Reports
-        Route::get('/reports/service-revenue', [App\Http\Controllers\ReportController::class, 'serviceRevenueReport'])->name('reports.service-revenue');
-        Route::get('/reports/technician-performance', [App\Http\Controllers\ReportController::class, 'technicianPerformanceReport'])->name('reports.technician-performance');
-        Route::get('/reports/overdue-services', [App\Http\Controllers\ReportController::class, 'overdueServicesReport'])->name('reports.overdue-services');
     });
 
     // Subscription Management — admin-only, same as every other module

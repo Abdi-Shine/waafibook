@@ -41,8 +41,8 @@ class PaymentInController extends Controller
             $query->where('status', $request->status);
         }
 
-        if ($request->method) {
-            $query->where('payment_method', $request->method);
+        if ($request->input('method')) {
+            $query->where('payment_method', $request->input('method'));
         }
 
         if ($request->date) {
@@ -248,9 +248,19 @@ class PaymentInController extends Controller
         $payment = PaymentIn::query()->with('customer', 'creator')->findOrFail($id);
         /** @var Company|null $company */
         $company = Company::find(auth()->user()->company_id);
-        
-        $pdf = Pdf::loadView('frontend.sales.pdf_receipt', compact('payment', 'company'));
-        return $pdf->download('Receipt_' . $payment->receipt_no . '.pdf');
+
+        $pdf = Pdf::loadView('frontend.sales.pdf_receipt_download', compact('payment', 'company'));
+        return $pdf->download('Receipt_' . ($payment->receipt_no ?? $payment->id) . '.pdf');
+    }
+
+    public function printReceipt($id)
+    {
+        /** @var PaymentIn $payment */
+        $payment = PaymentIn::query()->with('customer', 'creator')->findOrFail($id);
+        /** @var Company|null $company */
+        $company = Company::find(auth()->user()->company_id);
+
+        return view('frontend.sales.pdf_receipt_print', compact('payment', 'company'));
     }
 
     public function updateStatus(Request $request, $id)

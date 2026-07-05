@@ -51,10 +51,16 @@
                 <p class="text-[11px] font-bold text-gray-400">Receipt #{{ $payment->id }}</p>
             </div>
         </div>
-        <a href="{{ route('payment_in.download', $payment->id) }}"
-           class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-primary-dark font-bold rounded-lg hover:bg-gray-50 transition-all text-xs shadow-sm">
-            <i class="bi bi-download text-primary"></i> Download PDF
-        </a>
+        <div class="flex items-center gap-2">
+            <a href="{{ route('payment_in.print', $payment->id) }}" target="_blank"
+               class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-primary-dark font-bold rounded-lg hover:bg-gray-50 transition-all text-xs shadow-sm">
+                <i class="bi bi-printer text-primary"></i> Print
+            </a>
+            <a href="{{ route('payment_in.download', $payment->id) }}"
+               class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-primary-dark font-bold rounded-lg hover:bg-gray-50 transition-all text-xs shadow-sm">
+                <i class="bi bi-download text-primary"></i> Download PDF
+            </a>
+        </div>
     </div>
 
     {{-- Receipt Card --}}
