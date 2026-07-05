@@ -115,17 +115,6 @@
                     class="w-full pl-3 pr-3 py-2 bg-white border border-gray-200 rounded-[0.5rem] text-[13px] font-medium text-gray-600 focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer">
             </div>
 
-            <!-- Branch Filter -->
-            <div class="relative min-w-[170px]">
-                <select name="branch_id" onchange="this.form.submit()"
-                    class="w-full pl-3 pr-8 py-2 bg-white border border-gray-200 rounded-[0.5rem] text-[13px] font-medium text-gray-600 focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
-                    <option value="">All Branches</option>
-                    @foreach($branches as $branch)
-                        <option value="{{ $branch->id }}" {{ request('branch_id') == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>
-                    @endforeach
-                </select>
-                <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
-            </div>
 
             <!-- Status Filter -->
             <div class="relative min-w-[150px]">
