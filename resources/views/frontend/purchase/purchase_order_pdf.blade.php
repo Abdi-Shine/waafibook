@@ -1,4 +1,20 @@
 ﻿@extends('admin.admin_master')
+
+@push('css')
+<style>
+@media print {
+    #sidebar, header, #sidebarBackdrop, #pwa-install-banner,
+    [id^="announcement-"] { display: none !important; }
+    /* hide FAB bottom nav */
+    body > div[x-data*="fabOpen"] { display: none !important; }
+    .main-content { margin-left: 0 !important; }
+    body { background: #fff !important; }
+    /* make printable area fill the page */
+    .px-4.py-8 { padding: 0 !important; }
+}
+</style>
+@endpush
+
 @section('admin')
 
 <div x-data="{
