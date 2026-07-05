@@ -54,18 +54,12 @@ Route::get('/dashboard', function () {
             ->selectRaw('SUM(debit) - SUM(credit) as balance')->value('balance') ?? 0
         : 0;
 
-    // Read from the Accounts Receivable GL account itself, same pattern as
-    // Stock Value above — Customer::sum('amount_balance') was used here
-    // before, but that field goes negative the moment a customer is owed a
-    // refund (e.g. a return on an already-paid invoice), which isn't a
-    // receivable at all; the GL correctly books that as a separate
-    // liability instead, so it doesn't drag this figure negative.
-    $receivableAccount = \App\Models\Account::query()->where('code', '1140')->first()
-        ?: \App\Models\Account::query()->where('name', 'like', '%Receivable%')->first();
-    $accountsReceivable = $receivableAccount
-        ? \App\Models\JournalItem::query()->where('account_id', $receivableAccount->id)
-            ->selectRaw('SUM(debit) - SUM(credit) as balance')->value('balance') ?? 0
-        : 0;
+    // Account Receivable = sum of what customers still owe us.
+    // Uses Customer.amount_balance directly (opening_balance + sales - payments received).
+    // Only positive balances are summed — negative means a credit owed TO the customer,
+    // which is a liability not a receivable.
+    $accountsReceivable = \App\Models\Customer::where('amount_balance', '>', 0)
+        ->sum('amount_balance');
 
     $stats = [
         'assets' => $assets,
