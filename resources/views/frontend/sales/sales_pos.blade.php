@@ -90,8 +90,8 @@
 
             <div class="cart-summary">
                 <div class="summary-row">
-                    <span>Products Total <span id="totalQtyLabel" style="font-size:11px;font-weight:600;color:#888;"></span></span>
-                    <span id="subtotal">0.00 {{ $company->currency ?? 'SAR' }}</span>
+                    <span>Products Total</span>
+                    <span id="totalQtyLabel">0 items</span>
                 </div>
                 <div class="summary-row total">
                     <span>Total</span>
@@ -267,10 +267,9 @@
             const sub = cart.reduce((s, i) => s + (i.price * i.quantity), 0);
             const total = sub;
             const totalQty = cart.reduce((s, i) => s + i.quantity, 0);
-            document.getElementById('subtotal').innerText = sub.toFixed(2) + ' ' + CURRENCY;
             document.getElementById('totalAmount').innerText = total.toFixed(2) + ' ' + CURRENCY;
             const qtyLabel = document.getElementById('totalQtyLabel');
-            if (qtyLabel) qtyLabel.innerText = totalQty > 0 ? '(' + totalQty + ' item' + (totalQty !== 1 ? 's' : '') + ')' : '';
+            if (qtyLabel) qtyLabel.innerText = totalQty + ' item' + (totalQty !== 1 ? 's' : '');
 
             // Sync mobile elements
             const badge = document.getElementById('cartBadge');
