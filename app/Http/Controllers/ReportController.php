@@ -2297,14 +2297,25 @@ class ReportController extends Controller
         $items = $products->map(function (object $product) use ($salesData, $purchaseData) {
             $sale     = $salesData->get($product->id);
             $purchase = $purchaseData->get($product->id);
+            $saleQty  = (float) ($sale->sale_qty ?? 0);
             $saleAmt  = (float) ($sale->sale_amount ?? 0);
-            $purchAmt = (float) ($purchase->purchase_amount ?? 0);
+
+            if ($saleQty > 0) {
+                // COGS = units sold × unit cost price
+                $unitCost    = (float) ($product->purchase_price ?? 0);
+                $purchaseQty = $saleQty;
+                $purchAmt    = round($saleQty * $unitCost, 2);
+            } else {
+                $purchaseQty = (float) ($purchase->purchase_qty ?? 0);
+                $purchAmt    = (float) ($purchase->purchase_amount ?? 0);
+            }
+
             return (object)[
                 'name'            => $product->product_name,
                 'code'            => $product->product_code,
-                'saleQty'         => (float) ($sale->sale_qty ?? 0),
+                'saleQty'         => $saleQty,
                 'saleAmount'      => $saleAmt,
-                'purchaseQty'     => (float) ($purchase->purchase_qty ?? 0),
+                'purchaseQty'     => $purchaseQty,
                 'purchaseAmount'  => $purchAmt,
                 'netProfit'       => $saleAmt - $purchAmt,
             ];
@@ -2354,16 +2365,26 @@ class ReportController extends Controller
 
         $products = DB::table('products')->where('company_id', auth()->user()->company_id)->orderBy('product_name')->get();
         $items = $products->map(function (object $product) use ($salesData, $purchaseData) {
-            $sale    = $salesData->get($product->id);
+            $sale     = $salesData->get($product->id);
             $purchase = $purchaseData->get($product->id);
-            $saleAmt = (float) ($sale->sale_amount ?? 0);
-            $purchAmt= (float) ($purchase->purchase_amount ?? 0);
+            $saleQty  = (float) ($sale->sale_qty ?? 0);
+            $saleAmt  = (float) ($sale->sale_amount ?? 0);
+
+            if ($saleQty > 0) {
+                $unitCost    = (float) ($product->purchase_price ?? 0);
+                $purchaseQty = $saleQty;
+                $purchAmt    = round($saleQty * $unitCost, 2);
+            } else {
+                $purchaseQty = (float) ($purchase->purchase_qty ?? 0);
+                $purchAmt    = (float) ($purchase->purchase_amount ?? 0);
+            }
+
             return (object)[
                 'name'           => $product->product_name,
                 'code'           => $product->product_code,
-                'saleQty'        => (float) ($sale->sale_qty ?? 0),
+                'saleQty'        => $saleQty,
                 'saleAmount'     => $saleAmt,
-                'purchaseQty'    => (float) ($purchase->purchase_qty ?? 0),
+                'purchaseQty'    => $purchaseQty,
                 'purchaseAmount' => $purchAmt,
                 'netProfit'      => $saleAmt - $purchAmt,
             ];
@@ -3425,76 +3446,6 @@ class ReportController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
-    }
-
-    public function serviceRevenueReport(Request $request)
-    {
-        $companyId = auth()->user()->company_id;
-        $from = $request->from ?? now()->startOfMonth()->format('Y-m-d');
-        $to   = $request->to   ?? now()->format('Y-m-d');
-
-        $orders = \App\Models\ServiceOrder::with('customer')
-            ->where('company_id', $companyId)
-            ->whereBetween('created_at', [$from, $to . ' 23:59:59'])
-            ->orderByDesc('created_at')
-            ->get();
-
-        $totalRevenue   = $orders->whereIn('status', ['completed','in_progress'])->sum('total_amount');
-        $totalInvoiced  = $orders->where('status', 'completed')->count();
-        $pendingRevenue = $orders->whereNotIn('status', ['completed','cancelled'])->sum('total_amount');
-
-        return view('frontend.reports.service_revenue_report', compact(
-            'orders', 'from', 'to', 'totalRevenue', 'totalInvoiced', 'pendingRevenue'
-        ));
-    }
-
-    public function technicianPerformanceReport(Request $request)
-    {
-        $companyId = auth()->user()->company_id;
-        $from = $request->from ?? now()->startOfMonth()->format('Y-m-d');
-        $to   = $request->to   ?? now()->format('Y-m-d');
-
-        $technicians = DB::table('service_order_employees as soe')
-            ->join('service_orders as so', 'soe.service_order_id', '=', 'so.id')
-            ->join('employees as e', 'soe.employee_id', '=', 'e.id')
-            ->where('so.company_id', $companyId)
-            ->whereBetween('so.created_at', [$from, $to . ' 23:59:59'])
-            ->select(
-                'soe.employee_id',
-                DB::raw('COUNT(soe.service_order_id) as total_assigned'),
-                DB::raw('SUM(CASE WHEN so.status = "completed" THEN 1 ELSE 0 END) as total_completed')
-            )
-            ->groupBy('soe.employee_id')
-            ->orderByDesc('total_assigned')
-            ->get()
-            ->map(function ($row) {
-                $row->employee = \App\Models\Employee::find($row->employee_id);
-                return $row;
-            });
-
-        return view('frontend.reports.technician_performance_report', compact('technicians', 'from', 'to'));
-    }
-
-    public function overdueServicesReport(Request $request)
-    {
-        $companyId = auth()->user()->company_id;
-
-        $overdueOrders = \App\Models\ServiceOrder::with('customer')
-            ->where('company_id', $companyId)
-            ->whereNotIn('status', ['completed', 'cancelled'])
-            ->whereNotNull('scheduled_date')
-            ->whereDate('scheduled_date', '<', now())
-            ->orderBy('scheduled_date')
-            ->get();
-
-        $totalOverdue = $overdueOrders->count();
-        $overdue1to3  = $overdueOrders->filter(fn($o) => now()->diffInDays($o->scheduled_date) <= 3)->count();
-        $overdue4to7  = $overdueOrders->filter(fn($o) => now()->diffInDays($o->scheduled_date) > 3 && now()->diffInDays($o->scheduled_date) <= 7)->count();
-        $overdue7plus = $overdueOrders->filter(fn($o) => now()->diffInDays($o->scheduled_date) > 7)->count();
-
-        return view('frontend.reports.overdue_services_report', compact(
-            'overdueOrders', 'totalOverdue', 'overdue1to3', 'overdue4to7', 'overdue7plus'
-        ));
     }
 }
 
