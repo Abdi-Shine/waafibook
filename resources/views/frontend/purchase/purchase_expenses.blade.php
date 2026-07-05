@@ -356,16 +356,12 @@
                     <!-- Row 3: Bank Account, Description -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Bank Account <span class="text-primary">*</span></label>
-                            <div class="relative">
-                                <select required name="bank_account_id" x-model="newExpenseBankId"
-                                        class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
-                                    <option value="">-- SELECT BANK ACCOUNT --</option>
-                                    <template x-for="account in filteredBankAccounts" :key="account.id">
-                                        <option :value="account.id" x-text="account.name"></option>
-                                    </template>
-                                </select>
-                                <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+                            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Bank Account</label>
+                            @php $cashAccount = $bankAccounts->first(); @endphp
+                            <input type="hidden" name="bank_account_id" value="{{ $cashAccount?->id }}">
+                            <div class="w-full pl-4 pr-4 py-2.5 bg-gray-100 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700">
+                                <i class="bi bi-cash-stack text-primary mr-1"></i>
+                                {{ $cashAccount?->name ?? 'Cash on Hand' }}
                             </div>
                         </div>
                         <div class="space-y-1.5">
