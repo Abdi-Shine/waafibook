@@ -172,20 +172,20 @@
                     <i class="bi bi-graph-up text-primary text-sm"></i>
                     <h3 class="text-xs font-black text-primary-dark uppercase tracking-wider">Summary</h3>
                 </div>
-                <div class="p-5 space-y-3">
+                <div class="px-5 pb-5 space-y-3">
                     @if(($order->discount ?? 0) > 0)
-                    <div class="flex justify-between items-center text-[12px]">
+                    <div class="flex justify-between items-center text-[12px] pt-5">
                         <span class="font-bold text-gray-400">Discount</span>
                         <span class="font-black text-primary">- {{ $symbol }} {{ number_format($order->discount, 2) }}</span>
                     </div>
                     @endif
                     @if(($order->tax ?? 0) > 0)
-                    <div class="flex justify-between items-center text-[12px]">
+                    <div class="flex justify-between items-center text-[12px] pt-5">
                         <span class="font-bold text-gray-400">Tax</span>
                         <span class="font-black text-primary-dark">{{ $symbol }} {{ number_format($order->tax, 2) }}</span>
                     </div>
                     @endif
-                    <div class="border-t border-dashed border-gray-100 pt-3">
+                    <div class="pt-3">
                         <div class="bg-primary rounded-lg px-4 py-3 flex justify-between items-center">
                             <span class="text-[13px] font-black text-white uppercase tracking-wider">Total</span>
                             <span class="text-[18px] font-black text-accent">{{ $symbol }} {{ number_format($order->total_amount, 2) }}</span>
