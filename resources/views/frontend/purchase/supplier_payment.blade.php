@@ -146,9 +146,9 @@
             <h2 class="text-xs font-bold text-primary-dark uppercase tracking-wider">Payment Records</h2>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="overflow-y-auto overflow-x-auto" style="max-height:75vh;">
             <table class="w-full whitespace-nowrap text-left">
-                <thead>
+                <thead class="sticky top-0 z-10">
                     <tr class="bg-white border-b border-gray-100">
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider w-16 text-center">#</th>
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Voucher Info</th>
