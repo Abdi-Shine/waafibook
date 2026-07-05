@@ -162,7 +162,6 @@
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider w-12 text-center">#</th>
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Invoice</th>
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Customer</th>
-                        <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Branch</th>
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Date</th>
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-right">Total</th>
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-right">Balance</th>
@@ -184,9 +183,6 @@
                                     <span class="text-[12px] font-semibold text-primary-dark">{{ $order->customer->name ?? 'Walk-in Customer' }}</span>
                                     <span class="text-[10px] text-gray-400 font-medium">{{ $order->customer->phone ?? '' }}</span>
                                 </div>
-                            </td>
-                            <td class="px-5 py-4">
-                                <span class="text-[12px] font-semibold text-primary-dark">{{ $order->branch->name ?? '—' }}</span>
                             </td>
                             <td class="px-5 py-4 text-center">
                                 <span class="text-[12px] font-semibold text-primary-dark">{{ \Carbon\Carbon::parse($order->invoice_date)->format('d M, Y') }}</span>
