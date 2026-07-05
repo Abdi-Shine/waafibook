@@ -155,9 +155,9 @@
             <h2 class="text-xs font-bold text-primary-dark uppercase tracking-wider">Invoice List</h2>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="overflow-y-auto overflow-x-auto" style="max-height:75vh;">
             <table class="w-full whitespace-nowrap text-left border-collapse">
-                <thead>
+                <thead class="sticky top-0 z-10">
                     <tr class="bg-white border-b border-gray-100">
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider w-12 text-center">#</th>
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Invoice</th>
@@ -174,7 +174,7 @@
                     @forelse($orders as $key => $order)
                         <tr class="hover:bg-gray-50/60 transition-colors bg-white group">
                             <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark text-center">
-                                {{ str_pad($orders->firstItem() + $key, 2, '0', STR_PAD_LEFT) }}
+                                {{ str_pad($key + 1, 2, '0', STR_PAD_LEFT) }}
                             </td>
                             <td class="px-5 py-4">
                                 <span class="text-[12px] font-semibold text-primary-dark">{{ $order->invoice_no }}</span>
@@ -252,44 +252,6 @@
         </div>
 
         <!-- Table Footer / Pagination -->
-        <div class="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p class="text-[11px] font-black text-gray-400 uppercase tracking-widest">
-                Showing {{ $orders->firstItem() ?? 0 }} to {{ $orders->lastItem() ?? 0 }} of {{ $orders->total() }} entries
-            </p>
-            <div class="flex items-center gap-1">
-                @if ($orders->onFirstPage())
-                    <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-300 cursor-not-allowed shadow-sm" disabled>
-                        <i class="bi bi-chevron-left text-xs"></i>
-                    </button>
-                @else
-                    <a href="{{ $orders->previousPageUrl() }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-400 hover:bg-gray-50 transition-all shadow-sm">
-                        <i class="bi bi-chevron-left text-xs"></i>
-                    </a>
-                @endif
-
-                @foreach ($orders->links()->elements as $element)
-                    @if (is_array($element))
-                        @foreach ($element as $page => $url)
-                            @if ($page == $orders->currentPage())
-                                <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-white font-black text-xs shadow-md shadow-primary/20">{{ $page }}</button>
-                            @else
-                                <a href="{{ $url }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 transition-all shadow-sm text-xs font-bold">{{ $page }}</a>
-                            @endif
-                        @endforeach
-                    @endif
-                @endforeach
-
-                @if ($orders->hasMorePages())
-                    <a href="{{ $orders->nextPageUrl() }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-400 hover:bg-gray-50 transition-all shadow-sm">
-                        <i class="bi bi-chevron-right text-xs"></i>
-                    </a>
-                @else
-                    <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-300 cursor-not-allowed shadow-sm" disabled>
-                        <i class="bi bi-chevron-right text-xs"></i>
-                    </button>
-                @endif
-            </div>
-        </div>
     </div>
 </div>
 

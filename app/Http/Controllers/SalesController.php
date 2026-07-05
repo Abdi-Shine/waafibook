@@ -62,7 +62,7 @@ class SalesController extends Controller
             $query->whereDate('invoice_date', '<=', $request->date_to);
         }
 
-        $orders = $query->latest()->paginate(15);
+        $orders = $query->latest()->get();
 
         // Stats — always from the full dataset, not the filtered $query
         // Stats filtered by branch if not admin
