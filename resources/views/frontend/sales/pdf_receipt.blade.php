@@ -1,35 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Payment Receipt - {{ $payment->receipt_no ?? $payment->id }}</title>
-    <style>
-        @page { margin: 15mm; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 13px;
-            color: #1a1a2e;
-            background: #fff;
-        }
-        h1.page-title {
-            text-align: center;
-            font-size: 26px;
-            font-weight: bold;
-            margin-bottom: 18px;
-            color: #1a1a2e;
-        }
-        .outer-box {
-            border: 1px solid #666;
-            width: 100%;
-        }
-        .row-border-top {
-            border-top: 1px solid #666;
-        }
-        table { width: 100%; border-collapse: collapse; }
-    </style>
-</head>
-<body>
+@extends('admin.admin_master')
+@section('page_title', 'Payment Receipt')
+@section('admin')
 
 @php
     $numToWords = function(int $n) use (&$numToWords): string {
@@ -47,8 +18,8 @@
         return $w;
     };
 
-    $dollars = (int) floor((float) $payment->amount);
-    $cents   = (int) round(((float) $payment->amount - $dollars) * 100);
+    $dollars     = (int) floor((float) $payment->amount);
+    $cents       = (int) round(((float) $payment->amount - $dollars) * 100);
     $amountWords = trim($numToWords($dollars)) . ' Dollar' . ($dollars !== 1 ? 's' : '');
     if ($cents > 0) {
         $amountWords .= ' and ' . trim($numToWords($cents)) . ' Cent' . ($cents !== 1 ? 's' : '');
@@ -66,81 +37,91 @@
         : null;
 @endphp
 
-<h1 class="page-title">Payment Receipt</h1>
+<div class="px-4 py-6 md:px-8 bg-background min-h-screen">
 
-<div class="outer-box">
+    {{-- Page Header --}}
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+            <a href="{{ route('view_payment_in') }}"
+               class="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:text-primary hover:border-primary transition-all bg-white shadow-sm">
+                <i class="bi bi-arrow-left text-sm"></i>
+            </a>
+            <div>
+                <h1 class="text-[20px] font-black text-primary-dark tracking-tight">Payment Receipt</h1>
+                <p class="text-[11px] font-bold text-gray-400">Receipt #{{ $payment->id }}</p>
+            </div>
+        </div>
+        <a href="{{ route('payment_in.download', $payment->id) }}"
+           class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-primary-dark font-bold rounded-lg hover:bg-gray-50 transition-all text-xs shadow-sm">
+            <i class="bi bi-download text-primary"></i> Download PDF
+        </a>
+    </div>
 
-    {{-- Company --}}
-    <table>
-        <tr>
-            <td style="padding:12px 16px;">
-                @if($logoB64)
-                    <img src="{{ $logoB64 }}"
-                         style="width:72px;height:72px;object-fit:contain;border:1px dashed #bbb;border-radius:6px;vertical-align:middle;margin-right:14px;">
-                @endif
-                <span style="display:inline-block;vertical-align:middle;">
-                    <div style="font-size:24px;font-weight:bold;color:#1a1a2e;">{{ $company->name ?? '' }}</div>
-                    <div style="font-size:12px;color:#555;margin-top:5px;">Phone:&nbsp;&nbsp;{{ $company->phone ?? '' }}</div>
-                </span>
-            </td>
-        </tr>
-    </table>
+    {{-- Receipt Card --}}
+    <div class="max-w-3xl mx-auto bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
 
-    {{-- Received From / Receipt Details --}}
-    <table class="row-border-top">
-        <tr>
-            <td width="50%" style="padding:12px 16px;vertical-align:top;border-right:1px solid #666;">
-                <div style="font-weight:bold;margin-bottom:8px;">Received From:</div>
-                <div style="font-weight:bold;font-size:15px;">{{ strtoupper($payment->customer->name ?? 'WALK-IN') }}</div>
-                <div style="margin-top:5px;color:#444;">Contact No:&nbsp;&nbsp;<strong>{{ $payment->customer->phone ?? 'N/A' }}</strong></div>
-            </td>
-            <td width="50%" style="padding:12px 16px;vertical-align:top;">
-                <div style="font-weight:bold;margin-bottom:8px;">Receipt Details:</div>
-                <div>Receipt No.:&nbsp;&nbsp;<strong>{{ $payment->id }}</strong></div>
-                <div style="margin-top:5px;">Date:&nbsp;&nbsp;<strong>{{ date('d/m/Y', strtotime($payment->payment_date)) }}</strong></div>
-            </td>
-        </tr>
-    </table>
+        {{-- Title --}}
+        <div class="text-center py-4 border-b border-gray-200">
+            <h2 class="text-2xl font-black text-gray-800 tracking-tight">Payment Receipt</h2>
+        </div>
 
-    {{-- Received Amount --}}
-    <table class="row-border-top">
-        <tr>
-            <td style="padding:10px 16px;width:50%;">Received</td>
-            <td style="padding:10px 16px;text-align:center;width:10%;">:</td>
-            <td style="padding:10px 16px;text-align:right;font-weight:bold;width:40%;">{{ $symbol }}&nbsp;{{ number_format($payment->amount, 2) }}</td>
-        </tr>
-    </table>
+        {{-- Company --}}
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center gap-4">
+            @if($logoB64)
+                <img src="{{ $logoB64 }}" alt="{{ $company->name ?? '' }}"
+                     class="w-16 h-16 object-contain border border-dashed border-gray-300 rounded">
+            @endif
+            <div>
+                <div class="text-xl font-black text-gray-800">{{ $company->name ?? '' }}</div>
+                <div class="text-sm text-gray-500 mt-1">Phone:&nbsp;&nbsp;{{ $company->phone ?? '' }}</div>
+            </div>
+        </div>
 
-    {{-- Amount in Words label --}}
-    <table class="row-border-top">
-        <tr>
-            <td style="padding:8px 16px;font-weight:bold;background:#f5f5f5;"><strong>Amount in Words:</strong></td>
-        </tr>
-    </table>
+        {{-- Received From / Receipt Details --}}
+        <div class="grid grid-cols-2 divide-x divide-gray-200 border-b border-gray-200">
+            <div class="px-6 py-4">
+                <div class="text-xs font-bold text-gray-500 mb-2">Received From:</div>
+                <div class="text-base font-black text-gray-800 uppercase">{{ $payment->customer->name ?? 'WALK-IN' }}</div>
+                <div class="text-sm text-gray-500 mt-1">Contact No:&nbsp;&nbsp;<strong class="text-gray-700">{{ $payment->customer->phone ?? 'N/A' }}</strong></div>
+            </div>
+            <div class="px-6 py-4">
+                <div class="text-xs font-bold text-gray-500 mb-2">Receipt Details:</div>
+                <div class="text-sm text-gray-700">Receipt No.:&nbsp;&nbsp;<strong>{{ $payment->id }}</strong></div>
+                <div class="text-sm text-gray-700 mt-1">Date:&nbsp;&nbsp;<strong>{{ date('d/m/Y', strtotime($payment->payment_date)) }}</strong></div>
+            </div>
+        </div>
 
-    {{-- Amount in Words value --}}
-    <table class="row-border-top">
-        <tr>
-            <td style="padding:10px 16px;">{{ $amountWords }}</td>
-        </tr>
-    </table>
+        {{-- Received Amount --}}
+        <div class="px-6 py-3 border-b border-gray-200 flex items-center justify-between">
+            <span class="text-sm text-gray-700">Received</span>
+            <span class="text-gray-400 text-sm">:</span>
+            <span class="text-sm font-black text-gray-800">{{ $symbol }}&nbsp;{{ number_format($payment->amount, 2) }}</span>
+        </div>
 
-    {{-- Authorized Signatory --}}
-    <table class="row-border-top">
-        <tr>
-            <td width="50%" style="padding:16px;"></td>
-            <td width="50%" style="padding:16px;">
-                <div style="border:1px solid #666;padding:12px 14px;">
-                    <div style="font-weight:bold;margin-bottom:65px;">For {{ $company->name ?? '' }}:</div>
-                    <div style="text-align:center;font-size:11px;color:#555;border-top:1px solid #ccc;padding-top:6px;">
+        {{-- Amount in Words label --}}
+        <div class="px-6 py-2 border-b border-gray-200 bg-gray-50">
+            <span class="text-sm font-black text-gray-700">Amount in Words:</span>
+        </div>
+
+        {{-- Amount in Words value --}}
+        <div class="px-6 py-3 border-b border-gray-200">
+            <span class="text-sm text-gray-700">{{ $amountWords }}</span>
+        </div>
+
+        {{-- Authorized Signatory --}}
+        <div class="grid grid-cols-2 border-b border-gray-200">
+            <div></div>
+            <div class="px-6 py-5">
+                <div class="border border-gray-300 p-4 rounded">
+                    <div class="text-sm font-black text-gray-800 mb-14">For {{ $company->name ?? '' }}:</div>
+                    <div class="text-center text-xs text-gray-500 border-t border-gray-200 pt-2">
                         Authorized Signatory
                     </div>
                 </div>
-            </td>
-        </tr>
-    </table>
+            </div>
+        </div>
 
+    </div>
 </div>
 
-</body>
-</html>
+@endsection
