@@ -173,10 +173,6 @@
                     <h3 class="text-xs font-black text-primary-dark uppercase tracking-wider">Summary</h3>
                 </div>
                 <div class="p-5 space-y-3">
-                    <div class="flex justify-between items-center text-[12px]">
-                        <span class="font-bold text-gray-400">Subtotal</span>
-                        <span class="font-black text-primary-dark">{{ $symbol }} {{ number_format($order->subtotal ?? $order->total_amount, 2) }}</span>
-                    </div>
                     @if(($order->discount ?? 0) > 0)
                     <div class="flex justify-between items-center text-[12px]">
                         <span class="font-bold text-gray-400">Discount</span>
