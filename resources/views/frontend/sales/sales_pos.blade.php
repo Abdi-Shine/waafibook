@@ -30,7 +30,7 @@
                 <div class="search-input-group">
                     <i class="bi bi-search search-icon"></i>
                     <input type="text" class="search-input" id="searchInput"
-                           placeholder="Search by name, SKU or scan barcode...">
+                        placeholder="Search by name, SKU or scan barcode...">
                 </div>
             </div>
 
@@ -39,9 +39,9 @@
                     <i class="bi bi-grid"></i> All
                 </button>
                 @foreach($categories as $cat)
-                <button class="category-btn" onclick="filterCategory('{{ $cat->id }}', this)">
-                    <i class="bi bi-tag"></i> {{ $cat->name }}
-                </button>
+                    <button class="category-btn" onclick="filterCategory('{{ $cat->id }}', this)">
+                        <i class="bi bi-tag"></i> {{ $cat->name }}
+                    </button>
                 @endforeach
             </div>
 
@@ -73,7 +73,8 @@
                     </select>
                     <select class="customer-input" id="account_id">
                         @foreach($accounts as $account)
-                            <option value="{{ $account->id }}" {{ $account->id == $defaultPaymentAccountId ? 'selected' : '' }}>{{ $account->name }}</option>
+                            <option value="{{ $account->id }}" {{ $account->id == $defaultPaymentAccountId ? 'selected' : '' }}>
+                                {{ $account->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -89,7 +90,7 @@
 
             <div class="cart-summary">
                 <div class="summary-row">
-                    <span>Subtotal</span>
+                    <span>Products Total <span id="totalQtyLabel" style="font-size:11px;font-weight:600;color:#888;"></span></span>
                     <span id="subtotal">0.00 {{ $company->currency ?? 'SAR' }}</span>
                 </div>
                 <div class="summary-row total">
@@ -143,20 +144,20 @@
                 return;
             }
             grid.innerHTML = list.map(p => `
-                <div class="product-card" onclick="addToCart(${p.id})">
-                    <div class="product-image">
-                        ${p.image ? `<img src="/${p.image}" class="pos-product-image-img">` : `<i class="bi bi-box"></i>`}
+                    <div class="product-card" onclick="addToCart(${p.id})">
+                        <div class="product-image">
+                            ${p.image ? `<img src="/${p.image}" class="pos-product-image-img">` : `<i class="bi bi-box"></i>`}
+                        </div>
+                        <div class="product-name">${p.product_name}</div>
+                        <div class="product-stock ${p.stocks_sum_quantity <= 0 ? 'text-danger fw-bold' : ''}">
+                            Stock: ${p.stocks_sum_quantity || 0}
+                        </div>
+                        <div class="product-purchase-price text-muted" style="font-size: 11px;">
+                            Cost: ${parseFloat(p.purchase_price || 0).toFixed(2)} ${CURRENCY}
+                        </div>
+                        <div class="product-price">${parseFloat(p.selling_price).toFixed(2)} ${CURRENCY}</div>
                     </div>
-                    <div class="product-name">${p.product_name}</div>
-                    <div class="product-stock ${p.stocks_sum_quantity <= 0 ? 'text-danger fw-bold' : ''}">
-                        Stock: ${p.stocks_sum_quantity || 0}
-                    </div>
-                    <div class="product-purchase-price text-muted" style="font-size: 11px;">
-                        Cost: ${parseFloat(p.purchase_price || 0).toFixed(2)} ${CURRENCY}
-                    </div>
-                    <div class="product-price">${parseFloat(p.selling_price).toFixed(2)} ${CURRENCY}</div>
-                </div>
-            `).join('');
+                `).join('');
         }
 
         function filterCategory(catId, btn) {
@@ -167,8 +168,8 @@
         }
 
         function filterProducts(term) {
-            const filtered = products.filter(p => 
-                p.product_name.toLowerCase().includes(term) || 
+            const filtered = products.filter(p =>
+                p.product_name.toLowerCase().includes(term) ||
                 (p.product_code && p.product_code.toLowerCase().includes(term))
             );
             displayProducts(filtered);
@@ -244,32 +245,34 @@
                 container.innerHTML = `<div class="empty-cart"><i class="bi bi-cart-x"></i><p>Your cart is empty</p></div>`;
             } else {
                 container.innerHTML = cart.map(i => `
-                    <div class="cart-item">
-                        <div class="item-header">
-                            <span class="item-name">${i.name}</span>
-                            <button class="item-remove" onclick="removeFromCart(${i.id})"><i class="bi bi-trash"></i></button>
-                        </div>
-                        <div class="item-details">
-                            <div class="item-quantity">
-                                <button class="qty-btn" onclick="updateQuantity(${i.id}, -1)">-</button>
-                                <span class="qty-display">${i.quantity}</span>
-                                <button class="qty-btn" onclick="updateQuantity(${i.id}, 1)">+</button>
+                        <div class="cart-item">
+                            <div class="item-header">
+                                <span class="item-name">${i.name}</span>
+                                <button class="item-remove" onclick="removeFromCart(${i.id})"><i class="bi bi-trash"></i></button>
                             </div>
-                            <input type="number" class="item-price-input" min="0" step="0.01"
-                                   value="${(i.price * i.quantity).toFixed(2)}"
-                                   onchange="updateItemAmount(${i.id}, this.value)"
-                                   onclick="this.select()">
+                            <div class="item-details">
+                                <div class="item-quantity">
+                                    <button class="qty-btn" onclick="updateQuantity(${i.id}, -1)">-</button>
+                                    <span class="qty-display">${i.quantity}</span>
+                                    <button class="qty-btn" onclick="updateQuantity(${i.id}, 1)">+</button>
+                                </div>
+                                <input type="number" class="item-price-input" min="0" step="0.01"
+                                       value="${(i.price * i.quantity).toFixed(2)}"
+                                       onchange="updateItemAmount(${i.id}, this.value)"
+                                       onclick="this.select()">
+                            </div>
                         </div>
-                    </div>
-                `).join('');
+                    `).join('');
             }
             const sub = cart.reduce((s, i) => s + (i.price * i.quantity), 0);
             const total = sub;
+            const totalQty = cart.reduce((s, i) => s + i.quantity, 0);
             document.getElementById('subtotal').innerText = sub.toFixed(2) + ' ' + CURRENCY;
             document.getElementById('totalAmount').innerText = total.toFixed(2) + ' ' + CURRENCY;
+            const qtyLabel = document.getElementById('totalQtyLabel');
+            if (qtyLabel) qtyLabel.innerText = totalQty > 0 ? '(' + totalQty + ' item' + (totalQty !== 1 ? 's' : '') + ')' : '';
 
             // Sync mobile elements
-            const totalQty = cart.reduce((s, i) => s + i.quantity, 0);
             const badge = document.getElementById('cartBadge');
             const mobileTotal = document.getElementById('mobileTotalAmt');
             if (badge) { badge.textContent = totalQty; badge.style.display = totalQty > 0 ? 'inline-flex' : 'none'; }
@@ -278,8 +281,8 @@
 
         // ── Mobile tab switching ──────────────────────────────────────
         function switchPosTab(tab) {
-            const panels  = { products: document.getElementById('posPanelProducts'), cart: document.getElementById('posPanelCart') };
-            const tabs    = { products: document.getElementById('tabProducts'),      cart: document.getElementById('tabCart') };
+            const panels = { products: document.getElementById('posPanelProducts'), cart: document.getElementById('posPanelCart') };
+            const tabs = { products: document.getElementById('tabProducts'), cart: document.getElementById('tabCart') };
             Object.keys(panels).forEach(k => {
                 const isCurrent = k === tab;
                 panels[k].classList.toggle('pos-panel-hidden', !isCurrent);
@@ -293,7 +296,7 @@
             if (cart.length === 0) return Swal.fire('Error', 'Cart is empty', 'error');
 
             const total = cart.reduce((s, i) => s + (i.price * i.quantity), 0);
-            
+
             Swal.fire({
                 title: 'Confirm Checkout',
                 html: `Total: <strong style="color:#004161">${total.toFixed(2)} ${CURRENCY}</strong>`,
@@ -329,26 +332,26 @@
                         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                         body: JSON.stringify(data)
                     })
-                    .then(r => r.json())
-                    .then(res => {
-                        if (res.success) {
-                            Swal.fire('Success', 'Transaction Complete', 'success').then(() => {
-                                // Deduct sold quantities from local stock so cards refresh immediately
-                                cart.forEach(item => {
-                                    const p = products.find(prod => prod.id === item.id);
-                                    if (p) p.stocks_sum_quantity = Math.max(0, (p.stocks_sum_quantity || 0) - item.quantity);
+                        .then(r => r.json())
+                        .then(res => {
+                            if (res.success) {
+                                Swal.fire('Success', 'Transaction Complete', 'success').then(() => {
+                                    // Deduct sold quantities from local stock so cards refresh immediately
+                                    cart.forEach(item => {
+                                        const p = products.find(prod => prod.id === item.id);
+                                        if (p) p.stocks_sum_quantity = Math.max(0, (p.stocks_sum_quantity || 0) - item.quantity);
+                                    });
+                                    cart = [];
+                                    updateCart();
+                                    saveCartToStorage();
+                                    document.getElementById('customer_id').value = '';
+                                    displayProducts(products);
+                                    switchPosTab('products');
                                 });
-                                cart = [];
-                                updateCart();
-                                saveCartToStorage();
-                                document.getElementById('customer_id').value = '';
-                                displayProducts(products);
-                                switchPosTab('products');
-                            });
-                        } else {
-                            Swal.fire('Error', res.message, 'error');
-                        }
-                    });
+                            } else {
+                                Swal.fire('Error', res.message, 'error');
+                            }
+                        });
                 }
             });
         }
@@ -364,17 +367,17 @@
         // ── PWA: IndexedDB cart persistence ──────────────────────────────
         const CART_KEY = 'waafibook-pos-cart';
         function saveCartToStorage() {
-            try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch(e) {}
+            try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch (e) { }
         }
         function loadCartFromStorage() {
             try {
                 const saved = localStorage.getItem(CART_KEY);
                 if (saved) { cart = JSON.parse(saved); updateCart(); }
-            } catch(e) {}
+            } catch (e) { }
         }
         // Patch updateCart to also persist on every change
         const _origUpdateCart = updateCart;
-        updateCart = function() { _origUpdateCart(); saveCartToStorage(); };
+        updateCart = function () { _origUpdateCart(); saveCartToStorage(); };
         // Restore cart on load
         window.addEventListener('DOMContentLoaded', loadCartFromStorage);
 
