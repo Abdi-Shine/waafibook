@@ -10,7 +10,7 @@
     $symbol = $currencySymbols[$company->currency ?? 'USD'] ?? ($company->currency ?? '$');
 @endphp
 
-    <div class="px-4 py-8 md:px-8 md:py-10 bg-background min-h-screen" x-data="{
+    <div class="px-4 py-8 md:px-8 md:py-10 bg-background min-h-screen overflow-x-hidden" x-data="{
             showModal: false,
             showViewModal: false,
             showEditModal: false,
@@ -19,7 +19,34 @@
             editDate: '',
             editNotes: '',
             editStatus: 'approved',
+            editItems: [],
             isEditSubmitting: false,
+
+            get editTotal() {
+                return this.editItems.reduce((s, i) => s + (parseFloat(i.quantity) || 0) * parseFloat(i.unit_price), 0).toFixed(2);
+            },
+
+            numToWords(amount) {
+                const n = Math.floor(parseFloat(amount) || 0);
+                const c = Math.round(((parseFloat(amount) || 0) - n) * 100);
+                const ones = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine',
+                              'Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen',
+                              'Seventeen','Eighteen','Nineteen'];
+                const tens = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+                const hw = (x) => {
+                    if (x === 0) return '';
+                    let w = '';
+                    if (x >= 1000000) { w += hw(Math.floor(x/1000000)) + ' Million '; x %= 1000000; }
+                    if (x >= 1000)    { w += hw(Math.floor(x/1000))    + ' Thousand '; x %= 1000; }
+                    if (x >= 100)     { w += ones[Math.floor(x/100)]   + ' Hundred '; x %= 100; }
+                    if (x >= 20)      { w += tens[Math.floor(x/10)]    + ' '; x %= 10; }
+                    if (x > 0)        { w += ones[x] + ' '; }
+                    return w;
+                };
+                let r = hw(n).trim() + ' Dollar' + (n !== 1 ? 's' : '');
+                if (c > 0) r += ' and ' + hw(c).trim() + ' Cent' + (c !== 1 ? 's' : '');
+                return r + ' only';
+            },
 
             openViewModal(r) { this.activeReturn = r; this.showViewModal = true; },
             openEditModal(r) {
@@ -28,6 +55,7 @@
                 this.editDate   = r.return_date;
                 this.editNotes  = r.notes ?? '';
                 this.editStatus = r.status ?? 'approved';
+                this.editItems  = (r.items ?? []).map(i => ({ ...i, quantity: parseFloat(i.quantity) }));
                 this.showEditModal = true;
             },
             async submitEdit() {
@@ -38,6 +66,7 @@
                         return_date: this.editDate,
                         notes: this.editNotes,
                         status: this.editStatus,
+                        items: this.editItems.map(i => ({ id: i.id, quantity: i.quantity })),
                         _token: document.querySelector('meta[name=csrf-token]').content,
                     });
                     Swal.fire('Updated', res.data?.message || 'Credit note updated.', 'success')
@@ -249,9 +278,9 @@
             </div>
 
             <!-- Table -->
-            <div class="overflow-x-auto">
+            <div class="overflow-y-auto overflow-x-auto" style="max-height:75vh;">
                 <table class="w-full whitespace-nowrap text-left border-collapse">
-                    <thead>
+                    <thead class="sticky top-0 z-10">
                         <tr class="bg-white border-b border-gray-100">
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider w-16 text-center">#</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Product Name</th>
@@ -266,7 +295,7 @@
                         @forelse($returns as $key => $return)
                         <tr class="hover:bg-gray-50/60 transition-colors bg-white group">
                             <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark text-center">
-                                {{ str_pad($returns->firstItem() + $key, 2, '0', STR_PAD_LEFT) }}
+                                {{ str_pad($key + 1, 2, '0', STR_PAD_LEFT) }}
                             </td>
                             <td class="px-5 py-4">
                                 <div class="flex flex-col gap-0.5">
@@ -319,7 +348,7 @@
                                         'amount'      => number_format($return->amount, 2),
                                         'status'      => $return->status,
                                         'notes'       => $return->notes ?? '',
-                                        'items'       => $return->items->map(fn($i) => ['product_name' => $i->product->product_name ?? '—', 'quantity' => $i->quantity, 'unit_price' => $i->unit_price, 'subtotal' => $i->subtotal])->values(),
+                                        'items'       => $return->items->map(fn($i) => ['id' => $i->id, 'product_id' => $i->product_id, 'product_name' => $i->product->product_name ?? '—', 'quantity' => $i->quantity, 'unit_price' => $i->unit_price, 'subtotal' => $i->subtotal])->values(),
                                     ]);
                                 @endphp
                                 <div class="flex items-center justify-center gap-1.5">
@@ -356,100 +385,146 @@
         </div>
 
         <!-- View Modal -->
+        <template x-teleport="body">
         <div x-show="showViewModal" x-cloak
-             class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-            <div class="bg-white rounded-[1.25rem] w-full max-w-lg shadow-2xl flex flex-col overflow-hidden"
-                 @click.away="showViewModal = false"
+             @click.self="showViewModal = false"
+             style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(15,23,42,0.55);backdrop-filter:blur(4px);">
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;max-width:42rem;max-height:90vh;display:flex;flex-direction:column;border-radius:0.75rem;overflow:hidden;box-shadow:0 25px 50px -12px rgba(0,0,0,0.4);"
                  x-transition:enter="transition ease-out duration-200"
                  x-transition:enter-start="opacity-0 scale-95"
                  x-transition:enter-end="opacity-100 scale-100">
 
-                <!-- Header -->
-                <div class="px-6 py-5 bg-primary flex items-center justify-between shrink-0">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white">
-                            <i class="bi bi-receipt text-lg"></i>
-                        </div>
-                        <div>
-                            <h2 class="text-base font-black text-white" x-text="activeReturn?.credit_note_no"></h2>
-                            <p class="text-[10px] text-white/60">Credit Note Detail</p>
-                        </div>
-                    </div>
-                    <button @click="showViewModal = false" class="w-8 h-8 bg-white/10 border border-white/10 text-white rounded-lg hover:bg-white/20 transition-all flex items-center justify-center">
-                        <i class="bi bi-x-lg text-xs"></i>
-                    </button>
-                </div>
+                <!-- Invoice card — no wrapper, fills the container directly -->
+                <div id="cn-printable" class="overflow-y-auto flex-1 min-h-0 bg-white">
 
-                <!-- Body -->
-                <div class="px-6 py-5 space-y-4 overflow-y-auto max-h-[70vh]">
-                    <!-- Info Grid -->
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="bg-gray-50 rounded-lg px-4 py-3">
-                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Customer</p>
-                            <p class="text-[13px] font-black text-primary-dark" x-text="activeReturn?.customer?.name"></p>
-                            <p class="text-[11px] text-gray-400" x-text="activeReturn?.customer?.phone"></p>
+                        {{-- Title --}}
+                        <div class="text-center py-4 border-b border-gray-200">
+                            <h2 class="text-2xl font-black text-gray-800 tracking-tight">Credit Note</h2>
                         </div>
-                        <div class="bg-gray-50 rounded-lg px-4 py-3">
-                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Invoice</p>
-                            <p class="text-[13px] font-black text-primary-dark" x-text="activeReturn?.invoice_no"></p>
-                        </div>
-                        <div class="bg-gray-50 rounded-lg px-4 py-3">
-                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Return Date</p>
-                            <p class="text-[13px] font-black text-primary-dark" x-text="activeReturn?.return_date"></p>
-                        </div>
-                        <div class="bg-gray-50 rounded-lg px-4 py-3">
-                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Reason</p>
-                            <p class="text-[13px] font-black text-primary-dark" x-text="activeReturn?.reason"></p>
-                        </div>
-                        <div class="bg-gray-50 rounded-lg px-4 py-3">
-                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Amount</p>
-                            <p class="text-[15px] font-black text-accent" x-text="'$ ' + activeReturn?.amount"></p>
-                        </div>
-                        <div class="bg-gray-50 rounded-lg px-4 py-3">
-                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Status</p>
-                            <p class="text-[13px] font-black text-primary-dark capitalize" x-text="activeReturn?.status"></p>
-                        </div>
-                    </div>
 
-                    <!-- Items -->
-                    <template x-if="activeReturn?.items?.length > 0">
-                        <div>
-                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2">Returned Items</p>
-                            <div class="border border-gray-100 rounded-lg divide-y divide-gray-100">
-                                <template x-for="item in activeReturn.items" :key="item.product_name">
-                                    <div class="flex items-center justify-between px-4 py-2.5">
-                                        <span class="text-[12px] font-bold text-primary-dark" x-text="item.product_name"></span>
-                                        <span class="text-[11px] text-gray-400" x-text="'Qty: ' + item.quantity + '  ×  $' + item.unit_price"></span>
-                                        <span class="text-[12px] font-black text-primary" x-text="'$' + parseFloat(item.subtotal).toFixed(2)"></span>
-                                    </div>
-                                </template>
+                        {{-- Company --}}
+                        <div class="px-6 py-4 border-b border-gray-200 flex items-center gap-4">
+                            <img src="{{ (!empty($company?->logo) && file_exists(public_path($company->logo))) ? asset($company->logo) : asset('upload/waafibooklogo/waafibook_logo.jpg') }}"
+                                 class="w-16 h-16 object-contain border border-dashed border-gray-300 rounded flex-shrink-0">
+                            <div>
+                                <div class="text-xl font-black text-gray-800">{{ $company?->name ?? 'Company Name' }}</div>
+                                <div class="text-sm text-gray-500 mt-1">Phone:&nbsp;&nbsp;{{ $company?->phone ?? '' }}</div>
                             </div>
                         </div>
-                    </template>
 
-                    <!-- Notes -->
-                    <template x-if="activeReturn?.notes">
-                        <div class="bg-amber-50 border border-amber-100 rounded-lg px-4 py-3">
-                            <p class="text-[10px] font-black text-amber-600 uppercase tracking-wider mb-1">Notes</p>
-                            <p class="text-[12px] text-amber-800" x-text="activeReturn?.notes"></p>
+                        {{-- Return From | Return Details --}}
+                        <div class="grid grid-cols-2 divide-x divide-gray-200 border-b border-gray-200">
+                            <div class="px-6 py-4">
+                                <div class="text-xs font-bold text-gray-500 mb-2">Return From:</div>
+                                <div class="text-base font-black text-gray-800 uppercase" x-text="activeReturn?.customer?.name ?? 'WALK-IN'"></div>
+                                <div class="text-sm text-gray-500 mt-1">Contact No:&nbsp;&nbsp;<strong class="text-gray-700" x-text="activeReturn?.customer?.phone || 'N/A'"></strong></div>
+                            </div>
+                            <div class="px-6 py-4">
+                                <div class="text-xs font-bold text-gray-500 mb-2">Return Details:</div>
+                                <div class="text-sm text-gray-700">Credit Note No.:&nbsp;&nbsp;<strong x-text="activeReturn?.credit_note_no"></strong></div>
+                                <div class="text-sm text-gray-700 mt-1">Date:&nbsp;&nbsp;<strong x-text="activeReturn?.return_date"></strong></div>
+                            </div>
                         </div>
-                    </template>
+
+                        {{-- Items Table --}}
+                        <template x-if="activeReturn?.items?.length > 0">
+                            <div class="border-b border-gray-200">
+                                <div class="grid border-b border-gray-100 bg-gray-50 px-6 py-2" style="grid-template-columns:2rem 1fr 5rem 6rem 5.5rem;">
+                                    <span class="text-xs font-bold text-gray-500">#</span>
+                                    <span class="text-xs font-bold text-gray-500">Item Name</span>
+                                    <span class="text-xs font-bold text-gray-500 text-right">Qty</span>
+                                    <span class="text-xs font-bold text-gray-500 text-right">Unit Price</span>
+                                    <span class="text-xs font-bold text-gray-500 text-right">Amount</span>
+                                </div>
+                                <template x-for="(item, idx) in (activeReturn?.items ?? [])" :key="idx">
+                                    <div class="grid px-6 py-2.5 border-b border-gray-50" style="grid-template-columns:2rem 1fr 5rem 6rem 5.5rem;">
+                                        <span class="text-sm text-gray-400" x-text="idx + 1"></span>
+                                        <span class="text-sm font-medium text-gray-800" x-text="item.product_name"></span>
+                                        <span class="text-sm text-gray-600 text-right" x-text="parseFloat(item.quantity).toFixed(2)"></span>
+                                        <span class="text-sm text-gray-600 text-right" x-text="'$ ' + parseFloat(item.unit_price).toFixed(2)"></span>
+                                        <span class="text-sm font-bold text-gray-800 text-right" x-text="'$ ' + parseFloat(item.subtotal).toFixed(2)"></span>
+                                    </div>
+                                </template>
+                                <div class="grid px-6 py-2.5 bg-gray-50" style="grid-template-columns:2rem 1fr 5rem 6rem 5.5rem;">
+                                    <span></span>
+                                    <span class="text-sm font-black text-gray-800">Total</span>
+                                    <span class="text-sm font-bold text-gray-800 text-right"
+                                          x-text="(activeReturn?.items ?? []).reduce((s,i)=>s+parseFloat(i.quantity),0).toFixed(2)"></span>
+                                    <span></span>
+                                    <span class="text-sm font-black text-gray-800 text-right"
+                                          x-text="'$ ' + parseFloat(activeReturn?.amount ?? 0).toFixed(2)"></span>
+                                </div>
+                            </div>
+                        </template>
+
+                        {{-- Sub Total / Total --}}
+                        <div class="px-6 py-3 border-b border-gray-200 flex items-center justify-between">
+                            <span class="text-sm text-gray-700">Sub Total</span>
+                            <span class="text-gray-400 text-sm">:</span>
+                            <span class="text-sm font-bold text-gray-800" x-text="'$ ' + parseFloat(activeReturn?.amount ?? 0).toFixed(2)"></span>
+                        </div>
+                        <div class="px-6 py-3 border-b border-gray-200 flex items-center justify-between">
+                            <span class="text-sm font-black text-gray-800">Total</span>
+                            <span class="text-gray-400 text-sm">:</span>
+                            <span class="text-sm font-black text-gray-800" x-text="'$ ' + parseFloat(activeReturn?.amount ?? 0).toFixed(2)"></span>
+                        </div>
+
+                        {{-- Amount in Words --}}
+                        <div class="px-6 py-2 border-b border-gray-200 bg-gray-50">
+                            <span class="text-sm font-black text-gray-700">Amount in Words:</span>
+                        </div>
+                        <div class="px-6 py-3 border-b border-gray-200">
+                            <span class="text-sm text-gray-700" x-text="numToWords(activeReturn?.amount ?? 0)"></span>
+                        </div>
+
+                        {{-- Paid / Balance --}}
+                        <div class="px-6 py-3 border-b border-gray-200 flex items-center justify-between">
+                            <span class="text-sm text-gray-700">Paid</span>
+                            <span class="text-gray-400 text-sm">:</span>
+                            <span class="text-sm font-bold text-gray-800">$ 0.00</span>
+                        </div>
+                        <div class="px-6 py-3 border-b border-gray-200 flex items-center justify-between">
+                            <span class="text-sm text-gray-700">Balance</span>
+                            <span class="text-gray-400 text-sm">:</span>
+                            <span class="text-sm font-black text-gray-800" x-text="'$ ' + parseFloat(activeReturn?.amount ?? 0).toFixed(2)"></span>
+                        </div>
+
+                        {{-- Authorized Signatory --}}
+                        <div class="grid grid-cols-2">
+                            <div></div>
+                            <div class="px-6 py-5">
+                                <div class="border border-gray-300 p-4 rounded">
+                                    <div class="text-sm font-black text-gray-800 mb-14">For {{ $company?->name ?? 'Company' }}:</div>
+                                    <div class="text-center text-xs text-gray-500 border-t border-gray-200 pt-2">Authorized Signatory</div>
+                                </div>
+                            </div>
+                        </div>
+
                 </div>
 
                 <!-- Footer -->
-                <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end">
-                    <button @click="showViewModal = false" class="px-5 py-2.5 bg-primary text-white font-black rounded-lg hover:bg-primary/90 transition-all text-[11px] uppercase tracking-wider">
+                <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex items-center justify-between shrink-0">
+                    <div class="flex gap-2">
+                        <a :href="'/sales-return/' + activeReturn?.id + '/pdf'" target="_blank"
+                           class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-primary font-black rounded-lg hover:bg-gray-50 transition-all text-[11px] uppercase tracking-wider shadow-sm">
+                            <i class="bi bi-file-earmark-pdf"></i> Download PDF
+                        </a>
+                    </div>
+                    <button @click="showViewModal = false"
+                            class="px-5 py-2.5 bg-primary text-white font-black rounded-lg hover:bg-primary/90 transition-all text-[11px] uppercase tracking-wider">
                         Close
                     </button>
                 </div>
             </div>
         </div>
+        </template>
 
         <!-- Edit Modal -->
+        <template x-teleport="body">
         <div x-show="showEditModal" x-cloak
-             class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-            <div class="bg-white rounded-[1.25rem] w-full max-w-lg shadow-2xl flex flex-col overflow-hidden"
-                 @click.away="showEditModal = false"
+             @click.self="showEditModal = false"
+             style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(15,23,42,0.4);backdrop-filter:blur(4px);">
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;max-width:32rem;max-height:90vh;display:flex;flex-direction:column;border-radius:1.25rem;overflow:hidden;box-shadow:0 25px 50px -12px rgba(0,0,0,0.35);"
                  x-transition:enter="transition ease-out duration-200"
                  x-transition:enter-start="opacity-0 scale-95"
                  x-transition:enter-end="opacity-100 scale-100">
@@ -471,7 +546,58 @@
                 </div>
 
                 <!-- Body -->
-                <div class="px-6 py-6 space-y-5">
+                <div class="px-6 py-6 space-y-5 overflow-y-auto flex-1 min-h-0 custom-scrollbar">
+
+                    {{-- Customer + Invoice (read-only) --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div class="space-y-1.5">
+                            <label class="block text-[11px] font-black text-primary uppercase tracking-wider">Customer</label>
+                            <div class="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-500 flex items-center gap-2">
+                                <i class="bi bi-person text-primary/40"></i>
+                                <span x-text="activeReturn?.customer?.name ?? '—'"></span>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="block text-[11px] font-black text-primary uppercase tracking-wider">Original Invoice</label>
+                            <div class="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-500 flex items-center gap-2">
+                                <i class="bi bi-receipt text-primary/40"></i>
+                                <span x-text="activeReturn?.invoice_no ?? '—'"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Items (editable qty) --}}
+                    <template x-if="editItems.length > 0">
+                        <div class="space-y-1.5">
+                            <label class="block text-[11px] font-black text-primary uppercase tracking-wider">Items Being Returned</label>
+                            <div class="border border-gray-200 rounded-lg divide-y divide-gray-100 bg-gray-50">
+                                <template x-for="(item, idx) in editItems" :key="idx">
+                                    <div class="flex items-center gap-3 px-4 py-2.5">
+                                        <i class="bi bi-check2-square text-accent text-base flex-shrink-0"></i>
+                                        <span class="flex-1 text-[12px] font-bold text-primary-dark" x-text="item.product_name"></span>
+                                        <div class="flex items-center gap-1.5 flex-shrink-0">
+                                            <span class="text-[11px] text-gray-400">Qty:</span>
+                                            <input type="number" x-model.number="item.quantity" min="0.01" step="0.01"
+                                                   class="w-20 px-2 py-1 border border-primary/30 rounded-lg text-[12px] text-center font-bold text-primary focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none bg-white">
+                                        </div>
+                                        <span class="text-[12px] font-black text-primary w-20 text-right flex-shrink-0"
+                                              x-text="'$ ' + ((item.quantity || 0) * item.unit_price).toFixed(2)"></span>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+
+                    {{-- Return Amount (auto-computed from items) --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-black text-primary uppercase tracking-wider">Return Amount</label>
+                        <div class="w-full px-4 py-2.5 bg-primary/5 border border-primary/20 rounded-lg text-[13px] font-black text-primary flex items-center justify-between">
+                            <span x-text="'$ ' + editTotal"></span>
+                            <i class="bi bi-calculator text-primary/40 text-xs"></i>
+                        </div>
+                    </div>
+
+                    {{-- Reason + Status --}}
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div class="space-y-1.5">
                             <label class="block text-[11px] font-black text-primary uppercase tracking-wider">Return Reason <span class="text-primary">*</span></label>
@@ -485,7 +611,6 @@
                                 <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
                             </div>
                         </div>
-
                         <div class="space-y-1.5">
                             <label class="block text-[11px] font-black text-primary uppercase tracking-wider">Status <span class="text-primary">*</span></label>
                             <div class="relative">
@@ -499,15 +624,17 @@
                         </div>
                     </div>
 
+                    {{-- Return Date --}}
                     <div class="space-y-1.5">
                         <label class="block text-[11px] font-black text-primary uppercase tracking-wider">Return Date <span class="text-primary">*</span></label>
                         <input type="date" x-model="editDate"
                                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-primary focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
                     </div>
 
+                    {{-- Notes --}}
                     <div class="space-y-1.5">
                         <label class="block text-[11px] font-black text-primary uppercase tracking-wider">Notes</label>
-                        <textarea x-model="editNotes" rows="3" placeholder="Additional notes..."
+                        <textarea x-model="editNotes" rows="2" placeholder="Additional notes..."
                                   class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-primary focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all resize-none"></textarea>
                     </div>
                 </div>
@@ -525,6 +652,7 @@
                 </div>
             </div>
         </div>
+        </template>
 
         <!-- Issue Credit Note Modal -->
         <div x-show="showModal" x-cloak
@@ -660,37 +788,12 @@
             </div>
         </div>
 
-        <!-- Pagination -->
-        @if($returns->total() > 0)
-        <div class="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
+        <!-- Record count -->
+        <div class="px-6 py-3 bg-gray-50/50 border-t border-gray-100">
             <p class="text-[11px] font-black text-gray-400 uppercase tracking-widest">
-                Showing {{ $returns->firstItem() ?? 0 }} to {{ $returns->lastItem() ?? 0 }} of {{ $returns->total() }} entries
+                Showing {{ $returns->count() }} {{ Str::plural('entry', $returns->count()) }}
             </p>
-            <div class="flex items-center gap-1">
-                @if ($returns->onFirstPage())
-                    <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-300 cursor-not-allowed shadow-sm" disabled><i class="bi bi-chevron-left text-xs"></i></button>
-                @else
-                    <a href="{{ $returns->previousPageUrl() }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-400 hover:bg-gray-50 transition-all shadow-sm"><i class="bi bi-chevron-left text-xs"></i></a>
-                @endif
-                @foreach ($returns->links()->elements as $element)
-                    @if (is_array($element))
-                        @foreach ($element as $page => $url)
-                            @if ($page == $returns->currentPage())
-                                <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-white font-black text-xs shadow-md shadow-primary/20">{{ $page }}</button>
-                            @else
-                                <a href="{{ $url }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 transition-all shadow-sm text-xs font-bold">{{ $page }}</a>
-                            @endif
-                        @endforeach
-                    @endif
-                @endforeach
-                @if ($returns->hasMorePages())
-                    <a href="{{ $returns->nextPageUrl() }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-400 hover:bg-gray-50 transition-all shadow-sm"><i class="bi bi-chevron-right text-xs"></i></a>
-                @else
-                    <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-300 cursor-not-allowed shadow-sm" disabled><i class="bi bi-chevron-right text-xs"></i></button>
-                @endif
-            </div>
         </div>
-        @endif
 
     </div>
 
@@ -721,3 +824,24 @@ function confirmDeleteReturn(id) {
 
 @endsection
 
+@push('js')
+<script>
+function printCreditNote() {
+    var doc = document.getElementById('cn-printable');
+    if (!doc) return;
+    var css = '* { margin:0; padding:0; box-sizing:border-box; }'
+            + 'body { font-family:Arial,Helvetica,sans-serif; font-size:13px; color:#1a1a2e; background:#fff; padding:20px; }'
+            + 'h2 { text-align:center; font-size:22px; font-weight:bold; margin-bottom:16px; color:#1a1a2e; }'
+            + '.border-b { border-bottom:1px solid #e5e7eb; }'
+            + '.grid { display:grid; }'
+            + '.grid-cols-2 { grid-template-columns:1fr 1fr; }'
+            + 'img { max-width:64px; max-height:64px; object-fit:contain; }'
+            + 'strong { font-weight:bold; }';
+    var w = window.open('', '_blank', 'width=900,height=700');
+    w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Credit Note</title><style>' + css + '</style></head><body>' + doc.innerHTML + '</body></html>');
+    w.document.close();
+    w.focus();
+    setTimeout(function() { w.print(); }, 400);
+}
+</script>
+@endpush

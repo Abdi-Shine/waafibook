@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use App\Models\Company;
 use App\Models\Customer;
 use App\Models\JournalEntry;
 use App\Models\JournalItem;
@@ -11,6 +12,7 @@ use App\Models\SalesOrder;
 use App\Models\SalesReturn;
 use App\Models\SalesReturnItem;
 use App\Models\StockMovement;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -31,7 +33,7 @@ class SalesReturnController extends Controller
             $query->where('status', $request->status);
         }
 
-        $returns   = $query->paginate(10)->withQueryString();
+        $returns   = $query->get();
         $customers = Customer::query()->orderBy('name')->get();
         $invoices  = SalesOrder::query()->whereIn('status', ['completed', 'partial'])
             ->with(['items.product', 'items.returnItems'])
@@ -44,7 +46,9 @@ class SalesReturnController extends Controller
             'pending'        => SalesReturn::query()->where('status', 'pending')->count(),
         ];
 
-        return view('frontend.sales.sales_return_credit_note', compact('returns', 'customers', 'invoices', 'stats'));
+        $company = Company::find(auth()->user()->company_id) ?? Company::first();
+
+        return view('frontend.sales.sales_return_credit_note', compact('returns', 'customers', 'invoices', 'stats', 'company'));
     }
 
     public function store(Request $request)
@@ -162,22 +166,73 @@ class SalesReturnController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'reason'      => 'required|string|max:255',
-            'return_date' => 'required|date',
-            'notes'       => 'nullable|string',
-            'status'      => 'required|in:approved,pending,rejected',
+            'reason'           => 'required|string|max:255',
+            'return_date'      => 'required|date',
+            'notes'            => 'nullable|string',
+            'status'           => 'required|in:approved,pending,rejected',
+            'items'            => 'nullable|array',
+            'items.*.id'       => 'required|exists:sales_return_items,id',
+            'items.*.quantity' => 'required|numeric|min:0.01',
         ]);
 
         /** @var SalesReturn $return */
-        $return = SalesReturn::query()->findOrFail($id);
-        $return->update([
-            'reason'      => $request->reason,
-            'return_date' => $request->return_date,
-            'notes'       => $request->notes,
-            'status'      => $request->status,
-        ]);
+        $return = SalesReturn::query()->with('items')->findOrFail($id);
+
+        DB::transaction(function () use ($request, $return) {
+            $newAmount = (float) $return->amount;
+
+            if ($request->filled('items')) {
+                $newAmount = 0;
+                foreach ($request->items as $itemData) {
+                    /** @var SalesReturnItem|null $item */
+                    $item = $return->items->firstWhere('id', $itemData['id']);
+                    if (!$item) continue;
+
+                    $oldQty = (float) $item->quantity;
+                    $newQty = (float) $itemData['quantity'];
+                    $diff   = $newQty - $oldQty;
+
+                    $item->quantity = $newQty;
+                    $item->subtotal = round($newQty * (float) $item->unit_price, 4);
+                    $item->save();
+
+                    // Adjust restocked quantity at the branch
+                    if ($return->branch_id && abs($diff) > 0.0001) {
+                        $stock = ProductStock::query()
+                            ->where('product_id', $item->product_id)
+                            ->where('branch_id', $return->branch_id)
+                            ->first();
+                        if ($stock) {
+                            $stock->quantity = max(0, $stock->quantity + $diff);
+                            $stock->save();
+                        }
+                    }
+
+                    $newAmount += $item->subtotal;
+                }
+            }
+
+            $return->update([
+                'reason'      => $request->reason,
+                'return_date' => $request->return_date,
+                'notes'       => $request->notes,
+                'status'      => $request->status,
+                'amount'      => $newAmount,
+            ]);
+        });
 
         return response()->json(['success' => true, 'message' => 'Credit note updated successfully.']);
+    }
+
+    public function downloadPdf($id)
+    {
+        $return  = SalesReturn::query()->with('customer', 'invoice', 'items.product')->findOrFail($id);
+        $company = Company::find(auth()->user()->company_id);
+
+        $pdf = Pdf::loadView('frontend.sales.cn_pdf', compact('return', 'company'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->download('CreditNote-' . $return->credit_note_no . '.pdf');
     }
 
     public function destroy($id)

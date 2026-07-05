@@ -5,7 +5,7 @@
 @endpush
 
 @section('admin')
-<div class="px-4 py-8 md:px-8 md:py-10 bg-background min-h-screen" 
+<div class="px-4 py-8 md:px-8 md:py-10 bg-background min-h-screen overflow-x-hidden" 
     x-data="{ 
         showModal: false,
         searchTerm: '',

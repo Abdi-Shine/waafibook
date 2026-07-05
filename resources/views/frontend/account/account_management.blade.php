@@ -2,7 +2,7 @@
 @section('page_title', 'Account Management')
 
 @section('admin')
-<div class="px-4 py-8 md:px-8 md:py-10 bg-background min-h-screen" x-data="{ searchTerm: '' }" x-cloak>
+<div class="px-4 py-8 md:px-8 md:py-10 bg-background min-h-screen overflow-x-hidden" x-data="{ searchTerm: '' }" x-cloak>
 
     <!-- Page Header -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
