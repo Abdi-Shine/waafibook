@@ -50,6 +50,24 @@ class PurchaseController extends Controller
         return view('frontend.purchase.purchase_order', compact('purchaseOrders', 'suppliers', 'branches', 'products', 'poNo', 'currency'));
     }
 
+    public function create()
+    {
+        $suppliers = Supplier::query()->where('status', 'active')->get();
+        $branches  = Branch::query()->get();
+        $products  = Product::query()->get();
+
+        /** @var Company|null $company */
+        $company = Company::find(auth()->user()->company_id);
+        $currSymbols = ['SAR' => '﷼', 'USD' => '$', 'EUR' => '€', 'GBP' => '£', 'AED' => 'د.إ', 'KWD' => 'د.ك'];
+        $currency = $currSymbols[$company->currency ?? ''] ?? ($company->currency ?? '$');
+
+        $lastPO = PurchaseOrder::query()->latest()->first();
+        $nextId = $lastPO ? ($lastPO->id + 1) : 1;
+        $poNo   = 'PO-' . date('Y') . '-' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
+
+        return view('frontend.purchase.create_purchase_order', compact('suppliers', 'branches', 'products', 'poNo', 'currency'));
+    }
+
     public function billIndex(Request $request)
     {
         /** @var PurchaseBill|null $lastBill */

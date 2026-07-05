@@ -334,7 +334,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Purchase
     Route::middleware('permission:Purchase')->group(function () {
         Route::get('/purchase/orders', [App\Http\Controllers\PurchaseController::class, 'index'])->name('purchase.order.index');
-        Route::get('/purchase/orders/create', [App\Http\Controllers\PurchaseController::class, 'index'])->name('purchase.order.create');
+        Route::get('/purchase/orders/create', [App\Http\Controllers\PurchaseController::class, 'create'])->name('purchase.order.create');
         Route::post('/purchase/orders', [App\Http\Controllers\PurchaseController::class, 'store'])->name('purchase.order.store');
         Route::get('/purchase/orders/{id}', [App\Http\Controllers\PurchaseController::class, 'show'])->name('purchase.order.show')->middleware('tenant.owns:purchase_orders');
         Route::get('/purchase/orders/{id}/print', [App\Http\Controllers\PurchaseController::class, 'printOrder'])->name('purchase.order.print')->middleware('tenant.owns:purchase_orders');

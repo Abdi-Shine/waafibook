@@ -11,11 +11,11 @@
             <h1 class="text-[20px] font-bold text-primary-dark">Purchase Orders</h1>
         </div>
         <div class="flex items-center gap-3">
-            <button @click="openCreateModal()"
+            <a href="{{ route('purchase.order.create') }}"
                 class="flex items-center gap-2 px-5 py-2.5 bg-primary text-white font-semibold rounded-[0.5rem] hover:bg-primary/90 transition-all shadow-sm text-sm group">
                 <i class="bi bi-plus-lg group-hover:rotate-180 transition-transform duration-300"></i>
                 Create Purchase Order
-            </button>
+            </a>
         </div>
     </div>
 
