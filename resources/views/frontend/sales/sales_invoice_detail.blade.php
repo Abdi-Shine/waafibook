@@ -236,16 +236,6 @@
                     <i class="bi bi-file-earmark-pdf text-primary text-base"></i>
                     <span class="text-[12px] font-black text-primary-dark group-hover:text-primary transition-colors">Download PDF Invoice</span>
                 </a>
-                <a href="{{ route('sales.invoice.edit', $order->id) }}"
-                   class="flex items-center gap-3 px-4 py-3 bg-gray-50 border border-gray-100 rounded-lg hover:bg-primary/10 hover:border-indigo-200 transition-all group w-full">
-                    <i class="bi bi-pencil text-primary text-base"></i>
-                    <span class="text-[12px] font-black text-primary-dark group-hover:text-primary transition-colors">Edit This Invoice</span>
-                </a>
-                <a href="{{ route('sales.invoice.view') }}"
-                   class="flex items-center gap-3 px-4 py-3 bg-gray-50 border border-gray-100 rounded-lg hover:bg-primary/5 hover:border-primary/20 transition-all group w-full">
-                    <i class="bi bi-list-ul text-primary text-base"></i>
-                    <span class="text-[12px] font-black text-primary-dark group-hover:text-primary transition-colors">Back to Invoices</span>
-                </a>
             </div>
         </div>
     </div>
