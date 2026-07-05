@@ -167,11 +167,6 @@
                     <span class="text-[11px] font-bold text-primary-dark uppercase tracking-wider">Invoice Summary</span>
                 </div>
 
-                {{-- Subtotal --}}
-                <div class="flex justify-between items-center py-2 border-b border-gray-100">
-                    <span class="text-[12px] text-gray-500 font-medium">Subtotal</span>
-                    <span class="text-[13px] font-bold text-gray-700" id="subtotalDisplay">{{ $curr }} {{ number_format($order->subtotal, 2) }}</span>
-                </div>
 
                 {{-- Discount + Amount Paid --}}
                 <div class="grid grid-cols-2 gap-3 py-2 border-b border-gray-100">
