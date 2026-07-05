@@ -4,13 +4,18 @@
     <meta charset="UTF-8">
     <title>Payment Receipt - {{ $payment->receipt_no ?? $payment->id }}</title>
     <style>
+        @page {
+            size: A4 portrait;
+            margin: 15mm 20mm;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: Arial, Helvetica, sans-serif;
             font-size: 13px;
             color: #1a1a2e;
             background: #fff;
-            padding: 20px;
+            width: 170mm;
+            margin: 15mm auto;
         }
         h1.page-title {
             text-align: center;
@@ -24,8 +29,7 @@
         table { width: 100%; border-collapse: collapse; }
 
         @media print {
-            body { padding: 0; }
-            .no-print { display: none !important; }
+            body { margin: 0; width: 100%; }
         }
     </style>
 </head>
