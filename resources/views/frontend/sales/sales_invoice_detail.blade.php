@@ -228,15 +228,6 @@
                 </div>
             </div>
 
-            {{-- Quick Actions --}}
-            <div class="bg-white rounded-[1rem] border border-gray-100 shadow-sm p-5 space-y-2">
-                <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-3">Quick Actions</p>
-                <a href="{{ route('sales.invoice.pdf', $order->id) }}" target="_blank"
-                   class="flex items-center gap-3 px-4 py-3 bg-gray-50 border border-gray-100 rounded-lg hover:bg-primary/10 hover:border-sky-200 transition-all group w-full">
-                    <i class="bi bi-file-earmark-pdf text-primary text-base"></i>
-                    <span class="text-[12px] font-black text-primary-dark group-hover:text-primary transition-colors">Download PDF Invoice</span>
-                </a>
-            </div>
         </div>
     </div>
 </div>
