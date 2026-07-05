@@ -152,7 +152,6 @@
                     <tr class="bg-white border-b border-gray-100">
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider w-16 text-center">#</th>
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Voucher Info</th>
-                        <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Supplier</th>
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Products</th>
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Method</th>
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-right">Amount</th>
@@ -168,9 +167,6 @@
                         </td>
                         <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark">
                             {{ $item->voucher_no }}
-                        </td>
-                        <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark">
-                            {{ $item->supplier->name ?? 'N/A' }}
                         </td>
                         <td class="px-5 py-4">
                             <div class="flex flex-col gap-1 max-w-[200px]">
