@@ -308,27 +308,14 @@
                 @csrf
                 <div class="px-6 py-6 flex-1 overflow-y-auto custom-scrollbar bg-white space-y-6">
 
-                    <!-- Row 1: Expense Name, Linked Bill, Category -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <!-- Row 1: Expense Name, Category -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div class="space-y-1.5">
                             <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Expense Name <span class="text-primary">*</span></label>
                             <div class="relative">
                                 <input type="text" name="expense_name" required placeholder="Shipping Fee"
                                        class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
                                 <i class="bi bi-tag absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                            </div>
-                        </div>
-                        <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Linked Bill <span class="text-gray-400 normal-case font-normal">(optional)</span></label>
-                            <div class="relative">
-                                <select name="purchase_id"
-                                        class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
-                                    <option value="">-- No Linked Bill --</option>
-                                    @foreach($bills as $bill)
-                                        <option value="{{ $bill->id }}">{{ $bill->bill_number }}</option>
-                                    @endforeach
-                                </select>
-                                <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
                             </div>
                         </div>
                         <div class="space-y-1.5">
@@ -346,8 +333,8 @@
                         </div>
                     </div>
 
-                    <!-- Row 2: Amount, Date, Supplier -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <!-- Row 2: Amount, Date -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div class="space-y-1.5">
                             <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Amount Paid <span class="text-primary">*</span></label>
                             <div class="relative">
@@ -364,36 +351,10 @@
                                 <i class="bi bi-calendar3 absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
                             </div>
                         </div>
-                        <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Supplier <span class="text-gray-400 normal-case font-normal">(optional)</span></label>
-                            <div class="relative">
-                                <select name="supplier_id"
-                                        class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
-                                    <option value="">-- SELECT SUPPLIER --</option>
-                                    @foreach ($suppliers as $supplier)
-                                        <option value="{{ $supplier->id }}">{{ $supplier->company_name ?? $supplier->name }}</option>
-                                    @endforeach
-                                </select>
-                                <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
-                            </div>
-                        </div>
                     </div>
 
-                    <!-- Row 3: Branch, Bank Account, Description -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                        <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Branch <span class="text-gray-400 normal-case font-normal">(optional)</span></label>
-                            <div class="relative">
-                                <select name="branch_id" x-model="selectedBranch"
-                                        class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
-                                    <option value="">-- SELECT BRANCH --</option>
-                                    @foreach ($branches as $branch)
-                                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                                    @endforeach
-                                </select>
-                                <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
-                            </div>
-                        </div>
+                    <!-- Row 3: Bank Account, Description -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div class="space-y-1.5">
                             <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Bank Account <span class="text-primary">*</span></label>
                             <div class="relative">
