@@ -149,7 +149,6 @@
                     <tr class="bg-white border-b border-gray-100">
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider w-16">#</th>
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Date</th>
-                        <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Bill No.</th>
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Expense Name</th>
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Account</th>
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Paid From</th>
@@ -166,15 +165,6 @@
                             </td>
                             <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark">
                                 {{ $expense->expense_date ? \Carbon\Carbon::parse($expense->expense_date)->format('d M Y') : 'N/A' }}
-                            </td>
-                            <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark">
-                                @if($expense->purchase_id)
-                                    <a href="{{ route('purchase.bill.show', $expense->purchase_id) }}" class="hover:text-primary transition-colors">
-                                        #{{ $expense->purchase->bill_number ?? 'N/A' }}
-                                    </a>
-                                @else
-                                    <span class="text-gray-400">—</span>
-                                @endif
                             </td>
                             <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark">{{ $expense->expense_name }}</td>
                             <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark">
