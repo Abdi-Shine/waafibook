@@ -38,23 +38,12 @@
                 {{-- Left: Supplier --}}
                 <div class="p-6 border-b md:border-b-0 md:border-r border-gray-100">
                     <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Supplier Entity</p>
-                    <div class="relative mb-4">
+                    <div class="relative">
                         <select name="supplier_id" id="po_supplier_id" required
                             class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold text-slate-700 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
                             <option value="">Search by Name / Supplier...</option>
                             @foreach($suppliers as $supplier)
                                 <option value="{{ $supplier->id }}">{{ $supplier->name }}  ·  {{ $supplier->supplier_code }}</option>
-                            @endforeach
-                        </select>
-                        <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
-                    </div>
-
-                    <div class="relative">
-                        <select name="branch_id" id="po_branch_id" required
-                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold text-slate-700 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
-                            <option value="">Receiving Branch...</option>
-                            @foreach($branches as $branch)
-                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                             @endforeach
                         </select>
                         <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
@@ -299,14 +288,10 @@
 
     function submitPO() {
         const supplier = document.getElementById('po_supplier_id').value;
-        const branch   = document.getElementById('po_branch_id').value;
         const items    = document.querySelectorAll('.manifest-item');
 
         if (!supplier) {
             Swal.fire({ icon: 'warning', title: 'Missing Supplier', text: 'Please select a supplier before saving.' }); return;
-        }
-        if (!branch) {
-            Swal.fire({ icon: 'warning', title: 'Missing Branch', text: 'Please select a receiving branch before saving.' }); return;
         }
         if (items.length === 0) {
             Swal.fire({ icon: 'warning', title: 'Empty Manifest', text: 'Please add at least one product to the order.' }); return;
