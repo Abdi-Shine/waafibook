@@ -2319,7 +2319,7 @@ class ReportController extends Controller
                 'purchaseAmount'  => $purchAmt,
                 'netProfit'       => $saleAmt - $purchAmt,
             ];
-        })->filter(fn(object $i) => $i->saleQty > 0 || $i->purchaseQty > 0)->values();
+        })->filter(fn(object $i) => $i->saleQty > 0)->values();
 
         $totals = (object)[
             'saleQty'        => $items->sum('saleQty'),
