@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SupplierPayment;
 use App\Models\SupplierPaymentDetail;
 use App\Models\Supplier;
+use App\Models\PurchaseBill;
 use App\Models\Company;
 use App\Models\Account;
 use App\Models\JournalEntry;
@@ -50,8 +51,17 @@ class PaymentOutController extends Controller
             $query->whereDate('payment_date', $request->date);
         }
 
-        $payments = $query->latest()->get();
-        
+        $payments = $query->latest()->with('details.bill.items')->get();
+
+        // Build supplier → product names map so the blade can show
+        // what was purchased from each supplier without N+1 queries.
+        $supplierIds = $payments->pluck('supplier_id')->unique()->filter();
+        $billItemsBySupplier = PurchaseBill::query()
+            ->whereIn('supplier_id', $supplierIds)
+            ->with('items')
+            ->get()
+            ->groupBy('supplier_id');
+
         $todayPayments = SupplierPayment::query()->whereDate('payment_date', now())->sum('amount');
         $monthPayments = SupplierPayment::query()->whereMonth('payment_date', now()->month)->sum('amount');
         $pendingPayments = SupplierPayment::query()->where('status', 'pending')->sum('amount');
@@ -69,8 +79,9 @@ class PaymentOutController extends Controller
         $suggestedVoucherNo = 'PV-' . date('Ymd') . '-' . str_pad(SupplierPayment::query()->count() + 1, 4, '0', STR_PAD_LEFT);
 
         return view('frontend.purchase.supplier_payment', compact(
-            'payments', 'todayPayments', 'monthPayments', 'pendingPayments', 
-            'totalTransactions', 'suppliers', 'company', 'suggestedVoucherNo', 'bankAccounts'
+            'payments', 'todayPayments', 'monthPayments', 'pendingPayments',
+            'totalTransactions', 'suppliers', 'company', 'suggestedVoucherNo',
+            'bankAccounts', 'billItemsBySupplier'
         ));
     }
 
