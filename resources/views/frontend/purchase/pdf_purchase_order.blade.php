@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <title>Purchase Order - {{ $po->po_number }}</title>
     <style>
-        @page { size: A4 portrait; margin: 12mm 10mm; }
+        @page { size: A4 portrait; margin: 0; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: Arial, Helvetica, sans-serif;
             font-size: 13px;
             color: #1a1a2e;
             background: #fff;
+            padding: 14mm 16mm;
         }
         h1.page-title {
             text-align: center;
