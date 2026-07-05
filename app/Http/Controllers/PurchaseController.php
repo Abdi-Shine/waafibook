@@ -1276,8 +1276,10 @@ class PurchaseController extends Controller
 
         $bills = PurchaseBill::query()->get();
         $branches = Branch::query()->get();
-        $bankAccounts = Account::query()->whereIn('type', ['bank', 'cash'])
-                                           ->where('type', '!=', 'parent')
+        $bankAccounts = Account::query()->where('type', 'cash')
+                                           ->where(fn($q) => $q->where('name', 'like', '%Cash on Hand%')
+                                                               ->orWhere('name', 'like', '%Cash in Hand%'))
+                                           ->where('is_active', 1)
                                            ->orderBy('name')
                                            ->get(['id', 'name', 'code', 'branch_id']);
 
