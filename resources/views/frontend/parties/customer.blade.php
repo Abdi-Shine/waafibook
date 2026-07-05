@@ -317,47 +317,6 @@
                 </table>
             </div>
 
-            <!-- Table Footer / Pagination -->
-            @if($customers->count() > 0)
-                <div class="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <p class="text-[11px] font-black text-gray-400 uppercase tracking-widest">
-                        Showing {{ $customers->firstItem() }} to {{ $customers->lastItem() }} of {{ $customers->total() }} entries
-                    </p>
-                    <div class="flex items-center gap-1">
-                        @if ($customers->onFirstPage())
-                            <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-300 cursor-not-allowed shadow-sm" disabled>
-                                <i class="bi bi-chevron-left text-xs"></i>
-                            </button>
-                        @else
-                            <a href="{{ $customers->previousPageUrl() }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-400 hover:bg-gray-50 transition-all shadow-sm">
-                                <i class="bi bi-chevron-left text-xs"></i>
-                            </a>
-                        @endif
-
-                        @foreach ($customers->links()->elements as $element)
-                            @if (is_array($element))
-                                @foreach ($element as $page => $url)
-                                    @if ($page == $customers->currentPage())
-                                        <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-white font-black text-xs shadow-md shadow-primary/20">{{ $page }}</button>
-                                    @else
-                                        <a href="{{ $url }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 transition-all shadow-sm text-xs font-bold">{{ $page }}</a>
-                                    @endif
-                                @endforeach
-                            @endif
-                        @endforeach
-
-                        @if ($customers->hasMorePages())
-                            <a href="{{ $customers->nextPageUrl() }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-400 hover:bg-gray-50 transition-all shadow-sm">
-                                <i class="bi bi-chevron-right text-xs"></i>
-                            </a>
-                        @else
-                            <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-300 cursor-not-allowed shadow-sm" disabled>
-                                <i class="bi bi-chevron-right text-xs"></i>
-                            </button>
-                        @endif
-                    </div>
-                </div>
-            @endif
         </div>
 
         <!-- CUSTOMER MODAL -->

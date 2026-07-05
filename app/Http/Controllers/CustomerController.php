@@ -37,7 +37,7 @@ class CustomerController extends Controller
                 ->whereColumn('customer_id', 'customers.id')
                 ->latest('invoice_date')
                 ->limit(1),
-        ])->paginate(10)->withQueryString();
+        ])->get();
 
         $stats = [
             'total'          => Customer::query()->count(),
