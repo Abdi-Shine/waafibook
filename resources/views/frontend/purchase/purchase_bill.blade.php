@@ -142,9 +142,9 @@
             </div>
 
             {{-- Table --}}
-            <div class="overflow-x-auto">
+            <div class="overflow-y-auto overflow-x-auto" style="max-height:75vh;">
                 <table class="w-full whitespace-nowrap text-left">
-                    <thead>
+                    <thead class="sticky top-0 z-10">
                         <tr class="bg-white border-b border-gray-100">
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider w-16 text-center">#</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Supplier</th>
@@ -160,7 +160,7 @@
                         @forelse($purchaseBills as $key => $bill)
                             <tr class="hover:bg-gray-50/60 transition-colors bg-white group">
                                 <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark text-center">
-                                    {{ str_pad($purchaseBills->firstItem() + $key, 2, '0', STR_PAD_LEFT) }}
+                                    {{ str_pad($key + 1, 2, '0', STR_PAD_LEFT) }}
                                 </td>
                                 <td class="px-5 py-4">
                                     <span class="text-[12px] font-semibold text-primary-dark">{{ $bill->supplier->name ?? '—' }}</span>
@@ -230,18 +230,6 @@
                 </table>
             </div>
 
-            {{-- Footer / Pagination --}}
-            @if($purchaseBills->total() > 0)
-                <div class="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between gap-4">
-                    <p class="text-[11px] font-black text-gray-400 uppercase tracking-widest">
-                        Showing <span class="text-primary-dark">{{ $purchaseBills->firstItem() }}</span>–<span class="text-primary-dark">{{ $purchaseBills->lastItem() }}</span>
-                        of <span class="text-primary-dark">{{ $purchaseBills->total() }}</span> entries
-                    </p>
-                    <div>
-                        {{ $purchaseBills->links() }}
-                    </div>
-                </div>
-            @endif
 
         </div>
 

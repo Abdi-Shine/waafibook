@@ -79,7 +79,7 @@ class PurchaseController extends Controller
             'totalAmount' => (clone $query)->sum('total_amount'),
             'vouchers'    => (clone $query)->whereNotNull('supplier_invoice_no')->count(),
         ];
-        $purchaseBills = $query->latest()->paginate(15)->withQueryString();
+        $purchaseBills = $query->latest()->get();
 
         $suppliers = Supplier::query()->where('status', 'active')->get();
         $branches = Branch::query()->get();
