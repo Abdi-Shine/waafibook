@@ -112,19 +112,9 @@
         
         <div class="flex items-center gap-3">
             <!-- Badges & Primary Actions -->
-            @if($po->status === 'approved' || $po->status === 'received')
-                <span class="px-3 py-1.5 rounded-lg bg-[#0B5567]/5 text-[#0B5567] text-[10px] font-bold border border-[#0B5567]/20 uppercase">Approved</span>
-            @endif
-            
             @if($po->status === 'pending')
                 <button @click="confirmStatusAction('approved')" class="px-4 py-2 bg-white text-[#0B5567] text-xs font-bold rounded-lg border border-[#0B5567]/20 hover:bg-[#0B5567]/5 transition-all shadow-sm">
                     Approve
-                </button>
-            @endif
-
-            @if($po->status === 'pending' || $po->status === 'approved')
-                <button @click="confirmStatusAction('cancelled')" class="px-4 py-2 bg-white text-[#ef4444] text-xs font-bold rounded-lg border border-[#ef4444]/20 hover:bg-primary/10 transition-all shadow-sm">
-                    Cancel PO
                 </button>
             @endif
 
