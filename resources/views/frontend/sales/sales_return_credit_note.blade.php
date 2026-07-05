@@ -235,7 +235,7 @@
                             <td class="px-5 py-4">
                                 <div class="flex flex-col gap-0.5">
                                     @forelse($return->items as $item)
-                                        <span class="text-[12px] font-semibold text-primary-dark">{{ $item->product->name ?? '—' }}</span>
+                                        <span class="text-[12px] font-semibold text-primary-dark">{{ $item->product->product_name ?? '—' }}</span>
                                     @empty
                                         <span class="text-[12px] text-gray-400">—</span>
                                     @endforelse
