@@ -29,25 +29,35 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class PurchaseController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $purchaseOrders = PurchaseOrder::query()->with(['supplier', 'branch', 'items.product'])->latest()->get();
-        $suppliers = Supplier::query()->where('status', 'active')->get();
-        $branches = Branch::query()->get();
-        $products = Product::query()->get();
+        $query = PurchaseOrder::query()->with(['supplier', 'branch', 'items.product'])->latest();
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('po_number', 'like', "%$search%")
+                  ->orWhereHas('supplier', fn($s) => $s->where('name', 'like', "%$search%"));
+            });
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('supplier_id')) {
+            $query->where('supplier_id', $request->supplier_id);
+        }
+
+        $purchaseOrders = $query->get();
+        $suppliers      = Supplier::query()->where('status', 'active')->get();
+        $filters        = $request->only(['search', 'status', 'supplier_id']);
 
         /** @var Company|null $company */
         $company = Company::find(auth()->user()->company_id);
         $currSymbols = ['SAR' => '﷼', 'USD' => '$', 'EUR' => '€', 'GBP' => '£', 'AED' => 'د.إ', 'KWD' => 'د.ك'];
-        $currency = $currSymbols[$company->currency ?? ''] ?? ($company->currency ?? '$');
+        $sym  = $currSymbols[$company->currency ?? ''] ?? ($company->currency ?? '$');
+        $curr = $sym;
 
-        // Generate Next PO Number
-        /** @var PurchaseOrder|null $lastPO */
-        $lastPO = PurchaseOrder::query()->latest()->first();
-        $nextId = $lastPO ? ($lastPO->id + 1) : 1;
-        $poNo = 'PO-' . date('Y') . '-' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
-
-        return view('frontend.purchase.purchase_order', compact('purchaseOrders', 'suppliers', 'branches', 'products', 'poNo', 'currency'));
+        return view('frontend.purchase.purchase_order', compact('purchaseOrders', 'suppliers', 'filters', 'sym', 'curr'));
     }
 
     public function create()
