@@ -1,5 +1,26 @@
 @extends('admin.admin_master')
 @section('page_title', 'Payment Receipt')
+
+@push('css')
+<style>
+@media print {
+    body * { visibility: hidden !important; }
+    #receipt-printable,
+    #receipt-printable * { visibility: visible !important; }
+    #receipt-printable {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        margin: 0;
+        padding: 20px;
+        box-shadow: none;
+        border-radius: 0;
+    }
+}
+</style>
+@endpush
+
 @section('admin')
 
 @php
@@ -64,7 +85,7 @@
     </div>
 
     {{-- Receipt Card --}}
-    <div class="max-w-3xl mx-auto bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
+    <div id="receipt-printable" class="max-w-3xl mx-auto bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
 
         {{-- Title --}}
         <div class="text-center py-4 border-b border-gray-200">
