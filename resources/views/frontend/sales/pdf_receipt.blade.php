@@ -2,183 +2,145 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Receipt - {{ $payment->receipt_no }}</title>
+    <title>Payment Receipt - {{ $payment->receipt_no ?? $payment->id }}</title>
     <style>
-        {!! file_get_contents(public_path('frontend/assets/css/receipt-pdf.css')) !!}
+        @page { margin: 15mm; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 13px;
+            color: #1a1a2e;
+            background: #fff;
+        }
+        h1.page-title {
+            text-align: center;
+            font-size: 26px;
+            font-weight: bold;
+            margin-bottom: 18px;
+            color: #1a1a2e;
+        }
+        .outer-box {
+            border: 1px solid #666;
+            width: 100%;
+        }
+        .row-border-top {
+            border-top: 1px solid #666;
+        }
+        table { width: 100%; border-collapse: collapse; }
     </style>
 </head>
 <body>
-    <div class="receipt-container">
-        <div class="watermark">PAID</div>
-        
-        <div class="receipt-header">
-            <div class="receipt-badge">Payment Receipt</div>
-            <h1 class="receipt-title uppercase">Official Confirmation</h1>
-            <p class="receipt-subtitle">Thank you for choosing {{ $company->name ?? '' }}</p>
-        </div>
 
-        <div class="company-bar">
-            <div class="company-info-cell">
-                <div class="company-logo-placeholder has-logo">
-                    @php
-                        // Resolve logo path: company logo or fallback to WaafiBook logo
-                        $receiptLogoPath = (!empty($company->logo) && file_exists(public_path($company->logo)))
-                            ? public_path($company->logo)
-                            : public_path('upload/waafibooklogo/waafibook_logo.jpg');
-                        $receiptLogoExt  = pathinfo($receiptLogoPath, PATHINFO_EXTENSION) ?: 'jpg';
-                        $receiptLogoB64  = file_exists($receiptLogoPath)
-                            ? 'data:image/' . $receiptLogoExt . ';base64,' . base64_encode(file_get_contents($receiptLogoPath))
-                            : null;
-                    @endphp
-                    @if($receiptLogoB64)
-                        <img src="{{ $receiptLogoB64 }}" class="company-logo">
-                    @endif
+@php
+    $numToWords = function(int $n) use (&$numToWords): string {
+        if ($n === 0) return '';
+        $ones = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine',
+                 'Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen',
+                 'Seventeen','Eighteen','Nineteen'];
+        $tens = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+        $w = '';
+        if ($n >= 1000000) { $w .= $numToWords(intdiv($n, 1000000)) . ' Million '; $n %= 1000000; }
+        if ($n >= 1000)    { $w .= $numToWords(intdiv($n, 1000)) . ' Thousand '; $n %= 1000; }
+        if ($n >= 100)     { $w .= $ones[intdiv($n, 100)] . ' Hundred '; $n %= 100; }
+        if ($n >= 20)      { $w .= $tens[intdiv($n, 10)] . ' '; $n %= 10; }
+        if ($n > 0)        { $w .= $ones[$n] . ' '; }
+        return $w;
+    };
+
+    $dollars = (int) floor((float) $payment->amount);
+    $cents   = (int) round(((float) $payment->amount - $dollars) * 100);
+    $amountWords = trim($numToWords($dollars)) . ' Dollar' . ($dollars !== 1 ? 's' : '');
+    if ($cents > 0) {
+        $amountWords .= ' and ' . trim($numToWords($cents)) . ' Cent' . ($cents !== 1 ? 's' : '');
+    }
+    $amountWords .= ' only';
+
+    $symbol = '$';
+
+    $logoPath = (!empty($company->logo) && file_exists(public_path($company->logo)))
+        ? public_path($company->logo)
+        : public_path('upload/waafibooklogo/waafibook_logo.jpg');
+    $logoExt = strtolower(pathinfo($logoPath, PATHINFO_EXTENSION) ?: 'jpg');
+    $logoB64 = file_exists($logoPath)
+        ? 'data:image/' . $logoExt . ';base64,' . base64_encode(file_get_contents($logoPath))
+        : null;
+@endphp
+
+<h1 class="page-title">Payment Receipt</h1>
+
+<div class="outer-box">
+
+    {{-- Company --}}
+    <table>
+        <tr>
+            <td style="padding:12px 16px;">
+                @if($logoB64)
+                    <img src="{{ $logoB64 }}"
+                         style="width:72px;height:72px;object-fit:contain;border:1px dashed #bbb;border-radius:6px;vertical-align:middle;margin-right:14px;">
+                @endif
+                <span style="display:inline-block;vertical-align:middle;">
+                    <div style="font-size:24px;font-weight:bold;color:#1a1a2e;">{{ $company->name ?? '' }}</div>
+                    <div style="font-size:12px;color:#555;margin-top:5px;">Phone:&nbsp;&nbsp;{{ $company->phone ?? '' }}</div>
+                </span>
+            </td>
+        </tr>
+    </table>
+
+    {{-- Received From / Receipt Details --}}
+    <table class="row-border-top">
+        <tr>
+            <td width="50%" style="padding:12px 16px;vertical-align:top;border-right:1px solid #666;">
+                <div style="font-weight:bold;margin-bottom:8px;">Received From:</div>
+                <div style="font-weight:bold;font-size:15px;">{{ strtoupper($payment->customer->name ?? 'WALK-IN') }}</div>
+                <div style="margin-top:5px;color:#444;">Contact No:&nbsp;&nbsp;<strong>{{ $payment->customer->phone ?? 'N/A' }}</strong></div>
+            </td>
+            <td width="50%" style="padding:12px 16px;vertical-align:top;">
+                <div style="font-weight:bold;margin-bottom:8px;">Receipt Details:</div>
+                <div>Receipt No.:&nbsp;&nbsp;<strong>{{ $payment->id }}</strong></div>
+                <div style="margin-top:5px;">Date:&nbsp;&nbsp;<strong>{{ date('d/m/Y', strtotime($payment->payment_date)) }}</strong></div>
+            </td>
+        </tr>
+    </table>
+
+    {{-- Received Amount --}}
+    <table class="row-border-top">
+        <tr>
+            <td style="padding:10px 16px;width:50%;">Received</td>
+            <td style="padding:10px 16px;text-align:center;width:10%;">:</td>
+            <td style="padding:10px 16px;text-align:right;font-weight:bold;width:40%;">{{ $symbol }}&nbsp;{{ number_format($payment->amount, 2) }}</td>
+        </tr>
+    </table>
+
+    {{-- Amount in Words label --}}
+    <table class="row-border-top">
+        <tr>
+            <td style="padding:8px 16px;font-weight:bold;background:#f5f5f5;"><strong>Amount in Words:</strong></td>
+        </tr>
+    </table>
+
+    {{-- Amount in Words value --}}
+    <table class="row-border-top">
+        <tr>
+            <td style="padding:10px 16px;">{{ $amountWords }}</td>
+        </tr>
+    </table>
+
+    {{-- Authorized Signatory --}}
+    <table class="row-border-top">
+        <tr>
+            <td width="50%" style="padding:16px;"></td>
+            <td width="50%" style="padding:16px;">
+                <div style="border:1px solid #666;padding:12px 14px;">
+                    <div style="font-weight:bold;margin-bottom:65px;">For {{ $company->name ?? '' }}:</div>
+                    <div style="text-align:center;font-size:11px;color:#555;border-top:1px solid #ccc;padding-top:6px;">
+                        Authorized Signatory
+                    </div>
                 </div>
-                <div class="inline-block vertical-middle">
-                    <div class="company-name text-primary uppercase">{{ $company->name ?? '' }}</div>
-                    <div class="company-tagline">{{ $company->company_tagline ?? 'Your Trusted Business Partner' }}</div>
-                </div>
-            </div>
-            <div class="company-info-cell text-right">
-                <div class="company-tax-label">Tax ID: {{ $company->tax_id ?? 'N/A' }}</div>
-                <div class="company-tax-value">{{ $company->address ?? 'Mogadishu, Somalia' }}</div>
-            </div>
-        </div>
+            </td>
+        </tr>
+    </table>
 
-        <table class="w-100 receipt-info">
-            <tr>
-                <td width="50%">
-                    <div class="receipt-number">#{{ $payment->receipt_no }}</div>
-                    <div class="receipt-date">Issued on: {{ date('d M, Y', strtotime($payment->payment_date)) }}</div>
-                </td>
-                <td width="50%">
-                    <table align="right">
-                        <tr>
-                            <td>
-                                <div class="info-box info-box-mr">
-                                    <div class="info-label">Status</div>
-                                    <div class="info-value status-cleared uppercase">{{ $payment->status }}</div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="info-box">
-                                    <div class="info-label">Terminal</div>
-                                    <div class="info-value uppercase">01-WEB</div>
-                                </div>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-        </table>
+</div>
 
-        <div class="customer-card">
-            <div class="section-title">Received From</div>
-            <div class="customer-name uppercase">{{ $payment->customer->name ?? 'WALK-IN CUSTOMER' }}</div>
-            <table class="customer-details-table">
-                <tr class="detail-row">
-                    <td width="20%">Phone:</td>
-                    <td><strong>{{ $payment->customer->phone ?? 'N/A' }}</strong></td>
-                </tr>
-                <tr class="detail-row">
-                    <td width="20%">Email:</td>
-                    <td><strong>{{ $payment->customer->email ?? 'N/A' }}</strong></td>
-                </tr>
-                <tr class="detail-row">
-                    <td width="20%">Payment Mode:</td>
-                    <td><strong>{{ $payment->payment_method }}</strong></td>
-                </tr>
-            </table>
-        </div>
-
-        <div class="payment-amount-card">
-            <div class="payment-total-label">Total Amount Received</div>
-            <div class="amount-value">
-                @php
-                    $currencySymbols = [
-                        'USD' => '$',
-                        'SAR' => 'SAR',
-                        'SOS' => 'SOS',
-                        'EUR' => '€',
-                        'GBP' => '£',
-                        'KES' => 'KSh',
-                    ];
-                    $symbol = '$'; // Force Dollar
-                @endphp
-                {{ $symbol }} {{ number_format($payment->amount, 2) }}
-            </div>
-            <div class="payment-total-note">
-                Amount recognized in {{ $company->currency ?? 'USD' }} currency.
-            </div>
-        </div>
-
-        <div class="section-title">Settlement Details</div>
-        <table class="invoices-table">
-            <thead>
-                <tr>
-                    <th>Reference / Invoice</th>
-                    <th>Payment Date</th>
-                    <th>Payment Category</th>
-                    <th class="right">Amount Settled</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>{{ $payment->invoice_no ?? 'Direct Payment' }}</td>
-                    <td>{{ date('d-m-Y', strtotime($payment->payment_date)) }}</td>
-                    <td>{{ $payment->payment_method }} Payment</td>
-                    <td class="amount-paid-cell">{{ $symbol }} {{ number_format($payment->amount, 2) }}</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <div class="clearfix">
-            <div class="summary-table">
-                <div class="summary-row">
-                    <div class="summary-cell summary-label text-primary uppercase">Subtotal</div>
-                    <div class="summary-cell summary-value text-primary font-bold">{{ $symbol }} {{ number_format($payment->amount, 2) }}</div>
-                </div>
-                <div class="summary-row">
-                    <div class="summary-cell summary-label text-primary uppercase">Tax Applied</div>
-                    <div class="summary-cell summary-value text-primary font-bold">{{ $symbol }} 0.00</div>
-                </div>
-                <div class="summary-row total-credit-row">
-                    <div class="summary-cell summary-label text-accent font-black uppercase">Grand Total</div>
-                    <div class="summary-cell total-credit-value text-accent font-black">{{ $symbol }} {{ number_format($payment->amount, 2) }}</div>
-                </div>
-            </div>
-        </div>
-
-        @if($payment->notes)
-            <div class="confirmation-box">
-                <div class="confirmation-title">Additional Notes</div>
-                <div class="confirmation-text">
-                    {{ $payment->notes }}
-                </div>
-            </div>
-        @endif
-
-        <table class="signature-table">
-            <tr>
-                <td class="signature-box">
-                    <div class="signature-line"></div>
-                    <div class="signature-name uppercase">{{ $payment->creator->name ?? 'AUTHORIZED PERSON' }}</div>
-                    <div class="signature-role">Generated By</div>
-                </td>
-                <td width="10%"></td>
-                <td class="signature-box">
-                    <div class="signature-line"></div>
-                    <div class="signature-name uppercase">{{ $payment->customer->name ?? 'CUSTOMER' }}</div>
-                    <div class="signature-role">Customer Signature</div>
-                </td>
-            </tr>
-        </table>
-
-        <div class="footer-meta">
-            This is a computer-generated receipt. Generated on {{ date('d M, Y H:i A') }} • {{ $company->name ?? 'Waafibook' }}
-        </div>
-    </div>
 </body>
 </html>
-
