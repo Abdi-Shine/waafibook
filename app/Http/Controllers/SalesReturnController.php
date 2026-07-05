@@ -159,6 +159,25 @@ class SalesReturnController extends Controller
         return redirect()->back()->with('success', 'Credit note issued successfully.');
     }
 
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'reason'      => 'required|string|max:255',
+            'return_date' => 'required|date',
+            'notes'       => 'nullable|string',
+        ]);
+
+        /** @var SalesReturn $return */
+        $return = SalesReturn::query()->findOrFail($id);
+        $return->update([
+            'reason'      => $request->reason,
+            'return_date' => $request->return_date,
+            'notes'       => $request->notes,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Credit note updated successfully.']);
+    }
+
     public function destroy($id)
     {
         /** @var SalesReturn $return */

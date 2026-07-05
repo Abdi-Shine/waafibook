@@ -405,6 +405,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Sales Return / Credit Note
         Route::get('/sales-return', [App\Http\Controllers\SalesReturnController::class, 'viewSalesReturn'])->name('sales.return.view');
         Route::post('/sales-return', [App\Http\Controllers\SalesReturnController::class, 'store'])->name('sales.return.store');
+        Route::patch('/sales-return/{id}', [App\Http\Controllers\SalesReturnController::class, 'update'])->name('sales.return.update')->middleware('tenant.owns:sales_returns');
         Route::delete('/sales-return/{id}', [App\Http\Controllers\SalesReturnController::class, 'destroy'])->name('sales.return.destroy')->middleware(['tenant.owns:sales_returns', 'permission:Sales & POS,delete', 'delete.password']);
     });
 

@@ -12,6 +12,39 @@
 
     <div class="px-4 py-8 md:px-8 md:py-10 bg-background min-h-screen" x-data="{
             showModal: false,
+            showViewModal: false,
+            showEditModal: false,
+            activeReturn: null,
+            editReason: '',
+            editDate: '',
+            editNotes: '',
+            isEditSubmitting: false,
+
+            openViewModal(r) { this.activeReturn = r; this.showViewModal = true; },
+            openEditModal(r) {
+                this.activeReturn = r;
+                this.editReason = r.reason;
+                this.editDate   = r.return_date;
+                this.editNotes  = r.notes ?? '';
+                this.showEditModal = true;
+            },
+            async submitEdit() {
+                this.isEditSubmitting = true;
+                try {
+                    const res = await axios.patch(`/sales-return/${this.activeReturn.id}`, {
+                        reason: this.editReason,
+                        return_date: this.editDate,
+                        notes: this.editNotes,
+                        _token: document.querySelector('meta[name=csrf-token]').content,
+                    });
+                    Swal.fire('Updated', res.data?.message || 'Credit note updated.', 'success')
+                        .then(() => window.location.reload());
+                } catch (e) {
+                    Swal.fire('Error', e.response?.data?.message || 'Something went wrong.', 'error');
+                } finally {
+                    this.isEditSubmitting = false;
+                }
+            },
             customerName: 'SELECT CUSTOMER',
             returnAmount: '',
             returnDate: '{{ date('Y-m-d') }}',
@@ -272,7 +305,29 @@
                                 <span class="premium-badge {{ $statusClass }}">{{ $statusLabel }}</span>
                             </td>
                             <td class="px-5 py-4">
+                                @php
+                                    $returnJson = json_encode([
+                                        'id'          => $return->id,
+                                        'credit_note_no' => $return->credit_note_no,
+                                        'customer'    => ['name' => $return->customer->name ?? '—', 'phone' => $return->customer->phone ?? ''],
+                                        'invoice_no'  => $return->invoice->invoice_no ?? '—',
+                                        'reason'      => $return->reason,
+                                        'return_date' => $return->return_date,
+                                        'amount'      => number_format($return->amount, 2),
+                                        'status'      => $return->status,
+                                        'notes'       => $return->notes ?? '',
+                                        'items'       => $return->items->map(fn($i) => ['product_name' => $i->product->product_name ?? '—', 'quantity' => $i->quantity, 'unit_price' => $i->unit_price, 'subtotal' => $i->subtotal])->values(),
+                                    ]);
+                                @endphp
                                 <div class="flex items-center justify-center gap-1.5">
+                                    <button @click="openViewModal({{ $returnJson }})"
+                                            class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all text-xs" title="View">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button @click="openEditModal({{ $returnJson }})"
+                                            class="w-8 h-8 flex items-center justify-center rounded-lg bg-accent/10 text-primary hover:bg-accent hover:text-white transition-all text-xs" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
                                     <button onclick="confirmDeleteReturn({{ $return->id }})" class="btn-action-delete" title="Delete">
                                         <i class="bi bi-trash"></i>
                                     </button>
@@ -294,6 +349,163 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- View Modal -->
+        <div x-show="showViewModal" x-cloak
+             class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+            <div class="bg-white rounded-[1.25rem] w-full max-w-lg shadow-2xl flex flex-col overflow-hidden"
+                 @click.away="showViewModal = false"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100">
+
+                <!-- Header -->
+                <div class="px-6 py-5 bg-primary flex items-center justify-between shrink-0">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white">
+                            <i class="bi bi-receipt text-lg"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-base font-black text-white" x-text="activeReturn?.credit_note_no"></h2>
+                            <p class="text-[10px] text-white/60">Credit Note Detail</p>
+                        </div>
+                    </div>
+                    <button @click="showViewModal = false" class="w-8 h-8 bg-white/10 border border-white/10 text-white rounded-lg hover:bg-white/20 transition-all flex items-center justify-center">
+                        <i class="bi bi-x-lg text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Body -->
+                <div class="px-6 py-5 space-y-4 overflow-y-auto max-h-[70vh]">
+                    <!-- Info Grid -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-gray-50 rounded-lg px-4 py-3">
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Customer</p>
+                            <p class="text-[13px] font-black text-primary-dark" x-text="activeReturn?.customer?.name"></p>
+                            <p class="text-[11px] text-gray-400" x-text="activeReturn?.customer?.phone"></p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg px-4 py-3">
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Invoice</p>
+                            <p class="text-[13px] font-black text-primary-dark" x-text="activeReturn?.invoice_no"></p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg px-4 py-3">
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Return Date</p>
+                            <p class="text-[13px] font-black text-primary-dark" x-text="activeReturn?.return_date"></p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg px-4 py-3">
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Reason</p>
+                            <p class="text-[13px] font-black text-primary-dark" x-text="activeReturn?.reason"></p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg px-4 py-3">
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Amount</p>
+                            <p class="text-[15px] font-black text-accent" x-text="'$ ' + activeReturn?.amount"></p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg px-4 py-3">
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Status</p>
+                            <p class="text-[13px] font-black text-primary-dark capitalize" x-text="activeReturn?.status"></p>
+                        </div>
+                    </div>
+
+                    <!-- Items -->
+                    <template x-if="activeReturn?.items?.length > 0">
+                        <div>
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2">Returned Items</p>
+                            <div class="border border-gray-100 rounded-lg divide-y divide-gray-100">
+                                <template x-for="item in activeReturn.items" :key="item.product_name">
+                                    <div class="flex items-center justify-between px-4 py-2.5">
+                                        <span class="text-[12px] font-bold text-primary-dark" x-text="item.product_name"></span>
+                                        <span class="text-[11px] text-gray-400" x-text="'Qty: ' + item.quantity + '  ×  $' + item.unit_price"></span>
+                                        <span class="text-[12px] font-black text-primary" x-text="'$' + parseFloat(item.subtotal).toFixed(2)"></span>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Notes -->
+                    <template x-if="activeReturn?.notes">
+                        <div class="bg-amber-50 border border-amber-100 rounded-lg px-4 py-3">
+                            <p class="text-[10px] font-black text-amber-600 uppercase tracking-wider mb-1">Notes</p>
+                            <p class="text-[12px] text-amber-800" x-text="activeReturn?.notes"></p>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Footer -->
+                <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end">
+                    <button @click="showViewModal = false" class="px-5 py-2.5 bg-primary text-white font-black rounded-lg hover:bg-primary/90 transition-all text-[11px] uppercase tracking-wider">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Modal -->
+        <div x-show="showEditModal" x-cloak
+             class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+            <div class="bg-white rounded-[1.25rem] w-full max-w-lg shadow-2xl flex flex-col overflow-hidden"
+                 @click.away="showEditModal = false"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100">
+
+                <!-- Header -->
+                <div class="px-6 py-5 bg-primary flex items-center justify-between shrink-0">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white">
+                            <i class="bi bi-pencil-square text-lg"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-base font-black text-white" x-text="'Edit — ' + (activeReturn?.credit_note_no ?? '')"></h2>
+                            <p class="text-[10px] text-white/60">Update credit note details</p>
+                        </div>
+                    </div>
+                    <button @click="showEditModal = false" class="w-8 h-8 bg-white/10 border border-white/10 text-white rounded-lg hover:bg-white/20 transition-all flex items-center justify-center">
+                        <i class="bi bi-x-lg text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Body -->
+                <div class="px-6 py-6 space-y-5">
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-black text-primary uppercase tracking-wider">Return Reason <span class="text-primary">*</span></label>
+                        <div class="relative">
+                            <select x-model="editReason" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-primary focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+                                <option value="Defective">Defective Product</option>
+                                <option value="Wrong">Wrong Item Delivered</option>
+                                <option value="Damaged">Damaged in Transit</option>
+                                <option value="Other">Other Reason</option>
+                            </select>
+                            <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-black text-primary uppercase tracking-wider">Return Date <span class="text-primary">*</span></label>
+                        <input type="date" x-model="editDate"
+                               class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-primary focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-black text-primary uppercase tracking-wider">Notes</label>
+                        <textarea x-model="editNotes" rows="3" placeholder="Additional notes..."
+                                  class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-primary focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all resize-none"></textarea>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex items-center justify-between shrink-0">
+                    <button @click="showEditModal = false" class="px-5 py-2.5 bg-white border border-gray-200 text-primary/60 font-black rounded-lg hover:bg-gray-50 transition-all text-[11px] uppercase tracking-wider shadow-sm">
+                        Cancel
+                    </button>
+                    <button @click="submitEdit()" :disabled="isEditSubmitting"
+                            class="btn-premium-accent" :class="isEditSubmitting ? 'opacity-60 cursor-not-allowed' : ''">
+                        <i class="bi" :class="isEditSubmitting ? 'bi-arrow-repeat animate-spin' : 'bi-check2-circle'"></i>
+                        <span x-text="isEditSubmitting ? 'Saving…' : 'Save Changes'"></span>
+                    </button>
+                </div>
             </div>
         </div>
 
