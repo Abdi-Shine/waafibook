@@ -117,50 +117,43 @@
             </span>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="report-premium-table">
-                <thead>
-                    <tr>
-                        <th class="text-center w-12">#</th>
-                        <th>Item Name</th>
-                        <th class="text-right">Sale Qty</th>
-                        <th class="text-right">Sale Amount</th>
-                        <th class="text-right">Purchase Qty</th>
-                        <th class="text-right">Purchase Amount</th>
-                        <th class="text-right">Net Profit / Loss</th>
+        <div class="overflow-y-auto overflow-x-auto" style="max-height:70vh;">
+            <table class="w-full whitespace-nowrap text-left text-[13px]">
+                <thead class="sticky top-0 z-10">
+                    <tr class="bg-white border-b-2 border-gray-100">
+                        <th class="px-4 py-3 text-[11px] font-black text-primary-dark uppercase tracking-wider text-center w-10">#</th>
+                        <th class="px-4 py-3 text-[11px] font-black text-primary-dark uppercase tracking-wider">Item Name</th>
+                        <th class="px-4 py-3 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right">Sale Qty</th>
+                        <th class="px-4 py-3 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right">Sale Amount</th>
+                        <th class="px-4 py-3 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right">Cost Qty</th>
+                        <th class="px-4 py-3 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right">Cost Amount</th>
+                        <th class="px-4 py-3 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right">Net Profit / Loss</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     @foreach($items as $item)
-                    <tr class="hover:bg-gray-50/50 transition-colors">
-                        <td class="px-5 py-4 text-[11px] font-black text-gray-400 text-center">{{ $loop->iteration }}</td>
-                        <td class="px-5 py-4">
-                            <span class="text-xs font-black text-primary-dark">{{ $item->name }}</span>
+                    @php $profit = $item->netProfit; @endphp
+                    <tr class="hover:bg-gray-50/60 transition-colors bg-white">
+                        <td class="px-4 py-2.5 text-[11px] font-semibold text-gray-400 text-center">{{ $loop->iteration }}</td>
+                        <td class="px-4 py-2.5">
+                            <span class="text-[13px] font-semibold text-primary-dark">{{ $item->name }}</span>
                         </td>
-                        <td class="px-5 py-4 text-right">
-                            <span class="text-[13px] font-black font-mono {{ $item->saleQty > 0 ? 'text-primary' : 'text-gray-300' }}">
-                                {{ $item->saleQty > 0 ? number_format($item->saleQty) : '—' }}
-                            </span>
+                        <td class="px-4 py-2.5 text-right font-mono font-semibold {{ $item->saleQty > 0 ? 'text-primary-dark' : 'text-gray-300' }}">
+                            {{ $item->saleQty > 0 ? number_format($item->saleQty) : '—' }}
                         </td>
-                        <td class="px-5 py-4 text-right">
-                            <span class="text-[13px] font-black font-mono {{ $item->saleAmount > 0 ? 'text-accent' : 'text-gray-300' }}">
-                                {{ $item->saleAmount > 0 ? number_format($item->saleAmount, 2) : '—' }}
-                            </span>
+                        <td class="px-4 py-2.5 text-right font-mono font-semibold {{ $item->saleAmount > 0 ? 'text-accent' : 'text-gray-300' }}">
+                            {{ $item->saleAmount > 0 ? number_format($item->saleAmount, 2) : '—' }}
                         </td>
-                        <td class="px-5 py-4 text-right">
-                            <span class="text-[13px] font-black font-mono {{ $item->purchaseQty > 0 ? 'text-primary' : 'text-gray-300' }}">
-                                {{ $item->purchaseQty > 0 ? number_format($item->purchaseQty) : '—' }}
-                            </span>
+                        <td class="px-4 py-2.5 text-right font-mono font-semibold {{ $item->purchaseQty > 0 ? 'text-primary-dark' : 'text-gray-300' }}">
+                            {{ $item->purchaseQty > 0 ? number_format($item->purchaseQty) : '—' }}
                         </td>
-                        <td class="px-5 py-4 text-right">
-                            <span class="text-[13px] font-black font-mono {{ $item->purchaseAmount > 0 ? 'text-primary' : 'text-gray-300' }}">
-                                {{ $item->purchaseAmount > 0 ? number_format($item->purchaseAmount, 2) : '—' }}
-                            </span>
+                        <td class="px-4 py-2.5 text-right font-mono font-semibold {{ $item->purchaseAmount > 0 ? 'text-primary-dark' : 'text-gray-300' }}">
+                            {{ $item->purchaseAmount > 0 ? number_format($item->purchaseAmount, 2) : '—' }}
                         </td>
-                        <td class="px-5 py-4 text-right">
-                            @php $profit = $item->netProfit; @endphp
-                            <span class="report-premium-badge {{ $profit > 0 ? 'report-premium-badge-success' : ($profit < 0 ? 'report-premium-badge-error' : 'report-premium-badge-info') }} italic !px-3">
-                                <i class="bi bi-{{ $profit > 0 ? 'arrow-up' : ($profit < 0 ? 'arrow-down' : 'dash') }} text-[10px]"></i>
+                        <td class="px-4 py-2.5 text-right">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black font-mono
+                                {{ $profit > 0 ? 'bg-green-50 text-green-600 border border-green-200' : ($profit < 0 ? 'bg-red-50 text-red-500 border border-red-200' : 'bg-gray-100 text-gray-400 border border-gray-200') }}">
+                                <i class="bi bi-{{ $profit > 0 ? 'arrow-up' : ($profit < 0 ? 'arrow-down' : 'dash') }} text-[9px]"></i>
                                 {{ number_format(abs($profit), 2) }}
                             </span>
                         </td>
@@ -168,30 +161,26 @@
                     @endforeach
                 </tbody>
                 @if($items->isNotEmpty())
-                <tfoot class="bg-primary/5">
-                    <tr class="font-black text-primary-dark border-t-2 border-primary/20">
-                        <td colspan="3" class="px-5 py-5 text-center">
-                            <span class="text-[11px] font-black uppercase tracking-widest italic text-primary-dark">Grand Totals</span>
+                <tfoot>
+                    <tr class="bg-primary/5 border-t-2 border-primary/20">
+                        <td colspan="2" class="px-4 py-3">
+                            <span class="text-[11px] font-black uppercase tracking-widest text-primary-dark">Grand Totals</span>
                         </td>
-                        <td class="px-5 py-4 text-right">
-                            <span class="text-[9px] text-gray-400 block font-bold uppercase mb-0.5">Sale Qty</span>
-                            <span class="text-[13px] font-mono font-black text-primary">{{ number_format($totals->saleQty) }}</span>
+                        <td class="px-4 py-3 text-right font-mono font-black text-primary-dark text-[13px]">
+                            {{ number_format($totals->saleQty) }}
                         </td>
-                        <td class="px-5 py-4 text-right">
-                            <span class="text-[9px] text-gray-400 block font-bold uppercase mb-0.5">Sale Amount</span>
-                            <span class="text-[13px] font-mono font-black text-accent">{{ ($company->currency ?? 'SAR') }} {{ number_format($totals->saleAmount, 2) }}</span>
+                        <td class="px-4 py-3 text-right font-mono font-black text-accent text-[13px]">
+                            {{ ($company->currency ?? 'SAR') }} {{ number_format($totals->saleAmount, 2) }}
                         </td>
-                        <td class="px-5 py-4 text-right">
-                            <span class="text-[9px] text-gray-400 block font-bold uppercase mb-0.5">Purch Qty</span>
-                            <span class="text-[13px] font-mono font-black text-primary">{{ number_format($totals->purchaseQty) }}</span>
+                        <td class="px-4 py-3 text-right font-mono font-black text-primary-dark text-[13px]">
+                            {{ number_format($totals->purchaseQty) }}
                         </td>
-                        <td class="px-5 py-4 text-right">
-                            <span class="text-[9px] text-gray-400 block font-bold uppercase mb-0.5">Purch Amount</span>
-                            <span class="text-[13px] font-mono font-black text-primary">{{ ($company->currency ?? 'SAR') }} {{ number_format($totals->purchaseAmount, 2) }}</span>
+                        <td class="px-4 py-3 text-right font-mono font-black text-primary-dark text-[13px]">
+                            {{ ($company->currency ?? 'SAR') }} {{ number_format($totals->purchaseAmount, 2) }}
                         </td>
-                        <td class="px-5 py-4 text-right">
-                            <span class="text-[9px] text-gray-400 block font-bold uppercase mb-0.5">Net Profit/Loss</span>
-                            <span class="text-[14px] font-mono font-black {{ $totals->netProfit >= 0 ? 'text-accent' : 'text-primary' }}">
+                        <td class="px-4 py-3 text-right">
+                            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[12px] font-black font-mono
+                                {{ $totals->netProfit >= 0 ? 'bg-green-50 text-green-600 border border-green-200' : 'bg-red-50 text-red-500 border border-red-200' }}">
                                 {{ ($company->currency ?? 'SAR') }} {{ number_format($totals->netProfit, 2) }}
                             </span>
                         </td>
