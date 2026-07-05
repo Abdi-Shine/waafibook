@@ -126,17 +126,6 @@
                     <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
                 </div>
 
-                <!-- Method Filter -->
-                <div class="relative min-w-[150px]">
-                    <select name="method" onchange="this.form.submit()" class="w-full pl-3 pr-8 py-2 bg-white border border-gray-200 rounded-[0.5rem] text-[13px] font-medium text-gray-600 focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
-                        <option value="">All Methods</option>
-                        <option value="Cash" {{ request('method') == 'Cash' ? 'selected' : '' }}>Cash</option>
-                        <option value="Card" {{ request('method') == 'Card' ? 'selected' : '' }}>Card</option>
-                        <option value="Bank Transfer" {{ request('method') == 'Bank Transfer' ? 'selected' : '' }}>Bank</option>
-                        <option value="Cheque" {{ request('method') == 'Cheque' ? 'selected' : '' }}>Cheque</option>
-                    </select>
-                    <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
-                </div>
 
                 <!-- Reset Button -->
                 <div class="flex items-center gap-2">
@@ -164,7 +153,6 @@
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider w-16 text-center">#</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Receipt Info</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Customer</th>
-                            <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Reference</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Account</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Amount</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Status</th>
@@ -182,11 +170,6 @@
                             </td>
                             <td class="px-5 py-4">
                                 <span class="text-[12px] font-black text-primary leading-tight">{{ $item->customer->name ?? 'N/A' }}</span>
-                            </td>
-                            <td class="px-5 py-4 text-center">
-                                <span class="text-[12px] font-black text-primary leading-tight">
-                                    {{ $item->invoice_no ?? 'DIRECT' }}
-                                </span>
                             </td>
                             <td class="px-5 py-4 text-center">
                                 <span class="text-[12px] font-black text-primary leading-tight">{{ $item->bankAccount->name ?? $item->payment_method }}</span>
