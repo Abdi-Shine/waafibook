@@ -49,7 +49,7 @@ class PaymentInController extends Controller
             $query->whereDate('payment_date', $request->date);
         }
 
-        $payments = $query->latest()->paginate(10);
+        $payments = $query->latest()->get();
         
         $todayReceipts = PaymentIn::query()->whereDate('payment_date', now())->sum('amount');
         $monthReceipts = PaymentIn::query()->whereMonth('payment_date', now()->month)->sum('amount');
