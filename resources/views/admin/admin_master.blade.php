@@ -315,8 +315,8 @@
                 text: options.text || ('Are you sure you want to delete ' + label + '? This action cannot be undone.'),
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#e11d48',
-                cancelButtonColor: '#6b7280',
+                confirmButtonColor: '#004161',
+                cancelButtonColor: '#99CC33',
                 confirmButtonText: 'Yes, delete it!',
                 footer: options.footer || ERP_FOOTERS.delete,
                 customClass: popupClass
@@ -330,8 +330,8 @@
                     inputPlaceholder: 'Password',
                     inputAttributes: { autocapitalize: 'off', autocomplete: 'current-password' },
                     showCancelButton: true,
-                    confirmButtonColor: '#e11d48',
-                    cancelButtonColor: '#6b7280',
+                    confirmButtonColor: '#004161',
+                    cancelButtonColor: '#99CC33',
                     confirmButtonText: 'Confirm & Delete',
                     customClass: popupClass,
                     preConfirm: (password) => {
