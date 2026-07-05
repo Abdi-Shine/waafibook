@@ -248,8 +248,6 @@
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider w-16 text-center">#</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Supplier</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Contact</th>
-                            <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Address</th>
-                            <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Type</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-right">Balance</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Status</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Actions</th>
@@ -270,12 +268,6 @@
                                     <div class="flex flex-col gap-0.5">
                                         <span class="text-[12px] font-semibold text-primary-dark">{{ $supplier->phone ?? '-' }}</span>
                                     </div>
-                                </td>
-                                <td class="px-5 py-4">
-                                    <span class="text-[12px] font-semibold text-primary-dark">{{ $supplier->address ?? '-' }}</span>
-                                </td>
-                                <td class="px-5 py-4 text-center">
-                                    <span class="text-[12px] font-semibold text-primary-dark capitalize">{{ $supplier->supplier_type }}</span>
                                 </td>
                                 <td class="px-5 py-4 text-right">
                                     <span class="text-[12px] font-semibold text-primary-dark">{{ $symbol ?? '$' }} {{ number_format($supplier->amount_balance, 2) }}</span>
