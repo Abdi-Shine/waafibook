@@ -165,8 +165,9 @@
                         <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark text-center">
                             {{ str_pad($payments->firstItem() + $key, 2, '0', STR_PAD_LEFT) }}
                         </td>
-                        <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark">
-                            {{ $item->voucher_no }}
+                        <td class="px-5 py-4">
+                            <span class="text-[12px] font-black text-primary-dark block">{{ $item->voucher_no }}</span>
+                            <span class="text-[11px] font-semibold text-gray-400 block mt-0.5">{{ $item->supplier->name ?? 'N/A' }}</span>
                         </td>
                         <td class="px-5 py-4">
                             <div class="flex flex-col gap-1 max-w-[200px]">
