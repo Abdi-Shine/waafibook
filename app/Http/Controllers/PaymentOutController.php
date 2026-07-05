@@ -208,7 +208,8 @@ class PaymentOutController extends Controller
         /** @var Company|null $company */
         $company = Company::find(auth()->user()->company_id);
         
-        $pdf = Pdf::loadView('frontend.purchase.pdf_payment_voucher', compact('payment', 'company'));
+        $pdf = Pdf::loadView('frontend.purchase.pdf_payment_voucher_download', compact('payment', 'company'));
+        $pdf->setPaper('A4', 'portrait');
         return $pdf->download('Voucher_' . $payment->voucher_no . '.pdf');
     }
 
