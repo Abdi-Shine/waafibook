@@ -32,7 +32,7 @@ class SupplierController extends Controller
             $query->where('supplier_type', $request->type);
         }
 
-        $suppliers = $query->paginate(10)->withQueryString();
+        $suppliers = $query->get();
 
         $stats = [
             'total'              => Supplier::query()->count(),
