@@ -6,7 +6,7 @@
     <style>
         @page {
             size: A4 portrait;
-            margin: 15mm 20mm;
+            margin: 12mm 10mm;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -14,8 +14,8 @@
             font-size: 13px;
             color: #1a1a2e;
             background: #fff;
-            width: 170mm;
-            margin: 15mm auto;
+            width: 190mm;
+            margin: 12mm auto;
         }
         h1.page-title {
             text-align: center;

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Payment Receipt - {{ $payment->receipt_no ?? $payment->id }}</title>
     <style>
-        @page { size: A4 portrait; margin: 15mm 20mm; }
+        @page { size: A4 portrait; margin: 12mm 10mm; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: Arial, Helvetica, sans-serif;
