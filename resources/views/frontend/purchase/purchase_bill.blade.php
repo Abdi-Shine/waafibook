@@ -147,7 +147,6 @@
                     <thead>
                         <tr class="bg-white border-b border-gray-100">
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider w-16 text-center">#</th>
-                            <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Bill Number</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Supplier</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Items</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Date</th>
@@ -162,11 +161,6 @@
                             <tr class="hover:bg-gray-50/60 transition-colors bg-white group">
                                 <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark text-center">
                                     {{ str_pad($purchaseBills->firstItem() + $key, 2, '0', STR_PAD_LEFT) }}
-                                </td>
-                                <td class="px-5 py-4">
-                                    <p class="text-[12px] font-semibold text-primary-dark leading-tight uppercase tracking-wide">
-                                        {{ $bill->bill_number }}
-                                    </p>
                                 </td>
                                 <td class="px-5 py-4">
                                     <span class="text-[12px] font-semibold text-primary-dark">{{ $bill->supplier->name ?? '—' }}</span>
