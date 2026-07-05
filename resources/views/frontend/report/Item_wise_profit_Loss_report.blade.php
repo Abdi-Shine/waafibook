@@ -138,17 +138,17 @@
                         <td class="px-4 py-2.5">
                             <span class="text-[13px] font-semibold text-primary-dark">{{ $item->name }}</span>
                         </td>
-                        <td class="px-4 py-2.5 text-right font-mono font-semibold {{ $item->saleQty > 0 ? 'text-primary-dark' : 'text-gray-300' }}">
-                            {{ $item->saleQty > 0 ? number_format($item->saleQty) : '—' }}
+                        <td class="px-4 py-2.5 text-right font-mono font-semibold {{ $item->saleQty > 0 ? 'text-primary-dark' : 'text-gray-400' }}">
+                            {{ number_format($item->saleQty) }}
                         </td>
-                        <td class="px-4 py-2.5 text-right font-mono font-semibold {{ $item->saleAmount > 0 ? 'text-accent' : 'text-gray-300' }}">
-                            {{ $item->saleAmount > 0 ? number_format($item->saleAmount, 2) : '—' }}
+                        <td class="px-4 py-2.5 text-right font-mono font-semibold {{ $item->saleAmount > 0 ? 'text-accent' : 'text-gray-400' }}">
+                            {{ number_format($item->saleAmount, 2) }}
                         </td>
-                        <td class="px-4 py-2.5 text-right font-mono font-semibold {{ $item->purchaseQty > 0 ? 'text-primary-dark' : 'text-gray-300' }}">
-                            {{ $item->purchaseQty > 0 ? number_format($item->purchaseQty) : '—' }}
+                        <td class="px-4 py-2.5 text-right font-mono font-semibold {{ $item->purchaseQty > 0 ? 'text-primary-dark' : 'text-gray-400' }}">
+                            {{ number_format($item->purchaseQty) }}
                         </td>
-                        <td class="px-4 py-2.5 text-right font-mono font-semibold {{ $item->purchaseAmount > 0 ? 'text-primary-dark' : 'text-gray-300' }}">
-                            {{ $item->purchaseAmount > 0 ? number_format($item->purchaseAmount, 2) : '—' }}
+                        <td class="px-4 py-2.5 text-right font-mono font-semibold {{ $item->purchaseAmount > 0 ? 'text-primary-dark' : 'text-gray-400' }}">
+                            {{ number_format($item->purchaseAmount, 2) }}
                         </td>
                         <td class="px-4 py-2.5 text-right">
                             <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black font-mono
