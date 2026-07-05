@@ -69,16 +69,7 @@
                             <input type="date" name="expected_delivery" id="po_expected"
                                 class="text-sm font-semibold text-primary-dark bg-transparent border-0 outline-none focus:ring-0 cursor-pointer text-right">
                         </div>
-                        <div class="flex items-center justify-between py-2">
-                            <span class="text-sm text-gray-400 font-semibold">Payment Terms</span>
-                            <select name="payment_terms" id="po_payment_terms"
-                                class="text-sm font-semibold text-primary-dark bg-transparent border-0 outline-none cursor-pointer text-right">
-                                <option value="Cash on Delivery">Cash on Delivery</option>
-                                <option value="Net 30 Days" selected>Net 30 Days</option>
-                                <option value="Net 60 Days">Net 60 Days</option>
-                                <option value="Bank Transfer">Bank Transfer</option>
-                            </select>
-                        </div>
+                        <input type="hidden" name="payment_terms" value="Net 30 Days">
                     </div>
                 </div>
             </div>
