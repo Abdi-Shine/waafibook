@@ -1401,14 +1401,14 @@ class PurchaseController extends Controller
     public function storeExpense(Request $request)
     {
         $request->validate([
-            'purchase_id' => 'required|exists:purchase_bills,id',
+            'purchase_id'        => 'nullable|exists:purchase_bills,id',
             'expense_account_id' => 'required|exists:chart_of_accounts,id',
-            'expense_name' => 'required|string|max:255',
-            'amount' => 'required|numeric|min:0',
-            'expense_date' => 'required|date',
-            'supplier_id' => 'nullable|exists:suppliers,id',
-            'branch_id' => 'nullable|exists:branches,id',
-            'bank_account_id' => 'required|exists:chart_of_accounts,id',
+            'expense_name'       => 'required|string|max:255',
+            'amount'             => 'required|numeric|min:0',
+            'expense_date'       => 'required|date',
+            'supplier_id'        => 'nullable|exists:suppliers,id',
+            'branch_id'          => 'nullable|exists:branches,id',
+            'bank_account_id'    => 'required|exists:chart_of_accounts,id',
         ]);
 
         try {

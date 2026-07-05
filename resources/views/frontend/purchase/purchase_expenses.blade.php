@@ -319,11 +319,11 @@
                             </div>
                         </div>
                         <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Linked Bill <span class="text-primary">*</span></label>
+                            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Linked Bill <span class="text-gray-400 normal-case font-normal">(optional)</span></label>
                             <div class="relative">
-                                <select required name="purchase_id"
+                                <select name="purchase_id"
                                         class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
-                                    <option value="">-- SELECT BILL --</option>
+                                    <option value="">-- No Linked Bill --</option>
                                     @foreach($bills as $bill)
                                         <option value="{{ $bill->id }}">{{ $bill->bill_number }}</option>
                                     @endforeach
@@ -365,9 +365,9 @@
                             </div>
                         </div>
                         <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Supplier <span class="text-primary">*</span></label>
+                            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Supplier <span class="text-gray-400 normal-case font-normal">(optional)</span></label>
                             <div class="relative">
-                                <select required name="supplier_id"
+                                <select name="supplier_id"
                                         class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
                                     <option value="">-- SELECT SUPPLIER --</option>
                                     @foreach ($suppliers as $supplier)
@@ -382,9 +382,9 @@
                     <!-- Row 3: Branch, Bank Account, Description -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                         <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Branch <span class="text-primary">*</span></label>
+                            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Branch <span class="text-gray-400 normal-case font-normal">(optional)</span></label>
                             <div class="relative">
-                                <select required name="branch_id" x-model="selectedBranch"
+                                <select name="branch_id" x-model="selectedBranch"
                                         class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
                                     <option value="">-- SELECT BRANCH --</option>
                                     @foreach ($branches as $branch)
