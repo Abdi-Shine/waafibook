@@ -218,7 +218,7 @@
                     <thead>
                         <tr class="bg-white border-b border-gray-100">
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider w-16 text-center">#</th>
-                            <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Credit Note Info</th>
+                            <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Product Name</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Customer</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Reference Info</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Amount</th>
@@ -233,9 +233,12 @@
                                 {{ str_pad($returns->firstItem() + $key, 2, '0', STR_PAD_LEFT) }}
                             </td>
                             <td class="px-5 py-4">
-                                <div class="flex flex-col">
-                                    <span class="text-[12px] font-semibold text-primary-dark">{{ $return->credit_note_no }}</span>
-                                    <span class="text-[10px] text-gray-400">{{ \Carbon\Carbon::parse($return->return_date)->format('d M, Y') }}</span>
+                                <div class="flex flex-col gap-0.5">
+                                    @forelse($return->items as $item)
+                                        <span class="text-[12px] font-semibold text-primary-dark">{{ $item->product->name ?? '—' }}</span>
+                                    @empty
+                                        <span class="text-[12px] text-gray-400">—</span>
+                                    @endforelse
                                 </div>
                             </td>
                             <td class="px-5 py-4">

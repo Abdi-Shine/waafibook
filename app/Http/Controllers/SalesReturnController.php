@@ -19,7 +19,7 @@ class SalesReturnController extends Controller
 {
     public function viewSalesReturn(Request $request)
     {
-        $query = SalesReturn::query()->with('customer', 'invoice', 'items')->latest();
+        $query = SalesReturn::query()->with('customer', 'invoice', 'items.product')->latest();
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
