@@ -245,13 +245,13 @@
             </div>
 
             <!-- Table -->
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto overflow-y-auto" style="max-height:600px;">
                 <table class="w-full whitespace-nowrap text-left">
                     <thead>
                         <tr class="bg-white border-b border-gray-100">
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider w-16 text-center">#</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Customer</th>
-                            <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Contact</th>
+                            <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Telephone</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-right">Balance</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Status</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Actions</th>
@@ -261,7 +261,7 @@
                         @forelse($customers as $key => $customer)
                             <tr class="hover:bg-gray-50/60 transition-colors bg-white group">
                                 <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark text-center">
-                                    {{ str_pad($customers->firstItem() + $key, 2, '0', STR_PAD_LEFT) }}
+                                    {{ str_pad($key + 1, 2, '0', STR_PAD_LEFT) }}
                                 </td>
                                 <td class="px-5 py-4">
                                     <p class="text-[12px] font-semibold text-primary-dark leading-tight">{{ $customer->name }}</p>
@@ -317,47 +317,6 @@
                 </table>
             </div>
 
-            <!-- Table Footer / Pagination -->
-            @if($customers->count() > 0)
-                <div class="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <p class="text-[11px] font-black text-gray-400 uppercase tracking-widest">
-                        Showing {{ $customers->firstItem() }} to {{ $customers->lastItem() }} of {{ $customers->total() }} entries
-                    </p>
-                    <div class="flex items-center gap-1">
-                        @if ($customers->onFirstPage())
-                            <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-300 cursor-not-allowed shadow-sm" disabled>
-                                <i class="bi bi-chevron-left text-xs"></i>
-                            </button>
-                        @else
-                            <a href="{{ $customers->previousPageUrl() }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-400 hover:bg-gray-50 transition-all shadow-sm">
-                                <i class="bi bi-chevron-left text-xs"></i>
-                            </a>
-                        @endif
-
-                        @foreach ($customers->links()->elements as $element)
-                            @if (is_array($element))
-                                @foreach ($element as $page => $url)
-                                    @if ($page == $customers->currentPage())
-                                        <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-white font-black text-xs shadow-md shadow-primary/20">{{ $page }}</button>
-                                    @else
-                                        <a href="{{ $url }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 transition-all shadow-sm text-xs font-bold">{{ $page }}</a>
-                                    @endif
-                                @endforeach
-                            @endif
-                        @endforeach
-
-                        @if ($customers->hasMorePages())
-                            <a href="{{ $customers->nextPageUrl() }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-400 hover:bg-gray-50 transition-all shadow-sm">
-                                <i class="bi bi-chevron-right text-xs"></i>
-                            </a>
-                        @else
-                            <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-300 cursor-not-allowed shadow-sm" disabled>
-                                <i class="bi bi-chevron-right text-xs"></i>
-                            </button>
-                        @endif
-                    </div>
-                </div>
-            @endif
         </div>
 
         <!-- CUSTOMER MODAL -->
