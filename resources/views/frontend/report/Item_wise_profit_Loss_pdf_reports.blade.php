@@ -103,7 +103,7 @@
             <tr>
                 <td>{{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}</td>
                 <td class="bold">
-                    {{ $item->name }} @if($item->code) <span class="muted" style="font-size: 8px;">({{ $item->code }})</span> @endif
+                    {{ $item->name }}
                 </td>
                 <td class="right {{ $item->saleQty > 0 ? '' : 'muted' }}">
                     {{ $item->saleQty > 0 ? number_format($item->saleQty) : '---' }}

@@ -123,7 +123,6 @@
                     <tr>
                         <th class="text-center w-12">#</th>
                         <th>Item Name</th>
-                        <th>Code</th>
                         <th class="text-right">Sale Qty</th>
                         <th class="text-right">Sale Amount</th>
                         <th class="text-right">Purchase Qty</th>
@@ -137,9 +136,6 @@
                         <td class="px-5 py-4 text-[11px] font-black text-gray-400 text-center">{{ $loop->iteration }}</td>
                         <td class="px-5 py-4">
                             <span class="text-xs font-black text-primary-dark">{{ $item->name }}</span>
-                        </td>
-                        <td class="px-5 py-4">
-                            <span class="text-[11px] text-gray-400 font-mono">{{ $item->code ?? '—' }}</span>
                         </td>
                         <td class="px-5 py-4 text-right">
                             <span class="text-[13px] font-black font-mono {{ $item->saleQty > 0 ? 'text-primary' : 'text-gray-300' }}">
