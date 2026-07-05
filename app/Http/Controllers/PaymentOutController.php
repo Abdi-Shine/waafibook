@@ -50,7 +50,7 @@ class PaymentOutController extends Controller
             $query->whereDate('payment_date', $request->date);
         }
 
-        $payments = $query->latest()->paginate(10);
+        $payments = $query->latest()->get();
         
         $todayPayments = SupplierPayment::query()->whereDate('payment_date', now())->sum('amount');
         $monthPayments = SupplierPayment::query()->whereMonth('payment_date', now()->month)->sum('amount');

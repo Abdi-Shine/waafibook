@@ -164,7 +164,7 @@
                     @forelse($payments as $key => $item)
                     <tr class="hover:bg-gray-50/50 transition-colors">
                         <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark text-center">
-                            {{ str_pad($payments->firstItem() + $key, 2, '0', STR_PAD_LEFT) }}
+                            {{ str_pad($key + 1, 2, '0', STR_PAD_LEFT) }}
                         </td>
                         <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark">
                             {{ $item->voucher_no }}
@@ -244,43 +244,6 @@
             </table>
         </div>
 
-        @if($payments->total() > 0)
-        <!-- Pagination -->
-        <div class="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="text-[11px] font-black text-gray-400 uppercase tracking-widest">
-                Showing {{ $payments->firstItem() }} to {{ $payments->lastItem() }} of {{ $payments->total() }} entries
-            </div>
-            <div class="flex items-center gap-2">
-                @if ($payments->onFirstPage())
-                    <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-300 cursor-not-allowed shadow-sm">
-                        <i class="bi bi-chevron-left text-[10px]"></i>
-                    </button>
-                @else
-                    <a href="{{ $payments->previousPageUrl() }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-400 hover:bg-gray-50 transition-all shadow-sm">
-                        <i class="bi bi-chevron-left text-[10px]"></i>
-                    </a>
-                @endif
-
-                @foreach ($payments->getUrlRange(max(1, $payments->currentPage() - 2), min($payments->lastPage(), $payments->currentPage() + 2)) as $page => $url)
-                    @if ($page == $payments->currentPage())
-                        <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-white font-black text-xs shadow-md shadow-primary/20">{{ $page }}</button>
-                    @else
-                        <a href="{{ $url }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-400 hover:bg-gray-50 transition-all shadow-sm text-xs font-semibold">{{ $page }}</a>
-                    @endif
-                @endforeach
-
-                @if ($payments->hasMorePages())
-                    <a href="{{ $payments->nextPageUrl() }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-400 hover:bg-gray-50 transition-all shadow-sm">
-                        <i class="bi bi-chevron-right text-[10px]"></i>
-                    </a>
-                @else
-                    <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-300 cursor-not-allowed shadow-sm">
-                        <i class="bi bi-chevron-right text-[10px]"></i>
-                    </button>
-                @endif
-            </div>
-        </div>
-        @endif
     </div>
 
     <!-- MODAL -->
