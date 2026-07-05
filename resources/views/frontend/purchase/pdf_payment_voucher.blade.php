@@ -1,194 +1,168 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voucher - {{ $payment->voucher_no }}</title>
-    <style>
-        {!! file_get_contents(public_path('frontend/assets/css/receipt-pdf.css')) !!}
-        :root {
-            --primary-color: #004161;
-            --accent-color: #aadb40;
-            --payment-out-color: #dc3545;
-        }
-    </style>
-</head>
-<body>
-    <div class="receipt-container">
-        @if($payment->status == 'completed')
-            <div class="watermark">PAID</div>
-        @elseif($payment->status == 'pending')
-            <div class="watermark" style="color: rgba(255, 193, 7, 0.05);">PENDING</div>
-        @endif
-        
-        <div class="receipt-header">
-            <div class="receipt-badge" style="background: var(--payment-out-color); color: white;">Payment Voucher</div>
-            <h1 class="receipt-title uppercase">Official Payment</h1>
-            <p class="receipt-subtitle">Voucher for supplier payment authorization</p>
+@extends('admin.admin_master')
+@section('page_title', 'Payment Voucher')
+
+@push('css')
+<style>
+@media print {
+    body * { visibility: hidden !important; }
+    #voucher-printable,
+    #voucher-printable * { visibility: visible !important; }
+    #voucher-printable {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        margin: 0;
+        padding: 20px;
+        box-shadow: none;
+        border-radius: 0;
+    }
+}
+</style>
+@endpush
+
+@section('admin')
+
+@php
+    $numToWords = function(int $n) use (&$numToWords): string {
+        if ($n === 0) return '';
+        $ones = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine',
+                 'Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen',
+                 'Seventeen','Eighteen','Nineteen'];
+        $tens = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+        $w = '';
+        if ($n >= 1000000) { $w .= $numToWords(intdiv($n, 1000000)) . ' Million '; $n %= 1000000; }
+        if ($n >= 1000)    { $w .= $numToWords(intdiv($n, 1000)) . ' Thousand '; $n %= 1000; }
+        if ($n >= 100)     { $w .= $ones[intdiv($n, 100)] . ' Hundred '; $n %= 100; }
+        if ($n >= 20)      { $w .= $tens[intdiv($n, 10)] . ' '; $n %= 10; }
+        if ($n > 0)        { $w .= $ones[$n] . ' '; }
+        return $w;
+    };
+
+    $dollars     = (int) floor((float) $payment->amount);
+    $cents       = (int) round(((float) $payment->amount - $dollars) * 100);
+    $amountWords = trim($numToWords($dollars)) . ' Dollar' . ($dollars !== 1 ? 's' : '');
+    if ($cents > 0) {
+        $amountWords .= ' and ' . trim($numToWords($cents)) . ' Cent' . ($cents !== 1 ? 's' : '');
+    }
+    $amountWords .= ' only';
+
+    $currencySymbols = ['SAR' => '﷼', 'USD' => '$', 'EUR' => '€', 'GBP' => '£', 'AED' => 'د.إ', 'KWD' => 'د.ك', 'SOS' => 'SOS', 'KES' => 'KSh'];
+    $symbol = $currencySymbols[$company->currency ?? ''] ?? ($company->currency ?? '$');
+
+    $logoPath = (!empty($company->logo) && file_exists(public_path($company->logo)))
+        ? public_path($company->logo)
+        : public_path('upload/waafibooklogo/waafibook_logo.jpg');
+    $logoExt = strtolower(pathinfo($logoPath, PATHINFO_EXTENSION) ?: 'jpg');
+    $logoB64 = file_exists($logoPath)
+        ? 'data:image/' . $logoExt . ';base64,' . base64_encode(file_get_contents($logoPath))
+        : null;
+@endphp
+
+<div class="px-4 py-6 md:px-8 bg-background min-h-screen">
+
+    {{-- Page Header --}}
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+            <a href="{{ route('view_payment_out') }}"
+               class="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:text-primary hover:border-primary transition-all bg-white shadow-sm">
+                <i class="bi bi-arrow-left text-sm"></i>
+            </a>
+            <div>
+                <h1 class="text-[20px] font-black text-primary-dark tracking-tight">Payment Voucher</h1>
+                <p class="text-[11px] font-bold text-gray-400">{{ $payment->voucher_no }}</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="window.print()"
+               class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-primary-dark font-bold rounded-lg hover:bg-gray-50 transition-all text-xs shadow-sm">
+                <i class="bi bi-printer text-primary"></i> Print
+            </button>
+            <a href="{{ route('payment_out.download', $payment->id) }}"
+               class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-primary-dark font-bold rounded-lg hover:bg-gray-50 transition-all text-xs shadow-sm">
+                <i class="bi bi-download text-primary"></i> Download PDF
+            </a>
+        </div>
+    </div>
+
+    {{-- Voucher Card --}}
+    <div id="voucher-printable" class="max-w-3xl mx-auto bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
+
+        {{-- Title --}}
+        <div class="text-center py-4 border-b border-gray-200">
+            <h2 class="text-2xl font-black text-gray-800 tracking-tight">Payment Voucher</h2>
         </div>
 
-        <div class="company-bar">
-            <div class="company-info-cell">
-                <div class="company-logo-placeholder" style="{{ ($company && $company->logo) ? 'background: transparent; line-height: 0;' : '' }}">
-                    @if($company && $company->logo)
-                        @php
-                            $logoPath = $company->logo;
-                            if (!str_starts_with($logoPath, 'uploads/')) {
-                                $logoPath = 'uploads/company/' . $logoPath;
-                            }
-                            $fullPath = public_path($logoPath);
-                        @endphp
-                        @if(file_exists($fullPath))
-                            @php
-                                $type = pathinfo($fullPath, PATHINFO_EXTENSION);
-                                $data = file_get_contents($fullPath);
-                                $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-                            @endphp
-                            <img src="{{ $base64 }}" class="company-logo" style="width: 60px; height: 60px; border-radius: 12px;">
-                        @elseif($company)
-                            {{ strtoupper(substr($company->name ?? 'B', 0, 1)) }}
-                        @else
-                            B
-                        @endif
-                    @elseif($company)
-                        {{ strtoupper(substr($company->name ?? 'B', 0, 1)) }}
-                    @else
-                        B
-                    @endif
-                </div>
-                <div class="inline-block vertical-middle">
-                    <div class="company-name uppercase">{{ $company->name ?? '' }}</div>
-                    <div class="company-tagline">{{ $company->company_tagline ?? 'Your Trusted Business Partner' }}</div>
-                </div>
-            </div>
-            <div class="company-info-cell text-right">
-                <div class="company-tax-label">Tax ID: {{ $company->tax_id ?? 'N/A' }}</div>
-                <div class="company-tax-value">{{ $company->address ?? 'Mogadishu, Somalia' }}</div>
-            </div>
-        </div>
-
-        <table class="w-100 receipt-info">
-            <tr>
-                <td width="50%">
-                    <div class="receipt-number">{{ $payment->voucher_no }}</div>
-                    <div class="receipt-date">Issued on: {{ date('d M, Y', strtotime($payment->payment_date)) }}</div>
-                </td>
-                <td width="50%">
-                    <table align="right">
-                        <tr>
-                            <td>
-                                <div class="info-box" style="margin-right: 10px;">
-                                    <div class="info-label">Status</div>
-                                    <div class="info-value uppercase {{ $payment->status == 'completed' ? 'status-cleared' : '' }}">{{ $payment->status }}</div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="info-box">
-                                    <div class="info-label">Terminal</div>
-                                    <div class="info-value uppercase">01-WEB</div>
-                                </div>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-        </table>
-
-        <div class="customer-card">
-            <div class="section-title">Pay To (Supplier)</div>
-            <div class="customer-name uppercase">{{ $payment->supplier->name ?? 'N/A' }}</div>
-            <table class="customer-details-table">
-                <tr class="detail-row">
-                    <td width="20%">Supplier Code:</td>
-                    <td><strong>{{ $payment->supplier->supplier_code ?? 'N/A' }}</strong></td>
-                </tr>
-                <tr class="detail-row">
-                    <td width="20%">Phone:</td>
-                    <td><strong>{{ $payment->supplier->phone ?? 'N/A' }}</strong></td>
-                </tr>
-                <tr class="detail-row">
-                    <td width="20%">Payment Mode:</td>
-                    <td><strong>{{ $payment->payment_method }} Payment</strong></td>
-                </tr>
-            </table>
-        </div>
-
-        <div class="payment-amount-card" style="background: var(--primary-color);">
-            <div class="payment-total-label">Total Amount Paid</div>
-            <div class="amount-value">
-                @php
-                    $currencySymbols = ['SAR' => '﷼', 'USD' => '$', 'EUR' => '€', 'GBP' => '£', 'AED' => 'د.إ', 'KWD' => 'د.ك', 'SOS' => 'SOS', 'KES' => 'KSh'];
-                    $symbol = $currencySymbols[$company->currency ?? ''] ?? ($company->currency ?? '$');
-                @endphp
-                {{ $symbol }} {{ number_format($payment->amount, 2) }}
-            </div>
-            <div class="payment-total-note">
-                Amount debited from accounts in {{ $company->currency ?? 'USD' }}.
+        {{-- Company --}}
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center gap-4">
+            @if($logoB64)
+                <img src="{{ $logoB64 }}" alt="{{ $company->name ?? '' }}"
+                     class="w-16 h-16 object-contain border border-dashed border-gray-300 rounded">
+            @endif
+            <div>
+                <div class="text-xl font-black text-gray-800">{{ $company->name ?? '' }}</div>
+                <div class="text-sm text-gray-500 mt-1">Phone:&nbsp;&nbsp;{{ $company->phone ?? '' }}</div>
             </div>
         </div>
 
-        <div class="section-title">Payment Breakdown</div>
-        <table class="invoices-table">
-            <thead>
-                <tr>
-                    <th>Reference / Bill</th>
-                    <th>Payment Date</th>
-                    <th>Category</th>
-                    <th style="text-align: right">Amount Paid</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>{{ $payment->reference ?? 'Direct Payment' }}</td>
-                    <td>{{ date('d-m-Y', strtotime($payment->payment_date)) }}</td>
-                    <td>Supplier Payment</td>
-                    <td class="amount-paid-cell">{{ $symbol }} {{ number_format($payment->amount, 2) }}</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <div class="clearfix">
-            <div class="summary-table">
-                <div class="summary-row">
-                    <div class="summary-cell summary-label uppercase">Subtotal</div>
-                    <div class="summary-cell summary-value">{{ $symbol }} {{ number_format($payment->amount, 2) }}</div>
-                </div>
-                <div class="summary-row total-credit-row">
-                    <div class="summary-cell summary-label font-black uppercase">Grand Total</div>
-                    <div class="summary-cell total-credit-value font-black">{{ $symbol }} {{ number_format($payment->amount, 2) }}</div>
-                </div>
+        {{-- Pay To / Voucher Details --}}
+        <div class="grid grid-cols-2 divide-x divide-gray-200 border-b border-gray-200">
+            <div class="px-6 py-4">
+                <div class="text-xs font-bold text-gray-500 mb-2">Pay To (Supplier):</div>
+                <div class="text-base font-black text-gray-800 uppercase">{{ $payment->supplier->name ?? 'N/A' }}</div>
+                <div class="text-sm text-gray-500 mt-1">Phone:&nbsp;&nbsp;<strong class="text-gray-700">{{ $payment->supplier->phone ?? 'N/A' }}</strong></div>
+                <div class="text-sm text-gray-500 mt-1">Method:&nbsp;&nbsp;<strong class="text-gray-700">{{ $payment->payment_method ?? 'Cash' }}</strong></div>
             </div>
+            <div class="px-6 py-4">
+                <div class="text-xs font-bold text-gray-500 mb-2">Voucher Details:</div>
+                <div class="text-sm text-gray-700">Voucher No.:&nbsp;&nbsp;<strong>{{ $payment->voucher_no }}</strong></div>
+                <div class="text-sm text-gray-700 mt-1">Date:&nbsp;&nbsp;<strong>{{ date('d/m/Y', strtotime($payment->payment_date)) }}</strong></div>
+                <div class="text-sm text-gray-700 mt-1">Status:&nbsp;&nbsp;<strong class="{{ $payment->status === 'completed' ? 'text-green-600' : 'text-yellow-600' }}">{{ ucfirst($payment->status) }}</strong></div>
+            </div>
+        </div>
+
+        {{-- Amount Paid --}}
+        <div class="px-6 py-3 border-b border-gray-200 flex items-center justify-between">
+            <span class="text-sm text-gray-700">Amount Paid</span>
+            <span class="text-gray-400 text-sm">:</span>
+            <span class="text-sm font-black text-gray-800">{{ $symbol }}&nbsp;{{ number_format($payment->amount, 2) }}</span>
+        </div>
+
+        {{-- Amount in Words label --}}
+        <div class="px-6 py-2 border-b border-gray-200 bg-gray-50">
+            <span class="text-sm font-black text-gray-700">Amount in Words:</span>
+        </div>
+
+        {{-- Amount in Words value --}}
+        <div class="px-6 py-3 border-b border-gray-200">
+            <span class="text-sm text-gray-700">{{ $amountWords }}</span>
         </div>
 
         @if($payment->notes)
-            <div class="confirmation-box">
-                <div class="confirmation-title">Additional Notes</div>
-                <div class="confirmation-text">
-                    {{ $payment->notes }}
-                </div>
-            </div>
+        {{-- Notes label --}}
+        <div class="px-6 py-2 border-b border-gray-200 bg-gray-50">
+            <span class="text-sm font-black text-gray-700">Notes:</span>
+        </div>
+        {{-- Notes value --}}
+        <div class="px-6 py-3 border-b border-gray-200">
+            <span class="text-sm text-gray-700">{{ $payment->notes }}</span>
+        </div>
         @endif
 
-        <table class="signature-table">
-            <tr>
-                <td class="signature-box">
-                    <div class="signature-line"></div>
-                    <div class="signature-name uppercase">{{ $payment->creator->name ?? 'ACCOUNTANT' }}</div>
-                    <div class="signature-role">Prepared By</div>
-                </td>
-                <td width="10%"></td>
-                <td class="signature-box">
-                    <div class="signature-line"></div>
-                    <div class="signature-name uppercase">_________________</div>
-                    <div class="signature-role">Manager Approval</div>
-                </td>
-            </tr>
-        </table>
-
-        <div class="footer-meta">
-            This is a computer-generated voucher. Generated on {{ date('d M, Y H:i A') }} • {{ $company->name ?? 'Waafibook' }}
+        {{-- Authorized Signatory --}}
+        <div class="grid grid-cols-2 border-b border-gray-200">
+            <div></div>
+            <div class="px-6 py-5">
+                <div class="border border-gray-300 p-4 rounded">
+                    <div class="text-sm font-black text-gray-800 mb-14">For {{ $company->name ?? '' }}:</div>
+                    <div class="text-center text-xs text-gray-500 border-t border-gray-200 pt-2">
+                        Authorized Signatory
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-</body>
-</html>
 
+    </div>
+</div>
+
+@endsection
