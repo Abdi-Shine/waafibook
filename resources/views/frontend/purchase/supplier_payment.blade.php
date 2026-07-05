@@ -154,7 +154,6 @@
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Voucher Info</th>
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Supplier</th>
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Products</th>
-                        <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Reference</th>
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Method</th>
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-right">Amount</th>
                         <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Status</th>
@@ -199,9 +198,6 @@
                                     @endif
                                 @endif
                             </div>
-                        </td>
-                        <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark text-center">
-                            {{ $item->reference ?? 'DIRECT' }}
                         </td>
                         <td class="px-5 py-4 text-[12px] font-semibold text-primary-dark text-center">
                             {{ $item->payment_method }}
