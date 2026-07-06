@@ -483,7 +483,7 @@
                     <p class="text-[11px] font-bold text-primary-dark uppercase tracking-wider mb-5 pb-2 border-b border-gray-100">
                         Return Details
                     </p>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
 
                         <div class="space-y-1.5">
                             <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Purchase Bill <span class="text-primary">*</span></label>
@@ -523,11 +523,6 @@
                             </div>
                         </div>
 
-                        <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Due Date <span class="text-gray-400 font-normal normal-case">(optional)</span></label>
-                            <input type="date" x-model="dueDate"
-                                class="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
-                        </div>
                     </div>
                 </div>
 
