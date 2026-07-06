@@ -126,10 +126,7 @@
                     <td class="label">Subtotal</td>
                     <td class="val">{{ $symbol }} {{ number_format($return->subtotal ?? $return->total_amount, 2) }}</td>
                 </tr>
-                <tr>
-                    <td class="label">Tax / VAT</td>
-                    <td class="val">{{ $symbol }} {{ number_format($return->tax ?? 0, 2) }}</td>
-                </tr>
+
                 <tr class="grand">
                     <td class="label">Total Credit</td>
                     <td class="val">{{ $symbol }} {{ number_format($return->total_amount, 2) }}</td>
