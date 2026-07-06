@@ -25,9 +25,8 @@
         <div class="header-left">
             @if($company && $company->logo && file_exists(public_path($company->logo)))
                 <img src="{{ public_path($company->logo) }}" class="logo-img" alt="Logo">
-            @else
-                <div class="company-name">{{ $company->name ?? 'Company' }}</div>
             @endif
+            <div class="company-name">{{ $company->name ?? 'Company' }}</div>
             <div class="company-sub">
                 {{ $company->address ?? '' }}<br>
                 @if($company->phone) Tel: {{ $company->phone }} @endif
