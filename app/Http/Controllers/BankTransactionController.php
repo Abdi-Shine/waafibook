@@ -293,7 +293,8 @@ class BankTransactionController extends Controller
         $cid = auth()->user()->company_id;
 
         DB::transaction(function () use ($request, $cid) {
-            $count = JournalEntry::query()->where('reference', 'like', 'DEP-%')->count() + 1;
+            // Use withoutGlobalScopes so count is global — entry_number is a global unique key
+            $count = JournalEntry::withoutGlobalScopes()->where('reference', 'like', 'DEP-%')->count() + 1;
             $ref   = 'DEP-' . date('Ymd') . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
 
             $entry = JournalEntry::query()->create([
@@ -341,7 +342,8 @@ class BankTransactionController extends Controller
         $cid = auth()->user()->company_id;
 
         DB::transaction(function () use ($request, $cid) {
-            $count = JournalEntry::query()->where('reference', 'like', 'WTH-%')->count() + 1;
+            // Use withoutGlobalScopes so count is global — entry_number is a global unique key
+            $count = JournalEntry::withoutGlobalScopes()->where('reference', 'like', 'WTH-%')->count() + 1;
             $ref   = 'WTH-' . date('Ymd') . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
 
             $entry = JournalEntry::query()->create([
