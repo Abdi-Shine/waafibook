@@ -122,8 +122,8 @@ class BankTransactionController extends Controller
         // 1. Get Accounts
         $cid = auth()->user()->company_id;
         $bankAccounts = Account::query()->where('company_id', $cid)->whereIn('type', ['bank', 'cash'])->where('is_active', 1)->get();
-        // Deposit "Deposit To" only shows cash accounts (physical cash, e.g. Cash on Hand)
-        $cashAccounts = Account::query()->where('company_id', $cid)->where('type', 'cash')->where('is_active', 1)->get();
+        // Deposit/Withdraw dropdowns: only Cash on Hand (code 1110)
+        $cashAccounts = Account::query()->where('company_id', $cid)->where('code', '1110')->where('is_active', 1)->get();
 
         // Deposit "other side": where incoming money comes FROM (credit accounts)
         $depositCategories = Account::query()
