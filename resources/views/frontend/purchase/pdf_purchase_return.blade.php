@@ -6,75 +6,6 @@
     <style>
         {!! file_get_contents(public_path('frontend/assets/css/receipt-pdf.css')) !!}
     </style>
-    <style>
-        /* ── Single-page A4 portrait layout ── */
-        @page { size: A4 portrait; margin: 10mm 12mm; }
-        body          { padding: 0; font-size: 10.5px; line-height: 1.4; }
-
-        /* Header */
-        .header       { margin-bottom: 10px; }
-        .logo-img     { height: 40px; margin-bottom: 4px; }
-        .company-name { font-size: 16px; }
-        .company-sub  { font-size: 9px; margin-top: 2px; }
-        .doc-title    { font-size: 22px; }
-        .doc-number   { font-size: 10px; margin-top: 3px; }
-        .doc-badge    { margin-top: 4px; }
-
-        /* Dividers */
-        .divider       { margin-bottom: 10px; }
-        .divider-light { margin: 10px 0; }
-
-        /* Meta bar */
-        .meta-box  { padding: 10px 12px; margin-bottom: 12px; }
-        .meta-item { padding: 8px 12px; }
-        .meta-val  { font-size: 12px; margin-top: 2px; }
-
-        /* Supplier / doc info */
-        .info-grid  { margin-bottom: 12px; }
-        .info-name  { font-size: 12px; margin-bottom: 3px; }
-        .info-detail{ font-size: 9.5px; line-height: 1.4; }
-
-        /* Items table */
-        .section-title    { margin-bottom: 8px; }
-        table.items th    { padding: 8px 10px; font-size: 8.5px; }
-        table.items td    { padding: 7px 10px; font-size: 10.5px; }
-        table.items       { margin-bottom: 12px; }
-
-        /* Totals */
-        .totals-wrap      { margin-top: 10px; }
-        .totals-table td  { padding: 4px 0; font-size: 10.5px; }
-        .totals-table .grand td,
-        .totals-table tr.grand-total td { font-size: 13px; padding-top: 6px; }
-
-        /* Reason box */
-        .reason-box   { padding: 8px 12px; margin-top: 8px; }
-        .reason-title { font-size: 8.5px; margin-bottom: 4px; }
-        .reason-text  { font-size: 10.5px; }
-
-        /* Signatures — fixed to bottom of page */
-        .signature-table {
-            position: fixed;
-            bottom: 22mm;
-            left: 0; right: 0;
-            width: 100%;
-            margin: 0;
-        }
-        .signature-line  { margin-top: 24px; margin-bottom: 8px; }
-        .signature-name  { font-size: 12px; }
-        .signature-role  { font-size: 9px; }
-
-        /* Footer — fixed to very bottom */
-        .footer-meta {
-            position: fixed;
-            bottom: 4mm;
-            left: 0; right: 0;
-            margin: 0;
-            padding-top: 6px;
-            font-size: 9px;
-            border-top: 1px solid #f1f5f9;
-            text-align: center;
-        }
-    </style>
 </head>
 <body>
 
@@ -113,25 +44,6 @@
 
     <hr class="divider">
 
-    {{-- Meta Bar --}}
-    <div class="meta-box">
-        <div class="meta-item">
-            <div class="meta-label">Return Date</div>
-            <div class="meta-val">{{ \Carbon\Carbon::parse($return->return_date)->format('d M Y') }}</div>
-        </div>
-        <div class="meta-item">
-            <div class="meta-label">Ref. Bill No.</div>
-            <div class="meta-val">{{ $return->bill->bill_number ?? 'N/A' }}</div>
-        </div>
-        <div class="meta-item">
-            <div class="meta-label">Branch</div>
-            <div class="meta-val">{{ $return->branch->name ?? '-' }}</div>
-        </div>
-        <div class="meta-item">
-            <div class="meta-label">Processed By</div>
-            <div class="meta-val">{{ $return->user->name ?? 'System' }}</div>
-        </div>
-    </div>
 
     {{-- Supplier Info --}}
     <div class="info-grid">
