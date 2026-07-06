@@ -1180,7 +1180,7 @@ class PurchaseController extends Controller
         $company = Company::find(auth()->user()->company_id);
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('frontend.purchase.pdf_purchase_return', compact('return', 'company'));
-        $pdf->setPaper('A4', 'portrait');
+        $pdf->setPaper('A4', 'landscape');
         return $pdf->download('Purchase-Return-' . $return->return_number . '.pdf');
     }
 
@@ -1514,10 +1514,10 @@ class PurchaseController extends Controller
 
         $company_profile = Company::find(auth()->user()->company_id);
 
-        $pdf = Pdf::loadView('frontend.expense.pdf_expense_receipt', compact('expense', 'company_profile'))
+        $pdf = Pdf::loadView('frontend.expense.pdf_expense_receipt_v2', compact('expense', 'company_profile'))
                   ->setPaper('a4', 'portrait');
 
-        return $pdf->download('Expense_Receipt_EXP-' . $expense->id . '.pdf');
+        return $pdf->stream('Expense_Receipt_EXP-' . str_pad($expense->id, 4, '0', STR_PAD_LEFT) . '.pdf');
     }
 
     public function updateExpense(Request $request, $id)

@@ -65,10 +65,29 @@
     .r-disclaimer { font-size: 11px; color: #94a3b8; line-height: 1.6; }
     .r-contact-link { color: #004161; }
 
+    /* Hide mobile bottom nav on this receipt page */
+    .bottom-nav, nav.bottom-nav { display: none !important; }
+
     @media print {
-        .no-print { display: none !important; }
-        body { background: white !important; }
-        .receipt-wrapper { border: none; box-shadow: none; padding: 0; }
+        /* Remove admin chrome from document flow */
+        #sidebar, header, .no-print { display: none !important; }
+
+        /* Kill Tailwind's min-h-screen on every element that carries it */
+        .min-h-screen { min-height: 0 !important; height: auto !important; }
+
+        /* Reset all layout containers */
+        html, body { height: auto !important; background: white !important; margin: 0 !important; padding: 0 !important; }
+        .main-content { margin-left: 0 !important; height: auto !important; overflow: visible !important; }
+        .main-content > div { padding: 0 !important; background: white !important; }
+
+        /* Clean receipt card */
+        .receipt-wrapper {
+            border: none !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            padding: 12px !important;
+            width: 100% !important;
+        }
     }
 </style>
 @endpush
