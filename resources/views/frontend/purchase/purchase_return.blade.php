@@ -18,10 +18,6 @@
     returnReason: '',
     returnItems: [],
     isSubmitting: false,
-    amountPaid: 0,
-    dueDate: '',
-    bankAccountId: '',
-    bankAccounts: @js($bankAccounts),
     editReturn: {},
     isEditSubmitting: false,
     pageSize: 10,
@@ -41,12 +37,6 @@
         return this.selectedBill.supplier ? (parseFloat(this.selectedBill.supplier.amount_balance) || 0) : 0;
     },
 
-    get resultingBalance() {
-        const totalReturn = this.calculateSubtotal();
-        const payment = parseFloat(this.amountPaid || 0);
-        return this.selectedSupplierBalance - totalReturn - payment;
-    },
-    
     get selectedBill() {
         return this.bills.find(b => b.id == this.selectedBillId);
     },
@@ -69,7 +59,6 @@
                 };
             }).filter(i => i.remaining_qty > 0);
             
-            this.amountPaid = 0; 
         } else {
             this.returnItems = [];
         }
@@ -85,19 +74,11 @@
         this.returnDate = '{{ date('Y-m-d') }}';
         this.returnReason = '';
         this.returnItems = [];
-        this.amountPaid = 0;
-        this.dueDate = '';
-        this.bankAccountId = '';
     },
 
     async submitReturn() {
         if (!this.selectedBillId || !this.returnDate || !this.returnReason || this.returnItems.length === 0) {
             Swal.fire('Error', 'Please fill all required fields and add items.', 'error');
-            return;
-        }
-
-        if (this.amountPaid > 0 && !this.bankAccountId) {
-            Swal.fire('Error', 'Please select a Bank Account for the refund.', 'error');
             return;
         }
 
@@ -107,9 +88,6 @@
                 purchase_bill_id: this.selectedBillId,
                 return_date: this.returnDate,
                 reason: this.returnReason,
-                amount_paid: this.amountPaid,
-                bank_account_id: this.bankAccountId,
-                due_date: this.dueDate,
                 items: this.returnItems.map(i => ({
                     product_id: i.product_id,
                     bill_item_id: i.id,
@@ -583,55 +561,10 @@
                     </div>
                 </div>
 
-                <!-- Section: Summary -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    <!-- Bank Account -->
-                    <div class="bg-white rounded-[1rem] border border-gray-100 shadow-sm p-5 lg:col-span-2">
-                        <p class="text-[11px] font-bold text-primary-dark uppercase tracking-wider mb-4 pb-2 border-b border-gray-100">Refund Details</p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                            <div class="space-y-1.5">
-                                <label class="block text-[10px] font-black text-primary-dark uppercase tracking-wider mb-1">Amount Paid</label>
-                                <div class="relative">
-                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-gray-400" x-text="currency"></span>
-                                    <input type="number" x-model="amountPaid" min="0" step="0.01"
-                                        class="w-full pl-7 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-[12px] font-semibold text-primary-dark focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all text-right">
-                                </div>
-                            </div>
-                            <div class="space-y-1.5">
-                                <label class="block text-[10px] font-black text-primary-dark uppercase tracking-wider mb-1">Bank Account</label>
-                                <select x-model="bankAccountId"
-                                    class="w-full pl-4 pr-10 py-2 bg-white border border-gray-200 rounded-lg text-[12px] font-semibold text-primary-dark focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
-                                    <option value="">-- Select Account --</option>
-                                    <template x-for="account in bankAccounts" :key="account.id">
-                                        <option :value="account.id" x-text="account.name"></option>
-                                    </template>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Totals -->
-                    <div class="bg-white rounded-[1rem] border border-gray-100 shadow-sm p-5 lg:col-span-1">
-                        <p class="text-[10px] font-black text-primary-dark uppercase tracking-wider mb-4 pb-2 border-b border-gray-100">Return Summary</p>
-                        <div class="space-y-2 mb-3">
-                            <div class="flex justify-between text-[11px] font-semibold text-gray-500">
-                                <span>Supplier Balance</span>
-                                <span x-text="`${currency} ${parseFloat(selectedSupplierBalance).toLocaleString(undefined,{minimumFractionDigits:2})}`"></span>
-                            </div>
-                            <div class="flex justify-between text-[11px] font-semibold text-gray-500">
-                                <span>— Return Total</span>
-                                <span x-text="`${currency} ${calculateSubtotal().toLocaleString(undefined,{minimumFractionDigits:2})}`"></span>
-                            </div>
-                            <div class="flex justify-between text-[11px] font-semibold text-gray-500 pb-2 border-b border-gray-100">
-                                <span>— Amount Paid</span>
-                                <span x-text="`${currency} ${parseFloat(amountPaid||0).toLocaleString(undefined,{minimumFractionDigits:2})}`"></span>
-                            </div>
-                        </div>
-                        <div class="bg-primary rounded-xl px-4 py-3 flex items-center justify-between">
-                            <span class="text-[11px] font-black text-white uppercase tracking-wider">New Balance</span>
-                            <span class="text-[15px] font-black text-accent" x-text="`${currency} ${resultingBalance.toLocaleString(undefined,{minimumFractionDigits:2})}`"></span>
-                        </div>
-                    </div>
+                <!-- Return Total -->
+                <div class="bg-primary rounded-xl px-5 py-3.5 flex items-center justify-between">
+                    <span class="text-[11px] font-black text-white uppercase tracking-wider">Return Total</span>
+                    <span class="text-[15px] font-black text-accent" x-text="`${currency} ${calculateSubtotal().toLocaleString(undefined,{minimumFractionDigits:2})}`"></span>
                 </div>
 
             </div>

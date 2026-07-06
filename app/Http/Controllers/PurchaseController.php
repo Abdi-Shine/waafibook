@@ -989,12 +989,10 @@ class PurchaseController extends Controller
         $company = Company::find(auth()->user()->company_id);
         $currSymbols = ['SAR' => '﷼', 'USD' => '$', 'EUR' => '€', 'GBP' => '£', 'AED' => 'د.إ', 'KWD' => 'د.ك'];
         $currency = $currSymbols[$company->currency ?? ''] ?? ($company->currency ?? '$');
-        $bankAccounts = Account::query()->whereIn('type', ['bank', 'cash'])->where('is_active', 1)->get();
-
         $suppliers = Supplier::where('status', 'active')->get();
         $branches = Branch::all();
 
-        return view('frontend.purchase.purchase_return', compact('bills', 'returns', 'currency', 'bankAccounts', 'suppliers', 'branches'));
+        return view('frontend.purchase.purchase_return', compact('bills', 'returns', 'currency', 'suppliers', 'branches'));
     }
 
     public function storeReturn(Request $request)
