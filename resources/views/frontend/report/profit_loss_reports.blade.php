@@ -85,8 +85,29 @@
     </div>
 
     {{-- Filter --}}
-    <form action="{{ route('reports.profit_loss') }}" method="GET"
+    <form id="plFilterForm" action="{{ route('reports.profit_loss') }}" method="GET"
           class="no-print bg-white rounded-[1rem] border border-gray-100 shadow-sm px-5 py-4 mb-6 flex flex-wrap items-end gap-4">
+
+        {{-- Quick period buttons --}}
+        <div class="w-full flex flex-wrap gap-2 pb-3 border-b border-gray-100">
+            <button type="button" onclick="setQuickPeriod('this_month')"
+                class="quick-period-btn px-3 py-1.5 text-[12px] font-semibold rounded-lg border border-gray-200 bg-gray-50 text-gray-600 hover:bg-primary hover:text-white hover:border-primary transition-all">
+                This Month
+            </button>
+            <button type="button" onclick="setQuickPeriod('last_month')"
+                class="quick-period-btn px-3 py-1.5 text-[12px] font-semibold rounded-lg border border-gray-200 bg-gray-50 text-gray-600 hover:bg-primary hover:text-white hover:border-primary transition-all">
+                Last Month
+            </button>
+            <button type="button" onclick="setQuickPeriod('this_quarter')"
+                class="quick-period-btn px-3 py-1.5 text-[12px] font-semibold rounded-lg border border-gray-200 bg-gray-50 text-gray-600 hover:bg-primary hover:text-white hover:border-primary transition-all">
+                This Quarter
+            </button>
+            <button type="button" onclick="setQuickPeriod('this_year')"
+                class="quick-period-btn px-3 py-1.5 text-[12px] font-semibold rounded-lg border border-gray-200 bg-gray-50 text-gray-600 hover:bg-primary hover:text-white hover:border-primary transition-all">
+                This Year
+            </button>
+        </div>
+
         <div>
             <label class="block text-[11px] font-semibold text-gray-500 mb-1">Period</label>
             <div class="flex items-center gap-2 text-[12px] font-bold text-primary bg-primary/5 px-3 py-2 rounded-lg border border-primary/10">
@@ -96,18 +117,50 @@
         </div>
         <div>
             <label class="block text-[11px] font-semibold text-gray-500 mb-1">From Date</label>
-            <input type="date" name="from_date" value="{{ $filters['from_date'] }}"
+            <input type="date" id="from_date" name="from_date" value="{{ $filters['from_date'] }}"
                 class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] outline-none focus:border-primary">
         </div>
         <div>
             <label class="block text-[11px] font-semibold text-gray-500 mb-1">To Date</label>
-            <input type="date" name="to_date" value="{{ $filters['to_date'] }}"
+            <input type="date" id="to_date" name="to_date" value="{{ $filters['to_date'] }}"
                 class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] outline-none focus:border-primary">
         </div>
         <button type="submit" class="flex items-center gap-2 px-5 py-2 bg-primary text-white font-bold rounded-lg text-[13px] hover:bg-primary/90">
             <i class="bi bi-arrow-clockwise"></i> Update
         </button>
     </form>
+
+    <script>
+    function setQuickPeriod(period) {
+        const now = new Date();
+        let from, to;
+
+        if (period === 'this_month') {
+            from = new Date(now.getFullYear(), now.getMonth(), 1);
+            to   = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        } else if (period === 'last_month') {
+            from = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            to   = new Date(now.getFullYear(), now.getMonth(), 0);
+        } else if (period === 'this_quarter') {
+            const q = Math.floor(now.getMonth() / 3);
+            from = new Date(now.getFullYear(), q * 3, 1);
+            to   = new Date(now.getFullYear(), q * 3 + 3, 0);
+        } else if (period === 'this_year') {
+            from = new Date(now.getFullYear(), 0, 1);
+            to   = new Date(now.getFullYear(), 11, 31);
+        }
+
+        document.getElementById('from_date').value = fmt(from);
+        document.getElementById('to_date').value   = fmt(to);
+        document.getElementById('plFilterForm').submit();
+    }
+
+    function fmt(d) {
+        return d.getFullYear() + '-' +
+               String(d.getMonth() + 1).padStart(2, '0') + '-' +
+               String(d.getDate()).padStart(2, '0');
+    }
+    </script>
 
     {{-- Statement Table --}}
     <div class="bg-white rounded-[1rem] border border-gray-100 shadow-sm overflow-hidden mb-6">
