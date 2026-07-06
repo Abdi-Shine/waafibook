@@ -1,6 +1,42 @@
 ﻿@extends('admin.admin_master')
 @section('page_title', 'Bill-wise Profit')
 
+@push('css')
+<style>
+    /* Stat card colors */
+    .bwp-card-revenue  { border-left: 4px solid #3b82f6 !important; }
+    .bwp-card-revenue h3 { color: #1d4ed8 !important; }
+    .bwp-card-revenue .card-icon { background: #eff6ff; color: #3b82f6; }
+
+    .bwp-card-profit   { border-left: 4px solid #22c55e !important; }
+    .bwp-card-profit h3 { color: #15803d !important; }
+    .bwp-card-profit .card-icon { background: #f0fdf4; color: #22c55e; }
+
+    .bwp-card-avg      { border-left: 4px solid #f97316 !important; }
+    .bwp-card-avg h3   { color: #c2410c !important; }
+    .bwp-card-avg .card-icon { background: #fff7ed; color: #f97316; }
+
+    .bwp-card-best     { border-left: 4px solid #a855f7 !important; }
+    .bwp-card-best h3  { color: #7e22ce !important; }
+    .bwp-card-best .card-icon { background: #faf5ff; color: #a855f7; }
+
+    /* Table row colors */
+    .bwp-profit-pos { color: #15803d !important; font-weight: 900 !important; }
+    .bwp-profit-neg { color: #dc2626 !important; font-weight: 900 !important; }
+
+    /* Totals footer */
+    .bwp-tfoot-row td { background: #004161 !important; color: #fff !important; }
+    .bwp-tfoot-row .lbl { color: #99CC33 !important; font-size: 9px; text-transform: uppercase; font-weight: 800; }
+    .bwp-tfoot-row .val { font-size: 15px; font-weight: 900; font-family: monospace; }
+    .bwp-tfoot-row .val-profit { color: #99CC33 !important; }
+
+    /* Badge overrides */
+    .badge-high   { background: #dcfce7; color: #15803d; padding: 3px 10px; border-radius: 999px; font-size: 9px; font-weight: 900; text-transform: uppercase; }
+    .badge-medium { background: #dbeafe; color: #1d4ed8; padding: 3px 10px; border-radius: 999px; font-size: 9px; font-weight: 900; text-transform: uppercase; }
+    .badge-low    { background: #fee2e2; color: #dc2626; padding: 3px 10px; border-radius: 999px; font-size: 9px; font-weight: 900; text-transform: uppercase; }
+</style>
+@endpush
+
 
 
 @section('admin')
@@ -69,53 +105,44 @@
         </div>
 
         <!-- Stats Cards -->
-        <!-- Stats Cards -->
         <div class="report-premium-stat-grid">
-            <div
-                class="bg-white p-5 rounded-[1rem] border border-gray-100 shadow-sm flex items-start justify-between hover:-translate-y-0.5 transition-transform duration-200">
+            <div class="bwp-card-revenue bg-white p-5 rounded-[1rem] border border-gray-100 shadow-sm flex items-start justify-between hover:-translate-y-0.5 transition-transform duration-200">
                 <div>
                     <p class="text-[12px] text-gray-400 font-medium mb-1">Total Revenue</p>
-                    <h3 class="text-[18px] font-black text-primary">{{ number_format($totals->revenue, 2) }}</h3>
-                    <p class="text-xs font-bold text-primary-dark mt-1.5 flex items-center gap-1">Gross Proceeds</p>
+                    <h3 class="text-[18px] font-black">{{ number_format($totals->revenue, 2) }}</h3>
+                    <p class="text-xs font-bold text-gray-500 mt-1.5">Gross Proceeds</p>
                 </div>
-                <div
-                    class="w-11 h-11 bg-primary/10 rounded-[0.6rem] flex items-center justify-center text-primary flex-shrink-0">
+                <div class="card-icon w-11 h-11 rounded-[0.6rem] flex items-center justify-center flex-shrink-0">
                     <i class="bi bi-graph-up-arrow"></i>
                 </div>
             </div>
-            <div
-                class="bg-white p-5 rounded-[1rem] border border-gray-100 shadow-sm flex items-start justify-between hover:-translate-y-0.5 transition-transform duration-200">
+            <div class="bwp-card-profit bg-white p-5 rounded-[1rem] border border-gray-100 shadow-sm flex items-start justify-between hover:-translate-y-0.5 transition-transform duration-200">
                 <div>
                     <p class="text-[12px] text-gray-400 font-medium mb-1">Net Profit</p>
-                    <h3 class="text-[18px] font-black text-primary">{{ number_format($totals->profit, 2) }}</h3>
-                    <p class="text-xs font-bold text-primary-dark mt-1.5 flex items-center gap-1">After Costs & Exp.</p>
+                    <h3 class="text-[18px] font-black">{{ number_format($totals->profit, 2) }}</h3>
+                    <p class="text-xs font-bold text-gray-500 mt-1.5">After Costs & Exp.</p>
                 </div>
-                <div
-                    class="w-11 h-11 bg-primary/10 rounded-[0.6rem] flex items-center justify-center text-primary flex-shrink-0">
+                <div class="card-icon w-11 h-11 rounded-[0.6rem] flex items-center justify-center flex-shrink-0">
                     <i class="bi bi-cash-stack"></i>
                 </div>
             </div>
-            <div
-                class="bg-white p-5 rounded-[1rem] border border-gray-100 shadow-sm flex items-start justify-between hover:-translate-y-0.5 transition-transform duration-200">
+            <div class="bwp-card-avg bg-white p-5 rounded-[1rem] border border-gray-100 shadow-sm flex items-start justify-between hover:-translate-y-0.5 transition-transform duration-200">
                 <div>
                     <p class="text-[12px] text-gray-400 font-medium mb-1">Avg Margin</p>
-                    <h3 class="text-[18px] font-black text-primary">{{ number_format($totals->avgMargin, 1) }}%</h3>
-                    <p class="text-xs font-bold text-primary-dark mt-1.5 flex items-center gap-1">Efficiency Rate</p>
+                    <h3 class="text-[18px] font-black">{{ number_format($totals->avgMargin, 1) }}%</h3>
+                    <p class="text-xs font-bold text-gray-500 mt-1.5">Efficiency Rate</p>
                 </div>
-                <div
-                    class="w-11 h-11 bg-primary/10 rounded-[0.6rem] flex items-center justify-center text-primary flex-shrink-0">
+                <div class="card-icon w-11 h-11 rounded-[0.6rem] flex items-center justify-center flex-shrink-0">
                     <i class="bi bi-percent"></i>
                 </div>
             </div>
-            <div
-                class="bg-white p-5 rounded-[1rem] border border-gray-100 shadow-sm flex items-start justify-between hover:-translate-y-0.5 transition-transform duration-200">
+            <div class="bwp-card-best bg-white p-5 rounded-[1rem] border border-gray-100 shadow-sm flex items-start justify-between hover:-translate-y-0.5 transition-transform duration-200">
                 <div>
                     <p class="text-[12px] text-gray-400 font-medium mb-1">Best Margin</p>
-                    <h3 class="text-[18px] font-black text-primary">{{ number_format($totals->bestMargin, 1) }}%</h3>
-                    <p class="text-xs font-bold text-primary-dark mt-1.5 flex items-center gap-1">TOP TRANSACTION</p>
+                    <h3 class="text-[18px] font-black">{{ number_format($totals->bestMargin, 1) }}%</h3>
+                    <p class="text-xs font-bold text-gray-500 mt-1.5">Top Transaction</p>
                 </div>
-                <div
-                    class="w-11 h-11 bg-primary/10 rounded-[0.6rem] flex items-center justify-center text-primary flex-shrink-0">
+                <div class="card-icon w-11 h-11 rounded-[0.6rem] flex items-center justify-center flex-shrink-0">
                     <i class="bi bi-trophy"></i>
                 </div>
             </div>
@@ -139,33 +166,6 @@
             <div class="report-premium-filter-group w-auto min-w-[140px]">
                 <span class="report-premium-filter-label">To Date</span>
                 <input type="date" name="to_date" value="{{ $filters['to_date'] }}" class="report-premium-filter-input">
-            </div>
-            <div class="report-premium-filter-group w-auto min-w-[160px]">
-                <span class="report-premium-filter-label">Customer</span>
-                <select name="customer_id" x-model="customerFilter" class="report-premium-filter-input">
-                    <option value="">All Customers</option>
-                    @foreach($customers as $c)
-                        <option value="{{ $c->id }}">{{ $c->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="report-premium-filter-group w-auto min-w-[140px]">
-                <span class="report-premium-filter-label">Margin Category</span>
-                <select name="margin_filter" x-model="marginFilter" class="report-premium-filter-input">
-                    <option value="">All Margins</option>
-                    <option value="high">High (>35%)</option>
-                    <option value="medium">Medium (15-35%)</option>
-                    <option value="low">Low (&lt;15%)</option>
-                </select>
-            </div>
-            <div class="report-premium-filter-group w-auto min-w-[140px]">
-                <span class="report-premium-filter-label">Branch</span>
-                <select name="branch_id" x-model="branchFilter" class="report-premium-filter-input">
-                    <option value="">All Branches</option>
-                    @foreach($branches as $b)
-                        <option value="{{ $b->id }}">{{ $b->name }}</option>
-                    @endforeach
-                </select>
             </div>
             <button type="submit" class="report-premium-btn-primary h-[38px] mt-auto">
                 <i class="bi bi-funnel"></i> Generate
@@ -215,22 +215,20 @@
                                     {{ number_format($row->revenue, 2) }}</td>
                                 <td class="px-6 py-4 text-[13px] font-black font-mono text-gray-400 text-right">
                                     {{ number_format($row->cost, 2) }}</td>
-                                <td
-                                    class="px-6 py-4 text-[13px] font-black font-mono text-right {{ $row->profit >= 0 ? 'text-accent' : 'text-primary' }}">
+                                <td class="px-6 py-4 text-[13px] font-mono text-right {{ $row->profit >= 0 ? 'bwp-profit-pos' : 'bwp-profit-neg' }}">
                                     {{ number_format($row->profit, 2) }}
                                 </td>
                                 <td class="px-6 py-4 text-[13px] font-black font-mono text-gray-900 text-right">
                                     {{ number_format($row->margin, 1) }}%</td>
                                 <td class="px-6 py-4 text-center">
                                     @php
-                                        $badgeType = match ($row->grade) {
-                                            'High' => 'success',
-                                            'Medium' => 'info',
-                                            default => 'error'
+                                        $badgeClass = match ($row->grade) {
+                                            'High'   => 'badge-high',
+                                            'Medium' => 'badge-medium',
+                                            default  => 'badge-low'
                                         };
                                     @endphp
-                                    <span
-                                        class="report-premium-badge report-premium-badge-{{ $badgeType }} !rounded-full italic font-black text-[9px] uppercase tracking-widest">{{ $row->grade }}</span>
+                                    <span class="{{ $badgeClass }}">{{ $row->grade }}</span>
                                 </td>
                             </tr>
                         @empty
@@ -248,42 +246,28 @@
                         @endforelse
                     </tbody>
                     @if($reportData->count() > 0)
-                        <tfoot class="bg-primary/5">
-                            <tr class="font-black text-primary-dark border-t-2 border-primary/20">
+                        <tfoot>
+                            <tr class="bwp-tfoot-row border-t-2 border-primary/30">
                                 <td colspan="3" class="px-6 py-5 text-center">
-                                    <span
-                                        class="text-[11px] font-black uppercase tracking-[0.2em] italic text-primary-dark opacity-70">Consolidated
-                                        Performance Analytics</span>
+                                    <span class="text-[11px] font-black uppercase tracking-[0.2em] italic" style="color:#99CC33;">Consolidated Performance</span>
                                 </td>
                                 <td class="px-6 py-5 text-right">
-                                    <span
-                                        class="text-[9px] text-gray-400 block font-black uppercase mb-0.5 leading-none text-right">Total
-                                        Rev.</span>
-                                    <span
-                                        class="text-[14px] font-mono text-primary italic leading-none">{{ number_format($totals->revenue, 2) }}</span>
+                                    <span class="lbl block mb-0.5">Total Rev.</span>
+                                    <span class="val">{{ number_format($totals->revenue, 2) }}</span>
                                 </td>
-                                <td class="px-6 py-5 text-right border-l border-gray-100/50">
-                                    <span
-                                        class="text-[9px] text-gray-400 block font-black uppercase mb-0.5 leading-none text-right">Net
-                                        COGS</span>
-                                    <span
-                                        class="text-[14px] font-mono text-gray-400 italic leading-none">{{ number_format($totals->cost, 2) }}</span>
+                                <td class="px-6 py-5 text-right">
+                                    <span class="lbl block mb-0.5">Net COGS</span>
+                                    <span class="val" style="color:#94a3b8;">{{ number_format($totals->cost, 2) }}</span>
                                 </td>
-                                <td class="px-6 py-5 text-right border-l border-gray-100/50 bg-brand-bg/5">
-                                    <span
-                                        class="text-[9px] text-gray-400 block font-black uppercase mb-0.5 leading-none text-right">Total
-                                        P&L</span>
-                                    <span
-                                        class="text-[14px] font-mono text-accent italic leading-none">{{ number_format($totals->profit, 2) }}</span>
+                                <td class="px-6 py-5 text-right">
+                                    <span class="lbl block mb-0.5">Total P&L</span>
+                                    <span class="val val-profit">{{ number_format($totals->profit, 2) }}</span>
                                 </td>
-                                <td class="px-6 py-5 text-right border-l border-gray-100/50">
-                                    <span
-                                        class="text-[9px] text-gray-400 block font-black uppercase mb-0.5 leading-none text-right">Avg
-                                        Rate</span>
-                                    <span
-                                        class="text-[14px] font-mono text-gray-900 italic leading-none">{{ number_format($totals->avgMargin, 1) }}%</span>
+                                <td class="px-6 py-5 text-right">
+                                    <span class="lbl block mb-0.5">Avg Rate</span>
+                                    <span class="val">{{ number_format($totals->avgMargin, 1) }}%</span>
                                 </td>
-                                <td class="bg-primary/5"></td>
+                                <td></td>
                             </tr>
                         </tfoot>
                     @endif

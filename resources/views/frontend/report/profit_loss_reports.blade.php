@@ -86,47 +86,31 @@
 
     {{-- Filter --}}
     <form id="plFilterForm" action="{{ route('reports.profit_loss') }}" method="GET"
-          class="no-print bg-white rounded-[1rem] border border-gray-100 shadow-sm px-5 py-4 mb-6 flex flex-wrap items-end gap-4">
+          class="no-print bg-white rounded-[1rem] border border-gray-100 shadow-sm px-5 py-3 mb-6 flex flex-wrap items-center gap-3">
 
-        {{-- Quick period buttons --}}
-        <div class="w-full flex flex-wrap gap-2 pb-3 border-b border-gray-100">
-            <button type="button" onclick="setQuickPeriod('this_month')"
-                class="quick-period-btn px-3 py-1.5 text-[12px] font-semibold rounded-lg border border-gray-200 bg-gray-50 text-gray-600 hover:bg-primary hover:text-white hover:border-primary transition-all">
-                This Month
+        {{-- Quick period pills --}}
+        @php $activePeriod = request('period', ''); @endphp
+        <div class="flex items-center gap-1">
+            @foreach(['this_month' => 'This Month', 'last_month' => 'Last Month', 'this_quarter' => 'This Quarter', 'this_year' => 'This Year', 'last_year' => 'Last Year'] as $key => $label)
+            <button type="button" id="btn-{{ $key }}" onclick="setQuickPeriod('{{ $key }}')"
+                class="quick-pill px-3.5 py-1.5 text-[12px] font-semibold rounded-lg transition-all
+                    {{ $activePeriod === $key ? 'bg-gray-200 text-primary-dark font-bold' : 'text-gray-500 hover:bg-gray-100 hover:text-primary-dark' }}">
+                {{ $label }}
             </button>
-            <button type="button" onclick="setQuickPeriod('last_month')"
-                class="quick-period-btn px-3 py-1.5 text-[12px] font-semibold rounded-lg border border-gray-200 bg-gray-50 text-gray-600 hover:bg-primary hover:text-white hover:border-primary transition-all">
-                Last Month
-            </button>
-            <button type="button" onclick="setQuickPeriod('this_quarter')"
-                class="quick-period-btn px-3 py-1.5 text-[12px] font-semibold rounded-lg border border-gray-200 bg-gray-50 text-gray-600 hover:bg-primary hover:text-white hover:border-primary transition-all">
-                This Quarter
-            </button>
-            <button type="button" onclick="setQuickPeriod('this_year')"
-                class="quick-period-btn px-3 py-1.5 text-[12px] font-semibold rounded-lg border border-gray-200 bg-gray-50 text-gray-600 hover:bg-primary hover:text-white hover:border-primary transition-all">
-                This Year
-            </button>
+            @endforeach
         </div>
 
-        <div>
-            <label class="block text-[11px] font-semibold text-gray-500 mb-1">Period</label>
-            <div class="flex items-center gap-2 text-[12px] font-bold text-primary bg-primary/5 px-3 py-2 rounded-lg border border-primary/10">
-                <i class="bi bi-calendar3 text-[11px]"></i>
-                {{ \Carbon\Carbon::parse($filters['from_date'])->format('d M Y') }} — {{ \Carbon\Carbon::parse($filters['to_date'])->format('d M Y') }}
-            </div>
-        </div>
-        <div>
-            <label class="block text-[11px] font-semibold text-gray-500 mb-1">From Date</label>
-            <input type="date" id="from_date" name="from_date" value="{{ $filters['from_date'] }}"
-                class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] outline-none focus:border-primary">
-        </div>
-        <div>
-            <label class="block text-[11px] font-semibold text-gray-500 mb-1">To Date</label>
-            <input type="date" id="to_date" name="to_date" value="{{ $filters['to_date'] }}"
-                class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] outline-none focus:border-primary">
-        </div>
-        <button type="submit" class="flex items-center gap-2 px-5 py-2 bg-primary text-white font-bold rounded-lg text-[13px] hover:bg-primary/90">
-            <i class="bi bi-arrow-clockwise"></i> Update
+        <div class="w-px h-6 bg-gray-200 mx-1"></div>
+
+        <input type="hidden" id="period_key" name="period" value="{{ $activePeriod }}">
+        <input type="date" id="from_date" name="from_date" value="{{ $filters['from_date'] }}"
+            class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-[14px] font-semibold text-gray-700 outline-none focus:border-primary w-44">
+        <span class="text-gray-400 font-bold">→</span>
+        <input type="date" id="to_date" name="to_date" value="{{ $filters['to_date'] }}"
+            class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-[14px] font-semibold text-gray-700 outline-none focus:border-primary w-44">
+
+        <button type="submit" class="ml-auto px-5 py-2 bg-primary text-white font-bold rounded-xl text-[13px] hover:bg-primary/90 transition-all">
+            Run Report
         </button>
     </form>
 
@@ -134,7 +118,6 @@
     function setQuickPeriod(period) {
         const now = new Date();
         let from, to;
-
         if (period === 'this_month') {
             from = new Date(now.getFullYear(), now.getMonth(), 1);
             to   = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -148,17 +131,23 @@
         } else if (period === 'this_year') {
             from = new Date(now.getFullYear(), 0, 1);
             to   = new Date(now.getFullYear(), 11, 31);
+        } else if (period === 'last_year') {
+            from = new Date(now.getFullYear() - 1, 0, 1);
+            to   = new Date(now.getFullYear() - 1, 11, 31);
         }
-
         document.getElementById('from_date').value = fmt(from);
         document.getElementById('to_date').value   = fmt(to);
+        document.getElementById('period_key').value = period;
+        document.querySelectorAll('.quick-pill').forEach(b => {
+            b.classList.remove('bg-gray-200','text-primary-dark','font-bold');
+            b.classList.add('text-gray-500');
+        });
+        const btn = document.getElementById('btn-' + period);
+        if (btn) { btn.classList.add('bg-gray-200','text-primary-dark','font-bold'); btn.classList.remove('text-gray-500'); }
         document.getElementById('plFilterForm').submit();
     }
-
     function fmt(d) {
-        return d.getFullYear() + '-' +
-               String(d.getMonth() + 1).padStart(2, '0') + '-' +
-               String(d.getDate()).padStart(2, '0');
+        return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
     }
     </script>
 
