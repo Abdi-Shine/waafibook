@@ -483,14 +483,14 @@
                     <p class="text-[11px] font-bold text-primary-dark uppercase tracking-wider mb-5 pb-2 border-b border-gray-100">
                         Return Details
                     </p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
 
                         <div class="space-y-1.5">
                             <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Purchase Bill <span class="text-primary">*</span></label>
                             <div class="relative">
                                 <select x-model="selectedBillId" @change="updateBillItems()"
                                     class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
-                                    <option value="">-- Select Purchase Bill --</option>
+                                    <option value="">-- Select --</option>
                                     <template x-for="bill in bills" :key="bill.id">
                                         <option :value="bill.id" x-text="`${bill.bill_number} — ${bill.supplier ? bill.supplier.name : 'Unknown'}`"></option>
                                     </template>
@@ -513,7 +513,7 @@
                             <div class="relative">
                                 <select x-model="returnReason"
                                     class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
-                                    <option value="">-- Select Reason --</option>
+                                    <option value="">-- Select --</option>
                                     <option value="damaged">Damaged on Arrival</option>
                                     <option value="technical">Defective / Not Working</option>
                                     <option value="wrong_sku">Wrong Item Delivered</option>
