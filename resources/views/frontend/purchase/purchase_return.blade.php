@@ -52,19 +52,31 @@
             this.returnType = (balance <= 0 && paid > 0) ? 'cash' : 'credit';
             this.refundAccountId = '';
 
+            const billBranchId = this.selectedBill.branch_id;
+
             this.returnItems = this.selectedBill.items.map(item => {
                 const alreadyReturned = (item.return_items || []).reduce((sum, ri) => sum + parseFloat(ri.quantity || 0), 0);
-                const remaining = item.quantity - alreadyReturned;
+                const remainingFromBill = item.quantity - alreadyReturned;
+
+                // Actual stock for this product in the bill's branch
+                const stocks = (item.product && item.product.stocks) ? item.product.stocks : [];
+                const branchStock = stocks.find(s => s.branch_id == billBranchId);
+                const actualStock = branchStock ? parseFloat(branchStock.quantity) : 0;
+
+                // Can only return what's both unreturned AND physically in stock
+                const available = Math.min(remainingFromBill, actualStock);
+
                 return {
                     id: item.id,
                     product_id: item.product_id,
                     name: item.product ? item.product.product_name : (item.product_name || 'Generic Product'),
                     original_qty: item.quantity,
                     already_returned_qty: alreadyReturned,
-                    remaining_qty: remaining,
-                    return_qty: remaining,
+                    stock_qty: actualStock,
+                    remaining_qty: available,
+                    return_qty: available,
                     rate: item.unit_price,
-                    total: remaining * item.unit_price
+                    total: available * item.unit_price
                 };
             }).filter(i => i.remaining_qty > 0);
             
@@ -559,7 +571,8 @@
                                             <div class="flex items-center gap-3 mt-0.5">
                                                 <span class="text-[10px] text-gray-400 font-semibold" x-text="`Ordered: ${item.original_qty}`"></span>
                                                 <span class="text-[10px] text-primary font-semibold" x-show="item.already_returned_qty > 0" x-text="`Returned: ${item.already_returned_qty}`"></span>
-                                                <span class="text-[10px] text-accent font-black" x-text="`Available: ${item.remaining_qty}`"></span>
+                                                <span class="text-[10px] text-gray-400 font-semibold" x-text="`In Stock: ${item.stock_qty}`"></span>
+                                                <span class="text-[10px] text-accent font-black" x-text="`Returnable: ${item.remaining_qty}`"></span>
                                             </div>
                                         </td>
                                         <td class="px-5 py-4 text-center border-r border-gray-100">

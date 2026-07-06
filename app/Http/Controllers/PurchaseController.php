@@ -983,7 +983,7 @@ class PurchaseController extends Controller
 
     public function returns()
     {
-        $bills = PurchaseBill::query()->with(['supplier', 'branch', 'items.product', 'items.returnItems'])->latest()->get();
+        $bills = PurchaseBill::query()->with(['supplier', 'branch', 'items.product.stocks', 'items.returnItems'])->latest()->get();
         $returns = PurchaseReturn::query()->with(['bill', 'supplier', 'items.product'])->latest()->get();
         /** @var Company|null $company */
         $company = Company::find(auth()->user()->company_id);
