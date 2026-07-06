@@ -1517,7 +1517,7 @@ class PurchaseController extends Controller
         $pdf = Pdf::loadView('frontend.expense.pdf_expense_receipt', compact('expense', 'company_profile'))
                   ->setPaper('a4', 'portrait');
 
-        return $pdf->stream('Expense_Receipt_EXP-' . str_pad($expense->id, 4, '0', STR_PAD_LEFT) . '.pdf');
+        return $pdf->download('Expense_Receipt_EXP-' . str_pad($expense->id, 4, '0', STR_PAD_LEFT) . '.pdf');
     }
 
     public function updateExpense(Request $request, $id)
