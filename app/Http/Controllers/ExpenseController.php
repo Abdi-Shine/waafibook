@@ -226,10 +226,10 @@ class ExpenseController extends Controller
 
     public function receipt($id)
     {
-        $expense = Expense::query()->with(['account', 'branch', 'bankAccount', 'createdBy'])->findOrFail($id);
+        $expense = Expense::query()->with(['account', 'branch', 'bankAccount', 'supplier', 'createdBy'])->findOrFail($id);
         $company_profile = Company::find(auth()->user()->company_id);
 
-        $pdf = Pdf::loadView('frontend.expense.pdf_expense_receipt', compact('expense', 'company_profile'))
+        $pdf = Pdf::loadView('frontend.expense.pdf_expense_receipt_v2', compact('expense', 'company_profile'))
                   ->setPaper('a4', 'portrait');
 
         return $pdf->stream('Receipt_EXP_' . $expense->id . '.pdf');

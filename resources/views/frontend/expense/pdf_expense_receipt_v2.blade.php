@@ -151,7 +151,7 @@
                 </tr>
                 <tr>
                     <td class="sum-label" style="border-bottom:1px solid #e2e8f0;">Recorded By</td>
-                    <td class="sum-val"   style="border-bottom:1px solid #e2e8f0;">{{ $expense->creator->name ?? 'System' }}</td>
+                    <td class="sum-val"   style="border-bottom:1px solid #e2e8f0;">{{ ($expense->creator ?? $expense->createdBy)->name ?? 'System' }}</td>
                 </tr>
                 <tr>
                     <td class="sum-label">Approval Status</td>
