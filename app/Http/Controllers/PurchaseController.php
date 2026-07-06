@@ -1180,7 +1180,7 @@ class PurchaseController extends Controller
         $company = Company::find(auth()->user()->company_id);
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('frontend.purchase.pdf_purchase_return', compact('return', 'company'));
-        $pdf->setPaper('A4', 'landscape');
+        $pdf->setPaper('A4', 'portrait');
         return $pdf->download('Purchase-Return-' . $return->return_number . '.pdf');
     }
 
