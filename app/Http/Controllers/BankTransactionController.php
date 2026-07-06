@@ -285,41 +285,44 @@ class BankTransactionController extends Controller
     {
         $request->validate([
             'bank_account_id' => 'required|exists:chart_of_accounts,id',
-            'amount' => 'required|numeric|min:0.01',
-            'date' => 'required|date',
-            'category_id' => 'required|exists:chart_of_accounts,id',
+            'amount'          => 'required|numeric|min:0.01',
+            'date'            => 'required|date',
+            'category_id'     => 'required|exists:chart_of_accounts,id',
         ]);
 
-        DB::transaction(function () use ($request) {
+        $cid = auth()->user()->company_id;
+
+        DB::transaction(function () use ($request, $cid) {
             $count = JournalEntry::query()->where('reference', 'like', 'DEP-%')->count() + 1;
-            $ref = 'DEP-' . date('Ymd') . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
+            $ref   = 'DEP-' . date('Ymd') . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
 
             $entry = JournalEntry::query()->create([
                 'entry_number' => $ref,
-                'date' => $request->date,
-                'reference' => $ref,
-                'description' => 'Deposit from ' . ($request->received_from ?? 'Client') . ' : ' . $request->notes,
-                'status' => 'posted',
+                'date'         => $request->date,
+                'reference'    => $ref,
+                'description'  => 'Deposit from ' . ($request->received_from ?? 'Client') . ' : ' . ($request->notes ?? ''),
+                'status'       => 'posted',
                 'total_amount' => $request->amount,
-                'created_by' => Auth::id() ?? 1,
+                'company_id'   => $cid,
+                'created_by'   => Auth::id() ?? 1,
             ]);
 
-            // Bank gets DEBIT (Money comes IN to asset)
             JournalItem::query()->create([
                 'journal_entry_id' => $entry->id,
-                'account_id' => $request->bank_account_id,
-                'debit' => $request->amount,
-                'credit' => 0,
-                'description' => 'Deposit ' . $ref
+                'account_id'       => $request->bank_account_id,
+                'company_id'       => $cid,
+                'debit'            => $request->amount,
+                'credit'           => 0,
+                'description'      => 'Deposit ' . $ref,
             ]);
 
-            // Category gets CREDIT
             JournalItem::query()->create([
                 'journal_entry_id' => $entry->id,
-                'account_id' => $request->category_id,
-                'debit' => 0,
-                'credit' => $request->amount,
-                'description' => 'Deposit ' . $ref
+                'account_id'       => $request->category_id,
+                'company_id'       => $cid,
+                'debit'            => 0,
+                'credit'           => $request->amount,
+                'description'      => 'Deposit ' . $ref,
             ]);
         });
 
@@ -330,41 +333,44 @@ class BankTransactionController extends Controller
     {
         $request->validate([
             'bank_account_id' => 'required|exists:chart_of_accounts,id',
-            'amount' => 'required|numeric|min:0.01',
-            'date' => 'required|date',
-            'category_id' => 'required|exists:chart_of_accounts,id',
+            'amount'          => 'required|numeric|min:0.01',
+            'date'            => 'required|date',
+            'category_id'     => 'required|exists:chart_of_accounts,id',
         ]);
 
-        DB::transaction(function () use ($request) {
+        $cid = auth()->user()->company_id;
+
+        DB::transaction(function () use ($request, $cid) {
             $count = JournalEntry::query()->where('reference', 'like', 'WTH-%')->count() + 1;
-            $ref = 'WTH-' . date('Ymd') . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
+            $ref   = 'WTH-' . date('Ymd') . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
 
             $entry = JournalEntry::query()->create([
                 'entry_number' => $ref,
-                'date' => $request->date,
-                'reference' => $ref,
-                'description' => 'Withdrawal to ' . ($request->paid_to ?? 'Vendor') . ' : ' . $request->notes,
-                'status' => 'posted',
+                'date'         => $request->date,
+                'reference'    => $ref,
+                'description'  => 'Withdrawal to ' . ($request->paid_to ?? 'Vendor') . ' : ' . ($request->notes ?? ''),
+                'status'       => 'posted',
                 'total_amount' => $request->amount,
-                'created_by' => Auth::id() ?? 1,
+                'company_id'   => $cid,
+                'created_by'   => Auth::id() ?? 1,
             ]);
 
-            // Category gets DEBIT (Expense goes up)
             JournalItem::query()->create([
                 'journal_entry_id' => $entry->id,
-                'account_id' => $request->category_id,
-                'debit' => $request->amount,
-                'credit' => 0,
-                'description' => 'Withdrawal ' . $ref
+                'account_id'       => $request->category_id,
+                'company_id'       => $cid,
+                'debit'            => $request->amount,
+                'credit'           => 0,
+                'description'      => 'Withdrawal ' . $ref,
             ]);
 
-            // Bank gets CREDIT (Money goes OUT of asset)
             JournalItem::query()->create([
                 'journal_entry_id' => $entry->id,
-                'account_id' => $request->bank_account_id,
-                'debit' => 0,
-                'credit' => $request->amount,
-                'description' => 'Withdrawal ' . $ref
+                'account_id'       => $request->bank_account_id,
+                'company_id'       => $cid,
+                'debit'            => 0,
+                'credit'           => $request->amount,
+                'description'      => 'Withdrawal ' . $ref,
             ]);
         });
 
