@@ -74,19 +74,4 @@ class Customer extends Model
     {
         return $this->hasMany(\App\Models\SalesOrder::class, 'customer_id');
     }
-
-    public function serviceOrders()
-    {
-        return $this->hasMany(\App\Models\ServiceOrder::class);
-    }
-
-    public function serviceQuotations()
-    {
-        return $this->hasMany(\App\Models\ServiceQuotation::class);
-    }
-
-    public function serviceSchedules()
-    {
-        return $this->hasMany(\App\Models\ServiceSchedule::class);
-    }
 }

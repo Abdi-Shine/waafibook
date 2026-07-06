@@ -11,17 +11,17 @@ class UserTableSeeder extends Seeder
     public function run(): void
     {
         // Remove old company admin if it exists
-        User::withoutGlobalScopes()->where('email', 'admin@horntech.com')->delete();
+        User::withoutGlobalScopes()->where('email', 'admin@waafibook.com')->delete();
 
         // Super Admin — no company, uses /host/dashboard
         User::withoutGlobalScopes()->updateOrCreate(
-            ['email' => 'superadmin@horntech.com'],
+            ['email' => 'superadmin@waafibook.com'],
             [
-                'name'              => 'Super Admin',
-                'fullname'          => 'Super Admin',
-                'password'          => Hash::make('SuperAdmin@1234'),
-                'company_id'        => null,
-                'role'              => 'Super Admin',
+                'name' => 'Super Admin',
+                'fullname' => 'Super Admin',
+                'password' => Hash::make('Admin@2026#/2026'),
+                'company_id' => null,
+                'role' => 'Super Admin',
                 'email_verified_at' => now(),
             ]
         );

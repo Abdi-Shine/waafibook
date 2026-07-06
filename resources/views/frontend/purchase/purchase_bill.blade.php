@@ -148,10 +148,10 @@
                         <tr class="bg-white border-b border-gray-100">
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider w-16 text-center">#</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Supplier</th>
-                            <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Items</th>
+                            <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Product Name</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Date</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-right">Total</th>
-                            <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-right">Balance Due</th>
+                            <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-right">Balance</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Status</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Actions</th>
                         </tr>

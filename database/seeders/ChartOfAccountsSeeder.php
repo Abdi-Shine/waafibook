@@ -17,8 +17,8 @@ class ChartOfAccountsSeeder extends Seeder
         $companies = Company::withoutGlobalScopes()->get();
         if ($companies->isEmpty()) {
             $company = Company::create([
-                'name'     => 'Horntech LTD',
-                'email'    => 'admin@horntech.com',
+                'name' => 'Waafibook',
+                'email' => 'admin@waafibook.com',
                 'currency' => 'USD',
             ]);
             $companies = collect([$company]);
@@ -36,9 +36,9 @@ class ChartOfAccountsSeeder extends Seeder
         DB::table('branches')->updateOrInsert(
             ['company_id' => $companyId, 'code' => 'BR-HQ'],
             [
-                'name'       => $companyName . ' - HQ',
-                'level'      => 'Headquarters',
-                'is_active'  => 1,
+                'name' => $companyName . ' - HQ',
+                'level' => 'Headquarters',
+                'is_active' => 1,
                 'updated_at' => now(),
                 'created_at' => now(),
             ]
