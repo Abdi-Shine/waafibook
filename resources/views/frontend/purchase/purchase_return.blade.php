@@ -446,7 +446,7 @@
         </div>
     </div>
 
-    <div x-show="activeModal === 'return-modal'" 
+    <div x-show="activeModal === 'return-modal'"
          x-cloak
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0 scale-95"
@@ -455,235 +455,206 @@
          x-transition:leave-start="opacity-100 scale-100"
          x-transition:leave-end="opacity-0 scale-95"
          class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-        
-        <div class="bg-white rounded-[1.25rem] w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col relative" @click.away="activeModal = null">
-            
-            <!-- Modal Header (Sync with Customer Style) -->
-            <div class="px-6 py-6 bg-primary relative overflow-hidden shrink-0">
-                <div class="flex items-center justify-between relative z-10">
+
+        <div class="bg-white rounded-[1.25rem] w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col" @click.away="activeModal = null">
+
+            <!-- Header -->
+            <div class="px-6 py-6 bg-primary shrink-0">
+                <div class="flex items-center justify-between">
                     <div class="flex items-center gap-4 text-white">
-                        <div class="w-12 h-12 bg-white/10 border border-white/10 rounded-xl flex items-center justify-center text-xl shadow-inner backdrop-blur-md">
+                        <div class="w-12 h-12 bg-white/10 border border-white/10 rounded-xl flex items-center justify-center text-xl">
                             <i class="bi bi-arrow-return-left"></i>
                         </div>
-                        <div class="flex flex-col">
-                            <h2 class="text-xl font-bold tracking-tight">Initiate Return</h2>
+                        <div>
+                            <h2 class="text-xl font-bold tracking-tight">New Purchase Return</h2>
                             <p class="text-xs text-white/60 font-medium mt-0.5">Fill in the required details below</p>
                         </div>
                     </div>
-                    
-                    <button @click="activeModal = null" 
-                        class="w-8 h-8 bg-white/10 border border-white/10 text-white rounded-lg hover:bg-white/20 transition-all flex items-center justify-center shadow-sm">
+                    <button @click="activeModal = null"
+                        class="w-8 h-8 bg-white/10 border border-white/10 text-white rounded-lg hover:bg-white/20 transition-all flex items-center justify-center">
                         <i class="bi bi-x-lg text-xs"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- Modal Content -->
-            <div class="px-6 py-6 overflow-y-auto custom-scrollbar flex-grow bg-white">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- General Details -->
-                    <div class="space-y-1.5">
-                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Return Identifier</label>
-                        <div class="relative group">
-                            <input type="text" value="Auto-Generated" readonly class="w-full px-5 py-3.5 bg-gray-100 border border-gray-200 rounded-lg text-[13px] font-bold text-gray-400 cursor-not-allowed pr-10">
-                            <i class="bi bi-hash absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                        </div>
-                    </div>
+            <!-- Body -->
+            <div class="px-6 py-6 overflow-y-auto custom-scrollbar flex-grow bg-white space-y-5">
 
+                <!-- Row 1: Purchase Bill + Return Date -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div class="space-y-1.5">
-                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Return Processing Date <span class="text-primary">*</span></label>
-                        <div class="relative group">
-                            <input type="date" x-model="returnDate" class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
-                        </div>
-                    </div>
-
-                    <div class="space-y-1.5">
-                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Reference Bill ID <span class="text-primary">*</span></label>
-                        <div class="relative group">
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Purchase Bill <span class="text-primary">*</span></label>
+                        <div class="relative">
                             <select x-model="selectedBillId" @change="updateBillItems()"
-                                class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer pr-12">
-                                <option value="">Select Reference Purchase...</option>
+                                class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+                                <option value="">-- Select Purchase Bill --</option>
                                 <template x-for="bill in bills" :key="bill.id">
-                                    <option :value="bill.id" x-text="`${bill.bill_number} - ${bill.supplier ? bill.supplier.name : 'Unknown'}`"></option>
+                                    <option :value="bill.id" x-text="`${bill.bill_number} — ${bill.supplier ? bill.supplier.name : 'Unknown'}`"></option>
                                 </template>
                             </select>
                             <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
                         </div>
                     </div>
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Return Date <span class="text-primary">*</span></label>
+                        <div class="relative">
+                            <input type="date" x-model="returnDate"
+                                class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                            <i class="bi bi-calendar3 absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
+                        </div>
+                    </div>
+                </div>
 
+                <!-- Row 2: Return Reason + Due Date -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div class="space-y-1.5">
                         <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Return Reason <span class="text-primary">*</span></label>
-                        <div class="relative group">
-                            <select x-model="returnReason" class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer pr-12">
-                                <option value="">Identify Deficiency...</option>
-                                <option value="damaged">Physical Damage on Arrival</option>
-                                <option value="technical">Technical Malfunction / Defect</option>
-                                <option value="wrong_sku">SKU Mismatch (Wrong Item)</option>
-                                <option value="quality">Quality Control Violation</option>
+                        <div class="relative">
+                            <select x-model="returnReason"
+                                class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+                                <option value="">-- Select Reason --</option>
+                                <option value="damaged">Damaged on Arrival</option>
+                                <option value="technical">Defective / Not Working</option>
+                                <option value="wrong_sku">Wrong Item Delivered</option>
+                                <option value="quality">Quality Issue</option>
                             </select>
                             <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
                         </div>
                     </div>
-
                     <div class="space-y-1.5">
-                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Due Date <span class="text-gray-400 font-medium normal-case">(optional)</span></label>
-                        <div class="relative group">
-                            <input type="date" x-model="dueDate" class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
-                        </div>
-                    </div>
-
-                    <!-- Supplier Balance Info (shown when bill selected) -->
-                    <div class="md:col-span-2 rounded-xl bg-primary/5 border border-primary/10 px-5 py-4 flex items-center gap-6" x-show="selectedBill">
-                        <div class="flex flex-col">
-                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Supplier</span>
-                            <span class="text-[13px] font-black text-primary-dark" x-text="selectedBill ? selectedBill.supplier?.name : ''"></span>
-                        </div>
-                        <div class="flex flex-col">
-                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Bill Total</span>
-                            <span class="text-[13px] font-black text-primary" x-text="selectedBill ? currency + ' ' + parseFloat(selectedBill.total_amount || 0).toLocaleString(undefined, {minimumFractionDigits:2}) : ''"></span>
-                        </div>
-                        <div class="flex flex-col ml-auto text-right">
-                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Current Balance</span>
-                            <span class="text-[13px] font-black text-primary" x-text="selectedBill ? currency + ' ' + parseFloat(selectedSupplierBalance).toLocaleString(undefined, {minimumFractionDigits:2}) : ''"></span>
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Due Date <span class="text-gray-400 font-normal normal-case">(optional)</span></label>
+                        <div class="relative">
+                            <input type="date" x-model="dueDate"
+                                class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                            <i class="bi bi-calendar3 absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
                         </div>
                     </div>
                 </div>
 
-                <!-- Product Grid Title -->
-                <div class="mt-8 mb-4 flex items-center justify-between">
-                    <h3 class="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
-                        <i class="bi bi-box-seam"></i>
-                        Reclamation Inventory
-                    </h3>
+                <!-- Supplier Info Bar -->
+                <div class="rounded-lg bg-primary/5 border border-primary/10 px-5 py-3 flex items-center gap-8" x-show="selectedBill" x-transition>
+                    <div>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Supplier</p>
+                        <p class="text-[13px] font-black text-primary-dark" x-text="selectedBill?.supplier?.name ?? ''"></p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Bill Total</p>
+                        <p class="text-[13px] font-black text-primary" x-text="selectedBill ? currency + ' ' + parseFloat(selectedBill.total_amount || 0).toLocaleString(undefined,{minimumFractionDigits:2}) : ''"></p>
+                    </div>
+                    <div class="ml-auto text-right">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Supplier Balance</p>
+                        <p class="text-[13px] font-black text-primary" x-text="currency + ' ' + parseFloat(selectedSupplierBalance).toLocaleString(undefined,{minimumFractionDigits:2})"></p>
+                    </div>
                 </div>
 
-                <!-- Product List in Modal (Sync with Customer Table Style) -->
-                <div class="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm mb-6">
-                    <table class="w-full text-left">
-                        <thead>
-                            <tr class="bg-white border-b border-gray-100">
-                                <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Item Details</th>
-                                <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Return Qty</th>
-                                <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-right">Unit Rate</th>
-                                <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-right">Credit</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template x-if="returnItems.length === 0">
-                                <tr>
-                                    <td colspan="4" class="px-6 py-12 text-center">
-                                        <div class="flex flex-col items-center gap-2 text-gray-300">
-                                            <i class="bi bi-box-seam text-4xl"></i>
-                                            <span class="text-[11px] font-black uppercase tracking-widest">Waiting for Invoice Anchor</span>
-                                        </div>
-                                    </td>
+                <!-- Return Items -->
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="bi bi-box-seam text-primary text-sm"></i>
+                        <h3 class="text-xs font-bold text-primary-dark uppercase tracking-wider">Return Items</h3>
+                    </div>
+                    <div class="rounded-lg border border-gray-200 overflow-hidden">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="bg-gray-50 border-b border-gray-100">
+                                    <th class="px-5 py-3 text-[11px] font-black text-primary-dark uppercase tracking-wider">Product</th>
+                                    <th class="px-5 py-3 text-[11px] font-black text-primary-dark uppercase tracking-wider text-center">Qty to Return</th>
+                                    <th class="px-5 py-3 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right">Unit Price</th>
+                                    <th class="px-5 py-3 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right">Total</th>
                                 </tr>
-                            </template>
-                            <template x-for="(item, index) in returnItems" :key="index">
-                                <tr class="hover:bg-gray-50/60 transition-colors bg-white border-b border-gray-50">
-                                    <td class="px-6 py-4">
-                                        <div class="flex flex-col">
-                                            <span class="text-[13px] font-black text-primary" x-text="item.name"></span>
-                                            <div class="flex items-center gap-3 mt-1">
-                                                <span class="text-[9px] text-gray-400 font-bold uppercase tracking-tighter" x-text="`Invoice: ${item.original_qty}`"></span>
-                                                <span class="text-[9px] text-primary font-bold uppercase tracking-tighter" x-show="item.already_returned_qty > 0" x-text="`Prev Return: ${item.already_returned_qty}`"></span>
-                                                <span class="text-[9px] text-accent font-black uppercase tracking-tighter" x-text="`Max Left: ${item.remaining_qty}`"></span>
+                            </thead>
+                            <tbody>
+                                <template x-if="returnItems.length === 0">
+                                    <tr>
+                                        <td colspan="4" class="px-6 py-10 text-center">
+                                            <div class="flex flex-col items-center gap-2 text-gray-300">
+                                                <i class="bi bi-box-seam text-4xl"></i>
+                                                <span class="text-[11px] font-bold uppercase tracking-widest">Select a bill above to load items</span>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 text-center">
-                                        <input type="number" x-model="item.return_qty" :max="item.remaining_qty" min="0" 
-                                            class="sm:w-28 w-20 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-center font-black text-primary text-[13px] focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all shadow-sm">
-                                    </td>
-                                    <td class="px-6 py-4 text-right">
-                                        <span class="text-[13px] font-bold text-gray-400" x-text="`${currency} ${parseFloat(item.rate).toLocaleString()}`"></span>
-                                    </td>
-                                    <td class="px-6 py-4 text-right">
-                                        <span class="text-[14px] font-black text-primary" x-text="`${currency} ${(item.return_qty * item.rate).toLocaleString()}`"></span>
-                                    </td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
+                                        </td>
+                                    </tr>
+                                </template>
+                                <template x-for="(item, index) in returnItems" :key="index">
+                                    <tr class="hover:bg-gray-50/60 transition-colors bg-white border-b border-gray-100">
+                                        <td class="px-5 py-3">
+                                            <p class="text-[13px] font-bold text-primary-dark" x-text="item.name"></p>
+                                            <div class="flex items-center gap-3 mt-0.5">
+                                                <span class="text-[10px] text-gray-400 font-semibold" x-text="`Ordered: ${item.original_qty}`"></span>
+                                                <span class="text-[10px] text-primary font-semibold" x-show="item.already_returned_qty > 0" x-text="`Returned: ${item.already_returned_qty}`"></span>
+                                                <span class="text-[10px] text-green-600 font-bold" x-text="`Available: ${item.remaining_qty}`"></span>
+                                            </div>
+                                        </td>
+                                        <td class="px-5 py-3 text-center">
+                                            <input type="number" x-model="item.return_qty" :max="item.remaining_qty" min="0"
+                                                class="w-24 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-center font-bold text-primary-dark text-[13px] focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                                        </td>
+                                        <td class="px-5 py-3 text-right">
+                                            <span class="text-[13px] font-semibold text-gray-500" x-text="`${currency} ${parseFloat(item.rate).toLocaleString(undefined,{minimumFractionDigits:2})}`"></span>
+                                        </td>
+                                        <td class="px-5 py-3 text-right">
+                                            <span class="text-[13px] font-black text-primary" x-text="`${currency} ${(parseFloat(item.return_qty||0) * parseFloat(item.rate)).toLocaleString(undefined,{minimumFractionDigits:2})}`"></span>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <!-- Totals + Payment Details — Right aligned compact block -->
-                <div class="mt-6 px-6 flex justify-end">
-                    <div class="w-80 rounded-xl border border-gray-200 overflow-hidden">
-                        <!-- Net Credit Value -->
+                <!-- Totals + Payment -->
+                <div class="flex justify-end">
+                    <div class="w-80 rounded-lg border border-gray-200 overflow-hidden">
                         <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-                            <span class="text-[10px] font-black uppercase tracking-widest text-primary/60">Net Credit Value</span>
-                            <span class="text-[14px] font-black text-accent" x-text="`${currency} ${calculateSubtotal().toLocaleString()}`"></span>
+                            <span class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Subtotal</span>
+                            <span class="text-[14px] font-black text-primary-dark" x-text="`${currency} ${calculateSubtotal().toLocaleString(undefined,{minimumFractionDigits:2})}`"></span>
                         </div>
-                        <!-- Amount Paid -->
                         <div class="flex items-center px-4 py-3 border-b border-gray-100 gap-3">
-                            <div class="flex flex-col w-28 shrink-0">
-                                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Amount Paid</span>
-                                <p class="text-[9px] text-gray-400 font-semibold italic">Payment from you</p>
-                            </div>
+                            <span class="text-[11px] font-bold text-gray-500 uppercase tracking-wider shrink-0 w-28">Amount Paid</span>
                             <div class="relative flex-1">
                                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[11px] font-bold" x-text="currency"></span>
-                                <input type="number" x-model="amountPaid" min="0" 
-                                       class="w-full pl-7 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[12px] font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all text-right">
+                                <input type="number" x-model="amountPaid" min="0"
+                                    class="w-full pl-7 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-[12px] font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all text-right">
                             </div>
                         </div>
-                        <!-- Bank Account -->
                         <div class="flex items-center px-4 py-3 border-b border-gray-100 gap-3">
-                            <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider shrink-0 w-28">Bank Account</span>
-                            <select x-model="bankAccountId" class="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[12px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
-                                <option value="">Select Account</option>
+                            <span class="text-[11px] font-bold text-gray-500 uppercase tracking-wider shrink-0 w-28">Bank Account</span>
+                            <select x-model="bankAccountId" class="flex-1 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-[12px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                                <option value="">-- Select --</option>
                                 <template x-for="account in bankAccounts" :key="account.id">
-                                    <option :value="account.id" x-text="`${account.code} - ${account.name}`"></option>
+                                    <option :value="account.id" x-text="account.name"></option>
                                 </template>
                             </select>
                         </div>
-                        <!-- Supplier Balance Summary -->
-                        <div class="bg-gray-50 px-4 py-3 border-t border-gray-100 space-y-2">
-                            <div class="flex items-center justify-between text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                                <span>Current Balance</span>
-                                <span>{{ $currency }} <span x-text="selectedSupplierBalance.toLocaleString('en-US', {minimumFractionDigits:2})"></span></span>
+                        <div class="bg-gray-50 px-4 py-3 space-y-1.5">
+                            <div class="flex justify-between text-[11px] font-semibold text-gray-400">
+                                <span>Supplier Balance</span>
+                                <span x-text="`${currency} ${parseFloat(selectedSupplierBalance).toLocaleString(undefined,{minimumFractionDigits:2})}`"></span>
                             </div>
-                            <!-- Breakdown -->
-                            <div class="flex items-center justify-between text-[10px] font-bold text-primary">
-                                <span>- Total Return</span>
-                                <span>- {{ $currency }} <span x-text="calculateSubtotal().toLocaleString('en-US', {minimumFractionDigits:2})"></span></span>
+                            <div class="flex justify-between text-[11px] font-semibold text-gray-400">
+                                <span>— Return Total</span>
+                                <span x-text="`${currency} ${calculateSubtotal().toLocaleString(undefined,{minimumFractionDigits:2})}`"></span>
                             </div>
-                            <div class="flex items-center justify-between text-[10px] font-bold text-primary pb-1 border-b border-gray-200/50">
-                                <span>- Amount Paid</span>
-                                <span>- {{ $currency }} <span x-text="parseFloat(amountPaid || 0).toLocaleString('en-US', {minimumFractionDigits:2})"></span></span>
+                            <div class="flex justify-between text-[11px] font-semibold text-gray-400 pb-2 border-b border-gray-200">
+                                <span>— Amount Paid</span>
+                                <span x-text="`${currency} ${parseFloat(amountPaid||0).toLocaleString(undefined,{minimumFractionDigits:2})}`"></span>
                             </div>
-                            <!-- Result -->
-                            <div class="flex items-center justify-between pt-1">
-                                <span class="text-[10px] font-black text-primary uppercase tracking-widest">New Balance</span>
-                                <span class="text-[14px] font-black text-primary" x-text="`${currency} ${resultingBalance.toLocaleString('en-US', {minimumFractionDigits:2})}`"></span>
+                            <div class="flex justify-between pt-1">
+                                <span class="text-[11px] font-black text-primary-dark uppercase tracking-wider">New Balance</span>
+                                <span class="text-[14px] font-black text-primary" x-text="`${currency} ${resultingBalance.toLocaleString(undefined,{minimumFractionDigits:2})}`"></span>
                             </div>
                         </div>
                     </div>
                 </div>
+
             </div>
 
-            <!-- Modal Footer (Sync with Customer Style) -->
+            <!-- Footer -->
             <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/80 flex items-center justify-between shrink-0">
-                <div class="flex items-center gap-6">
-                    <label class="flex items-center gap-2 cursor-pointer group">
-                        <input type="radio" name="credit_mode" checked class="w-4 h-4 text-primary focus:ring-primary/20">
-                        <span class="text-[11px] font-bold text-gray-600 uppercase tracking-wider">Issue Debit Note</span>
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer group">
-                        <input type="radio" name="credit_mode" class="w-4 h-4 text-primary focus:ring-primary/20">
-                        <span class="text-[11px] font-bold text-gray-600 uppercase tracking-wider">Direct Refund</span>
-                    </label>
-                </div>
-
-                <div class="flex items-center gap-3">
-                    <button type="button" @click="activeModal = null" class="btn-premium-accent">
-                        Cancel
-                    </button>
-                    <button @click="submitReturn()" :disabled="isSubmitting" class="btn-premium-primary">
-                        <i class="bi bi-check2-circle" x-show="!isSubmitting"></i>
-                        <span x-text="isSubmitting ? 'Executing...' : 'Process Return'"></span>
-                    </button>
-                </div>
+                <button type="button" @click="activeModal = null" class="btn-premium-accent">Cancel</button>
+                <button @click="submitReturn()" :disabled="isSubmitting" class="btn-premium-primary">
+                    <i class="bi bi-check2-circle" x-show="!isSubmitting"></i>
+                    <span x-text="isSubmitting ? 'Processing...' : 'Process Return'"></span>
+                </button>
             </div>
         </div>
     </div>
