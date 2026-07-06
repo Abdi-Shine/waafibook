@@ -216,7 +216,7 @@
                 <div>
                     <label class="block text-[12px] font-semibold text-gray-600 mb-1.5">Deposit To</label>
                     <select name="bank_account_id" required class="w-full pl-3 pr-8 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] text-gray-700 focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none appearance-none">
-                        @foreach($bankAccounts as $acc)
+                        @foreach($cashAccounts as $acc)
                             <option value="{{ $acc->id }}">{{ $acc->name }} ({{ number_format($acc->balance, 2) }})</option>
                         @endforeach
                     </select>
