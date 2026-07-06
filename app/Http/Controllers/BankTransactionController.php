@@ -88,12 +88,73 @@ class BankTransactionController extends Controller
         return redirect()->back()->with('success', 'Transaction deleted and balances reversed.');
     }
 
+    public function receipt($id)
+    {
+        $entry = JournalEntry::query()->with(['items.account'])->findOrFail($id);
+        $company = Company::find(auth()->user()->company_id);
+
+        $bankAccountIds = Account::query()
+            ->where('company_id', auth()->user()->company_id)
+            ->whereIn('type', ['bank', 'cash'])
+            ->pluck('id');
+
+        $bankItem = $entry->items->first(fn($i) => $bankAccountIds->contains($i->account_id));
+        $catItem  = $entry->items->first(fn($i) => !$bankAccountIds->contains($i->account_id));
+
+        $desc = $entry->description ?? '';
+        $party = null;
+        if (preg_match('/^Deposit from (.+?) :/i', $desc, $m)) {
+            $party = trim($m[1]);
+        } elseif (preg_match('/^Withdrawal to (.+?) :/i', $desc, $m)) {
+            $party = trim($m[1]);
+        }
+
+        $notes = null;
+        if (preg_match('/ : (.+)$/i', $desc, $m)) {
+            $notes = trim($m[1]);
+        }
+
+        return view('frontend.account.transaction_receipt', compact('entry', 'company', 'bankItem', 'catItem', 'party', 'notes'));
+    }
+
     public function index(Request $request)
     {
         // 1. Get Accounts
         $cid = auth()->user()->company_id;
         $bankAccounts = Account::query()->where('company_id', $cid)->whereIn('type', ['bank', 'cash'])->where('is_active', 1)->get();
-        $accountCategories = Account::query()->where('company_id', $cid)->whereIn('code', ['3110', '1140', '2210'])->get();
+
+        // Deposit "other side": where incoming money comes FROM (credit accounts)
+        $depositCategories = Account::query()
+            ->where('company_id', $cid)
+            ->where('type', '!=', 'parent')
+            ->where(function ($q) {
+                $q->where('category', 'revenue')       // Sales Revenue, Service Income, etc.
+                  ->orWhere('category', 'equity')       // Owners Capital
+                  ->orWhere('category', 'liabilities')  // Loans Payable
+                  ->orWhereIn('code', ['1140']);         // Accounts Receivable
+            })
+            ->orderBy('category')->orderBy('code')
+            ->get();
+
+        // Withdrawal "other side": what is being paid (debit accounts)
+        $withdrawalCategories = Account::query()
+            ->where('company_id', $cid)
+            ->where('type', '!=', 'parent')
+            ->where(function ($q) {
+                $q->where('category', 'expenses')       // All expense accounts
+                  ->orWhereIn('code', ['2110', '2210']); // Accounts Payable, Loans Payable
+            })
+            ->orderBy('category')->orderBy('code')
+            ->get();
+
+        // Fallback for edit modal (all non-bank accounts)
+        $accountCategories = Account::query()
+            ->where('company_id', $cid)
+            ->where('type', '!=', 'parent')
+            ->whereNotIn('type', ['bank', 'cash'])
+            ->orderBy('category')->orderBy('code')
+            ->get();
+
         $parentAccounts = Account::query()->whereNull('parent_id')->orderBy('code')->get();
         
         // Stats
@@ -178,13 +239,10 @@ class BankTransactionController extends Controller
                 $query->where('reference', 'like', $prefix);
             }
         } else {
-            // Default: show only our prefixed bank/cash transactions
-            /** @disregard P0406 */
+            // Default: show only Deposits and Withdrawals
             $query->where(function(\Illuminate\Database\Eloquent\Builder $q) {
                 $q->where('reference', 'like', 'DEP-%')
-                  ->orWhere('reference', 'like', 'WTH-%')
-                  ->orWhere('reference', 'like', 'TRF-%')
-                  ->orWhere('reference', 'like', 'ADJ-%');
+                  ->orWhere('reference', 'like', 'WTH-%');
             });
         }
 
@@ -199,6 +257,8 @@ class BankTransactionController extends Controller
 
         return view('frontend.account.account_management', [
             'bankAccounts' => $bankAccounts,
+            'depositCategories' => $depositCategories,
+            'withdrawalCategories' => $withdrawalCategories,
             'accountCategories' => $accountCategories,
             'totalBalance' => $totalBalance,
             'activeAccounts' => $activeAccounts,

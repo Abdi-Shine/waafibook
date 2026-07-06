@@ -251,6 +251,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/account-management/withdraw', [App\Http\Controllers\BankTransactionController::class, 'storeWithdrawal'])->name('bank.transaction.withdraw');
         Route::post('/account-management/transfer', [App\Http\Controllers\BankTransactionController::class, 'storeTransfer'])->name('bank.transaction.transfer');
         Route::post('/account-management/adjustment', [App\Http\Controllers\BankTransactionController::class, 'storeAdjustment'])->name('bank.transaction.adjustment');
+        Route::get('/account-management/transaction/{id}/receipt', [App\Http\Controllers\BankTransactionController::class, 'receipt'])->name('bank.transaction.receipt');
         Route::put('/account-management/transaction/{id}', [App\Http\Controllers\BankTransactionController::class, 'updateTransaction'])->name('bank.transaction.update');
         Route::delete('/account-management/transaction/{id}', [App\Http\Controllers\BankTransactionController::class, 'destroyTransaction'])->name('bank.transaction.destroy');
         Route::post('/accounts', [App\Http\Controllers\AccountController::class, 'store'])->name('account.store');
