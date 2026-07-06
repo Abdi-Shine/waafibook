@@ -16,6 +16,9 @@
     selectedBillId: '',
     returnDate: '{{ date('Y-m-d') }}',
     returnReason: '',
+    returnType: 'credit',
+    refundAccountId: '',
+    cashAccounts: @js($cashAccounts),
     returnItems: [],
     isSubmitting: false,
     editReturn: {},
@@ -43,6 +46,12 @@
 
     updateBillItems() {
         if (this.selectedBill) {
+            // Auto-detect: if bill still has outstanding balance → credit return; else cash refund
+            const balance = parseFloat(this.selectedBill.balance_amount || 0);
+            const paid = parseFloat(this.selectedBill.paid_amount || 0);
+            this.returnType = (balance <= 0 && paid > 0) ? 'cash' : 'credit';
+            this.refundAccountId = '';
+
             this.returnItems = this.selectedBill.items.map(item => {
                 const alreadyReturned = (item.return_items || []).reduce((sum, ri) => sum + parseFloat(ri.quantity || 0), 0);
                 const remaining = item.quantity - alreadyReturned;
@@ -74,11 +83,18 @@
         this.returnDate = '{{ date('Y-m-d') }}';
         this.returnReason = '';
         this.returnItems = [];
+        this.returnType = 'credit';
+        this.refundAccountId = '';
     },
 
     async submitReturn() {
         if (!this.selectedBillId || !this.returnDate || !this.returnReason || this.returnItems.length === 0) {
             Swal.fire('Error', 'Please fill all required fields and add items.', 'error');
+            return;
+        }
+
+        if (this.returnType === 'cash' && !this.refundAccountId) {
+            Swal.fire('Error', 'Please select a Refund Account for the cash refund.', 'error');
             return;
         }
 
@@ -88,6 +104,8 @@
                 purchase_bill_id: this.selectedBillId,
                 return_date: this.returnDate,
                 reason: this.returnReason,
+                return_type: this.returnType,
+                refund_account_id: this.returnType === 'cash' ? this.refundAccountId : null,
                 items: this.returnItems.map(i => ({
                     product_id: i.product_id,
                     bill_item_id: i.id,
@@ -561,10 +579,89 @@
                     </div>
                 </div>
 
-                <!-- Return Total -->
-                <div class="bg-primary rounded-xl px-5 py-3.5 flex items-center justify-between">
-                    <span class="text-[11px] font-black text-white uppercase tracking-wider">Return Total</span>
-                    <span class="text-[15px] font-black text-accent" x-text="`${currency} ${calculateSubtotal().toLocaleString(undefined,{minimumFractionDigits:2})}`"></span>
+                <!-- Section: Return Type & Settlement -->
+                <div class="bg-white rounded-[1rem] border border-gray-100 shadow-sm p-6">
+                    <p class="text-[11px] font-bold text-primary-dark uppercase tracking-wider mb-5 pb-2 border-b border-gray-100">
+                        Settlement Method
+                    </p>
+
+                    {{-- Return Type Toggle --}}
+                    <div class="grid grid-cols-2 gap-3 mb-5">
+                        <button type="button" @click="returnType = 'credit'; refundAccountId = ''"
+                            :class="returnType === 'credit'
+                                ? 'bg-primary text-white border-primary shadow-sm'
+                                : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-primary/40'"
+                            class="flex items-center gap-3 px-4 py-3.5 rounded-xl border-2 transition-all text-left">
+                            <div :class="returnType === 'credit' ? 'bg-white/20' : 'bg-primary/10'"
+                                 class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="bi bi-file-earmark-minus text-base" :class="returnType === 'credit' ? 'text-white' : 'text-primary'"></i>
+                            </div>
+                            <div>
+                                <p class="text-[12px] font-black uppercase tracking-wide leading-tight">Credit Return</p>
+                                <p class="text-[10px] font-medium opacity-70 mt-0.5">Reduces AP balance (Debit Note)</p>
+                            </div>
+                        </button>
+
+                        <button type="button" @click="returnType = 'cash'"
+                            :class="returnType === 'cash'
+                                ? 'bg-accent text-primary-dark border-accent shadow-sm'
+                                : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-accent/40'"
+                            class="flex items-center gap-3 px-4 py-3.5 rounded-xl border-2 transition-all text-left">
+                            <div :class="returnType === 'cash' ? 'bg-black/10' : 'bg-accent/10'"
+                                 class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="bi bi-cash-coin text-base" :class="returnType === 'cash' ? 'text-primary-dark' : 'text-accent'"></i>
+                            </div>
+                            <div>
+                                <p class="text-[12px] font-black uppercase tracking-wide leading-tight">Cash Refund</p>
+                                <p class="text-[10px] font-medium opacity-70 mt-0.5">Supplier pays cash back to us</p>
+                            </div>
+                        </button>
+                    </div>
+
+                    {{-- Explanation chip --}}
+                    <div x-show="returnType === 'credit'"
+                         class="flex items-center gap-2 text-[11px] font-semibold text-primary bg-primary/5 border border-primary/10 rounded-lg px-4 py-2.5 mb-4">
+                        <i class="bi bi-info-circle-fill text-primary text-xs"></i>
+                        Debit Accounts Payable &rarr; Credit Inventory. Supplier balance decreases.
+                    </div>
+                    <div x-show="returnType === 'cash'"
+                         class="flex items-center gap-2 text-[11px] font-semibold text-primary-dark bg-accent/10 border border-accent/20 rounded-lg px-4 py-2.5 mb-4">
+                        <i class="bi bi-info-circle-fill text-accent text-xs"></i>
+                        Debit Cash / Bank &rarr; Credit Inventory. You receive cash from supplier.
+                    </div>
+
+                    {{-- Refund Account (cash only) --}}
+                    <div x-show="returnType === 'cash'" x-transition class="space-y-1.5 mb-4">
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">
+                            Refund Account <span class="text-primary">*</span>
+                            <span class="font-medium text-gray-400 normal-case ml-1">(where cash will be received)</span>
+                        </label>
+                        <div class="relative">
+                            <select x-model="refundAccountId"
+                                class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+                                <option value="">-- Select Cash / Bank Account --</option>
+                                <template x-for="acc in cashAccounts" :key="acc.id">
+                                    <option :value="acc.id" x-text="acc.name + (acc.type === 'bank' ? ' (Bank)' : ' (Cash)')"></option>
+                                </template>
+                            </select>
+                            <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+                        </div>
+                    </div>
+
+                    {{-- Total bar --}}
+                    <div :class="returnType === 'cash' ? 'bg-accent' : 'bg-primary'"
+                         class="rounded-xl px-5 py-3.5 flex items-center justify-between transition-colors">
+                        <div class="flex items-center gap-2">
+                            <i class="bi bi-receipt text-white/70 text-sm"></i>
+                            <span class="text-[11px] font-black uppercase tracking-wider"
+                                  :class="returnType === 'cash' ? 'text-primary-dark' : 'text-white'">
+                                Return Total
+                            </span>
+                        </div>
+                        <span class="text-[15px] font-black"
+                              :class="returnType === 'cash' ? 'text-primary-dark' : 'text-accent'"
+                              x-text="`${currency} ${calculateSubtotal().toLocaleString(undefined,{minimumFractionDigits:2})}`"></span>
+                    </div>
                 </div>
 
             </div>

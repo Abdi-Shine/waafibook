@@ -991,20 +991,27 @@ class PurchaseController extends Controller
         $currency = $currSymbols[$company->currency ?? ''] ?? ($company->currency ?? '$');
         $suppliers = Supplier::where('status', 'active')->get();
         $branches = Branch::all();
+        $cashAccounts = Account::query()
+            ->whereIn('type', ['cash', 'bank'])
+            ->where('is_active', 1)
+            ->orderBy('name')
+            ->get(['id', 'name', 'type']);
 
-        return view('frontend.purchase.purchase_return', compact('bills', 'returns', 'currency', 'suppliers', 'branches'));
+        return view('frontend.purchase.purchase_return', compact('bills', 'returns', 'currency', 'suppliers', 'branches', 'cashAccounts'));
     }
 
     public function storeReturn(Request $request)
     {
         $request->validate([
-            'purchase_bill_id' => 'required|exists:purchase_bills,id',
-            'return_date' => 'required|date',
-            'reason' => 'required|string',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|numeric|min:0.01',
-            'items.*.unit_price' => 'required|numeric|min:0',
+            'purchase_bill_id'  => 'required|exists:purchase_bills,id',
+            'return_date'       => 'required|date',
+            'reason'            => 'required|string',
+            'return_type'       => 'required|in:credit,cash',
+            'refund_account_id' => 'required_if:return_type,cash|nullable|exists:chart_of_accounts,id',
+            'items'             => 'required|array|min:1',
+            'items.*.product_id'  => 'required|exists:products,id',
+            'items.*.quantity'    => 'required|numeric|min:0.01',
+            'items.*.unit_price'  => 'required|numeric|min:0',
         ]);
 
         try {
@@ -1025,17 +1032,19 @@ class PurchaseController extends Controller
 
             // 1. Create Purchase Return
             $purchaseReturn = PurchaseReturn::query()->create([
-                'return_number' => $returnNumber,
-                'purchase_bill_id' => $bill->id,
-                'supplier_id' => $bill->supplier_id,
-                'branch_id' => $bill->branch_id,
-                'return_date' => $request->return_date,
-                'reason' => $request->reason,
-                'subtotal' => $subtotal,
-                'tax' => 0,
-                'total_amount' => $subtotal,
-                'status' => 'approved',
-                'created_by' => Auth::id(),
+                'return_number'     => $returnNumber,
+                'purchase_bill_id'  => $bill->id,
+                'supplier_id'       => $bill->supplier_id,
+                'branch_id'         => $bill->branch_id,
+                'return_date'       => $request->return_date,
+                'reason'            => $request->reason,
+                'subtotal'          => $subtotal,
+                'tax'               => 0,
+                'total_amount'      => $subtotal,
+                'status'            => 'approved',
+                'return_type'       => $request->return_type,
+                'refund_account_id' => $request->return_type === 'cash' ? $request->refund_account_id : null,
+                'created_by'        => Auth::id(),
             ]);
 
             // 2. Create Journal Entry (Debit Note Logic) — derived from the
@@ -1057,32 +1066,15 @@ class PurchaseController extends Controller
                 'created_by' => Auth::id(),
             ]);
 
-            // Debit Accounts Payable (Decrease liability) — use supplier's GL account, else AP 2110
-            $apAccount = ($bill->supplier && $bill->supplier->account_id)
-                ? Account::query()->find($bill->supplier->account_id)
-                : (Account::query()->where('company_id', $cid)->where('code', '2110')->first()
-                   ?: Account::query()->where('company_id', $cid)->where('name', 'like', '%Accounts Payable%')->first());
-
-            if ($apAccount) {
-                JournalItem::query()->create([
-                    'journal_entry_id' => $entry->id,
-                    'account_id'       => $apAccount->id,
-                    'company_id'       => $cid,
-                    'debit'            => $subtotal,
-                    'credit'           => 0,
-                    'description'      => 'AP debit on purchase return ' . $returnNumber,
-                ]);
-            }
-
-            // Credit Inventory (Decrease asset on return)
-            $returnInventoryAccount = Account::query()->where('company_id', $cid)->where('code', '1150')->first()
+            // Credit Inventory (Decrease asset on return) — common to both return types
+            $inventoryAccount = Account::query()->where('company_id', $cid)->where('code', '1150')->first()
                 ?: Account::query()->where('company_id', $cid)->where('type', 'inventory')->first()
                 ?: Account::query()->where('company_id', $cid)->where('name', 'like', '%Inventory%')->first();
 
-            if ($returnInventoryAccount) {
+            if ($inventoryAccount) {
                 JournalItem::query()->create([
                     'journal_entry_id' => $entry->id,
-                    'account_id'       => $returnInventoryAccount->id,
+                    'account_id'       => $inventoryAccount->id,
                     'company_id'       => $cid,
                     'debit'            => 0,
                     'credit'           => $subtotal,
@@ -1090,9 +1082,43 @@ class PurchaseController extends Controller
                 ]);
             }
 
-            // Reduce supplier balance
-            if ($bill->supplier) {
-                $bill->supplier->decrement('amount_balance', $subtotal);
+            if ($request->return_type === 'credit') {
+                // CREDIT RETURN (Debit Note): Debit AP → reduces what we owe the supplier
+                $apAccount = ($bill->supplier && $bill->supplier->account_id)
+                    ? Account::query()->find($bill->supplier->account_id)
+                    : (Account::query()->where('company_id', $cid)->where('code', '2110')->first()
+                       ?: Account::query()->where('company_id', $cid)->where('name', 'like', '%Accounts Payable%')->first());
+
+                if ($apAccount) {
+                    JournalItem::query()->create([
+                        'journal_entry_id' => $entry->id,
+                        'account_id'       => $apAccount->id,
+                        'company_id'       => $cid,
+                        'debit'            => $subtotal,
+                        'credit'           => 0,
+                        'description'      => 'AP debit on purchase return ' . $returnNumber,
+                    ]);
+                }
+
+                // Reduce supplier outstanding balance
+                if ($bill->supplier) {
+                    $bill->supplier->decrement('amount_balance', $subtotal);
+                }
+            } else {
+                // CASH REFUND: Debit Cash/Bank → supplier pays cash back to us
+                $refundAccount = Account::query()->find($request->refund_account_id);
+
+                if ($refundAccount) {
+                    JournalItem::query()->create([
+                        'journal_entry_id' => $entry->id,
+                        'account_id'       => $refundAccount->id,
+                        'company_id'       => $cid,
+                        'debit'            => $subtotal,
+                        'credit'           => 0,
+                        'description'      => 'Cash refund received on purchase return ' . $returnNumber,
+                    ]);
+                }
+                // Supplier balance unchanged: the original bill was already paid in cash
             }
 
             foreach ($request->items as $itemData) {
@@ -1176,8 +1202,8 @@ class PurchaseController extends Controller
                 }
             }
 
-            // 2. Reverse supplier balance
-            if ($return->supplier) {
+            // 2. Reverse supplier balance — only for credit returns (cash refunds never touched it)
+            if (($return->return_type ?? 'credit') === 'credit' && $return->supplier) {
                 $return->supplier->increment('amount_balance', $return->total_amount);
             }
 
