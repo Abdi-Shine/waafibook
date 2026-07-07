@@ -148,25 +148,54 @@ body { font-family: 'Inter', sans-serif; background: #f0f4f8; overflow-x: hidden
 .sa-brand-text { font-size:1.05rem; font-weight:700; color:white; line-height:1.2; letter-spacing:-.01em; }
 .sa-brand-sub  { font-size:.6rem; color:var(--accent); font-weight:800; letter-spacing:.12em; text-transform:uppercase; margin-top:1px; }
 
-.sa-nav { list-style:none; padding:.75rem 1rem; }
-.sa-nav li { margin:.1rem 0; }
-.sa-nav a {
-    display:flex; align-items:center; gap:.75rem;
-    padding:.7rem 1rem;
-    color:rgba(255,255,255,.70); text-decoration:none;
-    border-radius:12px;
-    font-size:.875rem; font-weight:600;
+/* ── Full nav reset (override Bootstrap's ul/li defaults) ── */
+.sa-sidebar .sa-nav,
+.sa-sidebar .sa-nav li,
+.sa-sidebar .sa-nav-sub,
+.sa-sidebar .sa-nav-sub li {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.sa-sidebar .sa-nav {
+    padding: .75rem .875rem !important;
+}
+
+.sa-sidebar .sa-nav > li {
+    margin: .15rem 0 !important;
+}
+
+/* Top-level links */
+.sa-sidebar .sa-nav > li > a {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .75rem 1rem;
+    border-radius: 12px;
+    color: rgba(255,255,255,.70);
+    text-decoration: none;
+    font-size: .875rem;
+    font-weight: 600;
     transition: all .2s;
+    width: 100%;
 }
-.sa-nav a:hover, .sa-nav a.active {
-    background:rgba(255,255,255,.05); color:white;
+.sa-sidebar .sa-nav > li > a:hover,
+.sa-sidebar .sa-nav > li > a.active {
+    background: rgba(255,255,255,.08);
+    color: #fff;
 }
-.sa-nav a i { font-size:1rem; width:18px; text-align:center; }
+.sa-sidebar .sa-nav > li > a > i {
+    font-size: 1.0625rem;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+}
 
 .sa-nav-label {
-    padding:.75rem 1rem .3rem;
-    font-size:.6rem; font-weight:800; letter-spacing:.12em;
-    text-transform:uppercase; color:rgba(255,255,255,.35);
+    padding: .85rem .875rem .3rem;
+    font-size: .6rem; font-weight: 800; letter-spacing: .12em;
+    text-transform: uppercase; color: rgba(255,255,255,.35);
 }
 
 /* ── Header ── */
@@ -276,44 +305,99 @@ body { font-family: 'Inter', sans-serif; background: #f0f4f8; overflow-x: hidden
 .sa-fill-card .lbl-top { font-size:.68rem; font-weight:800; text-transform:uppercase; letter-spacing:.04em; opacity:.85; margin-bottom:.2rem; }
 .sa-fill-card .val { font-size:1.35rem; font-weight:800; }
 
-/* ── Back to App link ── */
-.sa-nav-back { margin-top: 1.5rem; padding: .75rem 1rem; border-top: 1px solid rgba(255,255,255,.1); }
-.sa-back-link { color:rgba(255,255,255,.70); font-size:.875rem; font-weight:600; display:flex; align-items:center; gap:.75rem; padding:.7rem 1rem; border-radius:12px; text-decoration:none; transition:all .2s; }
-.sa-back-link:hover { background:rgba(255,255,255,.07); color:white; }
+/* ── Sign Out link ── */
+.sa-sidebar .sa-nav-back {
+    margin-top: 1rem;
+    padding: .5rem .875rem .875rem;
+    border-top: 1px solid rgba(255,255,255,.1);
+}
+.sa-sidebar .sa-back-link {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .75rem 1rem;
+    border-radius: 12px;
+    color: rgba(255,255,255,.70);
+    font-size: .875rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all .2s;
+    width: 100%;
+}
+.sa-sidebar .sa-back-link:hover { background: rgba(255,255,255,.08); color: #fff; }
 
 /* ── Header user info ── */
 .sa-user-name  { font-weight: 700; font-size: .85rem; color: #111827; }
 .sa-user-role  { font-size: .72rem; color: #9ca3af; }
 
 /* ── Sidebar nav group (dropdown) ── */
-.sa-nav-group-toggle {
-    display:flex; align-items:center; gap:.75rem;
-    padding:.75rem 1rem; border-radius:12px;
-    color:rgba(255,255,255,.70); text-decoration:none;
-    font-size:.875rem; font-weight:600;
-    cursor:pointer; transition:all .2s; width:100%;
+.sa-sidebar .sa-nav-group-toggle {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .75rem 1rem;
+    border-radius: 12px;
+    color: rgba(255,255,255,.70);
+    text-decoration: none;
+    font-size: .875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    width: 100%;
 }
-.sa-nav-group-toggle:hover, .sa-nav-group-toggle.active {
-    background:rgba(255,255,255,.05); color:#fff;
+.sa-sidebar .sa-nav-group-toggle:hover,
+.sa-sidebar .sa-nav-group-toggle.active,
+.sa-sidebar .sa-nav-group.open > .sa-nav-group-toggle {
+    background: rgba(255,255,255,.08);
+    color: #fff;
 }
-.sa-caret { margin-left:auto; font-size:.6rem; transition:transform .25s ease; flex-shrink:0; }
-.sa-nav-group.open .sa-caret { transform:rotate(180deg); }
+.sa-sidebar .sa-nav-group-toggle > i:first-child {
+    font-size: 1.0625rem;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+}
 
-/* Smooth slide via max-height */
-.sa-nav-sub {
-    list-style:none; margin:0; padding:0;
-    max-height:0; overflow:hidden;
-    transition: max-height .25s ease;
+/* Caret */
+.sa-sidebar .sa-caret {
+    margin-left: auto;
+    font-size: .6rem;
+    transition: transform .25s ease;
+    flex-shrink: 0;
 }
-.sa-nav-group.open .sa-nav-sub { max-height:400px; }
+.sa-sidebar .sa-nav-group.open .sa-caret {
+    transform: rotate(180deg);
+}
 
-/* Sub-items — match normal user panel exactly */
-.sa-nav-sub li a {
-    display:flex; align-items:center; gap:.75rem;
-    padding:.5rem 1rem .5rem 3rem;   /* pl-12 pr-4 py-2 */
-    color:rgba(255,255,255,.50); text-decoration:none;
-    font-size:.8125rem; font-weight:500;
-    transition:color .2s;
+/* Sub-menu — smooth slide */
+.sa-sidebar .sa-nav-sub {
+    max-height: 0 !important;
+    overflow: hidden !important;
+    transition: max-height .3s ease !important;
 }
-.sa-nav-sub li a i { font-size:1.125rem; }        /* text-lg */
-.sa-nav-sub li a:hover, .sa-nav-sub li a.active { color:#fff; }
+.sa-sidebar .sa-nav-group.open .sa-nav-sub {
+    max-height: 500px !important;
+}
+
+/* Sub-items — exact match to normal panel */
+.sa-sidebar .sa-nav-sub > li > a {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .5rem 1rem .5rem 3rem;
+    color: rgba(255,255,255,.50);
+    text-decoration: none;
+    font-size: .8125rem;
+    font-weight: 500;
+    transition: color .2s;
+    width: 100%;
+    border-radius: 0;
+}
+.sa-sidebar .sa-nav-sub > li > a > i {
+    font-size: 1.125rem;
+    flex-shrink: 0;
+}
+.sa-sidebar .sa-nav-sub > li > a:hover,
+.sa-sidebar .sa-nav-sub > li > a.active {
+    color: #fff;
+}
