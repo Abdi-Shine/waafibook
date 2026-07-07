@@ -159,7 +159,7 @@ body { font-family: 'Inter', sans-serif; background: #f0f4f8; overflow-x: hidden
     transition: all .2s;
 }
 .sa-nav a:hover, .sa-nav a.active {
-    background:rgba(255,255,255,.07); color:white;
+    background:rgba(255,255,255,.05); color:white;
 }
 .sa-nav a i { font-size:1rem; width:18px; text-align:center; }
 
@@ -286,11 +286,19 @@ body { font-family: 'Inter', sans-serif; background: #f0f4f8; overflow-x: hidden
 .sa-user-role  { font-size: .72rem; color: #9ca3af; }
 
 /* ── Sidebar nav group (dropdown) ── */
-.sa-nav-group-toggle { display:flex; align-items:center; gap:.75rem; padding:.7rem 1rem; border-radius:12px; color:rgba(255,255,255,.70); text-decoration:none; font-size:.875rem; font-weight:600; cursor:pointer; transition:all .2s; }
-.sa-nav-group-toggle:hover, .sa-nav-group-toggle.active { background:rgba(255,255,255,.07); color:#fff; }
-.sa-caret { margin-left:auto; font-size:.65rem; transition:transform .2s; }
+.sa-nav-group-toggle { display:flex; align-items:center; gap:.75rem; padding:.7rem 1rem; border-radius:12px; color:rgba(255,255,255,.70); text-decoration:none; font-size:.875rem; font-weight:600; cursor:pointer; transition:all .2s; width:100%; }
+.sa-nav-group-toggle:hover, .sa-nav-group-toggle.active { background:rgba(255,255,255,.05); color:#fff; }
+.sa-caret { margin-left:auto; font-size:.65rem; transition:transform .2s; flex-shrink:0; }
 .sa-nav-group.open .sa-caret { transform:rotate(180deg); }
-.sa-nav-sub { list-style:none; margin:.1rem 0 .2rem 0; padding:0 0 .2rem 1.4rem; display:none; }
+.sa-nav-sub { list-style:none; margin:0; padding:0; display:none; }
 .sa-nav-group.open .sa-nav-sub { display:block; }
-.sa-nav-sub li a { display:flex; align-items:center; gap:.5rem; padding:.4rem .7rem; border-radius:10px; color:rgba(255,255,255,.50); text-decoration:none; font-size:.82rem; font-weight:500; transition:all .15s; }
-.sa-nav-sub li a:hover, .sa-nav-sub li a.active { background:rgba(255,255,255,.07); color:#fff; }
+.sa-nav-sub li a {
+    display:flex; align-items:center; gap:.75rem;
+    padding:.5rem 1rem .5rem 3rem;
+    color:rgba(255,255,255,.50); text-decoration:none;
+    font-size:.8125rem; font-weight:500;
+    transition:color .15s;
+    border-radius:0;
+}
+.sa-nav-sub li a i { font-size:1rem; }
+.sa-nav-sub li a:hover, .sa-nav-sub li a.active { color:#fff; background:none; }
