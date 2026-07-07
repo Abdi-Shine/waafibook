@@ -24,6 +24,9 @@
             <div class="sa-stat-icon" style="background:rgba(0,65,97,.08);color:#004161;"><i class="bi bi-cash-coin"></i></div>
             <div class="sa-stat-val" style="color:#004161;">${{ number_format($totalMrr, 0) }}</div>
             <div class="sa-stat-lbl">Total MRR</div>
+            <div style="font-size:.75rem;color:#6b7280;margin-top:.4rem;">
+                Yearly: <strong style="color:#004161;">${{ number_format($totalArr, 0) }}</strong>
+            </div>
         </div>
     </div>
     <div class="col-md-4">

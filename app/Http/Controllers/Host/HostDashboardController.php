@@ -387,9 +387,10 @@ class HostDashboardController extends Controller
             ->whereBetween('expiry_date', [now()->toDateString(), now()->endOfMonth()->toDateString()])
             ->count();
 
+        $totalArr = $totalMrr * 12;
         $allPlans = SubscriptionPlan::orderBy('price')->get();
 
-        return view('super_admin.subscriptions', compact('subscriptions', 'totalMrr', 'overduePayments', 'expiringThisMonth', 'allPlans'));
+        return view('super_admin.subscriptions', compact('subscriptions', 'totalMrr', 'totalArr', 'overduePayments', 'expiringThisMonth', 'allPlans'));
     }
 
     public function payments()
