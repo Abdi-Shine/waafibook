@@ -786,15 +786,15 @@ class HostDashboardController extends Controller
     public function updateSettings(Request $request)
     {
         $request->validate([
-            'platform_name'       => 'required|string|max:255',
-            'support_email'       => 'required|email|max:255',
-            'trial_days'          => 'required|integer|min:1|max:365',
-            'default_currency'    => 'required|string|max:10',
-            'evc_merchant_number' => 'nullable|string|max:50',
-            'bank_name'           => 'nullable|string|max:255',
-            'bank_account_name'   => 'nullable|string|max:255',
-            'bank_account_number' => 'nullable|string|max:100',
-            'bank_swift_code'     => 'nullable|string|max:20',
+            'platform_name'          => 'required|string|max:255',
+            'support_email'          => 'required|email|max:255',
+            'trial_days'             => 'required|integer|min:1|max:365',
+            'default_currency'       => 'required|string|max:10',
+            'evc_merchant_number'    => 'nullable|string|max:50',
+            'bank_name'              => 'nullable|string|max:255',
+            'bank_account_name'      => 'nullable|string|max:255',
+            'bank_account_number'    => 'nullable|string|max:100',
+            'bank_swift_code'        => 'nullable|string|max:20',
         ]);
 
         $keys = [

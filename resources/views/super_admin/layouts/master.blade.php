@@ -44,11 +44,11 @@
     <aside class="sa-sidebar">
         <div class="sa-brand">
             <a href="{{ route('host.dashboard') }}">
-                <div class="sa-brand-logo" style="display:flex;align-items:center;justify-content:center;">
-                    <img src="/icons/icon-192.png" alt="Waafibook" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">
+                <div class="sa-brand-logo">
+                    @include('partials.logo_svg', ['width' => 36, 'height' => 36])
                 </div>
                 <div>
-                    <div class="sa-brand-text">Waafibook</div>
+                    <div class="sa-brand-text">Waafi Book</div>
                     <div class="sa-brand-sub">Super Admin</div>
                 </div>
             </a>
@@ -90,6 +90,34 @@
                    class="{{ request()->routeIs('host.subscription-plans*') ? 'active' : '' }}">
                     <i class="bi bi-tags"></i> Subscription Plans
                 </a>
+            </li>
+            {{-- Reports dropdown --}}
+            <li class="sa-nav-group {{ request()->routeIs('host.reports*') ? 'open' : '' }}">
+                <a href="#" class="sa-nav-group-toggle {{ request()->routeIs('host.reports*') ? 'active' : '' }}"
+                   onclick="event.preventDefault();this.closest('.sa-nav-group').classList.toggle('open');">
+                    <i class="bi bi-bar-chart-line"></i> Reports
+                    <i class="bi bi-chevron-down sa-caret"></i>
+                </a>
+                <ul class="sa-nav-sub">
+                    <li><a href="{{ route('host.reports') }}"
+                           class="{{ request()->routeIs('host.reports') && !request()->routeIs('host.reports.*') ? 'active' : '' }}">
+                        <i class="bi bi-grid me-1"></i> Overview</a></li>
+                    <li><a href="{{ route('host.reports.companies') }}"
+                           class="{{ request()->routeIs('host.reports.companies') ? 'active' : '' }}">
+                        <i class="bi bi-building me-1"></i> Companies</a></li>
+                    <li><a href="{{ route('host.reports.subscriptions') }}"
+                           class="{{ request()->routeIs('host.reports.subscriptions') ? 'active' : '' }}">
+                        <i class="bi bi-credit-card me-1"></i> Subscriptions</a></li>
+                    <li><a href="{{ route('host.reports.revenue') }}"
+                           class="{{ request()->routeIs('host.reports.revenue') ? 'active' : '' }}">
+                        <i class="bi bi-currency-dollar me-1"></i> Revenue</a></li>
+                    <li><a href="{{ route('host.reports.users') }}"
+                           class="{{ request()->routeIs('host.reports.users') ? 'active' : '' }}">
+                        <i class="bi bi-people me-1"></i> Users</a></li>
+                    <li><a href="{{ route('host.reports.activity') }}"
+                           class="{{ request()->routeIs('host.reports.activity') ? 'active' : '' }}">
+                        <i class="bi bi-activity me-1"></i> System Activity</a></li>
+                </ul>
             </li>
             <li>
                 <a href="{{ route('host.settings') }}"

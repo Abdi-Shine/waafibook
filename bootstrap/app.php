@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Expire trials that have passed their end date — runs daily at midnight
         $schedule->command('subscriptions:expire-trials')->dailyAt('00:05')->withoutOverlapping();
 
+
         try {
             $company = \App\Models\Company::withoutGlobalScopes()->first();
             if ($company && $company->auto_backup_enabled) {

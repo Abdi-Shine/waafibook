@@ -131,36 +131,41 @@ body { font-family: 'Inter', sans-serif; background: #f0f4f8; overflow-x: hidden
     box-shadow: 4px 0 20px rgba(0,0,0,.12);
 }
 .sa-brand {
-    padding: 1.25rem 1.25rem 1rem;
+    position: sticky; top: 0; z-index: 10;
+    padding: 1.5rem 1.25rem 1.25rem;
     border-bottom: 1px solid rgba(255,255,255,.1);
+    background: rgba(0,65,97,.95);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 .sa-brand a { display:flex; align-items:center; gap:.75rem; text-decoration:none; }
 .sa-brand-logo {
-    width:38px; height:38px; background:white; border-radius:8px;
+    width:40px; height:40px; background:white; border-radius:12px;
     display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    overflow:hidden; padding:2px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.18);
 }
-.sa-brand-text { font-size:1rem; font-weight:700; color:white; line-height:1.2; }
-.sa-brand-sub  { font-size:.65rem; color:var(--accent); font-weight:700; letter-spacing:.05em; text-transform:uppercase; }
+.sa-brand-text { font-size:1.05rem; font-weight:700; color:white; line-height:1.2; letter-spacing:-.01em; }
+.sa-brand-sub  { font-size:.6rem; color:var(--accent); font-weight:800; letter-spacing:.12em; text-transform:uppercase; margin-top:1px; }
 
-.sa-nav { list-style:none; padding:.75rem 0; }
+.sa-nav { list-style:none; padding:.75rem 1rem; }
 .sa-nav li { margin:.1rem 0; }
 .sa-nav a {
     display:flex; align-items:center; gap:.75rem;
-    padding:.65rem 1.25rem;
-    color:rgba(255,255,255,.72); text-decoration:none;
-    border-left:3px solid transparent;
-    font-size:.875rem; font-weight:500;
+    padding:.7rem 1rem;
+    color:rgba(255,255,255,.70); text-decoration:none;
+    border-radius:12px;
+    font-size:.875rem; font-weight:600;
     transition: all .2s;
 }
 .sa-nav a:hover, .sa-nav a.active {
-    background:rgba(255,255,255,.1); color:white;
-    border-left-color: var(--accent);
+    background:rgba(255,255,255,.07); color:white;
 }
 .sa-nav a i { font-size:1rem; width:18px; text-align:center; }
 
 .sa-nav-label {
-    padding:.75rem 1.25rem .3rem;
-    font-size:.65rem; font-weight:700; letter-spacing:.1em;
+    padding:.75rem 1rem .3rem;
+    font-size:.6rem; font-weight:800; letter-spacing:.12em;
     text-transform:uppercase; color:rgba(255,255,255,.35);
 }
 
@@ -272,10 +277,20 @@ body { font-family: 'Inter', sans-serif; background: #f0f4f8; overflow-x: hidden
 .sa-fill-card .val { font-size:1.35rem; font-weight:800; }
 
 /* ── Back to App link ── */
-.sa-nav-back { margin-top: 1.5rem; padding: .75rem 1.25rem; border-top: 1px solid rgba(255,255,255,.1); }
-.sa-back-link { color: rgba(255,255,255,.6); font-size: .8rem; display: flex; align-items: center; gap: .5rem; text-decoration: none; }
-.sa-back-link:hover { color: white; }
+.sa-nav-back { margin-top: 1.5rem; padding: .75rem 1rem; border-top: 1px solid rgba(255,255,255,.1); }
+.sa-back-link { color:rgba(255,255,255,.70); font-size:.875rem; font-weight:600; display:flex; align-items:center; gap:.75rem; padding:.7rem 1rem; border-radius:12px; text-decoration:none; transition:all .2s; }
+.sa-back-link:hover { background:rgba(255,255,255,.07); color:white; }
 
 /* ── Header user info ── */
 .sa-user-name  { font-weight: 700; font-size: .85rem; color: #111827; }
 .sa-user-role  { font-size: .72rem; color: #9ca3af; }
+
+/* ── Sidebar nav group (dropdown) ── */
+.sa-nav-group-toggle { display:flex; align-items:center; gap:.75rem; padding:.7rem 1rem; border-radius:12px; color:rgba(255,255,255,.70); text-decoration:none; font-size:.875rem; font-weight:600; cursor:pointer; transition:all .2s; }
+.sa-nav-group-toggle:hover, .sa-nav-group-toggle.active { background:rgba(255,255,255,.07); color:#fff; }
+.sa-caret { margin-left:auto; font-size:.65rem; transition:transform .2s; }
+.sa-nav-group.open .sa-caret { transform:rotate(180deg); }
+.sa-nav-sub { list-style:none; margin:.1rem 0 .2rem 0; padding:0 0 .2rem 1.4rem; display:none; }
+.sa-nav-group.open .sa-nav-sub { display:block; }
+.sa-nav-sub li a { display:flex; align-items:center; gap:.5rem; padding:.4rem .7rem; border-radius:10px; color:rgba(255,255,255,.50); text-decoration:none; font-size:.82rem; font-weight:500; transition:all .15s; }
+.sa-nav-sub li a:hover, .sa-nav-sub li a.active { background:rgba(255,255,255,.07); color:#fff; }

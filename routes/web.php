@@ -569,53 +569,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/security/export', [App\Http\Controllers\Host\HostDashboardController::class, 'exportAuditLog'])->name('host.security.export');
         Route::delete('/security/sessions/{id}', [App\Http\Controllers\Host\HostDashboardController::class, 'forceLogoutSession'])->name('host.security.force-logout');
 
-        Route::get('/reports', [App\Http\Controllers\Host\HostDashboardController::class, 'reports'])->name('host.reports');
+        // Reports module
+        Route::get('/reports',                  [App\Http\Controllers\Host\HostReportsController::class, 'index'])->name('host.reports');
+        Route::get('/reports/companies',        [App\Http\Controllers\Host\HostReportsController::class, 'companies'])->name('host.reports.companies');
+        Route::get('/reports/subscriptions',    [App\Http\Controllers\Host\HostReportsController::class, 'subscriptions'])->name('host.reports.subscriptions');
+        Route::get('/reports/revenue',          [App\Http\Controllers\Host\HostReportsController::class, 'revenue'])->name('host.reports.revenue');
+        Route::get('/reports/users',            [App\Http\Controllers\Host\HostReportsController::class, 'users'])->name('host.reports.users');
+        Route::get('/reports/activity',         [App\Http\Controllers\Host\HostReportsController::class, 'activity'])->name('host.reports.activity');
         Route::get('/settings', [App\Http\Controllers\Host\HostDashboardController::class, 'settings'])->name('host.settings');
         Route::post('/settings', [App\Http\Controllers\Host\HostDashboardController::class, 'updateSettings'])->name('host.settings.update');
         Route::post('/settings/maintenance', [App\Http\Controllers\Host\HostDashboardController::class, 'toggleMaintenanceMode'])->name('host.settings.maintenance');
     });
 });
 
-// Plans & Pricing — combined subscribe / renew page (authenticated or public)
-Route::get('/subscribers/pricing', function () {
-    $plans   = \App\Models\SubscriptionPlan::where('status', 'active')->orderBy('price', 'asc')->get();
-    $company = auth()->check() ? \App\Models\Company::find(auth()->user()->company_id) : null;
-    $currentSubscription = auth()->check()
-        ? \App\Models\Subscription::where('company_id', auth()->user()->company_id)
-            ->with('plan')
-            ->latest()
-            ->first()
-        : null;
-    return view('frontend.subscribers.plans_pricing', compact('plans', 'company', 'currentSubscription'));
-})->name('subscribers_pricing');
-
 require __DIR__ . '/auth.php';
-
-// Temporary Repair Route - Visit ims.thehorntech.com/repair-db to fix database errors
-// Admin-only: this drops and reseeds the users table, so it must never be reachable
-// without a valid admin session.
-Route::get('/repair-db', function () {
-    if (!auth()->check() || !in_array(strtolower(trim((string) auth()->user()->role)), ['admin', 'super admin'])) {
-        abort(403, 'Only administrators can run the database repair tool.');
-    }
-
-    try {
-        echo "=== Manual Repair Started ===<br>";
-
-        echo "Cleaning up tables...<br>";
-        // Using raw SQL to ensure success even if Schema classes fail
-        \Illuminate\Support\Facades\DB::statement('DROP TABLE IF EXISTS sessions');
-        \Illuminate\Support\Facades\DB::statement('DROP TABLE IF EXISTS password_reset_tokens');
-        \Illuminate\Support\Facades\DB::statement('DROP TABLE IF EXISTS users');
-
-        echo "Running migrations...<br>";
-        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-
-        echo "Running seeders...<br>";
-        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
-
-        return "<br><b>Database repaired successfully!</b><br><a href='/'>Click here to go to Login</a>";
-    } catch (\Exception $e) {
-        return "<br><b style='color:red'>Error:</b> " . $e->getMessage() . "<br><br>Trace:<br>" . nl2br($e->getTraceAsString());
-    }
-})->middleware(['auth', 'verified']);
