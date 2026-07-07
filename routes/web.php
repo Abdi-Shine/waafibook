@@ -562,6 +562,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/announcements', [App\Http\Controllers\Host\HostDashboardController::class, 'announcements'])->name('host.announcements');
         Route::post('/announcements', [App\Http\Controllers\Host\HostDashboardController::class, 'storeAnnouncement'])->name('host.announcements.store');
         Route::patch('/announcements/{id}/send', [App\Http\Controllers\Host\HostDashboardController::class, 'sendAnnouncement'])->name('host.announcements.send');
+        Route::put('/announcements/{id}', [App\Http\Controllers\Host\HostDashboardController::class, 'updateAnnouncement'])->name('host.announcements.update');
+        Route::delete('/announcements/{id}', [App\Http\Controllers\Host\HostDashboardController::class, 'destroyAnnouncement'])->name('host.announcements.destroy');
 
         Route::get('/security', [App\Http\Controllers\Host\HostDashboardController::class, 'security'])->name('host.security');
         Route::get('/security/export', [App\Http\Controllers\Host\HostDashboardController::class, 'exportAuditLog'])->name('host.security.export');

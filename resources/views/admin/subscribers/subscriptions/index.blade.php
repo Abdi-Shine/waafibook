@@ -95,19 +95,39 @@
     @php
         $isActive    = $sub->status === 'active';
         $isTrial     = $sub->status === 'trial';
+        $isPending   = $sub->status === 'pending_payment';
         $isExpired   = $sub->status === 'expired';
         $expiryDate  = $sub->expiry_date ? \Carbon\Carbon::parse($sub->expiry_date) : null;
         $startDate   = $sub->start_date  ? \Carbon\Carbon::parse($sub->start_date)  : null;
         $daysLeft    = $expiryDate ? now()->diffInDays($expiryDate, false) : null;
         $lastPayment = $sub->payments()->where('status','completed')->latest('payment_date')->first();
+        $pendingPmt  = $sub->payments()->where('status','pending')->latest()->first();
     @endphp
-    <div class="bg-white rounded-[1.2rem] border-2 {{ $isActive || $isTrial ? 'border-accent/40' : 'border-red-200' }} shadow-sm mb-6 overflow-hidden">
+
+    {{-- Pending Approval Banner --}}
+    @if($isPending && $pendingPmt)
+    <div class="bg-amber-50 border border-amber-200 rounded-[1rem] px-5 py-4 mb-4 flex items-start gap-3">
+        <i class="bi bi-hourglass-split text-amber-500 text-xl mt-0.5 flex-shrink-0"></i>
+        <div>
+            <p class="text-[13px] font-black text-amber-700">Payment Request Pending Approval</p>
+            <p class="text-[12px] text-amber-600 mt-0.5">
+                Your payment of <strong>${{ number_format($pendingPmt->amount, 2) }}</strong>
+                via <strong>{{ $pendingPmt->payment_method }}</strong>
+                (Ref: <code class="bg-amber-100 px-1 rounded text-[11px]">{{ $pendingPmt->transaction_id ?? '—' }}</code>)
+                has been submitted and is awaiting administrator approval.
+                Your subscription will be activated once approved.
+            </p>
+        </div>
+    </div>
+    @endif
+
+    <div class="bg-white rounded-[1.2rem] border-2 {{ $isActive || $isTrial ? 'border-accent/40' : ($isPending ? 'border-amber-300' : 'border-red-200') }} shadow-sm mb-6 overflow-hidden">
         <div class="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3
-                    {{ $isActive || $isTrial ? 'bg-accent/5' : 'bg-red-50' }} border-b border-gray-100">
+                    {{ $isActive || $isTrial ? 'bg-accent/5' : ($isPending ? 'bg-amber-50' : 'bg-red-50') }} border-b border-gray-100">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center
-                            {{ $isActive ? 'bg-accent/20 text-primary-dark' : ($isTrial ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700') }}">
-                    <i class="bi bi-{{ $isActive ? 'check-circle-fill' : ($isTrial ? 'clock-fill' : 'x-circle-fill') }}"></i>
+                            {{ $isActive ? 'bg-accent/20 text-primary-dark' : ($isTrial ? 'bg-blue-100 text-blue-700' : ($isPending ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700')) }}">
+                    <i class="bi bi-{{ $isActive ? 'check-circle-fill' : ($isTrial ? 'clock-fill' : ($isPending ? 'hourglass-split' : 'x-circle-fill')) }}"></i>
                 </div>
                 <div>
                     <p class="text-[13px] font-black text-primary-dark">{{ $sub->plan->name ?? 'Unknown Plan' }}</p>
@@ -117,8 +137,8 @@
                 </div>
             </div>
             <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider
-                        {{ $isActive ? 'bg-green-100 text-green-700' : ($isTrial ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700') }}">
-                {{ ucfirst($sub->status) }}
+                        {{ $isActive ? 'bg-green-100 text-green-700' : ($isTrial ? 'bg-blue-100 text-blue-700' : ($isPending ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700')) }}">
+                {{ $isPending ? 'Pending Approval' : ucfirst($sub->status) }}
             </span>
         </div>
 
@@ -142,24 +162,61 @@
                     {{ $startDate ? $startDate->format('d M Y') : '—' }}
                 </p>
             </div>
+
+            {{-- Users meter --}}
+            @php
+                $uPct   = $maxUsers < 999 ? min(100, round(($usedUsers / max(1,$maxUsers)) * 100)) : 0;
+                $uColor = $uPct >= 100 ? 'bg-red-500' : ($uPct >= 80 ? 'bg-yellow-400' : 'bg-accent');
+            @endphp
             <div>
-                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Renews / Expires</p>
-                <p class="text-[14px] font-semibold {{ $daysLeft !== null && $daysLeft <= 7 ? 'text-red-600' : 'text-gray-700' }}">
-                    {{ $expiryDate ? $expiryDate->format('d M Y') : '—' }}
-                    @if($daysLeft !== null && $daysLeft > 0)
-                        <span class="text-[11px] text-gray-400">({{ $daysLeft }}d left)</span>
-                    @elseif($daysLeft !== null && $daysLeft <= 0)
-                        <span class="text-[11px] text-red-500">(Expired)</span>
-                    @endif
+                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Users</p>
+                <p class="text-[18px] font-black {{ $uPct >= 100 ? 'text-red-600' : 'text-primary-dark' }}">
+                    {{ $usedUsers }} <span class="text-[13px] font-semibold text-gray-400">/ {{ $maxUsers < 999 ? $maxUsers : '∞' }}</span>
                 </p>
+                @if($maxUsers < 999)
+                <div class="w-full bg-gray-100 rounded-full h-1.5 mt-1.5">
+                    <div class="h-1.5 rounded-full {{ $uColor }} transition-all" style="width:{{ $uPct }}%"></div>
+                </div>
+                <p class="text-[10px] mt-0.5 {{ $uPct >= 100 ? 'text-red-500 font-bold' : 'text-gray-400' }}">
+                    {{ $uPct >= 100 ? 'Limit reached' : "{$uPct}% of plan limit" }}
+                </p>
+                @endif
             </div>
+
+            {{-- Storage meter --}}
+            @php
+                $sPct   = $maxStorageGB < 999 ? min(100, round(($usedStorageGB / max(0.001,$maxStorageGB)) * 100)) : 0;
+                $sColor = $sPct >= 100 ? 'bg-red-500' : ($sPct >= 80 ? 'bg-yellow-400' : 'bg-accent');
+                $sUsed  = $usedStorageGB < 0.01 ? round($usedStorageGB * 1024, 1) . ' MB' : round($usedStorageGB, 2) . ' GB';
+            @endphp
             <div>
-                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Max Users</p>
-                <p class="text-[14px] font-semibold text-gray-700">
-                    {{ $sub->plan->max_users ?? '—' }}
+                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Storage</p>
+                <p class="text-[18px] font-black {{ $sPct >= 100 ? 'text-red-600' : 'text-primary-dark' }}">
+                    {{ $sUsed }} <span class="text-[13px] font-semibold text-gray-400">/ {{ $maxStorageGB < 999 ? $maxStorageGB . ' GB' : '∞' }}</span>
                 </p>
+                @if($maxStorageGB < 999)
+                <div class="w-full bg-gray-100 rounded-full h-1.5 mt-1.5">
+                    <div class="h-1.5 rounded-full {{ $sColor }} transition-all" style="width:{{ $sPct }}%"></div>
+                </div>
+                <p class="text-[10px] mt-0.5 {{ $sPct >= 100 ? 'text-red-500 font-bold' : 'text-gray-400' }}">
+                    {{ $sPct >= 100 ? 'Storage full' : "{$sPct}% used" }}
+                </p>
+                @endif
             </div>
         </div>
+
+        {{-- Limit warnings --}}
+        @if($uPct >= 100 || $sPct >= 100)
+        <div class="px-6 pb-5">
+            <div class="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-[12px] text-red-700 font-semibold flex items-start gap-2">
+                <i class="bi bi-exclamation-triangle-fill text-red-500 mt-0.5"></i>
+                <div>
+                    @if($uPct >= 100) <div>User limit reached — you cannot add more users until you upgrade.</div> @endif
+                    @if($sPct >= 100) <div>Storage limit reached — delete old backups or upgrade your plan to upload files.</div> @endif
+                </div>
+            </div>
+        </div>
+        @endif
 
         @if($sub->plan && $sub->plan->features && count($sub->plan->features))
         <div class="px-6 pb-6">

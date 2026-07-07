@@ -155,6 +155,7 @@
                         <div class="col-md-3">
                             <label class="form-label fw-bold">Billing Cycle *</label>
                             <select name="billing_cycle" id="f_billing_cycle" class="form-select" required>
+                                <option value="7days">7 Days</option>
                                 <option value="monthly">Monthly</option>
                                 <option value="quarterly">Quarterly</option>
                                 <option value="yearly">Yearly</option>

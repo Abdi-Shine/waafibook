@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Artisan;
 use App\Mail\BackupMail;
+use App\Services\StorageUsageService;
 
 class CompanyController extends Controller
 {
@@ -269,6 +270,13 @@ class CompanyController extends Controller
         }
 
         if ($request->hasFile('logo')) {
+            $cid = auth()->user()->company_id;
+            if ($cid && StorageUsageService::isOverStorageLimit($cid)) {
+                $limit = StorageUsageService::limitGB($cid);
+                return redirect()->back()->with('error',
+                    "Storage limit of {$limit} GB reached. Please delete old backups or upgrade your plan to upload new files."
+                );
+            }
             $file = $request->file('logo');
             $filename = time() . '.' . $file->getClientOriginalExtension();
             $file->move(public_path('uploads/company'), $filename);
@@ -494,6 +502,16 @@ class CompanyController extends Controller
     public function createBackup()
     {
         try {
+            $cid = auth()->user()->company_id;
+            if ($cid && StorageUsageService::isOverStorageLimit($cid)) {
+                $limit = StorageUsageService::limitGB($cid);
+                $used  = StorageUsageService::usedGB($cid);
+                return response()->json([
+                    'success' => false,
+                    'message' => "Storage limit reached ({$used} GB / {$limit} GB). Delete old backups or upgrade your plan."
+                ]);
+            }
+
             $filename = "backup-" . now()->format('Y-m-d-H-i-s') . ".sql";
             $directory = storage_path('app/backups');
             

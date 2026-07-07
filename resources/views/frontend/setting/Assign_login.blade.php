@@ -107,15 +107,33 @@
             </div>
         </div>
 
-        <!-- Active Sessions -->
-        <div class="bg-white p-5 rounded-[1rem] border border-gray-100 shadow-sm flex items-start justify-between">
-            <div>
-                <p class="text-[13px] font-medium text-gray-400 mb-1">Live Sessions</p>
-                <h3 class="text-[24px] font-black text-primary">{{ number_format($stats['active_sessions']) }}</h3>
-                <p class="text-[12px] font-bold text-primary mt-1.5 flex items-center gap-1">Currently online</p>
+        <!-- Plan User Limit -->
+        @php
+            $maxU  = $stats['max_users'];
+            $usedU = $stats['used_users'];
+            $pct   = $maxU < 999 ? min(100, round(($usedU / $maxU) * 100)) : 0;
+            $atLimit = $usedU >= $maxU && $maxU < 999;
+        @endphp
+        <div class="bg-white p-5 rounded-[1rem] border {{ $atLimit ? 'border-red-300' : 'border-gray-100' }} shadow-sm flex items-start justify-between">
+            <div class="flex-1">
+                <p class="text-[13px] font-medium text-gray-400 mb-1">Plan User Limit</p>
+                <h3 class="text-[24px] font-black {{ $atLimit ? 'text-red-600' : 'text-primary' }}">
+                    {{ $usedU }} / {{ $maxU < 999 ? $maxU : '∞' }}
+                </h3>
+                @if($maxU < 999)
+                <div class="w-full bg-gray-100 rounded-full h-1.5 mt-2">
+                    <div class="h-1.5 rounded-full {{ $atLimit ? 'bg-red-500' : ($pct >= 80 ? 'bg-yellow-400' : 'bg-accent') }}"
+                         style="width:{{ $pct }}%"></div>
+                </div>
+                <p class="text-[11px] mt-1 {{ $atLimit ? 'text-red-600 font-bold' : 'text-gray-400' }}">
+                    {{ $atLimit ? 'Limit reached — upgrade to add more' : "{$pct}% used" }}
+                </p>
+                @else
+                <p class="text-[12px] text-gray-400 mt-1">Unlimited users</p>
+                @endif
             </div>
-            <div class="w-11 h-11 bg-accent/10 rounded-[0.6rem] flex items-center justify-center text-accent">
-                <i class="bi bi-shield-check text-lg"></i>
+            <div class="w-11 h-11 {{ $atLimit ? 'bg-red-50' : 'bg-accent/10' }} rounded-[0.6rem] flex items-center justify-center {{ $atLimit ? 'text-red-500' : 'text-accent' }} ml-3">
+                <i class="bi bi-people-fill text-lg"></i>
             </div>
         </div>
     </div>

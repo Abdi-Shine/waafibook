@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 use App\Models\Role;
 use App\Models\Company;
 use App\Models\Branch;
+use App\Models\Subscription;
+use App\Services\StorageUsageService;
 
 use App\Models\Employee;
 use App\Models\User;
@@ -63,6 +65,14 @@ class EmployeeController extends Controller
             // Handle Photo
             $photoPath = null;
             if ($request->hasFile('photo')) {
+                $cid = auth()->user()->company_id;
+                if ($cid && StorageUsageService::isOverStorageLimit($cid)) {
+                    $limit = StorageUsageService::limitGB($cid);
+                    DB::rollBack();
+                    return Redirect::back()->with('error',
+                        "Storage limit of {$limit} GB reached. Delete old backups or upgrade your plan to upload photos."
+                    );
+                }
                 $file = $request->file('photo');
                 $filename = date('YmdHi') . $file->getClientOriginalName();
                 $file->move(public_path('upload/admin_images'), $filename);
@@ -198,11 +208,21 @@ class EmployeeController extends Controller
     {
         $employees = Employee::query()->with('user')->get();
         $roles = Role::query()->get();
+
+        $subscription = Subscription::with('plan')
+            ->where('company_id', auth()->user()->company_id)
+            ->whereIn('status', ['active', 'trial'])
+            ->first();
+        $maxUsers    = $subscription?->plan?->max_users ?? 999;
+        $usedUsers   = User::query()->count(); // tenant-scoped
+
         $stats = [
-            'total' => $employees->count(),
-            'assigned' => $employees->whereNotNull('user_id')->count(),
-            'pending' => $employees->whereNull('user_id')->count(),
-            'active_sessions' => 0, // Placeholder
+            'total'           => $employees->count(),
+            'assigned'        => $employees->whereNotNull('user_id')->count(),
+            'pending'         => $employees->whereNull('user_id')->count(),
+            'active_sessions' => 0,
+            'max_users'       => $maxUsers,
+            'used_users'      => $usedUsers,
         ];
         return view('frontend.setting.Assign_login', compact('employees', 'stats', 'roles'));
     }
@@ -236,6 +256,21 @@ class EmployeeController extends Controller
                 }
                 $user->update($userData);
             } else {
+                // Enforce subscription plan user limit before creating
+                $subscription = Subscription::with('plan')
+                    ->where('company_id', auth()->user()->company_id)
+                    ->whereIn('status', ['active', 'trial'])
+                    ->first();
+                $maxUsers = $subscription?->plan?->max_users ?? 999;
+                $currentUsers = User::query()->count(); // tenant-scoped
+
+                if ($currentUsers >= $maxUsers) {
+                    DB::rollBack();
+                    return Redirect::back()->with('error',
+                        "Your current plan allows a maximum of {$maxUsers} user(s). You have reached the limit. Please upgrade your plan to add more users."
+                    );
+                }
+
                 // Create new user
                 $user = User::query()->create([
                     'name' => $employee->full_name,

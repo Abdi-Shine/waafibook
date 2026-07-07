@@ -6,6 +6,7 @@ use App\Models\Subscription;
 use App\Models\SubscriptionPayment;
 use App\Models\SubscriptionPlan;
 use App\Models\SystemSetting;
+use App\Services\StorageUsageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -38,7 +39,8 @@ class SubscriptionController extends Controller
             $expiresAt = match ($plan->billing_cycle) {
                 'yearly'    => now()->addYear(),
                 'quarterly' => now()->addMonths(3),
-                default     => now()->addMonth(), // monthly and any unknown cycle
+                '7days'     => now()->addDays(7),
+                default     => now()->addMonth(),
             };
 
             Subscription::updateOrCreate(
@@ -159,35 +161,37 @@ class SubscriptionController extends Controller
         $expiresAt = match ($plan->billing_cycle) {
             'yearly'    => now()->addYear(),
             'quarterly' => now()->addMonths(3),
+            '7days'     => now()->addDays(7),
             default     => now()->addMonth(),
         };
 
         DB::transaction(function () use ($request, $plan, $company, $expiresAt) {
-            // Create or renew the subscription
+            // Create or update subscription as pending_payment — will be activated by super admin approval
             $subscription = Subscription::updateOrCreate(
                 ['company_id' => $company->id],
                 [
                     'subscription_plan_id' => $plan->id,
-                    'status'               => 'active',
+                    'status'               => 'pending_payment',
                     'start_date'           => now()->toDateString(),
                     'expiry_date'          => $expiresAt->toDateString(),
                     'payment_method'       => $request->payment_method,
                 ]
             );
 
-            // Record the payment
+            // Record the payment as pending — super admin will approve/reject
             SubscriptionPayment::create([
                 'subscription_id' => $subscription->id,
                 'amount'          => $plan->price,
                 'payment_date'    => now()->toDateString(),
                 'payment_method'  => $request->payment_method,
                 'transaction_id'  => $request->transaction_ref,
-                'status'          => 'paid',
+                'status'          => 'pending',
+                'notes'           => $request->phone ? 'Phone: ' . $request->phone : null,
             ]);
         });
 
         return redirect()->route('subscribers.subscriptions.index')
-            ->with('success', 'Payment received. Your ' . $plan->name . ' subscription is now active until ' . $expiresAt->format('d M Y') . '.');
+            ->with('success', 'Your payment request has been submitted and is awaiting approval from the administrator.');
     }
 
     public function subscriptionsIndex()
@@ -206,6 +210,14 @@ class SubscriptionController extends Controller
             ->orderBy('price')
             ->get();
 
-        return view('admin.subscribers.subscriptions.index', compact('subscriptions', 'plans', 'activePlanId'));
+        $usedUsers    = StorageUsageService::usedUsers($companyId);
+        $maxUsers     = StorageUsageService::maxUsers($companyId);
+        $usedStorageGB = StorageUsageService::usedGB($companyId);
+        $maxStorageGB  = StorageUsageService::limitGB($companyId);
+
+        return view('admin.subscribers.subscriptions.index', compact(
+            'subscriptions', 'plans', 'activePlanId',
+            'usedUsers', 'maxUsers', 'usedStorageGB', 'maxStorageGB'
+        ));
     }
 }

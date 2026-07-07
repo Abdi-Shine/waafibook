@@ -225,10 +225,14 @@ class HostDashboardController extends Controller
     private function applyCompanyPlan(Company $company, $planId): SubscriptionPlan
     {
         $plan = SubscriptionPlan::findOrFail($planId);
-        // Free Trial (price $0) = 7 days; yearly = 12 months; monthly = 1 month
         $expiryDate = $plan->price == 0
             ? now()->addDays(7)
-            : now()->addMonths($plan->billing_cycle === 'yearly' ? 12 : 1);
+            : match ($plan->billing_cycle) {
+                'yearly'    => now()->addYear(),
+                'quarterly' => now()->addMonths(3),
+                '7days'     => now()->addDays(7),
+                default     => now()->addMonth(),
+            };
 
         if ($company->subscription) {
             $company->subscription->update([
@@ -433,12 +437,30 @@ class HostDashboardController extends Controller
 
     public function markPaymentPaid($id)
     {
-        $payment = SubscriptionPayment::with('subscription.company')->findOrFail($id);
+        $payment      = SubscriptionPayment::with(['subscription.company', 'subscription.plan'])->findOrFail($id);
+        $subscription = $payment->subscription;
+        $plan         = $subscription->plan;
+
         $payment->update(['status' => 'completed']);
 
-        \App\Models\AuditLog::log('Billing', "Marked payment as paid for: {$payment->subscription->company->name}", 'UPDATE');
+        // Activate the subscription when payment is approved
+        if ($subscription && $plan) {
+            $expiresAt = match ($plan->billing_cycle) {
+                'yearly'    => now()->addYear(),
+                'quarterly' => now()->addMonths(3),
+                '7days'     => now()->addDays(7),
+                default     => now()->addMonth(),
+            };
+            $subscription->update([
+                'status'      => 'active',
+                'start_date'  => now()->toDateString(),
+                'expiry_date' => $expiresAt->toDateString(),
+            ]);
+        }
 
-        return redirect()->route('host.payments')->with('success', 'Payment marked as paid.');
+        \App\Models\AuditLog::log('Billing', "Approved payment & activated {$plan?->name} plan for: {$subscription?->company?->name}", 'UPDATE');
+
+        return redirect()->route('host.payments')->with('success', 'Payment approved — subscription is now active.');
     }
 
     public function cancelSubscriptionAction($id)
@@ -579,6 +601,8 @@ class HostDashboardController extends Controller
             'company_id' => 'required_if:target,specific|nullable|exists:companies,id',
             'priority'   => 'required|in:Info,Warning,Critical',
             'submit_as'  => 'required|in:Sent,Draft',
+            'start_time' => 'nullable|date',
+            'end_time'   => 'nullable|date|after_or_equal:start_time',
         ]);
 
         $announcement = \App\Models\Announcement::create([
@@ -588,11 +612,52 @@ class HostDashboardController extends Controller
             'priority'          => $request->priority,
             'status'            => $request->submit_as,
             'sent_at'           => $request->submit_as === 'Sent' ? now() : null,
+            'start_time'        => $request->start_time ?: null,
+            'end_time'          => $request->end_time ?: null,
         ]);
 
         \App\Models\AuditLog::log('Announcement', ($request->submit_as === 'Sent' ? 'Sent' : 'Saved draft') . " announcement: {$announcement->title}", 'CREATE');
 
         return redirect()->route('host.announcements')->with('success', $request->submit_as === 'Sent' ? 'Announcement sent.' : 'Draft saved.');
+    }
+
+    public function updateAnnouncement(Request $request, $id)
+    {
+        $announcement = \App\Models\Announcement::findOrFail($id);
+
+        $request->validate([
+            'title'      => 'required|string|max:255',
+            'message'    => 'required|string',
+            'target'     => 'required|in:All,specific',
+            'company_id' => 'required_if:target,specific|nullable|exists:companies,id',
+            'priority'   => 'required|in:Info,Warning,Critical',
+            'start_time' => 'nullable|date',
+            'end_time'   => 'nullable|date|after_or_equal:start_time',
+        ]);
+
+        $announcement->update([
+            'title'             => $request->title,
+            'message'           => $request->message,
+            'target_company_id' => $request->target === 'specific' ? $request->company_id : null,
+            'priority'          => $request->priority,
+            'start_time'        => $request->start_time ?: null,
+            'end_time'          => $request->end_time ?: null,
+        ]);
+
+        \App\Models\AuditLog::log('Announcement', "Updated announcement: {$announcement->title}", 'UPDATE');
+
+        return redirect()->route('host.announcements')->with('success', 'Announcement updated.');
+    }
+
+    public function destroyAnnouncement($id)
+    {
+        $announcement = \App\Models\Announcement::findOrFail($id);
+        $title = $announcement->title;
+        $announcement->delete();
+
+        \App\Models\AuditLog::log('Announcement', "Deleted announcement: {$title}", 'DELETE');
+
+        return redirect()->route('host.announcements')->with('success', 'Announcement deleted.');
     }
 
     public function sendAnnouncement($id)
