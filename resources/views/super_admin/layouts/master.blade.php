@@ -189,16 +189,16 @@
         </div>
     </aside>
 
-    {{-- Mobile sidebar overlay --}}
+    {{-- Mobile backdrop overlay --}}
     <div class="sa-overlay" id="sa-overlay" onclick="closeSidebar()"></div>
 
     {{-- Header --}}
     <header class="sa-header">
-        {{-- Hamburger (mobile only) --}}
-        <button class="sa-hamburger me-2" id="sa-hamburger" onclick="openSidebar()" aria-label="Open menu">
+        {{-- hamburger — hidden on desktop, visible on mobile --}}
+        <button class="sa-hamburger me-2" id="sa-hamburger" type="button"
+                onclick="openSidebar()" aria-label="Open menu">
             <i class="bi bi-list"></i>
         </button>
-
         <h1 class="sa-header-title">@yield('page_title', 'Dashboard')</h1>
 
         <div class="ms-auto d-flex align-items-center gap-3">
@@ -223,30 +223,6 @@
         @yield('content')
     </main>
 
-    <script>
-    function openSidebar() {
-        document.getElementById('sa-sidebar').classList.add('open');
-        document.getElementById('sa-overlay').classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-    function closeSidebar() {
-        document.getElementById('sa-sidebar').classList.remove('open');
-        document.getElementById('sa-overlay').classList.remove('active');
-        document.body.style.overflow = '';
-    }
-    // Close sidebar on nav link click (mobile UX)
-    document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('#sa-sidebar a[href]').forEach(function (a) {
-            a.addEventListener('click', function () {
-                if (window.innerWidth < 768) closeSidebar();
-            });
-        });
-        // Close on Escape key
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') closeSidebar();
-        });
-    });
-    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
@@ -274,6 +250,40 @@
         @endif
     </script>
     @stack('js')
+    <script>
+    /* ── Sidebar slide-in/out for mobile / PWA ── */
+    function openSidebar() {
+        document.getElementById('sa-sidebar').classList.add('open');
+        document.getElementById('sa-overlay').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeSidebar() {
+        document.getElementById('sa-sidebar').classList.remove('open');
+        document.getElementById('sa-overlay').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+        // Auto-close on nav link tap (PWA-friendly)
+        document.querySelectorAll('#sa-sidebar a[href]').forEach(function (a) {
+            a.addEventListener('click', function () {
+                if (window.innerWidth < 768) closeSidebar();
+            });
+        });
+        // Close on Escape key
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeSidebar();
+        });
+        // Swipe-left to close sidebar on touch devices
+        var touchStartX = 0;
+        document.getElementById('sa-sidebar').addEventListener('touchstart', function (e) {
+            touchStartX = e.touches[0].clientX;
+        }, { passive: true });
+        document.getElementById('sa-sidebar').addEventListener('touchend', function (e) {
+            var dx = e.changedTouches[0].clientX - touchStartX;
+            if (dx < -60) closeSidebar();
+        }, { passive: true });
+    });
+    </script>
     <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
