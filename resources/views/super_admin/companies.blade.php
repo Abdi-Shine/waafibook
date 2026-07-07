@@ -30,7 +30,6 @@
 
     <div class="sa-card">
         <div class="p-3 border-bottom d-flex gap-2 align-items-center" style="background:#fafafa;">
-            {{-- Filter form --}}
             <form method="GET" action="{{ route('host.companies') }}" class="d-flex gap-2 align-items-center flex-fill m-0">
                 <div class="position-relative flex-fill" style="min-width:160px;">
                     <i class="bi bi-search position-absolute" style="left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:.85rem;"></i>
@@ -49,24 +48,11 @@
                     <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
                 </select>
             </form>
-            {{-- Bulk form --}}
-            <form method="POST" action="{{ route('host.companies.bulk') }}" id="bulkForm" class="d-flex gap-2 align-items-center m-0 flex-shrink-0">
-                @csrf
-                <select name="action" class="form-select" style="min-width:160px;">
-                    <option value="">Bulk Action…</option>
-                    <option value="suspend">Suspend Selected</option>
-                    <option value="reactivate">Reactivate Selected</option>
-                    <option value="delete">Delete Selected</option>
-                    <option value="export">Export Selected as CSV</option>
-                </select>
-                <button type="submit" class="btn btn-outline-primary" onclick="return confirmBulk(event)">Apply</button>
-            </form>
         </div>
         <div class="table-responsive">
             <table class="sa-table">
                 <thead>
                     <tr>
-                        <th><input type="checkbox" id="selectAll"></th>
                         <th>#</th>
                         <th>Company Name</th>
                         <th>Owner</th>
@@ -88,7 +74,6 @@
                             ?? \DB::table('users')->where('company_id', $company->id)->whereNotNull('email')->where('email','!=','')->value('email');
                     @endphp
                     <tr>
-                        <td><input type="checkbox" class="company-check" name="ids[]" value="{{ $company->id }}" form="bulkForm"></td>
                         <td style="color:#9ca3af;font-size:.78rem;">{{ $companies->firstItem() + $loop->index }}</td>
                         <td>
                             <div class="d-flex align-items-center gap-2">
@@ -147,7 +132,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="10" class="text-center py-5" style="color:#9ca3af;">No companies match your filters.</td>
+                        <td colspan="9" class="text-center py-5" style="color:#9ca3af;">No companies match your filters.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -433,27 +418,5 @@ function deleteCompany(id, name, paymentsCount) {
     });
 }
 
-function confirmBulk(e) {
-    e.preventDefault();
-    const action = document.querySelector('#bulkForm select[name="action"]').value;
-    const checked = document.querySelectorAll('.company-check:checked').length;
-    if (!action) { Swal.fire({ icon: 'warning', title: 'No Action', text: 'Choose a bulk action first.' }); return false; }
-    if (!checked) { Swal.fire({ icon: 'warning', title: 'None Selected', text: 'Select at least one company first.' }); return false; }
-    if (action === 'export') { document.getElementById('bulkForm').submit(); return; }
-    Swal.fire({
-        title: action.charAt(0).toUpperCase() + action.slice(1) + ' ' + checked + ' companies?',
-        text: 'This action will be applied to all selected companies.',
-        icon: action === 'delete' ? 'warning' : 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, ' + action,
-        confirmButtonColor: action === 'delete' ? '#e11d48' : '#004161',
-    }).then((result) => {
-        if (result.isConfirmed) document.getElementById('bulkForm').submit();
-    });
-}
-
-document.getElementById('selectAll').addEventListener('change', e => {
-    document.querySelectorAll('.company-check').forEach(cb => cb.checked = e.target.checked);
-});
 </script>
 @endpush
