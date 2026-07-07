@@ -7,12 +7,7 @@
     <p style="color:#6b7280;font-size:.875rem;margin:.2rem 0 0;">Platform-wide configuration, defaults, and maintenance controls.</p>
 </div>
 
-@if(session('success'))
-<div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
-    <i class="bi bi-check-circle-fill me-2"></i>{{ session('success') }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
 </div>
-@endif
 
 @if($errors->any())
 <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">

@@ -2,12 +2,7 @@
 @section('page_title', 'Security & Audit Log')
 @section('content')
 
-@if(session('success'))
-<div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
-    <i class="bi bi-check-circle-fill me-2"></i>{{ session('success') }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
 </div>
-@endif
 
 <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
     <div>
