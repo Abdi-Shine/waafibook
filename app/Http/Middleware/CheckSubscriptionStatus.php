@@ -9,70 +9,72 @@ use Illuminate\Support\Facades\View;
 
 class CheckSubscriptionStatus
 {
-    // Write requests to these URL segments are blocked when subscription is restricted.
-    // GET requests are always allowed (read-only mode).
-    private const BLOCKED_URL_SEGMENTS = [
-        '/sales',           // sales orders, invoices, approvals
-        '/purchase',        // purchase bills, orders, returns
-        '/expense',         // expense vouchers
-        '/payment',         // customer & supplier payments
-        '/stock-transfer',  // inter-warehouse transfers
-        '/inventory',       // adjustments, stock-take
-        '/pos',             // point of sale
-        '/payroll',         // salary processing
-        '/service-order',   // service orders
-        '/service-quotation',
-        '/service-schedule',
-        '/debit-note',
-        '/credit-note',
-        '/journal',         // manual journal entries
+    // Plan rank: 0 = none/trial, 1 = Starter, 2 = Business, 3 = Enterprise
+    private const PLAN_LEVELS = [
+        'starter'    => 1,
+        'business'   => 2,
+        'enterprise' => 3,
     ];
 
-    // Routes always permitted regardless of subscription status.
-    private const ALWAYS_ALLOWED_ROUTES = [
-        'login', 'logout', 'password.*', 'landing', 'offline', 'terms', 'privacy',
-        'manifest', 'sw', 'demo.*',
-        'subscribers.*', 'my-subscription',
-        'host.*',
-        'announcements.dismiss',
-        'unlock',
-        'profile.*', 'profile-user',
-        'ask-ai', 'ask-ai.ask',
+    // Features that require a paid Business plan or higher.
+    // Matched against the request URL path (case-insensitive substring).
+    private const BUSINESS_FEATURES = [
+        'purchase/order', 'purchase/return', 'sales/return',
+        'sales-return', 'purchase-return',
+        'payroll', 'loan', 'stock-transfer',
     ];
 
-    // URL path prefixes always allowed for writes (settings, master data, admin).
+    // Features that require Enterprise plan.
+    private const ENTERPRISE_FEATURES = [
+        'branches', 'branch/', 'shareholder', 'capital-deposit',
+    ];
+
+    // URL segments whose pages are fully blocked (GET included) when subscription is restricted.
+    private const TRANSACTION_URL_SEGMENTS = [
+        '/sales', '/purchase', '/expense', '/payment', '/pos',
+        '/stock-transfer', '/inventory', '/payroll', '/loan',
+        '/journal', '/sales-return', '/purchase-return',
+        '/debit-note', '/credit-note', '/service-order',
+        '/service-quotation', '/service-schedule',
+    ];
+
+    // URL path prefixes always allowed for writes regardless of subscription state.
     private const ALWAYS_ALLOWED_PATH_PREFIXES = [
         '/logout', '/unlock', '/profile', '/company', '/feature-settings',
-        '/backup', '/role', '/employee', '/branch', '/shareholder', '/capital-deposit',
-        '/subscribers', '/customer', '/supplier', '/product', '/account',
-        '/announcements', '/ask-ai',
+        '/backup', '/role', '/employee', '/branch', '/shareholder',
+        '/capital-deposit', '/subscribers', '/customer', '/supplier',
+        '/product', '/account', '/announcements', '/ask-ai',
+    ];
+
+    // Named routes always allowed.
+    private const ALWAYS_ALLOWED_ROUTES = [
+        'login', 'logout', 'password.*', 'landing', 'offline', 'terms', 'privacy',
+        'manifest', 'sw', 'demo.*', 'subscribers.*', 'my-subscription',
+        'host.*', 'announcements.dismiss', 'unlock',
+        'profile.*', 'profile-user', 'ask-ai', 'ask-ai.ask',
+        'dashboard', 'reports.*',
     ];
 
     public function handle(Request $request, Closure $next)
     {
         if (!auth()->check()) {
-            View::share('subscriptionRestricted', false);
-            View::share('subscriptionRestrictionReason', null);
-            View::share('currentSubscription', null);
+            $this->shareDefaults();
             return $next($request);
         }
 
         $user = auth()->user();
 
-        // Super admin panel never restricted
         if (!$user->company_id || $request->routeIs('host.*')) {
-            View::share('subscriptionRestricted', false);
-            View::share('subscriptionRestrictionReason', null);
-            View::share('currentSubscription', null);
+            $this->shareDefaults();
             return $next($request);
         }
 
+        // Load subscription and auto-expire trials
         $subscription = Subscription::with('plan')
             ->where('company_id', $user->company_id)
             ->latest('id')
             ->first();
 
-        // Auto-expire any trial whose period has passed
         if ($subscription && $subscription->status === 'trial' && $subscription->expiry_date) {
             if (\Carbon\Carbon::parse($subscription->expiry_date)->endOfDay()->isPast()) {
                 $subscription->update(['status' => 'expired']);
@@ -84,79 +86,164 @@ class CheckSubscriptionStatus
         $isSuspended   = $company && $company->status === 'suspended';
         $restrictionReason = $this->resolveRestriction($subscription, $isSuspended);
         $isRestricted  = $restrictionReason !== null;
+        $planLevel     = $this->planLevel($subscription, $isRestricted);
+        $plan = $subscription?->plan;
+        $currentPlanName = ($plan instanceof \App\Models\SubscriptionPlan ? $plan->name : null)
+            ?? ($subscription ? 'Trial' : 'None');
 
         View::share('subscriptionRestricted', $isRestricted);
         View::share('subscriptionRestrictionReason', $restrictionReason);
         View::share('currentSubscription', $subscription);
+        View::share('currentPlanLevel', $planLevel);
+        View::share('currentPlanName', $currentPlanName);
 
-        // GET / HEAD → always allow (full read-only access)
-        if (in_array($request->method(), ['GET', 'HEAD'])) {
-            return $next($request);
-        }
-
-        // Named-route exemptions
-        if ($request->routeIs(self::ALWAYS_ALLOWED_ROUTES)) {
-            return $next($request);
-        }
-
-        // Path-prefix exemptions (settings, master data writes)
         $path = '/' . ltrim($request->path(), '/');
-        foreach (self::ALWAYS_ALLOWED_PATH_PREFIXES as $prefix) {
-            if (str_starts_with($path, $prefix)) {
-                return $next($request);
-            }
-        }
+        $isGet = \in_array($request->method(), ['GET', 'HEAD'], true);
 
-        // Suspended: block all non-exempt writes
-        if ($isSuspended) {
-            return $this->deny($request,
-                'Your account is suspended. Please contact the platform administrator.'
-            );
-        }
-
-        // Expired / cancelled: block writes only to transaction paths
-        if ($isRestricted) {
-            foreach (self::BLOCKED_URL_SEGMENTS as $segment) {
-                if (str_contains($path, $segment)) {
-                    return $this->deny($request,
-                        'Your trial has expired. Please subscribe to a plan to continue creating or modifying transactions.'
-                    );
+        // Always-allowed named routes (read-only pages, settings, reports)
+        if ($request->routeIs(self::ALWAYS_ALLOWED_ROUTES)) {
+            // Still check plan gates even for allowed routes
+            if ($isGet) {
+                $gate = $this->planGate($path, $planLevel);
+                if ($gate) {
+                    return $this->lockPage($gate['plan'], $currentPlanName);
                 }
+            }
+            return $next($request);
+        }
+
+        // Suspended: block everything except login/logout
+        if ($isSuspended) {
+            if ($isGet) {
+                return $this->lockPage(null, $currentPlanName,
+                    'Account Suspended',
+                    'Your account has been suspended. Please contact the platform administrator to restore access.'
+                );
+            }
+            return $this->denyWrite($request, 'Your account is suspended. Please contact the platform administrator.');
+        }
+
+        // Trial expired / cancelled: block transaction pages
+        if ($isRestricted) {
+            if ($isGet && $this->isTransactionPath($path)) {
+                return $this->lockPage(null, $currentPlanName);
+            }
+            if (!$isGet) {
+                // Allow settings/admin writes
+                foreach (self::ALWAYS_ALLOWED_PATH_PREFIXES as $prefix) {
+                    if (str_starts_with($path, $prefix)) {
+                        return $next($request);
+                    }
+                }
+                if ($this->isTransactionPath($path)) {
+                    return $this->denyWrite($request, 'Your trial has expired. Please subscribe to continue.');
+                }
+            }
+            return $next($request);
+        }
+
+        // Active subscription: enforce plan-level feature gates
+        if ($isGet) {
+            $gate = $this->planGate($path, $planLevel);
+            if ($gate) {
+                return $this->lockPage($gate['plan'], $currentPlanName);
             }
         }
 
         return $next($request);
     }
 
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    private function planLevel(?Subscription $subscription, bool $isRestricted): int
+    {
+        if ($isRestricted || !$subscription?->plan) {
+            return 0;
+        }
+        $name = strtolower($subscription->plan->name ?? '');
+        foreach (self::PLAN_LEVELS as $key => $level) {
+            if (str_contains($name, $key)) {
+                return $level;
+            }
+        }
+        return 1; // unknown paid plan → treat as Starter
+    }
+
     private function resolveRestriction(?Subscription $subscription, bool $isSuspended): ?string
     {
-        if ($isSuspended) {
-            return 'suspended';
-        }
-
-        if (!$subscription) {
-            return null;
-        }
-
-        if (in_array($subscription->status, ['expired', 'cancelled'])) {
+        if ($isSuspended) return 'suspended';
+        if (!$subscription) return null;
+        if (\in_array($subscription->status, ['expired', 'cancelled'], true)) {
             return $subscription->status === 'cancelled' ? 'cancelled' : 'trial_expired';
         }
-
-        // Trial with a past expiry date (shouldn't normally reach here after auto-expire above)
         if ($subscription->status === 'trial' && $subscription->expiry_date
             && \Carbon\Carbon::parse($subscription->expiry_date)->endOfDay()->isPast()) {
             return 'trial_expired';
+        }
+        return null;
+    }
+
+    private function isTransactionPath(string $path): bool
+    {
+        foreach (self::TRANSACTION_URL_SEGMENTS as $segment) {
+            if (str_contains($path, $segment)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function planGate(string $path, int $planLevel): ?array
+    {
+        if ($planLevel >= 3) return null; // Enterprise has everything
+
+        if ($planLevel < 2) {
+            foreach (self::BUSINESS_FEATURES as $segment) {
+                if (str_contains($path, $segment)) {
+                    return ['plan' => 'Business', 'level' => 2];
+                }
+            }
+        }
+
+        if ($planLevel < 3) {
+            foreach (self::ENTERPRISE_FEATURES as $segment) {
+                if (str_contains($path, $segment)) {
+                    return ['plan' => 'Enterprise', 'level' => 3];
+                }
+            }
         }
 
         return null;
     }
 
-    private function deny(Request $request, string $message)
+    private function lockPage(
+        ?string $requiredPlan,
+        string  $currentPlanName,
+        string  $title   = 'Upgrade to unlock this feature',
+        string  $message = ''
+    ) {
+        return response()->view('admin.plan_locked', [
+            'lockTitle'       => $title,
+            'lockMessage'     => $message,
+            'requiredPlan'    => $requiredPlan,
+            'currentPlanName' => $currentPlanName,
+        ], $requiredPlan ? 403 : 402);
+    }
+
+    private function denyWrite(Request $request, string $message)
     {
         if ($request->expectsJson() || $request->wantsJson()) {
             return response()->json(['message' => $message, 'restricted' => true], 402);
         }
-
         return redirect()->back()->with('error', $message);
+    }
+
+    private function shareDefaults(): void
+    {
+        View::share('subscriptionRestricted', false);
+        View::share('subscriptionRestrictionReason', null);
+        View::share('currentSubscription', null);
+        View::share('currentPlanLevel', 3);
+        View::share('currentPlanName', '');
     }
 }

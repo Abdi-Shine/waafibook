@@ -30,6 +30,16 @@
     </div>
 
     <!-- Menu Sections -->
+    @php
+        $__planLevel = $currentPlanLevel ?? 3;
+        // Badge helper: returns HTML for a plan badge, or '' if current plan meets requirement
+        $__badge = function(int $required) use ($__planLevel): string {
+            if ($__planLevel >= $required) return '';
+            $label = $required >= 3 ? 'Enterprise' : 'Business';
+            $bg    = $required >= 3 ? '#7c3aed' : '#d97706';
+            return "<span style=\"background:{$bg};color:#fff;font-size:.6rem;font-weight:700;border-radius:4px;padding:1px 5px;margin-left:auto;letter-spacing:.03em;\">{$label}</span>";
+        };
+    @endphp
     <div class="px-4 py-4 space-y-1">
 
         {{-- Tenant-only modules: Super Admin has no company_id, so none of these
@@ -78,6 +88,7 @@
                         :class="isOpen('branch') ? 'bg-white/5 text-white' : ''">
                         <i class="bi bi-building text-lg"></i>
                         <span>Branch & Store</span>
+                        {!! $__badge(3) !!}
                         <i class="bi bi-chevron-down ml-auto text-[10px] transition-transform duration-200"
                             :class="isOpen('branch') ? 'rotate-180' : ''"></i>
                     </button>
@@ -143,7 +154,7 @@
                         class="space-y-1 overflow-hidden transition-all duration-300">
                         <a href="{{ route('purchase.order.index') }}"
                             class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('purchase.order.index') ? 'text-white bg-white/5' : '' }}"><i
-                                class="bi bi-plus text-lg"></i> Purchase Order</a>
+                                class="bi bi-plus text-lg"></i> Purchase Order {!! $__badge(2) !!}</a>
                         <a href="{{ route('purchase.bill') }}"
                             class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('purchase.bill') ? 'text-white bg-white/5' : '' }}"><i
                                 class="bi bi-plus text-lg"></i> Purchase Bill</a>
@@ -152,7 +163,7 @@
                                 class="bi bi-plus text-lg"></i> Direct Expenses</a>
                         <a href="{{ route('purchase.returns') }}"
                             class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('purchase.returns') ? 'text-white bg-white/5' : '' }}"><i
-                                class="bi bi-plus text-lg"></i> Purchase Returns</a>
+                                class="bi bi-plus text-lg"></i> Purchase Returns {!! $__badge(2) !!}</a>
                         <a href="{{ route('view_payment_out') }}"
                             class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('view_payment_out') ? 'text-white bg-white/5' : '' }}"><i
                                 class="bi bi-plus text-lg"></i> Supplier Payment</a>
@@ -187,7 +198,7 @@
                                 class="bi bi-plus text-lg"></i> Customer Payment</a>
                         <a href="{{ route('sales.return.view') }}"
                             class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('sales.return.*') ? 'text-white bg-white/5' : '' }}"><i
-                                class="bi bi-plus text-lg"></i> Sale Return / Credit Note</a>
+                                class="bi bi-plus text-lg"></i> Sale Return / Credit Note {!! $__badge(2) !!}</a>
                     </div>
                 </div>
             @endif
@@ -212,10 +223,10 @@
                                 class="bi bi-plus text-lg"></i> Expenses</a>
                         <a href="{{ route('payroll.index') }}"
                             class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200"><i
-                                class="bi bi-plus text-lg"></i> Salary List</a>
+                                class="bi bi-plus text-lg"></i> Salary List {!! $__badge(2) !!}</a>
                         <a href="{{ route('loan.view') }}"
                             class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200"><i
-                                class="bi bi-plus text-lg"></i> Loans</a>
+                                class="bi bi-plus text-lg"></i> Loans {!! $__badge(2) !!}</a>
                     </div>
                 </div>
             @endif
