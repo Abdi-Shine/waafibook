@@ -146,7 +146,7 @@
                         <a href="{{ route('subscribers.checkout', $plan->id) }}"
                            class="w-full text-center block py-2.5 px-4 font-bold rounded-lg text-[12px] transition-all hover:opacity-90"
                            style="background:#fff;border:2px solid #99CC33;color:#99CC33;">
-                            <i class="bi bi-arrow-down-circle me-1"></i> Switch Plan
+                            <i class="bi bi-arrow-down-circle me-1"></i> Downgrade
                         </a>
                     @else
                         {{-- No active paid plan (new / trial / expired / cancelled) --}}
