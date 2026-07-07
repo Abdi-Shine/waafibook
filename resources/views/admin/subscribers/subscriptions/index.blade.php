@@ -64,11 +64,21 @@
             <i class="bi bi-grid-3x2-gap text-primary"></i> Available Plans
         </h2>
 
+        {{-- Notice when subscription is confirmed active --}}
+        @if($subStatus === 'active')
+        <div class="mb-4 flex items-start gap-3 rounded-xl px-4 py-3 text-[12px] font-semibold"
+             style="background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;">
+            <i class="bi bi-lock-fill mt-0.5 flex-shrink-0"></i>
+            <span>Your subscription is active. Only the <strong>Super Admin</strong> can upgrade, downgrade, or replace your current plan. Please contact your platform administrator to request a change.</span>
+        </div>
+        @endif
+
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             @foreach($plans as $plan)
             @php
                 $__cur      = ($activePlanId !== null) && ((int)$activePlanId === (int)$plan->id);
                 $__paid     = ($sub !== null) && in_array($subStatus, ['active', 'pending_payment']);
+                $__locked   = ($subStatus === 'active') && !$__cur;
                 $__pPrice   = (float)$plan->price;
                 $__curPrice = (float)($sub?->plan?->price ?? 0);
                 $__border   = $__cur ? '2px solid #004161' : ($plan->is_popular ? '2px solid rgba(153,204,51,.5)' : '2px solid #e5e7eb');
@@ -124,9 +134,8 @@
                         @endif
                     </ul>
 
-                    {{-- CTA button — inline styles to prevent Tailwind JIT purging --}}
+                    {{-- CTA button —— inline styles prevent Tailwind JIT purging --}}
                     @if($isPending && $__cur)
-                        {{-- Only block the card whose plan is actually pending --}}
                         <div class="w-full text-center py-2.5 px-4 font-bold rounded-lg text-[12px]"
                              style="background:#fffbeb;border:1px solid #fcd34d;color:#b45309;">
                             <i class="bi bi-hourglass-split me-1"></i> Payment Pending
@@ -135,6 +144,13 @@
                         <div class="w-full text-center py-2.5 px-4 font-bold rounded-lg text-[12px]"
                              style="background:rgba(0,65,97,.07);color:#004161;border:1px solid rgba(0,65,97,.2);">
                             <i class="bi bi-check-circle me-1"></i> Active Plan
+                        </div>
+                    @elseif($__locked)
+                        {{-- Active subscription — only Super Admin can change plan --}}
+                        <div class="w-full text-center py-2.5 px-4 font-bold rounded-lg text-[12px]"
+                             style="background:#f3f4f6;color:#9ca3af;border:1px solid #e5e7eb;cursor:not-allowed;"
+                             title="Contact Super Admin to change your plan">
+                            <i class="bi bi-lock-fill me-1"></i> Contact Admin
                         </div>
                     @elseif($__paid && $__pPrice > $__curPrice)
                         <a href="{{ route('subscribers.checkout', $plan->id) }}"
