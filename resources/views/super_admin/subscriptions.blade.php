@@ -102,6 +102,20 @@
                 </td>
                 <td>
                     <div class="sa-row-actions">
+                        {{-- Approve payment button for pending_payment subscriptions --}}
+                        @if($sub->status === 'pending_payment')
+                            @php $pendingPmt = $sub->payments->where('status','pending')->sortByDesc('id')->first(); @endphp
+                            @if($pendingPmt)
+                            <form method="POST" action="{{ route('host.payments.mark-paid', $pendingPmt->id) }}" class="d-inline"
+                                  onsubmit="return confirm('Approve payment and activate subscription for {{ addslashes($sub->company->name ?? '') }}?');">
+                                @csrf @method('PATCH')
+                                <button type="submit" class="sa-btn-icon ok" data-bs-toggle="tooltip" title="Approve Payment"
+                                        style="background:#15803d;color:#fff;border-radius:6px;padding:5px 12px;font-size:.78rem;font-weight:800;border:none;display:flex;align-items:center;gap:4px;">
+                                    <i class="bi bi-check-lg"></i> Approve
+                                </button>
+                            </form>
+                            @endif
+                        @endif
                         @if($sub->status !== 'cancelled')
                         <form method="POST" action="{{ route('host.subscriptions.cancel', $sub->id) }}" class="d-inline"
                               onsubmit="return confirm('{{ addslashes($sub->company->name ?? '') }} will lose access to paid features at the end of the billing period. Continue?');">
