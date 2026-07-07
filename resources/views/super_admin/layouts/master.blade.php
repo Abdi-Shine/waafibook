@@ -45,6 +45,8 @@
         #sa-sidebar a:focus { text-decoration: none !important; }
         #sa-sidebar h4, #sa-sidebar p { margin: 0 !important; }
         #sa-sidebar button { background: transparent !important; border: none !important; box-shadow: none !important; outline: none !important; cursor: pointer; }
+        #sa-sidebar { scrollbar-width: none !important; -ms-overflow-style: none !important; overflow-y: auto !important; }
+        #sa-sidebar::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
         @yield('extra_css')
     </style>
     @stack('css')
@@ -132,42 +134,36 @@
                      x-transition:leave="transition ease-in duration-150"
                      x-transition:leave-start="opacity-100 max-h-[500px]"
                      x-transition:leave-end="opacity-0 max-h-0"
-                     class="space-y-0.5 overflow-hidden transition-all duration-300 ml-4 pl-4 border-l border-white/10">
+                     class="space-y-1 overflow-hidden transition-all duration-300">
                     <a href="{{ route('host.reports') }}"
-                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 no-underline
-                              {{ request()->routeIs('host.reports') && !request()->routeIs('host.reports.*') ? 'bg-white/10 text-white' : 'text-white/55 hover:bg-white/5 hover:text-white' }}">
-                        <i class="bi bi-grid text-[13px]"></i>
-                        <span>Overview</span>
+                       class="flex items-center gap-3 pl-12 pr-4 py-2 text-[13px] font-medium transition-all duration-200 no-underline
+                              {{ request()->routeIs('host.reports') && !request()->routeIs('host.reports.*') ? 'text-white' : 'text-white/50 hover:text-white' }}">
+                        <i class="bi bi-plus text-lg"></i> Overview
                     </a>
                     <a href="{{ route('host.reports.companies') }}"
-                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 no-underline
-                              {{ request()->routeIs('host.reports.companies') ? 'bg-white/10 text-white' : 'text-white/55 hover:bg-white/5 hover:text-white' }}">
-                        <i class="bi bi-building text-[13px]"></i>
-                        <span>Companies</span>
+                       class="flex items-center gap-3 pl-12 pr-4 py-2 text-[13px] font-medium transition-all duration-200 no-underline
+                              {{ request()->routeIs('host.reports.companies') ? 'text-white' : 'text-white/50 hover:text-white' }}">
+                        <i class="bi bi-plus text-lg"></i> Companies
                     </a>
                     <a href="{{ route('host.reports.subscriptions') }}"
-                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 no-underline
-                              {{ request()->routeIs('host.reports.subscriptions') ? 'bg-white/10 text-white' : 'text-white/55 hover:bg-white/5 hover:text-white' }}">
-                        <i class="bi bi-credit-card text-[13px]"></i>
-                        <span>Subscriptions</span>
+                       class="flex items-center gap-3 pl-12 pr-4 py-2 text-[13px] font-medium transition-all duration-200 no-underline
+                              {{ request()->routeIs('host.reports.subscriptions') ? 'text-white' : 'text-white/50 hover:text-white' }}">
+                        <i class="bi bi-plus text-lg"></i> Subscriptions
                     </a>
                     <a href="{{ route('host.reports.revenue') }}"
-                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 no-underline
-                              {{ request()->routeIs('host.reports.revenue') ? 'bg-white/10 text-white' : 'text-white/55 hover:bg-white/5 hover:text-white' }}">
-                        <i class="bi bi-cash-stack text-[13px]"></i>
-                        <span>Revenue</span>
+                       class="flex items-center gap-3 pl-12 pr-4 py-2 text-[13px] font-medium transition-all duration-200 no-underline
+                              {{ request()->routeIs('host.reports.revenue') ? 'text-white' : 'text-white/50 hover:text-white' }}">
+                        <i class="bi bi-plus text-lg"></i> Revenue
                     </a>
                     <a href="{{ route('host.reports.users') }}"
-                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 no-underline
-                              {{ request()->routeIs('host.reports.users') ? 'bg-white/10 text-white' : 'text-white/55 hover:bg-white/5 hover:text-white' }}">
-                        <i class="bi bi-people text-[13px]"></i>
-                        <span>Users</span>
+                       class="flex items-center gap-3 pl-12 pr-4 py-2 text-[13px] font-medium transition-all duration-200 no-underline
+                              {{ request()->routeIs('host.reports.users') ? 'text-white' : 'text-white/50 hover:text-white' }}">
+                        <i class="bi bi-plus text-lg"></i> Users
                     </a>
                     <a href="{{ route('host.reports.activity') }}"
-                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 no-underline
-                              {{ request()->routeIs('host.reports.activity') ? 'bg-white/10 text-white' : 'text-white/55 hover:bg-white/5 hover:text-white' }}">
-                        <i class="bi bi-shield-check text-[13px]"></i>
-                        <span>System Activity</span>
+                       class="flex items-center gap-3 pl-12 pr-4 py-2 text-[13px] font-medium transition-all duration-200 no-underline
+                              {{ request()->routeIs('host.reports.activity') ? 'text-white' : 'text-white/50 hover:text-white' }}">
+                        <i class="bi bi-plus text-lg"></i> System Activity
                     </a>
                 </div>
             </div>
