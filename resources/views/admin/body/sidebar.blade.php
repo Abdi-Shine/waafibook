@@ -32,12 +32,15 @@
     <!-- Menu Sections -->
     @php
         $__planLevel = $currentPlanLevel ?? 3;
-        // Badge helper: only shown on Starter plan, brand green pill
-        $__badge = function(int $required) use ($__planLevel): string {
-            if ($__planLevel !== 1) return '';
-            if ($__planLevel >= $required) return '';
-            $label = $required >= 3 ? 'Enterprise' : 'Business';
-            return "<span style=\"display:inline-flex;align-items:center;background:rgba(153,204,51,.18);color:#99CC33;font-size:.58rem;font-weight:800;border-radius:4px;padding:2px 7px;margin-left:8px;letter-spacing:.06em;line-height:1.3;border:1px solid rgba(153,204,51,.35);\">{$label}</span>";
+        // Badge helper — shows a green lock badge when a feature is inaccessible.
+        // required=1 → any paid plan (locked when trial expired)
+        // required=2 → Business plan or higher
+        // required=3 → Enterprise plan only
+        $__isRestricted = $subscriptionRestricted ?? false;
+        $__badge = function(int $required) use ($__planLevel, $__isRestricted): string {
+            $locked = $__isRestricted ? ($required >= 1) : ($__planLevel < $required);
+            if (!$locked) return '';
+            return '<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(153,204,51,.15);color:#99CC33;font-size:.58rem;font-weight:700;border-radius:20px;padding:2px 8px;margin-left:6px;border:1px solid rgba(153,204,51,.3);white-space:nowrap;vertical-align:middle;"><i class="bi bi-lock-fill" style="font-size:.5rem;"></i> Locked</span>';
         };
     @endphp
     <div class="px-4 py-4 space-y-1">
@@ -157,16 +160,16 @@
                                 class="bi bi-plus text-lg"></i> Purchase Order {!! $__badge(2) !!}</a>
                         <a href="{{ route('purchase.bill') }}"
                             class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('purchase.bill') ? 'text-white bg-white/5' : '' }}"><i
-                                class="bi bi-plus text-lg"></i> Purchase Bill</a>
+                                class="bi bi-plus text-lg"></i> Purchase Bill {!! $__badge(1) !!}</a>
                         <a href="{{ route('purchase.expense') }}"
                             class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('purchase.expense') ? 'text-white bg-white/5' : '' }}"><i
-                                class="bi bi-plus text-lg"></i> Direct Expenses</a>
+                                class="bi bi-plus text-lg"></i> Direct Expenses {!! $__badge(1) !!}</a>
                         <a href="{{ route('purchase.returns') }}"
                             class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('purchase.returns') ? 'text-white bg-white/5' : '' }}"><i
                                 class="bi bi-plus text-lg"></i> Purchase Returns {!! $__badge(2) !!}</a>
                         <a href="{{ route('view_payment_out') }}"
                             class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('view_payment_out') ? 'text-white bg-white/5' : '' }}"><i
-                                class="bi bi-plus text-lg"></i> Supplier Payment</a>
+                                class="bi bi-plus text-lg"></i> Supplier Payment {!! $__badge(1) !!}</a>
                     </div>
                 </div>
             @endif
@@ -189,13 +192,13 @@
                         class="space-y-1 overflow-hidden transition-all duration-300">
                         <a href="{{ route('sales.invoice.view') }}"
                             class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('sales.invoice.*') ? 'text-white bg-white/5' : '' }}"><i
-                                class="bi bi-plus text-lg"></i> Sales</a>
+                                class="bi bi-plus text-lg"></i> Sales {!! $__badge(1) !!}</a>
                         <a href="{{ route('sales.pos.view') }}"
                             class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('sales.pos.*') ? 'text-white bg-white/5' : '' }}"><i
-                                class="bi bi-plus text-lg"></i> POS Terminal</a>
+                                class="bi bi-plus text-lg"></i> POS Terminal {!! $__badge(1) !!}</a>
                         <a href="{{ route('view_payment_in') }}"
                             class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('view_payment_in') ? 'text-white bg-white/5' : '' }}"><i
-                                class="bi bi-plus text-lg"></i> Customer Payment</a>
+                                class="bi bi-plus text-lg"></i> Customer Payment {!! $__badge(1) !!}</a>
                         <a href="{{ route('sales.return.view') }}"
                             class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('sales.return.*') ? 'text-white bg-white/5' : '' }}"><i
                                 class="bi bi-plus text-lg"></i> Sale Return / Credit Note {!! $__badge(2) !!}</a>
@@ -220,7 +223,7 @@
                         class="space-y-1 overflow-hidden transition-all duration-300">
                         <a href="{{ route('expenses_view_all') }}"
                             class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200"><i
-                                class="bi bi-plus text-lg"></i> Expenses</a>
+                                class="bi bi-plus text-lg"></i> Expenses {!! $__badge(1) !!}</a>
                         <a href="{{ route('payroll.index') }}"
                             class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200"><i
                                 class="bi bi-plus text-lg"></i> Salary List {!! $__badge(2) !!}</a>
@@ -248,10 +251,10 @@
                         class="space-y-1 overflow-hidden transition-all duration-300">
                         <a href="{{ route('account_management.index') }}"
                             class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200"><i
-                                class="bi bi-plus text-lg"></i> Accounts</a>
+                                class="bi bi-plus text-lg"></i> Accounts {!! $__badge(1) !!}</a>
                         <a href="{{ route('cash_in_hand.index') }}"
                             class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200"><i
-                                class="bi bi-plus text-lg"></i> Cash In Hand</a>
+                                class="bi bi-plus text-lg"></i> Cash In Hand {!! $__badge(1) !!}</a>
                     </div>
                 </div>
             @endif
