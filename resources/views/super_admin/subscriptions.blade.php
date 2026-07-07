@@ -93,11 +93,11 @@
                 </td>
                 <td>
                     @php $lastPmt = $sub->payments->where('status','completed')->sortByDesc('payment_date')->first(); @endphp
+                    <div class="fw-semibold" style="font-size:.85rem;">${{ number_format($sub->plan->price ?? 0, 2) }}</div>
                     @if($lastPmt)
-                        <div class="fw-semibold" style="font-size:.85rem;">${{ number_format($lastPmt->amount, 2) }}</div>
                         <div style="font-size:.72rem;color:#9ca3af;">{{ $lastPmt->payment_method }} · {{ \Carbon\Carbon::parse($lastPmt->payment_date)->format('d M Y') }}</div>
                     @else
-                        <span style="color:#9ca3af;">—</span>
+                        <div style="font-size:.72rem;color:#9ca3af;">No payment recorded</div>
                     @endif
                 </td>
                 <td>
