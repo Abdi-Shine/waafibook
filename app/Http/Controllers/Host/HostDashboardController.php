@@ -33,7 +33,13 @@ class HostDashboardController extends Controller
         $revenueCollected   = SubscriptionPayment::where('status', 'completed')->sum('amount');
         $pendingApprovals   = DemoRequest::where('status', 'pending')->count();
         $overdueAccounts    = Subscription::where('status', 'expired')->count();
-        $expiredCompanies   = Subscription::where('status', 'expired')->count();
+        $expiredCompanies   = Subscription::where(fn ($q) => $q
+                                ->where('status', 'expired')
+                                ->orWhere(fn ($q2) => $q2
+                                    ->whereIn('status', ['trial', 'active'])
+                                    ->whereNotNull('expiry_date')
+                                    ->where('expiry_date', '<', now()->toDateString()))
+                            )->count();
 
         $recentActivity = \App\Models\AuditLog::with('user')->orderByDesc('created_at')->take(10)->get();
 
