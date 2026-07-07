@@ -29,15 +29,6 @@
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
-            <div class="sa-stat">
-                <span class="sa-pill">Monthly</span>
-                <div class="sa-stat-icon" style="background:rgba(0,65,97,.08);color:#004161;"><i class="bi bi-cash-stack"></i></div>
-                <div class="sa-stat-val" style="color:#004161;">${{ number_format($monthlyRevenue, 0) }}</div>
-                <div class="sa-stat-lbl mb-2">Total Revenue</div>
-                <a href="{{ route('host.payments') }}" class="sa-stat-link">See Billing <i class="bi bi-arrow-right"></i></a>
-            </div>
-        </div>
-        <div class="col-xl-3 col-md-6">
             <a href="{{ route('host.companies.expired') }}" style="text-decoration:none;">
             <div class="sa-stat" style="cursor:pointer;transition:box-shadow .15s;">
                 <span class="sa-pill" style="background:rgba(220,38,38,.1);color:#dc2626;">Expired</span>
@@ -47,6 +38,15 @@
                 <span class="sa-stat-link">See Expired <i class="bi bi-arrow-right"></i></span>
             </div>
             </a>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="sa-stat">
+                <span class="sa-pill">Monthly</span>
+                <div class="sa-stat-icon" style="background:rgba(0,65,97,.08);color:#004161;"><i class="bi bi-cash-stack"></i></div>
+                <div class="sa-stat-val" style="color:#004161;">${{ number_format($monthlyRevenue, 0) }}</div>
+                <div class="sa-stat-lbl mb-2">Total Revenue</div>
+                <a href="{{ route('host.payments') }}" class="sa-stat-link">See Billing <i class="bi bi-arrow-right"></i></a>
+            </div>
         </div>
     </div>
 
