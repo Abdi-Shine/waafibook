@@ -68,7 +68,7 @@
             @foreach($plans as $plan)
             @php
                 $__cur      = ($activePlanId !== null) && ((int)$activePlanId === (int)$plan->id);
-                $__paid     = ($sub !== null) && ($subStatus === 'active');
+                $__paid     = ($sub !== null) && in_array($subStatus, ['active', 'pending_payment']);
                 $__pPrice   = (float)$plan->price;
                 $__curPrice = (float)($sub?->plan?->price ?? 0);
                 $__border   = $__cur ? '2px solid #004161' : ($plan->is_popular ? '2px solid rgba(153,204,51,.5)' : '2px solid #e5e7eb');
