@@ -32,12 +32,12 @@
     <!-- Menu Sections -->
     @php
         $__planLevel = $currentPlanLevel ?? 3;
-        // Badge helper: returns HTML for a plan badge, or '' if current plan meets requirement
+        // Badge helper: only shown on Starter plan, always in brand green
         $__badge = function(int $required) use ($__planLevel): string {
-            if ($__planLevel >= $required) return '';
+            if ($__planLevel !== 1) return '';          // only Starter sees badges
+            if ($__planLevel >= $required) return '';   // already has access
             $label = $required >= 3 ? 'Enterprise' : 'Business';
-            $bg    = $required >= 3 ? '#7c3aed' : '#d97706';
-            return "<span style=\"background:{$bg};color:#fff;font-size:.6rem;font-weight:700;border-radius:4px;padding:1px 5px;margin-left:auto;letter-spacing:.03em;\">{$label}</span>";
+            return "<span style=\"background:#99CC33;color:#002d47;font-size:.6rem;font-weight:800;border-radius:4px;padding:1px 6px;margin-left:auto;letter-spacing:.04em;\">{$label}</span>";
         };
     @endphp
     <div class="px-4 py-4 space-y-1">
