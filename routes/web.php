@@ -531,6 +531,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['role:Super Admin'])->prefix('super_admin')->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\Host\HostDashboardController::class, 'dashboard'])->name('host.dashboard');
         Route::get('/companies', [App\Http\Controllers\Host\HostDashboardController::class, 'manageCompanies'])->name('host.companies');
+        Route::get('/companies/expired', [App\Http\Controllers\Host\HostDashboardController::class, 'expiredCompanies'])->name('host.companies.expired');
         Route::post('/companies', [App\Http\Controllers\Host\HostDashboardController::class, 'storeCompany'])->name('host.companies.store');
         Route::patch('/companies/{id}/plan', [App\Http\Controllers\Host\HostDashboardController::class, 'managePlan'])->name('host.companies.manage-plan');
         Route::patch('/companies/{id}/status', [App\Http\Controllers\Host\HostDashboardController::class, 'toggleCompanyStatus'])->name('host.companies.toggle-status');

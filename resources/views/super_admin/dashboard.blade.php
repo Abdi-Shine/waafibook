@@ -56,13 +56,15 @@
             </div>
         </div>
         <div class="col-xl-2 col-md-4">
-            <div class="sa-stat">
-                <span class="sa-pill">This Month</span>
-                <div class="sa-stat-icon" style="background:rgba(153,204,51,.15);color:#5a7a1a;"><i class="bi bi-graph-up-arrow"></i></div>
-                <div class="sa-stat-val" style="color:#5a7a1a;">{{ number_format($newThisMonth) }}</div>
-                <div class="sa-stat-lbl mb-2">New Signups</div>
-                <a href="{{ route('host.companies') }}" class="sa-stat-link">See Companies <i class="bi bi-arrow-right"></i></a>
+            <a href="{{ route('host.companies.expired') }}" style="text-decoration:none;">
+            <div class="sa-stat" style="cursor:pointer;transition:box-shadow .15s;">
+                <span class="sa-pill" style="background:rgba(220,38,38,.1);color:#dc2626;">Expired</span>
+                <div class="sa-stat-icon" style="background:rgba(220,38,38,.1);color:#dc2626;"><i class="bi bi-calendar-x"></i></div>
+                <div class="sa-stat-val" style="color:#dc2626;">{{ number_format($expiredCompanies) }}</div>
+                <div class="sa-stat-lbl mb-2">Expired Companies</div>
+                <span class="sa-stat-link">See Expired <i class="bi bi-arrow-right"></i></span>
             </div>
+            </a>
         </div>
     </div>
 

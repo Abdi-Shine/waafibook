@@ -30,9 +30,10 @@ class HostDashboardController extends Controller
             ->where('status', 'completed')
             ->sum('amount');
 
-        $revenueCollected = SubscriptionPayment::where('status', 'completed')->sum('amount');
-        $pendingApprovals = DemoRequest::where('status', 'pending')->count();
-        $overdueAccounts  = Subscription::where('status', 'expired')->count();
+        $revenueCollected   = SubscriptionPayment::where('status', 'completed')->sum('amount');
+        $pendingApprovals   = DemoRequest::where('status', 'pending')->count();
+        $overdueAccounts    = Subscription::where('status', 'expired')->count();
+        $expiredCompanies   = Subscription::where('status', 'expired')->count();
 
         $recentActivity = \App\Models\AuditLog::with('user')->orderByDesc('created_at')->take(10)->get();
 
@@ -44,8 +45,24 @@ class HostDashboardController extends Controller
         return view('super_admin.dashboard', compact(
             'totalCompanies', 'activeCompanies', 'suspendedCompanies', 'totalUsers',
             'monthlyRevenue', 'newThisMonth', 'revenueCollected', 'pendingApprovals',
-            'overdueAccounts', 'recentActivity', 'newSignupsThisWeek'
+            'overdueAccounts', 'expiredCompanies', 'recentActivity', 'newSignupsThisWeek'
         ));
+    }
+
+    public function expiredCompanies(Request $request)
+    {
+        $companies = Company::with(['subscription.plan'])
+            ->whereHas('subscription', fn ($q) => $q->where('status', 'expired'))
+            ->when($request->filled('search'), fn ($q) => $q->where(fn ($q2) => $q2
+                ->where('name', 'like', '%' . $request->search . '%')
+                ->orWhere('email', 'like', '%' . $request->search . '%')))
+            ->orderByDesc('created_at')
+            ->paginate(20)
+            ->withQueryString();
+
+        $allPlans = SubscriptionPlan::orderBy('price')->get();
+
+        return view('super_admin.expired_companies', compact('companies', 'allPlans'));
     }
 
     public function manageCompanies(Request $request)
