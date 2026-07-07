@@ -286,19 +286,39 @@ body { font-family: 'Inter', sans-serif; background: #f0f4f8; overflow-x: hidden
 .sa-user-role  { font-size: .72rem; color: #9ca3af; }
 
 /* ── Sidebar nav group (dropdown) ── */
-.sa-nav-group-toggle { display:flex; align-items:center; gap:.75rem; padding:.7rem 1rem; border-radius:12px; color:rgba(255,255,255,.70); text-decoration:none; font-size:.875rem; font-weight:600; cursor:pointer; transition:all .2s; width:100%; }
-.sa-nav-group-toggle:hover, .sa-nav-group-toggle.active { background:rgba(255,255,255,.05); color:#fff; }
-.sa-caret { margin-left:auto; font-size:.65rem; transition:transform .2s; flex-shrink:0; }
-.sa-nav-group.open .sa-caret { transform:rotate(180deg); }
-.sa-nav-sub { list-style:none; margin:0; padding:0; display:none; }
-.sa-nav-group.open .sa-nav-sub { display:block; }
-.sa-nav-sub li a {
+.sa-nav-group-toggle {
     display:flex; align-items:center; gap:.75rem;
-    padding:.5rem 1rem .5rem 3rem;
+    padding:.7rem 1rem; border-radius:12px;
+    color:rgba(255,255,255,.70); text-decoration:none;
+    font-size:.875rem; font-weight:600;
+    cursor:pointer; transition:all .2s; width:100%;
+}
+.sa-nav-group-toggle:hover, .sa-nav-group-toggle.active {
+    background:rgba(255,255,255,.05); color:#fff;
+}
+.sa-caret { margin-left:auto; font-size:.65rem; transition:transform .25s ease; flex-shrink:0; }
+.sa-nav-group.open .sa-caret { transform:rotate(180deg); }
+
+/* Smooth slide open/close via max-height transition */
+.sa-nav-sub {
+    list-style:none; margin:0; padding:0;
+    max-height:0; overflow:hidden;
+    transition: max-height .25s ease;
+}
+.sa-nav-group.open .sa-nav-sub { max-height:400px; }
+
+.sa-nav-sub li a {
+    display:flex; align-items:center;
+    padding:.45rem 1rem .45rem 2.5rem;
     color:rgba(255,255,255,.50); text-decoration:none;
     font-size:.8125rem; font-weight:500;
     transition:color .15s;
-    border-radius:0;
 }
-.sa-nav-sub li a i { font-size:1rem; }
-.sa-nav-sub li a:hover, .sa-nav-sub li a.active { color:#fff; background:none; }
+.sa-nav-sub li a:hover, .sa-nav-sub li a.active { color:#fff; }
+
+/* Active sub-item: accent left bar */
+.sa-nav-sub li a.active {
+    color:#fff;
+    border-left:2px solid var(--accent);
+    padding-left:calc(2.5rem - 2px);
+}

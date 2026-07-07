@@ -101,22 +101,22 @@
                 <ul class="sa-nav-sub">
                     <li><a href="{{ route('host.reports') }}"
                            class="{{ request()->routeIs('host.reports') && !request()->routeIs('host.reports.*') ? 'active' : '' }}">
-                        <i class="bi bi-plus"></i> Overview</a></li>
+                        Overview</a></li>
                     <li><a href="{{ route('host.reports.companies') }}"
                            class="{{ request()->routeIs('host.reports.companies') ? 'active' : '' }}">
-                        <i class="bi bi-plus"></i> Companies</a></li>
+                        Companies</a></li>
                     <li><a href="{{ route('host.reports.subscriptions') }}"
                            class="{{ request()->routeIs('host.reports.subscriptions') ? 'active' : '' }}">
-                        <i class="bi bi-plus"></i> Subscriptions</a></li>
+                        Subscriptions</a></li>
                     <li><a href="{{ route('host.reports.revenue') }}"
                            class="{{ request()->routeIs('host.reports.revenue') ? 'active' : '' }}">
-                        <i class="bi bi-plus"></i> Revenue</a></li>
+                        Revenue</a></li>
                     <li><a href="{{ route('host.reports.users') }}"
                            class="{{ request()->routeIs('host.reports.users') ? 'active' : '' }}">
-                        <i class="bi bi-plus"></i> Users</a></li>
+                        Users</a></li>
                     <li><a href="{{ route('host.reports.activity') }}"
                            class="{{ request()->routeIs('host.reports.activity') ? 'active' : '' }}">
-                        <i class="bi bi-plus"></i> System Activity</a></li>
+                        System Activity</a></li>
                 </ul>
             </li>
             <li>
