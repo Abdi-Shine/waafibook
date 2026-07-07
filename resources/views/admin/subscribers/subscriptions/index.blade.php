@@ -142,7 +142,7 @@
             </span>
         </div>
 
-        <div class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
             <div>
                 <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">
                     {{ $lastPayment ? 'Last Payment' : 'Plan Price' }}
@@ -161,6 +161,17 @@
                 <p class="text-[14px] font-semibold text-gray-700">
                     {{ $startDate ? $startDate->format('d M Y') : '—' }}
                 </p>
+            </div>
+            <div>
+                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Expires</p>
+                <p class="text-[14px] font-semibold {{ $daysLeft !== null && $daysLeft <= 7 ? 'text-red-600' : 'text-gray-700' }}">
+                    {{ $expiryDate ? $expiryDate->format('d M Y') : '—' }}
+                </p>
+                @if($daysLeft !== null && $daysLeft > 0)
+                    <p class="text-[10px] text-gray-400 mt-0.5">{{ $daysLeft }}d remaining</p>
+                @elseif($daysLeft !== null && $daysLeft <= 0)
+                    <p class="text-[10px] text-red-500 font-bold mt-0.5">Expired</p>
+                @endif
             </div>
 
             {{-- Users meter --}}
