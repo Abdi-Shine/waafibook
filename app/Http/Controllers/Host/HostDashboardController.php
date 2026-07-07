@@ -51,8 +51,14 @@ class HostDashboardController extends Controller
 
     public function expiredCompanies(Request $request)
     {
+        $today = now()->toDateString();
+
         $companies = Company::with(['subscription.plan'])
-            ->whereHas('subscription', fn ($q) => $q->where('status', 'expired'))
+            ->whereHas('subscription', fn ($q) => $q->where('status', 'expired')
+                ->orWhere(fn ($q2) => $q2
+                    ->whereIn('status', ['trial', 'active'])
+                    ->whereNotNull('expiry_date')
+                    ->where('expiry_date', '<', $today)))
             ->when($request->filled('search'), fn ($q) => $q->where(fn ($q2) => $q2
                 ->where('name', 'like', '%' . $request->search . '%')
                 ->orWhere('email', 'like', '%' . $request->search . '%')))

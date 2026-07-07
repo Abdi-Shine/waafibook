@@ -12,12 +12,12 @@ class ExpireTrialSubscriptions extends Command
 
     public function handle(): int
     {
-        $count = Subscription::where('status', 'trial')
+        $count = Subscription::whereIn('status', ['trial', 'active'])
             ->whereNotNull('expiry_date')
             ->where('expiry_date', '<', now()->toDateString())
             ->update(['status' => 'expired']);
 
-        $this->info("Expired {$count} trial subscription(s).");
+        $this->info("Expired {$count} subscription(s).");
 
         return self::SUCCESS;
     }
