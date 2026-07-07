@@ -9,7 +9,9 @@ class Announcement extends Model
     protected $guarded = [];
 
     protected $casts = [
-        'sent_at' => 'datetime',
+        'sent_at'    => 'datetime',
+        'start_time' => 'datetime',
+        'end_time'   => 'datetime',
     ];
 
     public function targetCompany()

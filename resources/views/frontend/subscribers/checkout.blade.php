@@ -49,9 +49,9 @@
 
                 <div class="px-6 py-5 border-b border-gray-100">
                     <h2 class="text-base font-black text-primary uppercase tracking-tight">
-                        {{ $isRenewal ? 'Renew Subscription' : ($isSwitch ? 'Switch Plan' : 'Activate Subscription') }}
+                        {{ $isRenewal ? 'Renew Subscription' : ($isSwitch ? 'Switch Plan' : 'Subscribe to Plan') }}
                     </h2>
-                    <p class="text-xs text-gray-400 mt-0.5">Complete your payment to activate the {{ $plan->name }} plan.</p>
+                    <p class="text-xs text-gray-400 mt-0.5">Submit your payment details for the {{ $plan->name }} plan. An administrator will review and activate your subscription.</p>
                 </div>
 
                 <form method="POST" action="{{ route('subscribers.checkout.pay', $plan->id) }}"
@@ -175,12 +175,15 @@
                     {{-- Submit --}}
                     <button type="submit"
                             class="w-full py-4 rounded-xl bg-accent text-white font-black text-sm uppercase tracking-widest hover:bg-accent/90 transition-all shadow-md shadow-accent/20">
-                        Confirm Payment &mdash; {{ $currency }}{{ number_format($plan->price, 2) }}
+                        <i class="bi bi-send me-2"></i> Submit Payment Request &mdash; {{ $currency }}{{ number_format($plan->price, 2) }}
                     </button>
 
-                    <p class="text-center text-[10px] text-gray-400 font-medium">
-                        By confirming, you agree to our terms. Subscriptions are non-refundable once activated.
-                    </p>
+                    <div class="flex items-start gap-2 bg-blue-50 border border-blue-100 rounded-xl p-3 mt-2">
+                        <i class="bi bi-info-circle-fill text-blue-400 mt-0.5 flex-shrink-0"></i>
+                        <p class="text-[11px] text-blue-600 font-medium leading-relaxed">
+                            Your payment request will be reviewed by the administrator. Your subscription will be activated once the payment is approved. You will see the status on your subscription page.
+                        </p>
+                    </div>
                 </form>
             </div>
 

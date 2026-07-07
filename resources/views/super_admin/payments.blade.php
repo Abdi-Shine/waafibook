@@ -30,6 +30,61 @@
     </div>
 </div>
 
+{{-- ── Pending Approval Requests ──────────────────────────────── --}}
+@php $pendingPayments = $payments->getCollection()->where('status','pending'); @endphp
+@if($pendingPayments->count())
+<div class="mb-4" style="border:2px solid #f59e0b;border-radius:12px;overflow:hidden;">
+    <div style="background:#fffbeb;padding:12px 20px;border-bottom:1px solid #fde68a;display:flex;align-items:center;gap:10px;">
+        <i class="bi bi-hourglass-split" style="color:#d97706;font-size:1.1rem;"></i>
+        <strong style="color:#92400e;font-size:.9rem;">Pending Payment Requests — {{ $pendingPayments->count() }} awaiting approval</strong>
+    </div>
+    <table class="sa-table" style="margin:0;">
+        <thead>
+            <tr>
+                <th>Company</th>
+                <th>Plan</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Transaction Ref</th>
+                <th>Submitted</th>
+                <th style="text-align:center;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($pendingPayments as $pmt)
+            <tr style="background:#fffbeb;">
+                <td><strong>{{ $pmt->subscription->company->name ?? '—' }}</strong></td>
+                <td><span class="sa-badge sa-badge-blue">{{ $pmt->subscription->plan->name ?? '—' }}</span></td>
+                <td><strong style="color:#15803d;font-size:1rem;">${{ number_format($pmt->amount, 2) }}</strong></td>
+                <td>{{ $pmt->payment_method ?? '—' }}</td>
+                <td><code style="background:#fef3c7;padding:2px 6px;border-radius:4px;font-size:.8rem;">{{ $pmt->transaction_id ?? '—' }}</code></td>
+                <td style="color:#6b7280;font-size:.8rem;">{{ \Carbon\Carbon::parse($pmt->payment_date)->format('d M Y') }}</td>
+                <td style="text-align:center;">
+                    <div style="display:flex;gap:6px;justify-content:center;">
+                        <form method="POST" action="{{ route('host.payments.mark-paid', $pmt->id) }}" class="d-inline"
+                              onsubmit="return confirm('Approve this payment and activate the subscription for {{ addslashes($pmt->subscription->company->name ?? '') }}?');">
+                            @csrf @method('PATCH')
+                            <button type="submit" style="background:#15803d;color:#fff;border:none;padding:6px 16px;border-radius:6px;font-weight:800;font-size:.8rem;cursor:pointer;">
+                                <i class="bi bi-check-lg"></i> Approve
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ route('host.payments.destroy', $pmt->id) }}" class="d-inline"
+                              onsubmit="return confirm('Reject and delete this payment request?');">
+                            @csrf @method('DELETE')
+                            <button type="submit" style="background:#dc2626;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-weight:800;font-size:.8rem;cursor:pointer;">
+                                <i class="bi bi-x-lg"></i> Reject
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+</div>
+@endif
+
+{{-- ── All Payments ────────────────────────────────────────────── --}}
 <div class="sa-card">
     <table class="sa-table">
         <thead>
@@ -66,16 +121,14 @@
                     <div class="sa-row-actions">
                         @if($pmt->status !== 'completed')
                         <form method="POST" action="{{ route('host.payments.mark-paid', $pmt->id) }}" class="d-inline"
-                              onsubmit="return confirm('Mark this payment as paid?');">
-                            @csrf
-                            @method('PATCH')
-                            <button type="submit" class="sa-btn-icon ok" data-bs-toggle="tooltip" title="Mark as Paid"><i class="bi bi-check2-circle"></i></button>
+                              onsubmit="return confirm('Approve this payment and activate the subscription?');">
+                            @csrf @method('PATCH')
+                            <button type="submit" class="sa-btn-icon ok" data-bs-toggle="tooltip" title="Approve & Activate"><i class="bi bi-check2-circle"></i></button>
                         </form>
                         @endif
                         <form method="POST" action="{{ route('host.payments.destroy', $pmt->id) }}" class="d-inline"
-                              onsubmit="return confirm('Permanently delete this payment record? This cannot be undone.');">
-                            @csrf
-                            @method('DELETE')
+                              onsubmit="return confirm('Permanently delete this payment record?');">
+                            @csrf @method('DELETE')
                             <button type="submit" class="sa-btn-icon danger" data-bs-toggle="tooltip" title="Delete"><i class="bi bi-trash"></i></button>
                         </form>
                     </div>
