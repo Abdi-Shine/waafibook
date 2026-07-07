@@ -67,29 +67,23 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             @foreach($plans as $plan)
             @php
-                $isCurrent      = $activePlanId === $plan->id;
-                $planPrice      = (float) $plan->price;
-                // Only do upgrade/downgrade comparisons when on an active paid plan
-                $hasActivePaid  = $sub && $subStatus === 'active';
-                $isHigher       = $hasActivePaid && !$isCurrent && $planPrice > $activePlanPrice;
-                $isLower        = $hasActivePaid && !$isCurrent && $planPrice < $activePlanPrice;
-                $isSamePaid     = $hasActivePaid && $isCurrent;
-                $borderClass    = $isCurrent
-                    ? 'border-[#004161] ring-1 ring-[#004161]/20'
-                    : ($plan->is_popular ? 'border-[#99CC33]/50' : 'border-gray-200');
+                $__cur      = ($activePlanId !== null) && ((int)$activePlanId === (int)$plan->id);
+                $__paid     = ($sub !== null) && ($subStatus === 'active');
+                $__pPrice   = (float)$plan->price;
+                $__curPrice = (float)($sub?->plan?->price ?? 0);
+                $__border   = $__cur ? '2px solid #004161' : ($plan->is_popular ? '2px solid rgba(153,204,51,.5)' : '2px solid #e5e7eb');
             @endphp
 
-            <div class="relative flex flex-col bg-white rounded-[1.1rem] border-2 {{ $borderClass }} shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200">
+            <div class="relative flex flex-col bg-white rounded-[1.1rem] shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200"
+                 style="border: {{ $__border }};">
 
-                {{-- Popular / Current badge --}}
-                @if($isCurrent)
-                <div class="absolute top-3.5 right-3.5 bg-[#004161] text-white text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full tracking-wider">
-                    Current Plan
-                </div>
+                {{-- Badge --}}
+                @if($__cur)
+                <div class="absolute top-3.5 right-3.5 text-white text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full tracking-wider"
+                     style="background:#004161;">Current Plan</div>
                 @elseif($plan->is_popular)
-                <div class="absolute top-3.5 right-3.5 bg-[#99CC33] text-white text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full tracking-wider">
-                    Popular
-                </div>
+                <div class="absolute top-3.5 right-3.5 text-white text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full tracking-wider"
+                     style="background:#99CC33;">Popular</div>
                 @endif
 
                 <div class="p-5 flex flex-col h-full">
@@ -110,19 +104,19 @@
                     {{-- Features --}}
                     <ul class="flex flex-col gap-1.5 mb-5 flex-1">
                         <li class="flex items-center gap-2 text-[11px] text-gray-600">
-                            <i class="bi bi-people-fill text-[#99CC33] text-[10px]"></i>
+                            <i class="bi bi-people-fill text-[10px]" style="color:#99CC33;"></i>
                             Up to <strong class="text-primary-dark">{{ $plan->max_users }}</strong> users
                         </li>
                         @if($plan->storage_limit_gb)
                         <li class="flex items-center gap-2 text-[11px] text-gray-600">
-                            <i class="bi bi-hdd-fill text-[#99CC33] text-[10px]"></i>
+                            <i class="bi bi-hdd-fill text-[10px]" style="color:#99CC33;"></i>
                             <strong class="text-primary-dark">{{ $plan->storage_limit_gb }} GB</strong> storage
                         </li>
                         @endif
-                        @foreach(array_slice($plan->features ?? [], 0, 4) as $feat)
+                        @foreach(array_slice($plan->features ?? [], 0, 4) as $__feat)
                         <li class="flex items-center gap-2 text-[11px] text-gray-600">
-                            <i class="bi bi-check-lg text-[#99CC33] text-[10px]"></i>
-                            {{ $feat }}
+                            <i class="bi bi-check-lg text-[10px]" style="color:#99CC33;"></i>
+                            {{ $__feat }}
                         </li>
                         @endforeach
                         @if(count($plan->features ?? []) > 4)
@@ -130,33 +124,34 @@
                         @endif
                     </ul>
 
-                    {{-- CTA button --}}
+                    {{-- CTA button — inline styles to prevent Tailwind JIT purging --}}
                     @if($isPending)
-                        {{-- Payment waiting approval — disable all buttons --}}
-                        <div class="w-full text-center py-2.5 px-4 bg-amber-50 border border-amber-200 text-amber-600 font-bold rounded-lg text-[12px]">
+                        <div class="w-full text-center py-2.5 px-4 font-bold rounded-lg text-[12px]"
+                             style="background:#fffbeb;border:1px solid #fcd34d;color:#b45309;">
                             <i class="bi bi-hourglass-split me-1"></i> Payment Pending
                         </div>
-                    @elseif($isSamePaid)
-                        {{-- Currently on this exact paid plan and active --}}
-                        <div class="w-full text-center py-2.5 px-4 bg-[#004161]/8 text-[#004161] font-bold rounded-lg text-[12px] border border-[#004161]/20">
+                    @elseif($__paid && $__cur)
+                        <div class="w-full text-center py-2.5 px-4 font-bold rounded-lg text-[12px]"
+                             style="background:rgba(0,65,97,.07);color:#004161;border:1px solid rgba(0,65,97,.2);">
                             <i class="bi bi-check-circle me-1"></i> Active Plan
                         </div>
-                    @elseif($isHigher)
-                        {{-- Upgrade from current active paid plan --}}
+                    @elseif($__paid && $__pPrice > $__curPrice)
                         <a href="{{ route('subscribers.checkout', $plan->id) }}"
-                           class="w-full text-center py-2.5 px-4 bg-[#99CC33] text-white font-bold rounded-lg text-[12px] hover:bg-[#88bb22] transition-all block">
+                           class="w-full text-center block py-2.5 px-4 font-bold rounded-lg text-[12px] transition-opacity hover:opacity-90"
+                           style="background:#99CC33;color:#fff;">
                             <i class="bi bi-arrow-up-circle me-1"></i> Upgrade Plan
                         </a>
-                    @elseif($isLower)
-                        {{-- Downgrade from current active paid plan --}}
+                    @elseif($__paid && $__pPrice < $__curPrice)
                         <a href="{{ route('subscribers.checkout', $plan->id) }}"
-                           class="w-full text-center py-2.5 px-4 bg-white border-2 border-[#99CC33] text-[#99CC33] font-bold rounded-lg text-[12px] hover:bg-[#99CC33] hover:text-white transition-all block">
+                           class="w-full text-center block py-2.5 px-4 font-bold rounded-lg text-[12px] transition-all hover:opacity-90"
+                           style="background:#fff;border:2px solid #99CC33;color:#99CC33;">
                             <i class="bi bi-arrow-down-circle me-1"></i> Switch Plan
                         </a>
                     @else
-                        {{-- No paid plan, trial, or expired — always show Choose Plan in brand green --}}
+                        {{-- No active paid plan (new / trial / expired / cancelled) --}}
                         <a href="{{ route('subscribers.checkout', $plan->id) }}"
-                           class="w-full text-center py-2.5 px-4 bg-[#99CC33] text-white font-bold rounded-lg text-[12px] hover:bg-[#88bb22] transition-all block">
+                           class="w-full text-center block py-2.5 px-4 font-bold rounded-lg text-[12px] transition-opacity hover:opacity-90"
+                           style="background:#99CC33;color:#fff;">
                             Choose Plan
                         </a>
                     @endif
