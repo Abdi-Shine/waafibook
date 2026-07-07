@@ -401,3 +401,40 @@ body { font-family: 'Inter', sans-serif; background: #f0f4f8; overflow-x: hidden
 .sa-sidebar .sa-nav-sub > li > a.active {
     color: #fff;
 }
+
+/* ── Bootstrap / Tailwind coexistence fixes ────────────────────
+   Bootstrap loads after app.css and overrides some Tailwind base
+   styles inside the sidebar. These rules win them back.           */
+
+/* Remove Bootstrap's link underline */
+.sa-sidebar a,
+.sa-sidebar a:hover,
+.sa-sidebar a:focus,
+.sa-sidebar a:visited { text-decoration: none !important; }
+
+/* Remove Bootstrap's heading + paragraph bottom margins
+   that cause extra spacing in the brand area              */
+.sa-sidebar h4,
+.sa-sidebar h5,
+.sa-sidebar p { margin-top: 0 !important; margin-bottom: 0 !important; }
+
+/* Reset Bootstrap's button defaults on the Reports toggle */
+.sa-sidebar button {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    color: inherit;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    text-align: left;
+    display: flex;
+    align-items: center;
+}
+.sa-sidebar button:focus,
+.sa-sidebar button:focus-visible { outline: none !important; box-shadow: none !important; }

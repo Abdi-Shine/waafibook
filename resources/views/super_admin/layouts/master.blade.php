@@ -47,7 +47,7 @@
     {{-- ── Sidebar (Tailwind + Alpine — identical structure to normal user panel) ── --}}
     <aside id="sa-sidebar"
            x-data="{ reportsOpen: {{ request()->routeIs('host.reports*') ? 'true' : 'false' }} }"
-           class="fixed top-0 left-0 w-[260px] h-screen bg-primary z-[1000] overflow-y-auto shadow-2xl border-r border-white/5">
+           class="sa-sidebar">
 
         {{-- Brand --}}
         <div class="sticky top-0 bg-primary/95 backdrop-blur-sm z-10 px-6 py-6 border-b border-white/10">
