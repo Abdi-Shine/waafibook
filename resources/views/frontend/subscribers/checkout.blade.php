@@ -54,7 +54,7 @@
                     <p class="text-xs text-gray-400 mt-0.5">Submit your payment details for the {{ $plan->name }} plan. An administrator will review and activate your subscription.</p>
                 </div>
 
-                <form method="POST" action="{{ route('subscribers.checkout.pay', $plan->id) }}"
+                <form id="payment-form" method="POST" action="{{ route('subscribers.checkout.pay', $plan->id) }}"
                       x-data="{ method: 'evc_mobile' }" class="p-6 space-y-6">
                     @csrf
 
@@ -165,8 +165,8 @@
                         </div>
                     </div>
 
-                    {{-- Submit --}}
-                    <button type="submit"
+                    {{-- Submit with SweetAlert2 confirmation --}}
+                    <button type="button" id="submit-payment-btn"
                             class="w-full py-4 rounded-xl bg-accent text-white font-black text-sm uppercase tracking-widest hover:bg-accent/90 transition-all shadow-md shadow-accent/20">
                         <i class="bi bi-send me-2"></i> Submit Payment Request &mdash; {{ $currency }}{{ number_format($plan->price, 2) }}
                     </button>
@@ -246,5 +246,44 @@
 
     </div>
 </div>
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+<script>
+document.getElementById('submit-payment-btn').addEventListener('click', function () {
+    const planName  = @json($plan->name);
+    const amount    = @json($currency . number_format($plan->price, 2));
+    const isSwitch  = @json($isSwitch);
+    const isRenewal = @json($isRenewal);
+
+    const title = isRenewal ? 'Confirm Renewal'
+                : isSwitch  ? 'Confirm Plan Switch'
+                :             'Confirm Subscription';
+
+    const text = isRenewal
+        ? `Renew your <strong>${planName}</strong> plan for <strong>${amount}</strong>?<br><br>Your payment request will be reviewed and activated by the administrator.`
+        : isSwitch
+        ? `Switch to the <strong>${planName}</strong> plan for <strong>${amount}</strong>? This will replace your current subscription once approved.`
+        : `Subscribe to the <strong>${planName}</strong> plan for <strong>${amount}</strong>.<br><br>Your payment will be reviewed and your subscription activated once approved.`;
+
+    Swal.fire({
+        title: title,
+        html: text,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Submit Request',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#004161',
+        cancelButtonColor: '#9ca3af',
+        reverseButtons: true,
+        focusConfirm: false,
+    }).then(function (result) {
+        if (result.isConfirmed) {
+            document.getElementById('payment-form').submit();
+        }
+    });
+});
+</script>
+@endpush
 
 @endsection
