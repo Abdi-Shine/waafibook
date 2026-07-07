@@ -67,13 +67,14 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             @foreach($plans as $plan)
             @php
-                $isCurrent   = $activePlanId === $plan->id;
-                $planPrice   = (float) $plan->price;
-                $isHigher    = !$isCurrent && $planPrice > $activePlanPrice && $sub;
-                $isLower     = !$isCurrent && $planPrice < $activePlanPrice && $sub;
-                $isSameTier  = $isCurrent;
-                // Determine card accent
-                $borderClass = $isCurrent
+                $isCurrent      = $activePlanId === $plan->id;
+                $planPrice      = (float) $plan->price;
+                // Only do upgrade/downgrade comparisons when on an active paid plan
+                $hasActivePaid  = $sub && $subStatus === 'active';
+                $isHigher       = $hasActivePaid && !$isCurrent && $planPrice > $activePlanPrice;
+                $isLower        = $hasActivePaid && !$isCurrent && $planPrice < $activePlanPrice;
+                $isSamePaid     = $hasActivePaid && $isCurrent;
+                $borderClass    = $isCurrent
                     ? 'border-[#004161] ring-1 ring-[#004161]/20'
                     : ($plan->is_popular ? 'border-[#99CC33]/50' : 'border-gray-200');
             @endphp
@@ -131,31 +132,31 @@
 
                     {{-- CTA button --}}
                     @if($isPending)
+                        {{-- Payment waiting approval — disable all buttons --}}
                         <div class="w-full text-center py-2.5 px-4 bg-amber-50 border border-amber-200 text-amber-600 font-bold rounded-lg text-[12px]">
                             <i class="bi bi-hourglass-split me-1"></i> Payment Pending
                         </div>
-                    @elseif($isCurrent && $isActive)
+                    @elseif($isSamePaid)
+                        {{-- Currently on this exact paid plan and active --}}
                         <div class="w-full text-center py-2.5 px-4 bg-[#004161]/8 text-[#004161] font-bold rounded-lg text-[12px] border border-[#004161]/20">
                             <i class="bi bi-check-circle me-1"></i> Active Plan
                         </div>
-                    @elseif($isCurrent && $isExpired)
-                        <a href="{{ route('subscribers.checkout', $plan->id) }}"
-                           class="w-full text-center py-2.5 px-4 bg-[#004161] text-white font-bold rounded-lg text-[12px] hover:bg-[#003150] transition-all block">
-                            <i class="bi bi-arrow-clockwise me-1"></i> Renew Plan
-                        </a>
                     @elseif($isHigher)
+                        {{-- Upgrade from current active paid plan --}}
                         <a href="{{ route('subscribers.checkout', $plan->id) }}"
                            class="w-full text-center py-2.5 px-4 bg-[#99CC33] text-white font-bold rounded-lg text-[12px] hover:bg-[#88bb22] transition-all block">
                             <i class="bi bi-arrow-up-circle me-1"></i> Upgrade Plan
                         </a>
                     @elseif($isLower)
+                        {{-- Downgrade from current active paid plan --}}
                         <a href="{{ route('subscribers.checkout', $plan->id) }}"
-                           class="w-full text-center py-2.5 px-4 bg-white border-2 border-gray-300 text-gray-600 font-bold rounded-lg text-[12px] hover:border-gray-400 hover:text-gray-700 transition-all block">
+                           class="w-full text-center py-2.5 px-4 bg-white border-2 border-[#99CC33] text-[#99CC33] font-bold rounded-lg text-[12px] hover:bg-[#99CC33] hover:text-white transition-all block">
                             <i class="bi bi-arrow-down-circle me-1"></i> Switch Plan
                         </a>
                     @else
+                        {{-- No paid plan, trial, or expired — always show Choose Plan in brand green --}}
                         <a href="{{ route('subscribers.checkout', $plan->id) }}"
-                           class="w-full text-center py-2.5 px-4 bg-[#004161] text-white font-bold rounded-lg text-[12px] hover:bg-[#003150] transition-all block">
+                           class="w-full text-center py-2.5 px-4 bg-[#99CC33] text-white font-bold rounded-lg text-[12px] hover:bg-[#88bb22] transition-all block">
                             Choose Plan
                         </a>
                     @endif
