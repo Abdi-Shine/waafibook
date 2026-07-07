@@ -42,7 +42,7 @@
         #sa-sidebar a,
         #sa-sidebar a:hover,
         #sa-sidebar a:visited,
-        #sa-sidebar a:focus { text-decoration: none !important; color: inherit !important; }
+        #sa-sidebar a:focus { text-decoration: none !important; }
         #sa-sidebar h4, #sa-sidebar p { margin: 0 !important; }
         #sa-sidebar button { background: transparent !important; border: none !important; box-shadow: none !important; outline: none !important; padding: 0 !important; margin: 0 !important; cursor: pointer; width: 100%; display: flex; align-items: center; font-family: inherit; font-size: inherit; color: inherit; }
         @yield('extra_css')
