@@ -32,12 +32,12 @@
     <!-- Menu Sections -->
     @php
         $__planLevel = $currentPlanLevel ?? 3;
-        // Badge helper: only shown on Starter plan, always in brand green
+        // Badge helper: only shown on Starter plan, brand green pill
         $__badge = function(int $required) use ($__planLevel): string {
-            if ($__planLevel !== 1) return '';          // only Starter sees badges
-            if ($__planLevel >= $required) return '';   // already has access
+            if ($__planLevel !== 1) return '';
+            if ($__planLevel >= $required) return '';
             $label = $required >= 3 ? 'Enterprise' : 'Business';
-            return "<span style=\"background:#99CC33;color:#002d47;font-size:.6rem;font-weight:800;border-radius:4px;padding:1px 6px;margin-left:auto;letter-spacing:.04em;\">{$label}</span>";
+            return "<span style=\"display:inline-flex;align-items:center;background:rgba(153,204,51,.18);color:#99CC33;font-size:.58rem;font-weight:800;border-radius:4px;padding:2px 7px;margin-left:8px;letter-spacing:.06em;line-height:1.3;border:1px solid rgba(153,204,51,.35);\">{$label}</span>";
         };
     @endphp
     <div class="px-4 py-4 space-y-1">
@@ -137,7 +137,7 @@
             @endif
 
             <!-- 4. Procurement -->
-            @if(Auth::user()->hasPermission('Purchase') && !($subscriptionRestricted ?? false))
+            @if(Auth::user()->hasPermission('Purchase'))
                 <div class="space-y-1">
                     <button @click="toggleMenu('procurement')"
                         class="flex items-center gap-3 px-4 py-3 text-white/70 hover:bg-white/5 hover:text-white rounded-xl font-semibold text-[14px] transition-all duration-200 w-full"
@@ -172,7 +172,7 @@
             @endif
 
             <!-- 5. Sales & POS -->
-            @if(Auth::user()->hasPermission('Sales & POS') && !($subscriptionRestricted ?? false))
+            @if(Auth::user()->hasPermission('Sales & POS'))
                 <div class="space-y-1">
                     <button @click="toggleMenu('sales')"
                         class="flex items-center gap-3 px-4 py-3 text-white/70 hover:bg-white/5 hover:text-white rounded-xl font-semibold text-[14px] transition-all duration-200 w-full"
@@ -203,7 +203,7 @@
                 </div>
             @endif
             <!-- 6. Expenses & Payroll -->
-            @if(Auth::user()->hasPermission('Expenses') && !($subscriptionRestricted ?? false))
+            @if(Auth::user()->hasPermission('Expenses'))
                 <div class="space-y-1">
                     <button @click="toggleMenu('users')"
                         class="flex items-center gap-3 px-4 py-3 text-white/70 hover:bg-white/5 hover:text-white rounded-xl font-semibold text-[14px] transition-all duration-200 w-full"
@@ -231,7 +231,7 @@
                 </div>
             @endif
             <!-- 6. Accounting & Finance -->
-            @if(Auth::user()->hasPermission('Accounting') && !($subscriptionRestricted ?? false))
+            @if(Auth::user()->hasPermission('Accounting'))
                 <div class="space-y-1">
                     <button @click="toggleMenu('finance')"
                         class="flex items-center gap-3 px-4 py-3 text-white/70 hover:bg-white/5 hover:text-white rounded-xl font-semibold text-[14px] transition-all duration-200 w-full"
