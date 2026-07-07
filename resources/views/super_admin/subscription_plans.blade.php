@@ -223,40 +223,38 @@ var __plans = {
     @endforeach
 };
 
-document.addEventListener('DOMContentLoaded', function () {
-    function openPlanModal() {
-        var el = document.getElementById('planModal');
-        (bootstrap.Modal.getInstance(el) || new bootstrap.Modal(el)).show();
-    }
+function openPlanModal() {
+    var el = document.getElementById('planModal');
+    (bootstrap.Modal.getInstance(el) || new bootstrap.Modal(el)).show();
+}
 
-    document.querySelectorAll('.btn-edit-plan').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var id   = this.dataset.id;
-            var plan = __plans[id] || {};
+document.querySelectorAll('.btn-edit-plan').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        var id   = this.dataset.id;
+        var plan = __plans[id] || {};
 
-            document.getElementById('planModalTitle').innerHTML = '<i class="bi bi-pencil me-2"></i>Edit Plan';
-            document.getElementById('planForm').action = '/super_admin/plans/' + id;
-            document.getElementById('methodField').innerHTML = '<input type="hidden" name="_method" value="PUT">';
-            document.getElementById('f_name').value          = plan.name || '';
-            document.getElementById('f_price').value         = plan.price || '';
-            document.getElementById('f_billing_cycle').value = plan.billing_cycle || 'monthly';
-            document.getElementById('f_max_users').value     = plan.max_users || '';
-            document.getElementById('f_storage').value       = plan.storage_limit_gb || 2;
-            document.getElementById('f_status').value        = plan.status || 'active';
-            document.getElementById('f_description').value   = plan.description || '';
-            document.getElementById('f_features').value      = Array.isArray(plan.features) ? plan.features.join(', ') : '';
-            document.getElementById('f_is_popular').checked  = plan.is_popular === true;
-            openPlanModal();
-        });
-    });
-
-    document.getElementById('addPlanBtn').addEventListener('click', function () {
-        document.getElementById('planModalTitle').innerHTML = '<i class="bi bi-plus-lg me-2"></i>Add Subscription Plan';
-        document.getElementById('planForm').action = '{{ route("host.plans.store") }}';
-        document.getElementById('methodField').innerHTML = '';
-        document.getElementById('planForm').reset();
+        document.getElementById('planModalTitle').innerHTML = '<i class="bi bi-pencil me-2"></i>Edit Plan';
+        document.getElementById('planForm').action = '/super_admin/plans/' + id;
+        document.getElementById('methodField').innerHTML = '<input type="hidden" name="_method" value="PUT">';
+        document.getElementById('f_name').value          = plan.name || '';
+        document.getElementById('f_price').value         = plan.price || '';
+        document.getElementById('f_billing_cycle').value = plan.billing_cycle || 'monthly';
+        document.getElementById('f_max_users').value     = plan.max_users || '';
+        document.getElementById('f_storage').value       = plan.storage_limit_gb || 2;
+        document.getElementById('f_status').value        = plan.status || 'active';
+        document.getElementById('f_description').value   = plan.description || '';
+        document.getElementById('f_features').value      = Array.isArray(plan.features) ? plan.features.join(', ') : '';
+        document.getElementById('f_is_popular').checked  = plan.is_popular === true;
         openPlanModal();
     });
+});
+
+document.getElementById('addPlanBtn').addEventListener('click', function () {
+    document.getElementById('planModalTitle').innerHTML = '<i class="bi bi-plus-lg me-2"></i>Add Subscription Plan';
+    document.getElementById('planForm').action = '{{ route("host.plans.store") }}';
+    document.getElementById('methodField').innerHTML = '';
+    document.getElementById('planForm').reset();
+    openPlanModal();
 });
 </script>
 @endpush
