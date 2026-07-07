@@ -110,8 +110,7 @@
             {{-- Actions --}}
             <div class="px-4 pb-4 d-flex gap-2">
                 <button class="btn btn-outline-primary btn-sm flex-fill btn-edit-plan fw-bold"
-                        data-id="{{ $plan->id }}"
-                        data-plan="{{ htmlspecialchars(json_encode($plan), ENT_QUOTES, 'UTF-8') }}">
+                        data-id="{{ $plan->id }}">
                     <i class="bi bi-pencil me-1"></i>Edit
                 </button>
                 <form method="POST" action="{{ route('host.plans.destroy', $plan->id) }}"
@@ -208,6 +207,22 @@
 
 @push('js')
 <script>
+var __plans = {
+    @foreach($plans as $plan)
+    "{{ $plan->id }}": {
+        name:             @json($plan->name),
+        price:            {{ (float) $plan->price }},
+        billing_cycle:    @json($plan->billing_cycle),
+        max_users:        {{ (int) $plan->max_users }},
+        storage_limit_gb: {{ (int) ($plan->storage_limit_gb ?? 2) }},
+        status:           @json($plan->status),
+        description:      @json($plan->description ?? ''),
+        features:         @json(is_array($plan->features) ? $plan->features : []),
+        is_popular:       {{ $plan->is_popular ? 'true' : 'false' }}
+    },
+    @endforeach
+};
+
 document.addEventListener('DOMContentLoaded', function () {
     function openPlanModal() {
         var el = document.getElementById('planModal');
@@ -216,9 +231,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.querySelectorAll('.btn-edit-plan').forEach(function (btn) {
         btn.addEventListener('click', function () {
-            var id = this.dataset.id;
-            var plan = {};
-            try { plan = JSON.parse(this.dataset.plan); } catch(e) {}
+            var id   = this.dataset.id;
+            var plan = __plans[id] || {};
 
             document.getElementById('planModalTitle').innerHTML = '<i class="bi bi-pencil me-2"></i>Edit Plan';
             document.getElementById('planForm').action = '/super_admin/plans/' + id;
@@ -230,8 +244,8 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('f_storage').value       = plan.storage_limit_gb || 2;
             document.getElementById('f_status').value        = plan.status || 'active';
             document.getElementById('f_description').value   = plan.description || '';
-            document.getElementById('f_features').value      = Array.isArray(plan.features) ? plan.features.join(', ') : (plan.features || '');
-            document.getElementById('f_is_popular').checked  = plan.is_popular == 1 || plan.is_popular === true;
+            document.getElementById('f_features').value      = Array.isArray(plan.features) ? plan.features.join(', ') : '';
+            document.getElementById('f_is_popular').checked  = plan.is_popular === true;
             openPlanModal();
         });
     });
