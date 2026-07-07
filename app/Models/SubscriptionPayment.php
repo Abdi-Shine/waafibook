@@ -32,8 +32,8 @@ use Illuminate\Database\Eloquent\Model;
 class SubscriptionPayment extends Model
 {
     protected $fillable = [
-        'subscription_id', 'amount', 'payment_date', 
-        'payment_method', 'transaction_id', 'status'
+        'subscription_id', 'amount', 'payment_date',
+        'payment_method', 'transaction_id', 'status', 'notes',
     ];
 
     public function subscription()

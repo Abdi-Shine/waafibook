@@ -24,7 +24,7 @@
     <div class="max-w-3xl mx-auto">
 
         {{-- Back --}}
-        <a href="{{ route('subscribers_pricing') }}"
+        <a href="{{ route('subscribers.subscriptions.index') }}"
            class="inline-flex items-center gap-2 text-sm font-semibold text-gray-400 hover:text-primary mb-8 transition-colors">
             <i class="bi bi-arrow-left"></i> Back to Plans
         </a>
@@ -155,6 +155,13 @@
                             <p class="text-[10px] text-amber-600 mt-2 font-medium">
                                 Use your company name as the transfer reference. After transferring, enter the bank reference number below.
                             </p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-primary mb-1.5">Bank Transfer Reference Number</label>
+                            <input type="text" name="transaction_ref" value="{{ old('transaction_ref') }}"
+                                   placeholder="e.g. TXN-20240701-0012"
+                                   class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm font-medium text-primary focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition">
+                            <p class="text-[10px] text-gray-400 mt-1">Enter the reference or confirmation number from your bank receipt.</p>
                         </div>
                     </div>
 

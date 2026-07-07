@@ -193,13 +193,11 @@ class SubscriptionController extends Controller
 
     public function subscriptionsIndex()
     {
-        $companyId     = auth()->user()->company_id;
-        $subscriptions = Subscription::query()
-            ->with(['company', 'plan', 'payments'])
+        $companyId   = auth()->user()->company_id;
+        $latestSub   = Subscription::with(['plan', 'payments'])
             ->where('company_id', $companyId)
-            ->get();
-
-        $activePlanId = $subscriptions->first()?->subscription_plan_id;
+            ->latest('id')
+            ->first();
 
         $plans = SubscriptionPlan::query()
             ->where('status', 'active')
@@ -207,16 +205,25 @@ class SubscriptionController extends Controller
             ->orderBy('price')
             ->get();
 
-        $usedUsers     = StorageUsageService::usedUsers($companyId);
+        $usedUsers    = StorageUsageService::usedUsers($companyId);
         $usedStorageGB = StorageUsageService::usedGB($companyId);
-        // Read limits from latest subscription regardless of status (covers pending_payment too)
-        $latestSub     = $subscriptions->sortByDesc('id')->first();
-        $maxUsers      = (int)   ($latestSub?->plan?->max_users        ?? 999);
-        $maxStorageGB  = (float) ($latestSub?->plan?->storage_limit_gb ?? 999);
+        $maxUsers     = (int)   ($latestSub?->plan?->max_users        ?? 999);
+        $maxStorageGB = (float) ($latestSub?->plan?->storage_limit_gb ?? 999);
+
+        // Full payment history across all subscriptions for this company
+        $paymentHistory = SubscriptionPayment::query()
+            ->join('subscriptions', 'subscription_payments.subscription_id', '=', 'subscriptions.id')
+            ->where('subscriptions.company_id', $companyId)
+            ->select('subscription_payments.*', 'subscriptions.subscription_plan_id as _plan_id')
+            ->with('subscription.plan')
+            ->orderByDesc('subscription_payments.payment_date')
+            ->orderByDesc('subscription_payments.id')
+            ->get();
 
         return view('admin.subscribers.subscriptions.index', compact(
-            'subscriptions', 'plans', 'activePlanId',
-            'usedUsers', 'maxUsers', 'usedStorageGB', 'maxStorageGB'
+            'latestSub', 'plans',
+            'usedUsers', 'maxUsers', 'usedStorageGB', 'maxStorageGB',
+            'paymentHistory'
         ));
     }
 }
