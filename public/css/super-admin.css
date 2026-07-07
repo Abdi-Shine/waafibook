@@ -432,3 +432,94 @@ body { font-family: 'Inter', sans-serif; background: #f0f4f8; overflow-x: hidden
 }
 .sa-sidebar button:focus,
 .sa-sidebar button:focus-visible { outline: none !important; box-shadow: none !important; }
+
+/* ── Hamburger toggle (mobile only) ── */
+.sa-hamburger {
+    display: none;
+    width: 38px; height: 38px; border-radius: 8px;
+    border: 1px solid #e5e7eb; background: #f9fafb;
+    align-items: center; justify-content: center;
+    color: #374151; cursor: pointer; flex-shrink: 0;
+    font-size: 1.1rem; transition: background .15s;
+}
+.sa-hamburger:hover { background: #e5e7eb; }
+
+/* ── Sidebar backdrop (mobile) ── */
+.sa-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.45); z-index: 1040;
+    transition: opacity .25s;
+}
+.sa-overlay.active { display: block; }
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE — mobile (< 768px)
+═══════════════════════════════════════════════ */
+@media (max-width: 767.98px) {
+
+    /* Sidebar: hidden off-screen, slides in when .open */
+    .sa-sidebar {
+        left: calc(-1 * var(--sidebar-w));
+        transition: left .25s ease;
+        z-index: 1050;
+    }
+    .sa-sidebar.open { left: 0; }
+
+    /* Header: full width (no sidebar offset) */
+    .sa-header {
+        left: 0 !important;
+        padding: 0 1rem;
+        gap: .5rem;
+    }
+
+    /* Show hamburger, hide last-login text */
+    .sa-hamburger { display: flex; }
+    .sa-header-lastlogin { display: none !important; }
+
+    /* User name hidden, only avatar shown */
+    .sa-user-name, .sa-user-role { display: none; }
+
+    /* Page title smaller */
+    .sa-header-title { font-size: .95rem; }
+
+    /* Main content: no sidebar margin, tighter padding */
+    .sa-main {
+        margin-left: 0 !important;
+        padding: 1.1rem .85rem;
+    }
+
+    /* Stat cards: tighter */
+    .sa-stat { padding: 1rem 1.1rem; }
+    .sa-stat-val { font-size: 1.35rem; }
+    .sa-stat-icon { width: 40px; height: 40px; font-size: 1.05rem; margin-bottom: .75rem; }
+
+    /* Fill cards */
+    .sa-fill-card { padding: .9rem 1rem; }
+    .sa-fill-card .val { font-size: 1.15rem; }
+
+    /* Tables: allow horizontal scroll */
+    .sa-table { font-size: .78rem; }
+    .sa-table thead th,
+    .sa-table tbody td { padding: .6rem .75rem; }
+
+    /* Row action buttons: slightly smaller */
+    .sa-btn-icon { width: 26px; height: 26px; font-size: .72rem; }
+
+    /* Cards */
+    .sa-card { margin-bottom: 1rem; }
+    .sa-card-head { padding: .75rem 1rem; }
+
+    /* Modal dialogs: full-width on mobile */
+    .modal-dialog { margin: .5rem; }
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE — small tablet (768px – 991px)
+═══════════════════════════════════════════════ */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    :root { --sidebar-w: 220px; }
+    .sa-main { padding: 1.5rem 1.25rem; }
+    .sa-header { padding: 0 1.25rem; }
+    .sa-header-lastlogin { font-size: .78rem; }
+    .sa-stat-val { font-size: 1.45rem; }
+}
