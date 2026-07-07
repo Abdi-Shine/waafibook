@@ -374,7 +374,9 @@ class HostDashboardController extends Controller
 
     public function subscriptions()
     {
-        $subscriptions = Subscription::with(['company', 'plan', 'payments'])->orderByDesc('created_at')->paginate(20);
+        $subscriptions = Subscription::with(['company', 'plan', 'payments'])
+            ->whereIn('status', ['active', 'pending_payment'])
+            ->orderByDesc('created_at')->paginate(20);
 
         $totalMrr = Subscription::with('plan')->where('status', 'active')->get()
             ->sum(fn ($s) => $s->plan ? $s->plan->price / ($s->plan->billing_cycle === 'yearly' ? 12 : ($s->plan->billing_cycle === 'quarterly' ? 3 : 1)) : 0);
