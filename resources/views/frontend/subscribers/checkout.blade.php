@@ -118,7 +118,7 @@
 
                         <div>
                             <label class="block text-xs font-bold text-primary mb-1.5">Your EVC Phone Number</label>
-                            <input type="text" name="phone" value="{{ old('phone') }}"
+                            <input type="text" name="phone" value="{{ old('phone', $company->phone ?? '') }}"
                                    placeholder="e.g. 0615 123 456"
                                    class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm font-medium text-primary focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition">
                         </div>
@@ -156,20 +156,6 @@
                                 Use your company name as the transfer reference. After transferring, enter the bank reference number below.
                             </p>
                         </div>
-                    </div>
-
-                    {{-- Transaction Reference (shared) --}}
-                    <div>
-                        <label class="block text-xs font-bold text-primary mb-1.5">
-                            Transaction Reference <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text" name="transaction_ref" value="{{ old('transaction_ref') }}"
-                               placeholder="e.g. EVC123456789 or BANK-REF-00123"
-                               required
-                               class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm font-medium text-primary focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition">
-                        <p class="text-[10px] text-gray-400 mt-1.5 font-medium">
-                            Enter the reference number from your payment confirmation SMS or bank receipt.
-                        </p>
                     </div>
 
                     {{-- Submit --}}

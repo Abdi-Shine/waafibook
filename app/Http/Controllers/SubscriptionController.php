@@ -154,8 +154,8 @@ class SubscriptionController extends Controller
 
         $request->validate([
             'payment_method'   => 'required|in:evc_mobile,bank_transfer',
-            'transaction_ref'  => 'required|string|max:100',
-            'phone'            => 'required_if:payment_method,evc_mobile|nullable|string|max:20',
+            'transaction_ref'  => 'nullable|string|max:100',
+            'phone'            => 'nullable|string|max:20',
         ]);
 
         $expiresAt = match ($plan->billing_cycle) {
