@@ -137,7 +137,7 @@
             @endif
 
             <!-- 4. Procurement -->
-            @if(Auth::user()->hasPermission('Purchase'))
+            @if(Auth::user()->hasPermission('Purchase') && !($subscriptionRestricted ?? false))
                 <div class="space-y-1">
                     <button @click="toggleMenu('procurement')"
                         class="flex items-center gap-3 px-4 py-3 text-white/70 hover:bg-white/5 hover:text-white rounded-xl font-semibold text-[14px] transition-all duration-200 w-full"
@@ -172,7 +172,7 @@
             @endif
 
             <!-- 5. Sales & POS -->
-            @if(Auth::user()->hasPermission('Sales & POS'))
+            @if(Auth::user()->hasPermission('Sales & POS') && !($subscriptionRestricted ?? false))
                 <div class="space-y-1">
                     <button @click="toggleMenu('sales')"
                         class="flex items-center gap-3 px-4 py-3 text-white/70 hover:bg-white/5 hover:text-white rounded-xl font-semibold text-[14px] transition-all duration-200 w-full"
@@ -203,7 +203,7 @@
                 </div>
             @endif
             <!-- 6. Expenses & Payroll -->
-            @if(Auth::user()->hasPermission('Expenses'))
+            @if(Auth::user()->hasPermission('Expenses') && !($subscriptionRestricted ?? false))
                 <div class="space-y-1">
                     <button @click="toggleMenu('users')"
                         class="flex items-center gap-3 px-4 py-3 text-white/70 hover:bg-white/5 hover:text-white rounded-xl font-semibold text-[14px] transition-all duration-200 w-full"
@@ -231,7 +231,7 @@
                 </div>
             @endif
             <!-- 6. Accounting & Finance -->
-            @if(Auth::user()->hasPermission('Accounting'))
+            @if(Auth::user()->hasPermission('Accounting') && !($subscriptionRestricted ?? false))
                 <div class="space-y-1">
                     <button @click="toggleMenu('finance')"
                         class="flex items-center gap-3 px-4 py-3 text-white/70 hover:bg-white/5 hover:text-white rounded-xl font-semibold text-[14px] transition-all duration-200 w-full"
