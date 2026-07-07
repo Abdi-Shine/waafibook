@@ -421,23 +421,14 @@ body { font-family: 'Inter', sans-serif; background: #f0f4f8; overflow-x: hidden
 .sa-sidebar h5,
 .sa-sidebar p { margin-top: 0 !important; margin-bottom: 0 !important; }
 
-/* Reset Bootstrap's button defaults on the Reports toggle */
+/* Reset Bootstrap's button defaults — only remove browser/BS chrome,
+   never touch color/padding/display since Tailwind classes handle those */
 .sa-sidebar button {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
     outline: none !important;
     cursor: pointer;
-    font-family: inherit;
-    font-size: inherit;
-    line-height: inherit;
-    color: inherit;
-    padding: 0;
-    margin: 0;
-    width: 100%;
-    text-align: left;
-    display: flex;
-    align-items: center;
 }
 .sa-sidebar button:focus,
 .sa-sidebar button:focus-visible { outline: none !important; box-shadow: none !important; }
