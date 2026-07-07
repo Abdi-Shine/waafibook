@@ -102,6 +102,11 @@
                 </td>
                 <td>
                     <div class="sa-row-actions">
+                        {{-- Change Plan --}}
+                        <button type="button" class="sa-btn-icon" data-bs-toggle="tooltip" title="Change Plan"
+                                onclick="changePlan({{ $sub->company_id }}, '{{ addslashes($sub->company->name ?? '') }}', {{ $sub->subscription_plan_id ?? 'null' }})">
+                            <i class="bi bi-credit-card"></i>
+                        </button>
                         {{-- Approve payment button for pending_payment subscriptions --}}
                         @if($sub->status === 'pending_payment')
                             @php $pendingPmt = $sub->payments->where('status','pending')->sortByDesc('id')->first(); @endphp
@@ -141,4 +146,88 @@
 @if($subscriptions->hasPages())
 <div class="mt-4 d-flex justify-content-center">{{ $subscriptions->links() }}</div>
 @endif
+
+{{-- Change Plan Modal --}}
+<div class="modal fade" id="changePlanModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="POST" id="changePlanForm">
+            @csrf
+            @method('PATCH')
+            <div class="modal-content">
+                <div class="modal-header" style="background:var(--primary);color:white;">
+                    <h5 class="modal-title"><i class="bi bi-credit-card me-2"></i>Change Plan — <span id="changePlanCompanyName"></span></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Subscription Plan *</label>
+                        <select name="subscription_plan_id" id="changePlanSelect" class="form-select" required onchange="updateChangePlanPrice(this)">
+                            @foreach($allPlans as $plan)
+                                <option value="{{ $plan->id }}" data-price="{{ $plan->price }}">
+                                    {{ $plan->name }} — ${{ number_format($plan->price, 0) }}/{{ $plan->billing_cycle }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <hr class="my-3">
+                    <p class="fw-bold mb-3" style="font-size:.8rem;color:var(--primary);text-transform:uppercase;letter-spacing:.05em;">
+                        <i class="bi bi-cash-coin me-1"></i> Record Payment (optional)
+                    </p>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Amount ($)</label>
+                            <input type="number" step="0.01" min="0" name="payment_amount" id="changePlanAmount" class="form-control" placeholder="0.00">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Payment Date</label>
+                            <input type="date" name="payment_date" id="changePlanDate" class="form-control" value="{{ now()->toDateString() }}">
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Method</label>
+                            <select name="payment_method" class="form-select">
+                                <option value="Cash">Cash</option>
+                                <option value="Bank Transfer">Bank Transfer</option>
+                                <option value="EVC Plus">EVC Plus</option>
+                                <option value="Card">Card</option>
+                                <option value="Manual">Manual / Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Transaction ID</label>
+                            <input type="text" name="transaction_id" class="form-control" placeholder="Optional ref.">
+                        </div>
+                    </div>
+                    <div class="form-text mt-2">Leave Amount blank to only change the plan without recording a payment.</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i>Save Plan</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@push('js')
+<script>
+function changePlan(companyId, name, currentPlanId) {
+    document.getElementById('changePlanForm').action = '/super_admin/companies/' + companyId + '/plan';
+    document.getElementById('changePlanCompanyName').textContent = name;
+    const sel = document.getElementById('changePlanSelect');
+    if (currentPlanId) sel.value = currentPlanId;
+    document.getElementById('changePlanAmount').value = '';
+    document.getElementById('changePlanDate').value = '{{ now()->toDateString() }}';
+    updateChangePlanPrice(sel);
+    new bootstrap.Modal(document.getElementById('changePlanModal')).show();
+}
+function updateChangePlanPrice(sel) {
+    const price = sel.options[sel.selectedIndex]?.dataset?.price;
+    const inp = document.getElementById('changePlanAmount');
+    if (price && parseFloat(price) > 0) inp.placeholder = parseFloat(price).toFixed(2);
+}
+</script>
+@endpush
+
 @endsection

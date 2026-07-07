@@ -128,9 +128,6 @@
                                         onclick="viewCompany({{ $company->id }})"><i class="bi bi-eye"></i></button>
                                 <button type="button" class="sa-btn-icon" data-bs-toggle="tooltip" title="Edit"
                                         onclick="editCompany({{ $company->id }}, '{{ addslashes($company->name) }}', '{{ addslashes($company->email) }}', '{{ addslashes($company->phone) }}', {{ $company->subscription->subscription_plan_id ?? 'null' }})"><i class="bi bi-pencil"></i></button>
-                                <button type="button" class="sa-btn-icon" data-bs-toggle="tooltip" title="Manage Plan"
-                                        onclick="managePlan({{ $company->id }}, '{{ addslashes($company->name) }}', {{ $company->subscription->subscription_plan_id ?? 'null' }})"><i class="bi bi-credit-card"></i></button>
-
                                 <form method="POST" action="{{ route('host.companies.toggle-status', $company->id) }}" class="d-inline toggle-status-form">
                                     @csrf
                                     @method('PATCH')
