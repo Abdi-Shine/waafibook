@@ -238,8 +238,13 @@ class HostDashboardController extends Controller
             $company->subscription->update([
                 'subscription_plan_id' => $planId,
                 'status'                => 'active',
+                'start_date'            => now()->toDateString(),
                 'expiry_date'           => $expiryDate,
             ]);
+            // Auto-complete any pending payment requests so history stays in sync
+            $company->subscription->payments()
+                ->where('status', 'pending')
+                ->update(['status' => 'completed']);
         } else {
             Subscription::create([
                 'company_id'           => $company->id,
