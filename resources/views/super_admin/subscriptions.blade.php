@@ -18,18 +18,23 @@
 </div>
 
 <div class="row g-3 mb-4">
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="sa-stat">
             <span class="sa-pill">Monthly</span>
             <div class="sa-stat-icon" style="background:rgba(0,65,97,.08);color:#004161;"><i class="bi bi-cash-coin"></i></div>
             <div class="sa-stat-val" style="color:#004161;">${{ number_format($totalMrr, 0) }}</div>
             <div class="sa-stat-lbl">Total MRR</div>
-            <div style="font-size:.75rem;color:#6b7280;margin-top:.4rem;">
-                Yearly: <strong style="color:#004161;">${{ number_format($totalArr, 0) }}</strong>
-            </div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
+        <div class="sa-stat">
+            <span class="sa-pill">Yearly</span>
+            <div class="sa-stat-icon" style="background:rgba(0,65,97,.08);color:#004161;"><i class="bi bi-graph-up-arrow"></i></div>
+            <div class="sa-stat-val" style="color:#004161;">${{ number_format($totalArr, 0) }}</div>
+            <div class="sa-stat-lbl">Total ARR</div>
+        </div>
+    </div>
+    <div class="col-md-3">
         <div class="sa-stat">
             <span class="sa-pill">Payments</span>
             <div class="sa-stat-icon" style="background:rgba(225,29,72,.1);color:#dc2626;"><i class="bi bi-exclamation-triangle"></i></div>
@@ -37,7 +42,7 @@
             <div class="sa-stat-lbl">Overdue Payments</div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="sa-stat">
             <span class="sa-pill">This Month</span>
             <div class="sa-stat-icon" style="background:rgba(245,158,11,.12);color:#d97706;"><i class="bi bi-calendar-event"></i></div>
