@@ -81,7 +81,10 @@ class HostDashboardController extends Controller
             ->when($request->filled('search'), fn ($q) => $q->where(fn ($q2) => $q2
                 ->where('companies.name', 'like', '%' . $request->search . '%')
                 ->orWhere('companies.email', 'like', '%' . $request->search . '%')))
-            ->when($request->filled('status'), fn ($q) => $q->where('companies.status', $request->status))
+            ->when($request->filled('status') && $request->status !== 'expired', fn ($q) => $q->where('companies.status', $request->status))
+            ->when($request->status === 'expired', fn ($q) => $q->whereHas('subscription', fn ($q2) => $q2
+                ->where('status', 'expired')
+                ->orWhere(fn ($q3) => $q3->whereIn('status', ['trial', 'active'])->whereNotNull('expiry_date')->where('expiry_date', '<', now()->toDateString()))))
             ->when($request->filled('plan'), fn ($q) => $q->whereHas('subscription.plan', fn ($q2) => $q2->where('name', $request->plan)))
             ->orderByDesc('companies.created_at')
             ->paginate(20)

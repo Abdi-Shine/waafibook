@@ -38,9 +38,10 @@
                 </select>
                 <select name="status" class="form-select" style="width:150px;flex-shrink:0;" onchange="this.form.submit()">
                     <option value="">All Status</option>
-                    <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
+                    <option value="active"    {{ request('status') === 'active'    ? 'selected' : '' }}>Active</option>
                     <option value="suspended" {{ request('status') === 'suspended' ? 'selected' : '' }}>Suspended</option>
-                    <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
+                    <option value="pending"   {{ request('status') === 'pending'   ? 'selected' : '' }}>Pending</option>
+                    <option value="expired"   {{ request('status') === 'expired'   ? 'selected' : '' }}>Expired</option>
                 </select>
             </form>
         </div>
@@ -93,10 +94,19 @@
                             @endif
                         </td>
                         <td>
+                            @php
+                                $sub = $company->subscription;
+                                $isExpired = $sub && (
+                                    $sub->status === 'expired' ||
+                                    ($sub->expiry_date && \Carbon\Carbon::parse($sub->expiry_date)->isPast())
+                                );
+                            @endphp
                             @if($company->status === 'suspended')
                                 <span class="sa-badge sa-badge-red"><i class="bi bi-slash-circle"></i> Suspended</span>
                             @elseif($company->status === 'pending')
                                 <span class="sa-badge sa-badge-blue"><i class="bi bi-hourglass-split"></i> Pending</span>
+                            @elseif($isExpired)
+                                <span class="sa-badge" style="background:rgba(220,38,38,.1);color:#dc2626;"><i class="bi bi-calendar-x"></i> Expired</span>
                             @else
                                 <span class="sa-badge sa-badge-green"><i class="bi bi-check-circle"></i> Active</span>
                             @endif
