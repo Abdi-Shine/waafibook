@@ -210,10 +210,12 @@ class SubscriptionController extends Controller
             ->orderBy('price')
             ->get();
 
-        $usedUsers    = StorageUsageService::usedUsers($companyId);
-        $maxUsers     = StorageUsageService::maxUsers($companyId);
+        $usedUsers     = StorageUsageService::usedUsers($companyId);
         $usedStorageGB = StorageUsageService::usedGB($companyId);
-        $maxStorageGB  = StorageUsageService::limitGB($companyId);
+        // Read limits from latest subscription regardless of status (covers pending_payment too)
+        $latestSub     = $subscriptions->sortByDesc('id')->first();
+        $maxUsers      = (int)   ($latestSub?->plan?->max_users        ?? 999);
+        $maxStorageGB  = (float) ($latestSub?->plan?->storage_limit_gb ?? 999);
 
         return view('admin.subscribers.subscriptions.index', compact(
             'subscriptions', 'plans', 'activePlanId',

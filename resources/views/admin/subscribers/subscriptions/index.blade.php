@@ -99,7 +99,7 @@
         $isExpired   = $sub->status === 'expired';
         $expiryDate  = $sub->expiry_date ? \Carbon\Carbon::parse($sub->expiry_date) : null;
         $startDate   = $sub->start_date  ? \Carbon\Carbon::parse($sub->start_date)  : null;
-        $daysLeft    = $expiryDate ? now()->diffInDays($expiryDate, false) : null;
+        $daysLeft    = $expiryDate ? (int) now()->diffInDays($expiryDate, false) : null;
         $lastPayment = $sub->payments()->where('status','completed')->latest('payment_date')->first();
         $pendingPmt  = $sub->payments()->where('status','pending')->latest()->first();
     @endphp
