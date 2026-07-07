@@ -20,10 +20,9 @@ class RoleSeeder extends Seeder
         $viewOnlyPermissions = array_fill_keys($modules, ['view']);
 
         $defaultRoles = [
-            ['name' => 'Manager',    'description' => 'Full access to all modules',     'permissions' => $fullPermissions],
-            ['name' => 'Cashier',    'description' => 'Sales and POS access',            'permissions' => array_fill_keys(['Dashboard', 'Sales & POS', 'Customers', 'Products'], $allActions)],
-            ['name' => 'Accountant', 'description' => 'Accounting and reports access',   'permissions' => array_fill_keys(['Dashboard', 'Accounting', 'Reports'], $allActions)],
-            ['name' => 'Staff',      'description' => 'View-only access to all modules', 'permissions' => $viewOnlyPermissions],
+            ['name' => 'Manager', 'description' => 'Full access to all modules',     'permissions' => $fullPermissions],
+            ['name' => 'Cashier', 'description' => 'Sales and POS access',            'permissions' => array_fill_keys(['Dashboard', 'Sales & POS'], $allActions)],
+            ['name' => 'Staff',   'description' => 'View-only access to all modules', 'permissions' => $viewOnlyPermissions],
         ];
 
         // Seed roles for every existing company
