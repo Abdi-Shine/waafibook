@@ -35,13 +35,13 @@
                     <i class="bi bi-search position-absolute" style="left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:.85rem;"></i>
                     <input type="text" name="search" value="{{ request('search') }}" class="form-control w-100" style="padding-left:34px;" placeholder="Search by company or owner name...">
                 </div>
-                <select name="plan" class="form-select flex-fill" style="min-width:120px;" onchange="this.form.submit()">
+                <select name="plan" class="form-select" style="width:160px;flex-shrink:0;" onchange="this.form.submit()">
                     <option value="">All Plans</option>
                     @foreach($plans as $p)
                         <option value="{{ $p }}" {{ request('plan') === $p ? 'selected' : '' }}>{{ $p }}</option>
                     @endforeach
                 </select>
-                <select name="status" class="form-select flex-fill" style="min-width:120px;" onchange="this.form.submit()">
+                <select name="status" class="form-select" style="width:150px;flex-shrink:0;" onchange="this.form.submit()">
                     <option value="">All Status</option>
                     <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
                     <option value="suspended" {{ request('status') === 'suspended' ? 'selected' : '' }}>Suspended</option>
