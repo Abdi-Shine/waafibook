@@ -33,6 +33,7 @@
         <i class="bi bi-hourglass-split" style="color:#d97706;font-size:1.1rem;"></i>
         <strong style="color:#92400e;font-size:.9rem;">Pending Payment Requests — {{ $pendingPayments->count() }} awaiting approval</strong>
     </div>
+    <div class="table-responsive">
     <table class="sa-table" style="margin:0;">
         <thead>
             <tr>
@@ -76,11 +77,13 @@
             @endforeach
         </tbody>
     </table>
+    </div>
 </div>
 @endif
 
 {{-- ── All Payments ────────────────────────────────────────────── --}}
 <div class="sa-card">
+    <div class="table-responsive">
     <table class="sa-table">
         <thead>
             <tr>
@@ -134,6 +137,7 @@
             @endforelse
         </tbody>
     </table>
+    </div>
 </div>
 
 @if($payments->hasPages())

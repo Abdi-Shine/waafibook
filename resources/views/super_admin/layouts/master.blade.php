@@ -112,8 +112,45 @@
             }
             .sa-main {
                 margin-left: 0 !important;
-                padding: 1rem .85rem !important;
+                padding: 1rem .75rem !important;
             }
+
+            /* ── Global page content ── */
+            /* Page heading row — stack vertically */
+            .sa-main .d-flex.justify-content-between {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: .6rem !important;
+            }
+            /* All sa-card tables scroll horizontally */
+            .sa-card {
+                overflow-x: auto !important;
+            }
+            /* Stat card values slightly smaller */
+            .sa-stat-val { font-size: 1.3rem !important; }
+            .sa-stat { padding: 1rem 1rem !important; }
+
+            /* Filter bar — wrap tightly */
+            .sa-card .p-3.border-bottom > form,
+            .sa-card .p-3.border-bottom > .d-flex {
+                flex-wrap: wrap !important;
+                gap: .5rem !important;
+            }
+            .sa-card .p-3.border-bottom .form-control,
+            .sa-card .p-3.border-bottom .form-select {
+                min-width: 0 !important;
+                flex: 1 1 140px !important;
+            }
+
+            /* Row actions — allow wrapping */
+            .sa-row-actions { flex-wrap: wrap !important; gap: .25rem !important; }
+
+            /* Fill cards — smaller padding on mobile */
+            .sa-fill-card { padding: .85rem 1rem !important; }
+            .sa-fill-card .val { font-size: 1.2rem !important; }
+
+            /* Modals — full-width on mobile */
+            .modal-dialog { margin: .5rem !important; }
         }
 
         @yield('extra_css')

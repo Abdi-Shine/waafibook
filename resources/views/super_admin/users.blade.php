@@ -41,7 +41,7 @@
             @endif
         </form>
     </div>
-    <div class="table-responsive">
+    <div class="table-responsive" style="overflow-x:auto;">
     <table class="sa-table">
         <thead>
             <tr>

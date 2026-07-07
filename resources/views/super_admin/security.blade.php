@@ -32,6 +32,7 @@
         </form>
     </div>
     <div class="sa-card-head"><h6>Full Audit Log</h6></div>
+    <div class="table-responsive">
     <table class="sa-table">
         <thead>
             <tr><th>Timestamp</th><th>Module</th><th>Action</th><th>Description</th><th>User</th><th>IP Address</th></tr>
@@ -51,6 +52,7 @@
             @endforelse
         </tbody>
     </table>
+    </div>
     @if($logs->hasPages())
     <div class="px-4 py-3 border-top" style="background:#fafafa;">{{ $logs->links() }}</div>
     @endif
@@ -58,6 +60,7 @@
 
 <div class="sa-card">
     <div class="sa-card-head"><h6>Active Sessions</h6></div>
+    <div class="table-responsive">
     <table class="sa-table">
         <thead>
             <tr><th>User</th><th>IP Address</th><th>Last Activity</th><th>Actions</th></tr>
@@ -82,6 +85,7 @@
             @endforelse
         </tbody>
     </table>
+    </div>
 </div>
 
 @endsection

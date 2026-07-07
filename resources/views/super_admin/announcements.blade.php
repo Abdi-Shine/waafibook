@@ -68,6 +68,7 @@
 {{-- Past Announcements --}}
 <div class="sa-card">
     <div class="sa-card-head"><h6>Past Announcements</h6></div>
+    <div class="table-responsive">
     <table class="sa-table">
         <thead>
             <tr>
@@ -129,6 +130,7 @@
             @endforelse
         </tbody>
     </table>
+    </div>
     @if($announcements->hasPages())
     <div class="px-4 py-3 border-top" style="background:#fafafa;">{{ $announcements->links() }}</div>
     @endif
