@@ -47,6 +47,75 @@
         #sa-sidebar button { background: transparent !important; border: none !important; box-shadow: none !important; outline: none !important; cursor: pointer; }
         #sa-sidebar { scrollbar-width: none !important; -ms-overflow-style: none !important; overflow-y: auto !important; }
         #sa-sidebar::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
+
+        /* ── Mobile hamburger button ── */
+        .sa-hamburger {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            color: #374151;
+            cursor: pointer;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            padding: 0;
+        }
+
+        /* ── Mobile backdrop overlay ── */
+        .sa-overlay {
+            position: fixed !important;
+            inset: 0 !important;
+            background: rgba(0,0,0,.50) !important;
+            z-index: 1040 !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+            transition: opacity .25s ease !important;
+        }
+        .sa-overlay.active {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }
+
+        /* ── Tablet ── */
+        @media (min-width: 768px) and (max-width: 991.98px) {
+            :root { --sidebar-w: 220px; }
+            .sa-main { padding: 1.25rem 1.1rem !important; }
+        }
+
+        /* ── Mobile (≤ 767.98px) ── */
+        @media (max-width: 767.98px) {
+            #sa-sidebar {
+                left: -280px !important;
+                transition: left .28s cubic-bezier(.4,0,.2,1) !important;
+                z-index: 1050 !important;
+            }
+            #sa-sidebar.open {
+                left: 0 !important;
+            }
+            .sa-header {
+                left: 0 !important;
+                padding: 0 .9rem !important;
+            }
+            .sa-hamburger {
+                display: flex !important;
+            }
+            .sa-header-lastlogin {
+                display: none !important;
+            }
+            .sa-user-name,
+            .sa-user-role {
+                display: none !important;
+            }
+            .sa-main {
+                margin-left: 0 !important;
+                padding: 1rem .85rem !important;
+            }
+        }
+
         @yield('extra_css')
     </style>
     @stack('css')
