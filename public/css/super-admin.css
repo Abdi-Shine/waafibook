@@ -129,7 +129,10 @@ body { font-family: 'Inter', sans-serif; background: #f0f4f8; overflow-x: hidden
     background: var(--primary);
     z-index: 1000; overflow-y: auto;
     box-shadow: 4px 0 20px rgba(0,0,0,.12);
+    scrollbar-width: none;        /* Firefox */
+    -ms-overflow-style: none;     /* IE/Edge */
 }
+.sa-sidebar::-webkit-scrollbar { display: none; } /* Chrome/Safari */
 .sa-brand {
     position: sticky; top: 0; z-index: 10;
     padding: 1.5rem 1.25rem 1.25rem;
