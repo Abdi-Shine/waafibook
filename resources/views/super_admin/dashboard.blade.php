@@ -10,7 +10,7 @@
 
     {{-- Stat cards --}}
     <div class="row g-3 mb-3">
-        <div class="col-xl-2 col-md-4">
+        <div class="col-xl-3 col-md-6">
             <div class="sa-stat">
                 <span class="sa-pill">Platform-Wide</span>
                 <div class="sa-stat-icon" style="background:rgba(0,65,97,.08);color:#004161;"><i class="bi bi-building"></i></div>
@@ -19,7 +19,7 @@
                 <a href="{{ route('host.companies') }}" class="sa-stat-link">See Companies <i class="bi bi-arrow-right"></i></a>
             </div>
         </div>
-        <div class="col-xl-2 col-md-4">
+        <div class="col-xl-3 col-md-6">
             <div class="sa-stat">
                 <span class="sa-pill">Tenants</span>
                 <div class="sa-stat-icon" style="background:rgba(153,204,51,.15);color:#5a7a1a;"><i class="bi bi-check-circle"></i></div>
@@ -28,25 +28,7 @@
                 <a href="{{ route('host.companies') }}?status=active" class="sa-stat-link">See Companies <i class="bi bi-arrow-right"></i></a>
             </div>
         </div>
-        <div class="col-xl-2 col-md-4">
-            <div class="sa-stat">
-                <span class="sa-pill">Tenants</span>
-                <div class="sa-stat-icon" style="background:rgba(245,158,11,.12);color:#d97706;"><i class="bi bi-slash-circle"></i></div>
-                <div class="sa-stat-val" style="color:#d97706;">{{ number_format($suspendedCompanies) }}</div>
-                <div class="sa-stat-lbl mb-2">Suspended Companies</div>
-                <a href="{{ route('host.companies') }}?status=suspended" class="sa-stat-link">See Companies <i class="bi bi-arrow-right"></i></a>
-            </div>
-        </div>
-        <div class="col-xl-2 col-md-4">
-            <div class="sa-stat">
-                <span class="sa-pill">All Tenants</span>
-                <div class="sa-stat-icon" style="background:rgba(59,130,246,.1);color:#2563eb;"><i class="bi bi-people"></i></div>
-                <div class="sa-stat-val" style="color:#2563eb;">{{ number_format($totalUsers) }}</div>
-                <div class="sa-stat-lbl mb-2">Total Users</div>
-                <a href="{{ route('host.users') }}" class="sa-stat-link">See Users <i class="bi bi-arrow-right"></i></a>
-            </div>
-        </div>
-        <div class="col-xl-2 col-md-4">
+        <div class="col-xl-3 col-md-6">
             <div class="sa-stat">
                 <span class="sa-pill">Monthly</span>
                 <div class="sa-stat-icon" style="background:rgba(0,65,97,.08);color:#004161;"><i class="bi bi-cash-stack"></i></div>
@@ -55,7 +37,7 @@
                 <a href="{{ route('host.payments') }}" class="sa-stat-link">See Billing <i class="bi bi-arrow-right"></i></a>
             </div>
         </div>
-        <div class="col-xl-2 col-md-4">
+        <div class="col-xl-3 col-md-6">
             <a href="{{ route('host.companies.expired') }}" style="text-decoration:none;">
             <div class="sa-stat" style="cursor:pointer;transition:box-shadow .15s;">
                 <span class="sa-pill" style="background:rgba(220,38,38,.1);color:#dc2626;">Expired</span>
