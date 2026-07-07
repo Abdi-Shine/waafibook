@@ -17,7 +17,17 @@ class HostDashboardController extends Controller
     public function dashboard()
     {
         $totalCompanies     = Company::count();
-        $activeCompanies    = Company::where('status', 'active')->count();
+        $activeCompanies    = Company::where('status', 'active')
+                                ->where(fn ($q) => $q
+                                    ->whereDoesntHave('subscription')
+                                    ->orWhereHas('subscription', fn ($q2) => $q2
+                                        ->where('status', '!=', 'expired')
+                                        ->where(fn ($q3) => $q3
+                                            ->whereNull('expiry_date')
+                                            ->orWhere('expiry_date', '>=', now()->toDateString())
+                                        )
+                                    )
+                                )->count();
         $suspendedCompanies = Company::where('status', 'suspended')->count();
         $totalUsers         = User::withoutGlobalScopes()->count();
         $newThisMonth       = Company::whereMonth('created_at', now()->month)
