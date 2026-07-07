@@ -45,38 +45,6 @@
     @endforeach
 </div>
 
-<div class="row g-4 mb-4">
-    {{-- Monthly Bar Chart --}}
-    <div class="col-lg-8">
-        <div class="sa-card p-4 h-100">
-            <h6 class="fw-black mb-3 text-uppercase" style="color:var(--primary);font-size:.75rem;letter-spacing:.08em;">
-                <i class="bi bi-bar-chart me-2"></i>Monthly Revenue — {{ $year }}
-            </h6>
-            <canvas id="monthlyChart" height="130"></canvas>
-        </div>
-    </div>
-
-    {{-- Payment Methods --}}
-    <div class="col-lg-4">
-        <div class="sa-card p-4 h-100">
-            <h6 class="fw-black mb-3 text-uppercase" style="color:var(--primary);font-size:.75rem;letter-spacing:.08em;">
-                <i class="bi bi-credit-card me-2"></i>By Payment Method
-            </h6>
-            @foreach($byMethod as $m)
-            @php $pct = $summary['total_all_time'] > 0 ? round($m->total / $summary['total_all_time'] * 100) : 0; @endphp
-            <div class="mb-3">
-                <div class="d-flex justify-content-between small mb-1">
-                    <span class="fw-semibold text-capitalize">{{ str_replace('_',' ',$m->payment_method ?? 'Unknown') }}</span>
-                    <span class="text-muted">${{ number_format($m->total,0) }} ({{ $m->count }})</span>
-                </div>
-                <div style="height:6px;background:#e5e7eb;border-radius:3px;">
-                    <div style="height:6px;background:#004161;border-radius:3px;width:{{ $pct }}%;"></div>
-                </div>
-            </div>
-            @endforeach
-        </div>
-    </div>
-</div>
 
 {{-- Revenue by Plan --}}
 <div class="sa-card p-4 mb-4">
@@ -144,26 +112,5 @@
     </div>
 </div>
 
-@push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script>
-const monthly = @json($monthly);
-new Chart(document.getElementById('monthlyChart'), {
-    type:'bar',
-    data:{
-        labels: monthly.map(m => m.label),
-        datasets:[
-            { label:'Completed ($)', data: monthly.map(m=>m.completed), backgroundColor:'#004161cc', borderRadius:5, borderSkipped:false },
-            { label:'Pending ($)',   data: monthly.map(m=>m.pending),   backgroundColor:'#f59e0b88', borderRadius:5, borderSkipped:false },
-        ]
-    },
-    options:{ plugins:{ legend:{ position:'bottom', labels:{ font:{size:11}, boxWidth:10 } } }, scales:{
-        x:{ticks:{font:{size:11}},grid:{display:false}},
-        y:{ticks:{font:{size:11}, callback:v=>'$'+v.toLocaleString()},grid:{color:'#e5e7eb'}},
-        stacked:false
-    }}
-});
-</script>
-@endpush
 
 @endsection
