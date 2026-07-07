@@ -16,6 +16,81 @@
     </div>
     @endif
 
+    {{-- Available Plans from Super Admin --}}
+    @if($plans->count())
+    <div class="mb-8">
+        <h2 class="text-[14px] font-black text-primary-dark mb-3 uppercase tracking-wider flex items-center gap-2">
+            <i class="bi bi-grid-3x2-gap text-primary"></i> Available Plans
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            @foreach($plans as $plan)
+            @php $isCurrent = $plan->id === $activePlanId; @endphp
+            <div class="bg-white rounded-[1rem] border-2 {{ $isCurrent ? 'border-primary shadow-md' : 'border-gray-100 shadow-sm' }} p-5 flex flex-col relative hover:-translate-y-0.5 transition-transform duration-200">
+                @if($isCurrent)
+                <span class="absolute top-3 right-3 bg-primary text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider">Current</span>
+                @endif
+                @if($plan->is_popular && !$isCurrent)
+                <span class="absolute top-3 right-3 bg-accent text-primary-dark text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider">Popular</span>
+                @endif
+
+                <div class="mb-3">
+                    <p class="text-[15px] font-black text-primary-dark">{{ $plan->name }}</p>
+                    @if($plan->description)
+                    <p class="text-[11px] text-gray-400 mt-0.5">{{ $plan->description }}</p>
+                    @endif
+                </div>
+
+                <div class="mb-3">
+                    <span class="text-[24px] font-black text-primary">${{ number_format($plan->price, 0) }}</span>
+                    <span class="text-[11px] text-gray-400 font-medium"> / {{ $plan->billing_cycle }}</span>
+                </div>
+
+                <div class="flex flex-col gap-1.5 mb-4 flex-1">
+                    <div class="flex items-center gap-1.5 text-[11px] text-gray-500">
+                        <i class="bi bi-people text-primary text-[10px]"></i>
+                        Up to <strong class="text-primary-dark">{{ $plan->max_users }}</strong> users
+                    </div>
+                    @if($plan->storage_limit_gb)
+                    <div class="flex items-center gap-1.5 text-[11px] text-gray-500">
+                        <i class="bi bi-hdd text-primary text-[10px]"></i>
+                        <strong class="text-primary-dark">{{ $plan->storage_limit_gb }} GB</strong> storage
+                    </div>
+                    @endif
+                    @if($plan->features && count($plan->features))
+                        @foreach(array_slice($plan->features, 0, 3) as $feature)
+                        <div class="flex items-center gap-1.5 text-[11px] text-gray-500">
+                            <i class="bi bi-check-lg text-accent text-[10px]"></i> {{ $feature }}
+                        </div>
+                        @endforeach
+                        @if(count($plan->features) > 3)
+                        <p class="text-[10px] text-gray-400 pl-4">+{{ count($plan->features) - 3 }} more features</p>
+                        @endif
+                    @endif
+                </div>
+
+                @if(!$isCurrent)
+                <a href="{{ route('subscribers.checkout', $plan->id) }}"
+                   class="mt-auto w-full text-center py-2 px-4 bg-primary text-white font-bold rounded-lg text-[12px] hover:bg-primary/90 transition-all">
+                    Choose Plan
+                </a>
+                @else
+                <div class="mt-auto w-full text-center py-2 px-4 bg-primary/10 text-primary font-bold rounded-lg text-[12px]">
+                    Active Plan
+                </div>
+                @endif
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
+    {{-- Current Subscription Details --}}
+    @if($subscriptions->count())
+    <h2 class="text-[14px] font-black text-primary-dark mb-3 uppercase tracking-wider flex items-center gap-2">
+        <i class="bi bi-receipt text-primary"></i> Your Subscription
+    </h2>
+    @endif
+
     @forelse($subscriptions as $sub)
     @php
         $isActive    = $sub->status === 'active';
