@@ -167,34 +167,58 @@
             </div>
         </div>
 
-        {{-- Items --}}
+        {{-- Items: one row per completed payment --}}
+        @php
+            $payments   = $subscription->payments->where('status','completed')->sortBy('payment_date');
+            $planPrice  = $subscription->plan->price ?? 0;
+            $planName   = $subscription->plan->name  ?? 'Subscription Plan';
+            $totalPaid  = $payments->sum('amount');
+            // Fall back to plan price if no payments recorded yet
+            $invoiceTotal = $totalPaid > 0 ? $totalPaid : $planPrice;
+        @endphp
         <table class="inv-table">
             <thead>
                 <tr>
                     <th>#</th>
                     <th>Description</th>
                     <th>Period</th>
-                    <th>Unit Price</th>
+                    <th>Method</th>
                     <th>Amount</th>
                 </tr>
             </thead>
             <tbody>
+                @forelse($payments as $i => $pmt)
+                <tr>
+                    <td style="color:#9ca3af;font-size:.78rem;">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</td>
+                    <td>
+                        <div style="font-weight:700;color:#111827;">{{ $planName }}</div>
+                        @if($pmt->transaction_id)
+                        <div style="font-size:.72rem;color:#9ca3af;margin-top:.1rem;">Ref: {{ $pmt->transaction_id }}</div>
+                        @endif
+                    </td>
+                    <td style="color:#6b7280;font-size:.8rem;">
+                        {{ \Carbon\Carbon::parse($pmt->payment_date)->format('d M Y') }}
+                    </td>
+                    <td style="color:#6b7280;font-size:.8rem;">{{ $pmt->payment_method ?? '—' }}</td>
+                    <td style="font-weight:700;color:#111827;">${{ number_format($pmt->amount, 2) }}</td>
+                </tr>
+                @empty
                 <tr>
                     <td style="color:#9ca3af;font-size:.78rem;">01</td>
                     <td>
-                        <div style="font-weight:700;color:#111827;">{{ $subscription->plan->name ?? 'Subscription Plan' }}</div>
+                        <div style="font-weight:700;color:#111827;">{{ $planName }}</div>
                         @if($subscription->plan?->description)
                         <div style="font-size:.75rem;color:#9ca3af;margin-top:.15rem;">{{ $subscription->plan->description }}</div>
                         @endif
                     </td>
                     <td style="color:#6b7280;">
                         {{ $subscription->start_date ? \Carbon\Carbon::parse($subscription->start_date)->format('d M Y') : '—' }}
-                        →
-                        {{ $subscription->expiry_date ? \Carbon\Carbon::parse($subscription->expiry_date)->format('d M Y') : '—' }}
+                        → {{ $subscription->expiry_date ? \Carbon\Carbon::parse($subscription->expiry_date)->format('d M Y') : '—' }}
                     </td>
-                    <td>${{ number_format($lastPayment->amount ?? $subscription->plan->price ?? 0, 2) }}</td>
-                    <td>${{ number_format($lastPayment->amount ?? $subscription->plan->price ?? 0, 2) }}</td>
+                    <td style="color:#9ca3af;">—</td>
+                    <td style="font-weight:700;color:#111827;">${{ number_format($planPrice, 2) }}</td>
                 </tr>
+                @endforelse
             </tbody>
         </table>
 
@@ -203,7 +227,7 @@
             <div class="totals-box">
                 <div class="totals-row">
                     <span class="t-lbl">Subtotal</span>
-                    <span>${{ number_format($lastPayment->amount ?? $subscription->plan->price ?? 0, 2) }}</span>
+                    <span>${{ number_format($invoiceTotal, 2) }}</span>
                 </div>
                 <div class="totals-row">
                     <span class="t-lbl">Tax</span>
@@ -211,7 +235,7 @@
                 </div>
                 <div class="totals-row total">
                     <span class="t-lbl">Total</span>
-                    <span class="t-amt">${{ number_format($lastPayment->amount ?? $subscription->plan->price ?? 0, 2) }}</span>
+                    <span class="t-amt">${{ number_format($invoiceTotal, 2) }}</span>
                 </div>
             </div>
         </div>
@@ -221,9 +245,7 @@
             @if($lastPayment)
                 <span class="status-badge paid">
                     ✓ PAID — {{ $lastPayment->payment_method }} on {{ \Carbon\Carbon::parse($lastPayment->payment_date)->format('d M Y') }}
-                    @if($lastPayment->transaction_id)
-                        · Ref: {{ $lastPayment->transaction_id }}
-                    @endif
+                    @if($lastPayment->transaction_id)· Ref: {{ $lastPayment->transaction_id }}@endif
                 </span>
             @else
                 <span class="status-badge unpaid">⚠ PAYMENT PENDING</span>
