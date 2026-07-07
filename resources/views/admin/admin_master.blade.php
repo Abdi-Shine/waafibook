@@ -228,6 +228,55 @@
             </button>
         </div>
     @endforeach
+
+    {{-- Subscription restriction banner --}}
+    @if(!empty($subscriptionRestricted) && $subscriptionRestricted)
+        @php
+            $bannerData = match($subscriptionRestrictionReason ?? '') {
+                'suspended'    => [
+                    'bg'   => '#fff3cd',
+                    'border' => '#ffc107',
+                    'text' => '#7c5700',
+                    'icon' => 'bi-slash-circle-fill',
+                    'title'=> 'Account Suspended',
+                    'msg'  => 'Your account has been suspended. Please contact the platform administrator to restore access.',
+                    'btn'  => null,
+                ],
+                'cancelled'    => [
+                    'bg'   => '#fee2e2',
+                    'border' => '#f87171',
+                    'text' => '#7f1d1d',
+                    'icon' => 'bi-x-circle-fill',
+                    'title'=> 'Subscription Cancelled',
+                    'msg'  => 'Your subscription has been cancelled. Subscribe to a plan to continue using all features.',
+                    'btn'  => ['label' => 'View Plans', 'url' => route('subscribers.plans')],
+                ],
+                default        => [
+                    'bg'   => '#fef9c3',
+                    'border' => '#facc15',
+                    'text' => '#713f12',
+                    'icon' => 'bi-exclamation-triangle-fill',
+                    'title'=> 'Trial Expired',
+                    'msg'  => 'Your 7-day free trial has expired. Please subscribe to continue creating new transactions. Your existing data remains available in read-only mode.',
+                    'btn'  => ['label' => 'Subscribe Now', 'url' => route('subscribers.plans')],
+                ],
+            };
+        @endphp
+        <div class="lg:ml-[260px] border-b px-4 py-2.5 flex flex-wrap items-center justify-between gap-3"
+             style="background:{{ $bannerData['bg'] }};border-color:{{ $bannerData['border'] }};color:{{ $bannerData['text'] }};">
+            <div class="flex items-center gap-2 text-sm font-medium">
+                <i class="bi {{ $bannerData['icon'] }}"></i>
+                <strong>{{ $bannerData['title'] }}:</strong>
+                <span>{{ $bannerData['msg'] }}</span>
+            </div>
+            @if($bannerData['btn'])
+                <a href="{{ $bannerData['btn']['url'] }}"
+                   style="background:#004161;color:#fff;border-radius:6px;padding:.3rem .9rem;font-size:.8rem;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0;">
+                    {{ $bannerData['btn']['label'] }} →
+                </a>
+            @endif
+        </div>
+    @endif
 @endauth
 
 <div class="main-content @auth lg:ml-[260px] @endauth min-h-screen transition-all duration-300 overflow-x-hidden">

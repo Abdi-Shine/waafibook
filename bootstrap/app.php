@@ -11,6 +11,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
+        // Expire trials that have passed their end date — runs daily at midnight
+        $schedule->command('subscriptions:expire-trials')->dailyAt('00:05')->withoutOverlapping();
+
         try {
             $company = \App\Models\Company::withoutGlobalScopes()->first();
             if ($company && $company->auto_backup_enabled) {
@@ -19,8 +22,8 @@ return Application::configure(basePath: dirname(__DIR__))
                          ->dailyAt($time)
                          ->withoutOverlapping();
             }
-        } catch (\Exception $e) {
-            // Log fallback or skip gracefully if DB not ready
+        } catch (\Exception) {
+            // skip gracefully if DB not ready during boot
         }
     })
     ->withMiddleware(function (Middleware $middleware): void {
