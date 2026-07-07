@@ -190,7 +190,7 @@ class HostReportsController extends Controller
         ]);
 
         $byPlan = SubscriptionPlan::withSum(
-            ['payments as revenue' => fn($q) => $q->where('status', 'completed')],
+            ['payments as revenue' => fn($q) => $q->where('subscription_payments.status', 'completed')],
             'amount'
         )->orderByDesc('revenue')->get();
 
