@@ -152,39 +152,22 @@
         </table>
     </div>
 
-    {{-- Items --}}
+    {{-- Items: current plan as single line item --}}
     @php
-        $payments      = $subscription->payments->where('status','completed')->sortBy('payment_date');
-        $planPrice     = $subscription->plan->price ?? 0;
-        $planName      = $subscription->plan->name  ?? 'Subscription Plan';
-        $totalPaid     = $payments->sum('amount');
-        $invoiceTotal  = $totalPaid > 0 ? $totalPaid : $planPrice;
+        $planPrice = (float) ($subscription->plan->price ?? 0);
+        $planName  = $subscription->plan->name ?? 'Subscription Plan';
     @endphp
     <table class="items-table">
         <thead>
             <tr>
                 <th style="width:5%;">#</th>
-                <th style="width:30%;">Description</th>
-                <th style="width:25%;">Payment Date</th>
-                <th style="width:20%;">Method</th>
-                <th class="right" style="width:20%;">Amount</th>
+                <th style="width:35%;">Description</th>
+                <th style="width:35%;">Period</th>
+                <th class="right" style="width:12%;">Unit Price</th>
+                <th class="right" style="width:13%;">Amount</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($payments as $i => $pmt)
-            <tr>
-                <td style="color:#9ca3af; font-size:10px;">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</td>
-                <td>
-                    <div class="item-name">{{ $planName }}</div>
-                    @if($pmt->transaction_id)
-                    <div class="item-desc">Ref: {{ $pmt->transaction_id }}</div>
-                    @endif
-                </td>
-                <td style="color:#6b7280; font-size:11px;">{{ \Carbon\Carbon::parse($pmt->payment_date)->format('d M Y') }}</td>
-                <td style="color:#6b7280; font-size:11px;">{{ $pmt->payment_method ?? '—' }}</td>
-                <td class="right">${{ number_format($pmt->amount, 2) }}</td>
-            </tr>
-            @empty
             <tr>
                 <td style="color:#9ca3af; font-size:10px;">01</td>
                 <td>
@@ -198,15 +181,14 @@
                     &rarr;
                     {{ $subscription->expiry_date ? \Carbon\Carbon::parse($subscription->expiry_date)->format('d M Y') : '—' }}
                 </td>
-                <td style="color:#9ca3af; font-size:11px;">—</td>
+                <td class="right">${{ number_format($planPrice, 2) }}</td>
                 <td class="right">${{ number_format($planPrice, 2) }}</td>
             </tr>
-            @endforelse
         </tbody>
     </table>
 
     {{-- Totals --}}
-    @php $amount = $invoiceTotal; @endphp
+    @php $amount = $planPrice; @endphp
     <table class="totals-table">
         <tr>
             <td>Subtotal</td>

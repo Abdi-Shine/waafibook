@@ -167,14 +167,10 @@
             </div>
         </div>
 
-        {{-- Items: one row per completed payment --}}
+        {{-- Items: current plan as single line item --}}
         @php
-            $payments   = $subscription->payments->where('status','completed')->sortBy('payment_date');
-            $planPrice  = $subscription->plan->price ?? 0;
-            $planName   = $subscription->plan->name  ?? 'Subscription Plan';
-            $totalPaid  = $payments->sum('amount');
-            // Fall back to plan price if no payments recorded yet
-            $invoiceTotal = $totalPaid > 0 ? $totalPaid : $planPrice;
+            $planPrice = (float) ($subscription->plan->price ?? 0);
+            $planName  = $subscription->plan->name ?? 'Subscription Plan';
         @endphp
         <table class="inv-table">
             <thead>
@@ -182,27 +178,11 @@
                     <th>#</th>
                     <th>Description</th>
                     <th>Period</th>
-                    <th>Method</th>
+                    <th>Unit Price</th>
                     <th>Amount</th>
                 </tr>
             </thead>
             <tbody>
-                @forelse($payments as $i => $pmt)
-                <tr>
-                    <td style="color:#9ca3af;font-size:.78rem;">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</td>
-                    <td>
-                        <div style="font-weight:700;color:#111827;">{{ $planName }}</div>
-                        @if($pmt->transaction_id)
-                        <div style="font-size:.72rem;color:#9ca3af;margin-top:.1rem;">Ref: {{ $pmt->transaction_id }}</div>
-                        @endif
-                    </td>
-                    <td style="color:#6b7280;font-size:.8rem;">
-                        {{ \Carbon\Carbon::parse($pmt->payment_date)->format('d M Y') }}
-                    </td>
-                    <td style="color:#6b7280;font-size:.8rem;">{{ $pmt->payment_method ?? '—' }}</td>
-                    <td style="font-weight:700;color:#111827;">${{ number_format($pmt->amount, 2) }}</td>
-                </tr>
-                @empty
                 <tr>
                     <td style="color:#9ca3af;font-size:.78rem;">01</td>
                     <td>
@@ -213,12 +193,12 @@
                     </td>
                     <td style="color:#6b7280;">
                         {{ $subscription->start_date ? \Carbon\Carbon::parse($subscription->start_date)->format('d M Y') : '—' }}
-                        → {{ $subscription->expiry_date ? \Carbon\Carbon::parse($subscription->expiry_date)->format('d M Y') : '—' }}
+                        →
+                        <span style="color:#004161;font-weight:600;">{{ $subscription->expiry_date ? \Carbon\Carbon::parse($subscription->expiry_date)->format('d M Y') : '—' }}</span>
                     </td>
-                    <td style="color:#9ca3af;">—</td>
-                    <td style="font-weight:700;color:#111827;">${{ number_format($planPrice, 2) }}</td>
+                    <td>${{ number_format($planPrice, 2) }}</td>
+                    <td>${{ number_format($planPrice, 2) }}</td>
                 </tr>
-                @endforelse
             </tbody>
         </table>
 
@@ -227,7 +207,7 @@
             <div class="totals-box">
                 <div class="totals-row">
                     <span class="t-lbl">Subtotal</span>
-                    <span>${{ number_format($invoiceTotal, 2) }}</span>
+                    <span>${{ number_format($planPrice, 2) }}</span>
                 </div>
                 <div class="totals-row">
                     <span class="t-lbl">Tax</span>
@@ -235,7 +215,7 @@
                 </div>
                 <div class="totals-row total">
                     <span class="t-lbl">Total</span>
-                    <span class="t-amt">${{ number_format($invoiceTotal, 2) }}</span>
+                    <span class="t-amt">${{ number_format($planPrice, 2) }}</span>
                 </div>
             </div>
         </div>
