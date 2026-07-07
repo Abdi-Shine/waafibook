@@ -249,7 +249,7 @@
                     'icon' => 'bi-x-circle-fill',
                     'title'=> 'Subscription Cancelled',
                     'msg'  => 'Your subscription has been cancelled. Subscribe to a plan to continue using all features.',
-                    'btn'  => ['label' => 'View Plans', 'url' => route('subscribers.plans')],
+                    'btn'  => ['label' => 'View Plans', 'url' => route('subscribers.plans.index')],
                 ],
                 default        => [
                     'bg'   => '#fef9c3',
@@ -258,7 +258,7 @@
                     'icon' => 'bi-exclamation-triangle-fill',
                     'title'=> 'Trial Expired',
                     'msg'  => 'Your 7-day free trial has expired. Please subscribe to continue creating new transactions. Your existing data remains available in read-only mode.',
-                    'btn'  => ['label' => 'Subscribe Now', 'url' => route('subscribers.plans')],
+                    'btn'  => ['label' => 'Subscribe Now', 'url' => route('subscribers.plans.index')],
                 ],
             };
         @endphp
