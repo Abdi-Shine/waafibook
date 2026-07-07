@@ -52,4 +52,9 @@ class SubscriptionPlan extends Model
     {
         return $this->hasMany(Subscription::class);
     }
+
+    public function payments()
+    {
+        return $this->hasManyThrough(SubscriptionPayment::class, Subscription::class);
+    }
 }
