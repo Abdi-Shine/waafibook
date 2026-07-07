@@ -125,7 +125,8 @@
                     </ul>
 
                     {{-- CTA button — inline styles to prevent Tailwind JIT purging --}}
-                    @if($isPending)
+                    @if($isPending && $__cur)
+                        {{-- Only block the card whose plan is actually pending --}}
                         <div class="w-full text-center py-2.5 px-4 font-bold rounded-lg text-[12px]"
                              style="background:#fffbeb;border:1px solid #fcd34d;color:#b45309;">
                             <i class="bi bi-hourglass-split me-1"></i> Payment Pending
