@@ -14,10 +14,7 @@ class SubscriptionController extends Controller
 {
     public function plansIndex()
     {
-        // "Free Trial" is auto-assigned on company registration (see
-        // RegisteredUserController), not something a customer picks here.
-        $plans = SubscriptionPlan::query()->where('name', '!=', 'Free Trial')->get();
-        return view('admin.subscribers.plans.index', compact('plans'));
+        return redirect()->route('subscribers.subscriptions.index');
     }
 
     public function plansStore(Request $request)
