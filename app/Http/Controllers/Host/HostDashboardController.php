@@ -440,10 +440,11 @@ class HostDashboardController extends Controller
         return view('super_admin.subscriptions', compact('subscriptions', 'totalMrr', 'totalArr', 'overduePayments', 'expiringThisMonth', 'allPlans'));
     }
 
-    public function payments()
+    public function payments(Request $request)
     {
         $payments = SubscriptionPayment::with(['subscription.company', 'subscription.plan'])
-            ->orderByDesc('payment_date')->paginate(20);
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
+            ->orderByDesc('payment_date')->paginate(20)->withQueryString();
         $totalRevenue = SubscriptionPayment::where('status', 'completed')->sum('amount');
         $subscriptions = Subscription::with(['company', 'plan'])->orderBy('id', 'desc')->get();
         return view('super_admin.payments', compact('payments', 'totalRevenue', 'subscriptions'));
