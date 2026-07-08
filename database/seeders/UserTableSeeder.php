@@ -18,7 +18,6 @@ class UserTableSeeder extends Seeder
             ['email' => 'superadmin@waafibook.com'],
             [
                 'name' => 'Super Admin',
-                'fullname' => 'Super Admin',
                 'password' => Hash::make('Admin@2026#/2026'),
                 'company_id' => null,
                 'role' => 'Super Admin',

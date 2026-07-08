@@ -156,7 +156,7 @@
                     <div class="hidden md:flex flex-col text-left leading-tight">
                         <div class="flex items-center gap-2">
                             <span
-                                class="text-[15px] font-bold text-[#004161] tracking-tight">{{ Auth::user()->fullname ?? Auth::user()->name }}</span>
+                                class="text-[15px] font-bold text-[#004161] tracking-tight">{{ Auth::user()->name }}</span>
                             <i class="bi bi-chevron-down text-gray-400 text-[10px] transition-transform duration-200"
                                 :class="open ? 'rotate-180' : ''"></i>
                         </div>
@@ -187,7 +187,7 @@
                         </div>
                         <div class="leading-tight min-w-0">
                             <h4 class="text-primary-dark font-bold text-sm leading-tight truncate">
-                                {{ Auth::user()->fullname ?? Auth::user()->name }}</h4>
+                                {{ Auth::user()->name }}</h4>
                             <p class="text-gray-400 text-[12px] font-medium mt-0.5 truncate">{{ Auth::user()->email }}
                             </p>
                             <p class="text-accent text-[11px] font-black mt-1 uppercase tracking-wider">

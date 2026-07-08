@@ -23,7 +23,7 @@
                     {{ substr(auth()->user()->name, 0, 2) }}
                 @endif
             </div>
-            <h2 class="text-[16px] font-bold text-primary-dark mt-4">{{ auth()->user()->fullname ?? auth()->user()->name }}</h2>
+            <h2 class="text-[16px] font-bold text-primary-dark mt-4">{{ auth()->user()->name }}</h2>
             <p class="text-[13px] text-gray-400 mt-0.5">{{ auth()->user()->email }}</p>
             <span class="inline-block mt-2 px-3 py-1 bg-blue-50 text-blue-600 text-[11px] font-black uppercase tracking-widest rounded-full">
                 {{ auth()->user()->role ?? 'Administrator' }}

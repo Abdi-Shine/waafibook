@@ -70,7 +70,6 @@ class RegisteredUserController extends Controller
         // access the dashboard right away without an email verification wall.
         $user = User::withoutGlobalScopes()->create([
             'name'              => $request->name,
-            'fullname'          => $request->name,
             'email'             => $request->email,
             'password'          => Hash::make($request->password),
             'role'              => 'admin',

@@ -135,7 +135,6 @@ class HostDashboardController extends Controller
             $tempPassword = \Illuminate\Support\Str::random(12);
             User::withoutGlobalScopes()->create([
                 'name'              => $request->owner_name,
-                'fullname'          => $request->owner_name,
                 'email'             => $request->owner_email,
                 'password'          => \Illuminate\Support\Facades\Hash::make($tempPassword),
                 'role'              => 'admin',

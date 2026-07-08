@@ -30,13 +30,12 @@ class ProfileController extends Controller
         $data = $request->validated();
 
         // 1. Update User Basic Info
-        $user->fullname = trim(($data['first_name'] ?? '') . ' ' . ($data['last_name'] ?? ''));
+        $user->name = trim(($data['first_name'] ?? '') . ' ' . ($data['last_name'] ?? ''));
         $user->email = $data['email'];
         $user->phone = $data['phone'] ?? $user->phone;
-        
-        // Use company field as job title fallback on User table if needed
+
         if (isset($data['job_title'])) {
-            $user->company = $data['job_title'];
+            $user->job_title = $data['job_title'];
         }
 
         // Bio mapping
@@ -65,7 +64,7 @@ class ProfileController extends Controller
         $employee = $user->employee;
         if ($employee) {
             $employee->update([
-                'full_name'   => $user->fullname,
+                'full_name'   => $user->name,
                 'email'       => $user->email,
                 'phone'       => $data['phone'] ?? $employee->phone,
                 'designation' => $data['job_title'] ?? $employee->designation,

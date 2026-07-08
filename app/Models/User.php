@@ -11,11 +11,10 @@ use App\Traits\BelongsToTenant;
  * @property int $id
  * @property int|null $company_id
  * @property string $name
- * @property string|null $fullname
+ * @property string|null $job_title
  * @property string|null $username
  * @property string $email
  * @property string|null $phone
- * @property string|null $company
  * @property string|null $photo
  * @property string $role
  * @property \Illuminate\Support\Carbon|null $email_verified_at
@@ -30,12 +29,10 @@ use App\Traits\BelongsToTenant;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereCompany($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereCompanyId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereEmail($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereEmailVerifiedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereFullname($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePassword($value)
@@ -59,11 +56,10 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
-        'fullname',
+        'job_title',
         'username',
         'email',
         'phone',
-        'company',
         'password',
         'photo',
         'role',
