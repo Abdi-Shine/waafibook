@@ -9,25 +9,6 @@ use Illuminate\Support\Facades\View;
 
 class CheckSubscriptionStatus
 {
-    // Plan rank: 0 = none/trial, 1 = Starter, 2 = Business, 3 = Enterprise
-    private const PLAN_LEVELS = [
-        'starter'    => 1,
-        'business'   => 2,
-        'enterprise' => 3,
-    ];
-
-    // Features that require a paid Business plan or higher.
-    // Matched against the request URL path (case-insensitive substring).
-    private const BUSINESS_FEATURES = [
-        'sales/return', 'sales-return',
-        'payroll', 'loan', 'stock-transfer',
-    ];
-
-    // Features that require Enterprise plan.
-    private const ENTERPRISE_FEATURES = [
-        'branches', 'branch/', 'shareholder', 'capital-deposit',
-    ];
-
     // URL segments whose pages are fully blocked (GET included) when subscription is restricted.
     private const TRANSACTION_URL_SEGMENTS = [
         '/sales', '/purchase', '/expense', '/payment', '/pos',
@@ -101,13 +82,6 @@ class CheckSubscriptionStatus
 
         // Always-allowed named routes (read-only pages, settings, reports)
         if ($request->routeIs(self::ALWAYS_ALLOWED_ROUTES)) {
-            // Still check plan gates even for allowed routes
-            if ($isGet) {
-                $gate = $this->planGate($path, $planLevel);
-                if ($gate) {
-                    return $this->lockPage($gate['plan'], $currentPlanName);
-                }
-            }
             return $next($request);
         }
 
@@ -141,14 +115,6 @@ class CheckSubscriptionStatus
             return $next($request);
         }
 
-        // Active subscription: enforce plan-level feature gates
-        if ($isGet) {
-            $gate = $this->planGate($path, $planLevel);
-            if ($gate) {
-                return $this->lockPage($gate['plan'], $currentPlanName);
-            }
-        }
-
         return $next($request);
     }
 
@@ -159,17 +125,9 @@ class CheckSubscriptionStatus
         if ($isRestricted || !$subscription?->plan) {
             return 0;
         }
-        if ($subscription->status === 'trial') {
-            // Active (non-expired) trial: no feature restrictions.
-            return 3;
-        }
-        $name = strtolower($subscription->plan->name ?? '');
-        foreach (self::PLAN_LEVELS as $key => $level) {
-            if (str_contains($name, $key)) {
-                return $level;
-            }
-        }
-        return 1; // unknown paid plan → treat as Starter
+        // Any active (non-restricted) subscription — trial or paid, any tier —
+        // has full feature access. Plan tiers govern price/limits, not feature gating.
+        return 3;
     }
 
     private function resolveRestriction(?Subscription $subscription, bool $isSuspended): ?string
@@ -194,29 +152,6 @@ class CheckSubscriptionStatus
             }
         }
         return false;
-    }
-
-    private function planGate(string $path, int $planLevel): ?array
-    {
-        if ($planLevel >= 3) return null; // Enterprise has everything
-
-        if ($planLevel < 2) {
-            foreach (self::BUSINESS_FEATURES as $segment) {
-                if (str_contains($path, $segment)) {
-                    return ['plan' => 'Business', 'level' => 2];
-                }
-            }
-        }
-
-        if ($planLevel < 3) {
-            foreach (self::ENTERPRISE_FEATURES as $segment) {
-                if (str_contains($path, $segment)) {
-                    return ['plan' => 'Enterprise', 'level' => 3];
-                }
-            }
-        }
-
-        return null;
     }
 
     private function lockPage(
