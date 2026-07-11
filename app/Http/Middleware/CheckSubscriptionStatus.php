@@ -19,8 +19,7 @@ class CheckSubscriptionStatus
     // Features that require a paid Business plan or higher.
     // Matched against the request URL path (case-insensitive substring).
     private const BUSINESS_FEATURES = [
-        'purchase/order', 'purchase/return', 'sales/return',
-        'sales-return', 'purchase-return',
+        'sales/return', 'sales-return',
         'payroll', 'loan', 'stock-transfer',
     ];
 
@@ -159,6 +158,10 @@ class CheckSubscriptionStatus
     {
         if ($isRestricted || !$subscription?->plan) {
             return 0;
+        }
+        if ($subscription->status === 'trial') {
+            // Active (non-expired) trial: no feature restrictions.
+            return 3;
         }
         $name = strtolower($subscription->plan->name ?? '');
         foreach (self::PLAN_LEVELS as $key => $level) {

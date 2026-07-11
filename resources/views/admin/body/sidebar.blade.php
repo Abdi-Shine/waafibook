@@ -157,7 +157,7 @@
                         class="space-y-1 overflow-hidden transition-all duration-300">
                         <a href="{{ route('purchase.order.index') }}"
                             class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('purchase.order.index') ? 'text-white bg-white/5' : '' }}"><i
-                                class="bi bi-plus text-lg"></i> Purchase Order {!! $__badge(2) !!}</a>
+                                class="bi bi-plus text-lg"></i> Purchase Order {!! $__badge(1) !!}</a>
                         <a href="{{ route('purchase.bill') }}"
                             class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('purchase.bill') ? 'text-white bg-white/5' : '' }}"><i
                                 class="bi bi-plus text-lg"></i> Purchase Bill {!! $__badge(1) !!}</a>
@@ -166,7 +166,7 @@
                                 class="bi bi-plus text-lg"></i> Direct Expenses {!! $__badge(1) !!}</a>
                         <a href="{{ route('purchase.returns') }}"
                             class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('purchase.returns') ? 'text-white bg-white/5' : '' }}"><i
-                                class="bi bi-plus text-lg"></i> Purchase Returns {!! $__badge(2) !!}</a>
+                                class="bi bi-plus text-lg"></i> Purchase Returns {!! $__badge(1) !!}</a>
                         <a href="{{ route('view_payment_out') }}"
                             class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('view_payment_out') ? 'text-white bg-white/5' : '' }}"><i
                                 class="bi bi-plus text-lg"></i> Supplier Payment {!! $__badge(1) !!}</a>
