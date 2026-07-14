@@ -164,7 +164,6 @@
                                     <i class="bi bi-eye" id="regToggleIcon"></i>
                                 </button>
                             </div>
-                            <p class="text-primary opacity-40 mt-1.5 text-[0.7rem]">Min. 8 characters with uppercase, lowercase and numbers</p>
                             @error('password')
                                 <p class="text-red-500 font-bold mt-1.5 uppercase text-[0.7rem]">{{ $message }}</p>
                             @enderror
@@ -181,6 +180,8 @@
                                 </button>
                             </div>
                         </div>
+
+                        <p class="col-span-2 text-primary opacity-40 -mt-1 text-[0.7rem] whitespace-nowrap">Min. 8 characters with uppercase, lowercase and numbers</p>
                     </div>
 
                     <div class="flex items-start gap-2 mb-4">
