@@ -208,11 +208,28 @@
 </div>
 
 <script>
-    function switchTab(tab) {
+    function switchTab(tab, pushState = true) {
         const isLogin = tab === 'login';
         document.getElementById('form-login').style.display    = isLogin ? '' : 'none';
         document.getElementById('form-register').style.display = isLogin ? 'none' : '';
+
+        if (pushState) {
+            const url = new URL(window.location);
+            if (isLogin) {
+                url.searchParams.delete('tab');
+            } else {
+                url.searchParams.set('tab', 'register');
+            }
+            history.pushState({ tab }, '', url);
+        }
     }
+
+    // Make the browser Back/Forward buttons move between the Sign In and
+    // Sign up tabs instead of leaving the page entirely.
+    window.addEventListener('popstate', function () {
+        const tab = new URLSearchParams(window.location.search).get('tab') === 'register' ? 'register' : 'login';
+        switchTab(tab, false);
+    });
 
     function togglePassword(inputId, iconId) {
         const input = document.getElementById(inputId);
