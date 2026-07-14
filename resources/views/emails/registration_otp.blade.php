@@ -55,6 +55,7 @@
 
         <div class="footer">
             <p>Need help? Email us at <a href="mailto:support@waafibook.com">support@waafibook.com</a></p>
+            <p>Or call us at <a href="tel:+252615164216">+252 615164216</a> / <a href="tel:+252615539846">+252 61 5539846</a></p>
             <p class="company">WaafiBook &mdash; Accounting SaaS for modern teams</p>
         </div>
 
