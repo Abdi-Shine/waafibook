@@ -65,7 +65,7 @@ class RegisteredUserController extends Controller
         $this->sendOtp($request, $pending);
 
         return redirect()->route('register.verify')
-            ->with('status', 'We sent a 6-digit code to ' . $pending['email'] . '. Enter it below to finish creating your account.');
+            ->with('status', 'We sent a 4-digit code to ' . $pending['email'] . '. Enter it below to finish creating your account.');
     }
 
     /**
