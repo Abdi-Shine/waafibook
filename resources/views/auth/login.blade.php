@@ -13,7 +13,7 @@
 <body class="auth-page-bg">
 @php
     $company = \App\Models\Company::first();
-    $activeTab = ($errors->has('company_name') || $errors->has('industry') || session('register_attempted')) ? 'register' : 'login';
+    $activeTab = ($errors->has('company_name') || $errors->has('industry') || session('register_attempted') || request()->query('tab') === 'register') ? 'register' : 'login';
 @endphp
 
 <div class="auth-container max-w-[450px] w-full animate-fadeIn">

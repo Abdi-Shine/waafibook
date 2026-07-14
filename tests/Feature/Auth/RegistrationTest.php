@@ -6,10 +6,18 @@ beforeEach(function () {
     $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class);
 });
 
-test('registration screen can be rendered', function () {
+test('the old standalone registration page redirects to the login page signup tab', function () {
     $response = $this->get('/register');
 
+    $response->assertRedirect(route('login', ['tab' => 'register']));
+});
+
+test('the login page opens on the signup tab when linked with ?tab=register', function () {
+    $response = $this->get('/login?tab=register');
+
     $response->assertStatus(200);
+    // The login form is the one hidden when the register tab is active.
+    $response->assertSee('id="form-login" style="display:none"', false);
 });
 
 test('submitting the registration form does not create an account yet and sends an otp', function () {

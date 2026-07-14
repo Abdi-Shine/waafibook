@@ -19,7 +19,9 @@ Route::post('super_admin/login', [HostLoginController::class, 'store'])->name('h
 Route::middleware('auth')->post('super_admin/logout', [HostLoginController::class, 'destroy'])->name('host.logout');
 
 Route::middleware('guest')->group(function () {
-    Route::get('register', [RegisteredUserController::class, 'create'])
+    // The standalone full-page registration form is retired in favor of the
+    // "Sign up" tab on the login page — redirect any existing links there.
+    Route::get('register', fn () => redirect()->route('login', ['tab' => 'register']))
         ->name('register');
 
     Route::post('register', [RegisteredUserController::class, 'store']);
