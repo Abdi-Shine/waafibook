@@ -154,10 +154,16 @@
 
     sendStatement() {
         if (!this.ledger) return;
-        const phone = (this.ledger.party.phone || '').replace(/[^0-9]/g, '');
+        let phone = (this.ledger.party.phone || '').replace(/[^0-9]/g, '');
         if (!phone) {
             Swal.fire({ icon: 'warning', title: 'No Phone Number', text: 'This party has no phone number saved. Please add one first.' });
             return;
+        }
+        // wa.me requires the full international number. Party phone numbers are
+        // usually saved locally (e.g. "612040858") without the +252 country code.
+        if (!phone.startsWith('252')) {
+            const trimmed = phone.replace(/^0+/, '');
+            if (trimmed.length <= 9) phone = '252' + trimmed;
         }
         const name = this.ledger.party.name;
         const co   = this.companyName;
