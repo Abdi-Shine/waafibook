@@ -166,6 +166,32 @@
         window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
     },
 
+    shareTransaction(txn) {
+        if (!this.ledger) return;
+        const phone = (this.ledger.party.phone || '').replace(/[^0-9]/g, '');
+        if (!phone) {
+            Swal.fire({ icon: 'warning', title: 'No Phone Number', text: 'This party has no phone number saved. Please add one first.' });
+            return;
+        }
+        const name  = this.ledger.party.name;
+        const co    = this.companyName;
+        const total = parseFloat(txn.total).toFixed(2);
+
+        let msg = 'Dear ' + name + ',\n\nHere are the details of your ' + txn.type
+            + (txn.number ? ' (' + txn.number + ')' : '') + ' with *' + co + '*:\n\n'
+            + 'Date: ' + txn.date + '\nTotal: $' + total;
+
+        if (txn.balance != null) {
+            msg += '\n' + (this.isPayment(txn.type) ? 'Unused' : 'Balance') + ': $' + parseFloat(txn.balance).toFixed(2);
+        }
+        if (txn.status) {
+            msg += '\nStatus: ' + txn.status;
+        }
+
+        msg += '\n\nThank you for your business!';
+        window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
+    },
+
     goToPayout() {
         if (!this.ledger) return;
         const isSupplier = this.ledger.party.type === 'supplier';
@@ -381,10 +407,10 @@
                                         class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-primary rounded-lg transition-colors">
                                         <i class="bi bi-printer text-[16px]"></i>
                                     </button>
-                                    <a :href="'https://wa.me/' + (ledger.party.phone || '').replace(/[^0-9]/g, '')" target="_blank"
+                                    <button @click="shareTransaction(txn)"
                                         class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-green-600 rounded-lg transition-colors">
                                         <i class="bi bi-share text-[15px]"></i>
-                                    </a>
+                                    </button>
                                     <div x-data="{ open: false }" class="relative">
                                         <button @click="open = !open" @click.away="open = false"
                                             class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-primary-dark rounded-lg transition-colors">
