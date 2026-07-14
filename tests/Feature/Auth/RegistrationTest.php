@@ -60,7 +60,7 @@ test('an incorrect otp does not create the account', function () {
         'password_confirmation' => 'Password123',
     ]);
 
-    $response = $this->post(route('register.verify.store'), ['otp' => '000000']);
+    $response = $this->post(route('register.verify.store'), ['otp' => '0000']);
 
     $this->assertDatabaseMissing('users', ['email' => 'test@example.com']);
     $response->assertSessionHasErrors('otp');

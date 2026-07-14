@@ -105,7 +105,7 @@
             padding: .75rem;
             font-size: 1.6rem;
             font-weight: 700;
-            letter-spacing: 12px;
+            letter-spacing: 18px;
             text-align: center;
             font-family: monospace;
             color: var(--primary);
@@ -174,7 +174,7 @@
                     <img src="/icons/icon-192.png" alt="Waafibook Logo" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">
                 </div>
                 <h1 class="otp-title">Verify Your Email</h1>
-                <p class="otp-subtitle">Enter the 6-digit code we sent to<br><strong>{{ $email }}</strong></p>
+                <p class="otp-subtitle">Enter the 4-digit code we sent to<br><strong>{{ $email }}</strong></p>
             </div>
 
             <div class="otp-body">
@@ -197,9 +197,9 @@
                     @csrf
                     <div class="mb-4">
                         <input type="text" name="otp" inputmode="numeric" autocomplete="one-time-code"
-                               maxlength="6" pattern="\d{6}"
+                               maxlength="4" pattern="\d{4}"
                                class="otp-input @error('otp') is-invalid @enderror"
-                               placeholder="------" required autofocus>
+                               placeholder="----" required autofocus>
                     </div>
 
                     <button type="submit" class="btn-submit">

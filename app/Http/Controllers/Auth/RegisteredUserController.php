@@ -150,7 +150,7 @@ class RegisteredUserController extends Controller
      */
     private function sendOtp(Request $request, array $pending): void
     {
-        $pending['otp_code']       = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $pending['otp_code']       = str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
         $pending['otp_expires_at'] = now()->addMinutes(self::OTP_TTL_MINUTES);
         $pending['otp_attempts']   = 0;
 
