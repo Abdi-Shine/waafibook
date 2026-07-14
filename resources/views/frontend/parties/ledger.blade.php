@@ -138,20 +138,9 @@
         return type === 'Payment-In' || type === 'Payment-Out';
     },
 
-    // wa.me links need the full international number. Party phone numbers
-    // are usually saved locally (e.g. "612040858") without the +252 country
-    // code, which makes WhatsApp/iOS reject the link outright. Assume the
-    // Somalia country code for short, code-less numbers.
-    normalizePhone(raw) {
-        let digits = (raw || '').replace(/[^0-9]/g, '');
-        if (!digits || digits.startsWith('252')) return digits;
-        const trimmed = digits.replace(/^0+/, '');
-        return trimmed.length <= 9 ? '252' + trimmed : digits;
-    },
-
     sendReminder() {
         if (!this.ledger) return;
-        const phone = this.normalizePhone(this.ledger.party.phone);
+        const phone = (this.ledger.party.phone || '').replace(/[^0-9]/g, '');
         if (!phone) {
             Swal.fire({ icon: 'warning', title: 'No Phone Number', text: 'This party has no phone number saved. Please add one first.' });
             return;
@@ -165,7 +154,7 @@
 
     sendStatement() {
         if (!this.ledger) return;
-        const phone = this.normalizePhone(this.ledger.party.phone);
+        const phone = (this.ledger.party.phone || '').replace(/[^0-9]/g, '');
         if (!phone) {
             Swal.fire({ icon: 'warning', title: 'No Phone Number', text: 'This party has no phone number saved. Please add one first.' });
             return;
@@ -258,7 +247,7 @@
                         </div>
 
                         <div class="flex items-center gap-2">
-                            <a :href="'https://wa.me/' + normalizePhone(ledger.party.phone)" target="_blank" title="WhatsApp"
+                            <a :href="'https://wa.me/' + (ledger.party.phone || '').replace(/[^0-9]/g, '')" target="_blank" title="WhatsApp"
                                 x-show="ledger.party.phone"
                                 class="w-9 h-9 flex items-center justify-center bg-green-50 text-green-600 rounded-full hover:bg-green-100 transition-all">
                                 <i class="bi bi-whatsapp"></i>
