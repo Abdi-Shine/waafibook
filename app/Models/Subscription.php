@@ -37,8 +37,13 @@ use Illuminate\Database\Eloquent\Model;
 class Subscription extends Model
 {
     protected $fillable = [
-        'company_id', 'subscription_plan_id', 'start_date', 'expiry_date', 
-        'status', 'payment_method', 'auto_renew'
+        'company_id', 'subscription_plan_id', 'start_date', 'expiry_date',
+        'status', 'payment_method', 'auto_renew', 'reminder_days_sent', 'expiry_notice_sent_at'
+    ];
+
+    protected $casts = [
+        'reminder_days_sent'     => 'array',
+        'expiry_notice_sent_at'  => 'datetime',
     ];
 
     public function company()

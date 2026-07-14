@@ -14,6 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // Expire trials that have passed their end date — runs daily at midnight
         $schedule->command('subscriptions:expire-trials')->dailyAt('00:05')->withoutOverlapping();
 
+        // Email 7/5/3/1-day-left reminders and a final expiry notice
+        $schedule->command('subscriptions:send-expiry-reminders')->dailyAt('09:00')->withoutOverlapping();
+
 
         try {
             $company = \App\Models\Company::withoutGlobalScopes()->first();
