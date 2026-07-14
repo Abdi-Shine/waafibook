@@ -256,6 +256,10 @@
                                 class="w-9 h-9 flex items-center justify-center bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-all">
                                 <i class="bi bi-file-earmark-text"></i>
                             </a>
+                            <a :href="ledger.party.type === 'supplier' ? '{{ route('view_payment_out') }}?vendor_id=' + ledger.party.id : '{{ route('view_payment_in') }}?customer_id=' + ledger.party.id" title="Payout"
+                                class="w-9 h-9 flex items-center justify-center bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-all">
+                                <i class="bi bi-cash-coin"></i>
+                            </a>
                         </div>
                     </div>
 

@@ -15,7 +15,22 @@
         paymentAmount: '',
         paymentDate: '{{ date('Y-m-d') }}',
         reference: '{{ $suggestedVoucherNo }}'
-    }">
+    }"
+    x-init="
+        @if(request('vendor_id'))
+            showModal = true;
+            $nextTick(() => {
+                const sel = $el.querySelector('#modalVendorSelect');
+                const opt = sel ? sel.options[sel.selectedIndex] : null;
+                if (opt && opt.value) {
+                    supplierName = opt.text.toUpperCase();
+                    const balance = parseFloat(opt.getAttribute('data-balance')) || 0;
+                    supplierBalance = balance.toLocaleString(undefined, {minimumFractionDigits: 2});
+                    if (balance > 0) paymentAmount = balance.toFixed(2);
+                }
+            });
+        @endif
+    ">
         <!-- Page Header -->
         <div
             class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
@@ -313,7 +328,7 @@
                                         <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Select
                                             Supplier <span class="text-primary">*</span></label>
                                         <div class="relative group w-full">
-                                            <select name="vendor_id" required
+                                            <select name="vendor_id" id="modalVendorSelect" required
                                                 class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer"
                                                 @change="
                                                     const opt = $event.target.options[$event.target.selectedIndex];
@@ -327,7 +342,7 @@
                                                 <option value="">Search Supplier...</option>
                                                 @foreach($suppliers as $supplier)
                                                     <option value="{{ $supplier->id }}"
-                                                        data-balance="{{ $supplier->amount_balance }}">{{ $supplier->name }}
+                                                        data-balance="{{ $supplier->amount_balance }}" {{ request('vendor_id') == $supplier->id ? 'selected' : '' }}>{{ $supplier->name }}
                                                     </option>
                                                 @endforeach
                                             </select>

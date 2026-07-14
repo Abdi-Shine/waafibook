@@ -18,7 +18,22 @@
             paymentMethod: '{{ $bankAccounts->first() ? strtoupper($bankAccounts->first()->name . ' (' . $bankAccounts->first()->type . ')') : 'SELECT ACCOUNT' }}',
             paymentAmount: '',
             paymentDate: '{{ date('Y-m-d') }}'
-        }">
+        }"
+        x-init="
+            @if(request('customer_id'))
+                showModal = true;
+                $nextTick(() => {
+                    const sel = $el.querySelector('#modalCustomerSelect');
+                    const opt = sel ? sel.options[sel.selectedIndex] : null;
+                    if (opt && opt.value) {
+                        customerName = opt.text.toUpperCase();
+                        const balance = parseFloat(opt.getAttribute('data-balance')) || 0;
+                        customerBalance = balance.toLocaleString(undefined, {minimumFractionDigits: 2});
+                        if (balance > 0) paymentAmount = balance.toFixed(2);
+                    }
+                });
+            @endif
+        ">
 
         <!-- Header Section -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
@@ -263,7 +278,7 @@
                                     <div class="space-y-1.5 w-full">
                                         <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Select Customer <span class="text-primary">*</span></label>
                                         <div class="relative group w-full">
-                                            <select name="customer_id" required
+                                            <select name="customer_id" id="modalCustomerSelect" required
                                                     class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer"
                                                     @change="
                                                         const opt = $event.target.options[$event.target.selectedIndex];
@@ -276,7 +291,7 @@
                                                     ">
                                                 <option value="">Search Customer...</option>
                                                 @foreach($customers as $customer)
-                                                    <option value="{{ $customer->id }}" data-balance="{{ $customer->amount_balance }}">{{ $customer->name }}</option>
+                                                    <option value="{{ $customer->id }}" data-balance="{{ $customer->amount_balance }}" {{ request('customer_id') == $customer->id ? 'selected' : '' }}>{{ $customer->name }}</option>
                                                 @endforeach
                                             </select>
                                             <i class="bi bi-person absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"></i>

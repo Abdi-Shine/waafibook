@@ -164,6 +164,14 @@
         const url  = this.ledger.party.statement_url;
         const msg  = 'Dear ' + name + ',\n\nPlease find your account statement with *' + co + '* at the link below:\n\n' + url + '\n\nThank you for your business!';
         window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
+    },
+
+    goToPayout() {
+        if (!this.ledger) return;
+        const isSupplier = this.ledger.party.type === 'supplier';
+        const base = isSupplier ? '{{ route('view_payment_out') }}' : '{{ route('view_payment_in') }}';
+        const param = isSupplier ? 'vendor_id' : 'customer_id';
+        window.location.href = base + '?' + param + '=' + this.ledger.party.id;
     }
 }">
 
@@ -318,6 +326,10 @@
                         <button @click="sendStatement()"
                             class="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold text-primary-dark hover:bg-gray-100 transition-colors">
                             <i class="bi bi-whatsapp text-green-500 text-[15px]"></i> Send Statement
+                        </button>
+                        <button @click="goToPayout()"
+                            class="flex-1 flex items-center justify-center gap-2 py-2.5 bg-primary/10 border border-primary/20 rounded-xl text-[13px] font-bold text-primary hover:bg-primary/20 transition-colors">
+                            <i class="bi bi-cash-coin text-[15px]"></i> Payout
                         </button>
                     </div>
                 </div>
