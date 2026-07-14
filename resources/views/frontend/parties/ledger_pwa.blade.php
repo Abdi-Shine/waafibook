@@ -138,9 +138,20 @@
         return type === 'Payment-In' || type === 'Payment-Out';
     },
 
+    // wa.me links need the full international number. Party phone numbers
+    // are usually saved locally (e.g. "612040858") without the +252 country
+    // code, which makes WhatsApp/iOS reject the link outright. Assume the
+    // Somalia country code for short, code-less numbers.
+    normalizePhone(raw) {
+        let digits = (raw || '').replace(/[^0-9]/g, '');
+        if (!digits || digits.startsWith('252')) return digits;
+        const trimmed = digits.replace(/^0+/, '');
+        return trimmed.length <= 9 ? '252' + trimmed : digits;
+    },
+
     sendReminder() {
         if (!this.ledger) return;
-        const phone = (this.ledger.party.phone || '').replace(/[^0-9]/g, '');
+        const phone = this.normalizePhone(this.ledger.party.phone);
         if (!phone) {
             Swal.fire({ icon: 'warning', title: 'No Phone Number', text: 'This party has no phone number saved. Please add one first.' });
             return;
@@ -154,16 +165,10 @@
 
     sendStatement() {
         if (!this.ledger) return;
-        let phone = (this.ledger.party.phone || '').replace(/[^0-9]/g, '');
+        const phone = this.normalizePhone(this.ledger.party.phone);
         if (!phone) {
             Swal.fire({ icon: 'warning', title: 'No Phone Number', text: 'This party has no phone number saved. Please add one first.' });
             return;
-        }
-        // wa.me requires the full international number. Party phone numbers are
-        // usually saved locally (e.g. "612040858") without the +252 country code.
-        if (!phone.startsWith('252')) {
-            const trimmed = phone.replace(/^0+/, '');
-            if (trimmed.length <= 9) phone = '252' + trimmed;
         }
         const name = this.ledger.party.name;
         const co   = this.companyName;
@@ -174,7 +179,7 @@
 
     shareTransaction(txn) {
         if (!this.ledger) return;
-        const phone = (this.ledger.party.phone || '').replace(/[^0-9]/g, '');
+        const phone = this.normalizePhone(this.ledger.party.phone);
         if (!phone) {
             Swal.fire({ icon: 'warning', title: 'No Phone Number', text: 'This party has no phone number saved. Please add one first.' });
             return;
