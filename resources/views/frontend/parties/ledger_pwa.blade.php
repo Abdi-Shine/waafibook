@@ -149,6 +149,21 @@
         return trimmed.length <= 9 ? '252' + trimmed : digits;
     },
 
+    // window.open('_blank') silently no-ops in a standalone/installed PWA (no
+    // browser chrome to open a new tab into), and window.location.href
+    // navigates the PWA's own page away so returning from WhatsApp reloads
+    // the app from scratch instead of resuming where you were. A synthetic
+    // link click lets the OS hand off to WhatsApp without either problem.
+    openWhatsApp(url) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    },
+
     sendReminder() {
         if (!this.ledger) return;
         const phone = this.normalizePhone(this.ledger.party.phone);
@@ -160,7 +175,7 @@
         const amt  = parseFloat(this.ledger.party.amount).toFixed(2);
         const co   = this.companyName;
         const msg  = 'Dear ' + name + ',\n\nWe would like to kindly remind you that your outstanding balance with *' + co + '* is *$' + amt + '*.\n\nPlease arrange payment at your earliest convenience.\n\nThank you for your business!';
-        window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
+        this.openWhatsApp('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg));
     },
 
     sendStatement() {
@@ -174,10 +189,7 @@
         const co   = this.companyName;
         const url  = this.ledger.party.statement_url;
         const msg  = 'Dear ' + name + ',\n\nPlease find your account statement with *' + co + '* at the link below:\n\n' + url + '\n\nThank you for your business!';
-        // window.open('_blank') silently no-ops in a standalone/installed PWA
-        // (no browser chrome to open a new tab into). Navigate directly so the
-        // OS can hand off to the WhatsApp app.
-        window.location.href = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
+        this.openWhatsApp('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg));
     },
 
     shareTransaction(txn) {
@@ -203,7 +215,7 @@
         }
 
         msg += '\n\nThank you for your business!';
-        window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
+        this.openWhatsApp('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg));
     },
 
     goToPayout() {
