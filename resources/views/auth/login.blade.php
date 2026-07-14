@@ -194,7 +194,7 @@
                     <button type="submit" class="btn-auth">
                         <i class="bi bi-rocket-takeoff mr-2"></i>Create Account
                     </button>
-                    <p class="text-center text-primary opacity-40 text-[0.75rem] mt-2 mb-0">14-day free trial &bull; No credit card required</p>
+                    <p class="text-center text-primary opacity-40 text-[0.75rem] mt-2 mb-0">7-day free trial &bull; No credit card required</p>
                 </form>
 
                 <p class="text-center text-primary opacity-50 text-sm mt-4 mb-0">

@@ -83,7 +83,7 @@
                             </li>
                             <li>
                                 <div class="feature-icon"><i class="bi bi-gift"></i></div>
-                                <div class="feature-text"><h6>Free Trial Access</h6><p>14-day trial immediately after demo</p></div>
+                                <div class="feature-text"><h6>Free Trial Access</h6><p>7-day trial immediately after demo</p></div>
                             </li>
                         </ul>
                     </div>

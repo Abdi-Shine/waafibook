@@ -471,7 +471,7 @@
                         <i class="bi bi-rocket-takeoff me-2"></i>Create Account
                     </button>
                     <div class="text-center text-muted mt-2">
-                        <small>14-day free trial &bull; No credit card required</small>
+                        <small>7-day free trial &bull; No credit card required</small>
                     </div>
 
                 </form>
