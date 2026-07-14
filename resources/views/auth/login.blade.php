@@ -87,8 +87,8 @@
                     </button>
                 </form>
 
-                <p class="text-center text-primary opacity-50 text-sm mt-4 mb-0">
-                    &copy; {{ date('Y') }} Waafibook. All rights reserved. <a href="#" class="link-auth" onclick="switchTab('register'); return false;">Sign up</a>
+                <p class="text-center text-sm mt-4 mb-0">
+                    <span class="text-primary opacity-50">&copy; {{ date('Y') }} Waafibook. All rights reserved.</span> <a href="#" class="link-auth" onclick="switchTab('register'); return false;">Sign up</a>
                 </p>
 
             </div>
@@ -197,8 +197,8 @@
                     <p class="text-center text-primary opacity-40 text-[0.75rem] mt-2 mb-0">7-day free trial &bull; No credit card required</p>
                 </form>
 
-                <p class="text-center text-primary opacity-50 text-sm mt-4 mb-0">
-                    Already have an account? <a href="#" class="link-auth" onclick="switchTab('login'); return false;">Sign in</a>
+                <p class="text-center text-sm mt-4 mb-0">
+                    <span class="text-primary opacity-50">Already have an account?</span> <a href="#" class="link-auth" onclick="switchTab('login'); return false;">Sign in</a>
                 </p>
             </div>
 
