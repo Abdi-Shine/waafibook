@@ -38,7 +38,10 @@ class PartiesController extends Controller
             }
         }
 
-        return view('frontend.parties.ledger', compact('parties', 'selectedType', 'selectedId', 'ledger'));
+        $isMobile = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $request->userAgent() ?? '');
+        $view = $isMobile ? 'frontend.parties.ledger_pwa' : 'frontend.parties.ledger';
+
+        return view($view, compact('parties', 'selectedType', 'selectedId', 'ledger'));
     }
 
     public function ledgerData($type, $id)
