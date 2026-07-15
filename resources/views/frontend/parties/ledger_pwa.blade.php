@@ -174,10 +174,7 @@
         const co   = this.companyName;
         const url  = this.ledger.party.statement_url;
         const msg  = 'Dear ' + name + ',\n\nPlease find your account statement with *' + co + '* at the link below:\n\n' + url + '\n\nThank you for your business!';
-        // window.open('_blank') silently no-ops in a standalone/installed PWA
-        // (no browser chrome to open a new tab into). Navigate directly so the
-        // OS can hand off to the WhatsApp app.
-        window.location.href = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
+        window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
     },
 
     shareTransaction(txn) {
