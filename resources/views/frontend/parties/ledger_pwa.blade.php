@@ -11,12 +11,12 @@
 
 <script>
     window.__ledger = {
-        companyName:  @json($ledgerCompany->name ?? 'us'),
-        parties:      @json($parties),
-        selectedType: @json($selectedType),
-        selectedId:   @json($selectedId ?? null),
-        ledger:       @json($ledger),
-        mobileView:   @json($initialMobileView),
+        companyName:  @js($ledgerCompany->name ?? 'us'),
+        parties:      @js($parties),
+        selectedType: @js($selectedType),
+        selectedId:   @js($selectedId ?? null),
+        ledger:       @js($ledger),
+        mobileView:   @js($initialMobileView),
     };
 </script>
 
