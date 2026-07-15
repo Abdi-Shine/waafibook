@@ -522,6 +522,16 @@
     {{-- PWA Service Worker + Install Prompt --}}
     <script>
     if ('serviceWorker' in navigator) {
+        // A newly activated SW (clients.claim()) takes over fetch handling for
+        // this page immediately, but the already-loaded JS/state keeps running
+        // as-is. Reload once so a fixed SW/deploy actually takes effect instead
+        // of silently mixing old page state with new SW behavior.
+        let _swRefreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (_swRefreshing) return;
+            _swRefreshing = true;
+            window.location.reload();
+        });
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('/sw.js', { scope: '/' })
                 .catch(err => console.warn('SW registration failed:', err));

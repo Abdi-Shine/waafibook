@@ -92,6 +92,12 @@
 </script>
 <script>
 if ('serviceWorker' in navigator) {
+    let _swRefreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (_swRefreshing) return;
+        _swRefreshing = true;
+        window.location.reload();
+    });
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js', { scope: '/' })
             .catch(err => console.warn('SW registration failed:', err));
