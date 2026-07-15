@@ -32,32 +32,6 @@
     loading: false,
     mobileView:   window.__ledger.mobileView,
 
-    // Tapping a party link (e.g. from WhatsApp) while the installed PWA is
-    // already open showing a different party can bring the existing WebView
-    // to the foreground without doing a fresh page load — the address bar
-    // ends up on the new URL but this Alpine state (and window.__ledger)
-    // still reflects whatever party was open before. Re-check the URL
-    // whenever the app regains visibility/focus and reload if it points at
-    // a different party than what's currently shown.
-    init() {
-        const resync = () => this.syncFromUrl();
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible') resync();
-        });
-        window.addEventListener('pageshow', resync);
-        window.addEventListener('focus', resync);
-    },
-
-    syncFromUrl() {
-        const params = new URLSearchParams(location.search);
-        const type = params.get('type');
-        const id = params.get('id');
-        if (!type || !id) return;
-        if (type !== this.selectedType || String(id) !== String(this.selectedId)) {
-            this.selectParty(type, id);
-        }
-    },
-
     get filteredParties() {
         let list = this.parties;
         if (this.typeFilter !== 'all') list = list.filter(p => p.type === this.typeFilter);
@@ -79,14 +53,6 @@
     },
 
     async selectParty(type, id) {
-        // Keep the URL in sync with the open party. selectParty() only
-        // flips client-side state, so without this the address bar stays on
-        // whatever was last loaded — if Android reclaims the WebView while
-        // it's backgrounded (e.g. handing off to WhatsApp) and restores it
-        // later, the restore reloads that stale URL and land back on the
-        // list/default party instead of the one actually being viewed.
-        history.replaceState(null, '', '{{ url('/parties/ledger') }}?type=' + type + '&id=' + id);
-
         if (this.selectedType === type && this.selectedId === id && this.ledger) {
             this.mobileView = 'detail';
             return;
@@ -343,7 +309,7 @@
             <div>
                 {{-- Header --}}
                 <div class="sticky top-0 z-20 bg-white border-b border-gray-100 shadow-sm px-4 py-3 flex items-center gap-2">
-                    <button @click="mobileView = 'list'; history.replaceState(null, '', '{{ url('/parties/ledger') }}')"
+                    <button @click="mobileView = 'list'"
                         class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors shrink-0">
                         <i class="bi bi-arrow-left text-primary-dark text-lg"></i>
                     </button>
