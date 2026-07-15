@@ -32,6 +32,32 @@
     loading: false,
     mobileView:   window.__ledger.mobileView,
 
+    // Tapping a party link (e.g. from WhatsApp) while the installed PWA is
+    // already open showing a different party can bring the existing WebView
+    // to the foreground without doing a fresh page load — the address bar
+    // ends up on the new URL but this Alpine state (and window.__ledger)
+    // still reflects whatever party was open before. Re-check the URL
+    // whenever the app regains visibility/focus and reload if it points at
+    // a different party than what's currently shown.
+    init() {
+        const resync = () => this.syncFromUrl();
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') resync();
+        });
+        window.addEventListener('pageshow', resync);
+        window.addEventListener('focus', resync);
+    },
+
+    syncFromUrl() {
+        const params = new URLSearchParams(location.search);
+        const type = params.get('type');
+        const id = params.get('id');
+        if (!type || !id) return;
+        if (type !== this.selectedType || String(id) !== String(this.selectedId)) {
+            this.selectParty(type, id);
+        }
+    },
+
     get filteredParties() {
         let list = this.parties;
         if (this.typeFilter !== 'all') list = list.filter(p => p.type === this.typeFilter);
