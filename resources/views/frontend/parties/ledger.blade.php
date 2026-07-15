@@ -1,36 +1,20 @@
 @extends('admin.admin_master')
 @section('page_title', 'Parties')
-
 @section('admin')
 
 @php
     $symbol = '$';
-    $ledgerCompany = $company ?? \App\Models\Company::find(auth()->user()->company_id ?? 0);
-    $initialMobileView = $ledger ? 'detail' : 'list';
 @endphp
 
-<script>
-    window.__ledger = {
-        companyName:  @js($ledgerCompany->name ?? 'us'),
-        parties:      @js($parties),
-        selectedType: @js($selectedType),
-        selectedId:   @js($selectedId ?? null),
-        ledger:       @js($ledger),
-        mobileView:   @js($initialMobileView),
-    };
-</script>
-
-<div x-data="{
-    companyName: window.__ledger.companyName,
-    parties:     window.__ledger.parties,
+<div class="h-[calc(100vh-5rem)] flex bg-background" x-data="{
+    parties: @js($parties),
     search: '',
     typeFilter: 'all',
     txnSearch: '',
-    selectedType: window.__ledger.selectedType,
-    selectedId:   window.__ledger.selectedId,
-    ledger:       window.__ledger.ledger,
+    selectedType: '{{ $selectedType }}',
+    selectedId: {{ $selectedId ?? 'null' }},
+    ledger: @js($ledger),
     loading: false,
-    mobileView:   window.__ledger.mobileView,
 
     get filteredParties() {
         let list = this.parties;
@@ -53,17 +37,13 @@
     },
 
     async selectParty(type, id) {
-        if (this.selectedType === type && this.selectedId === id && this.ledger) {
-            this.mobileView = 'detail';
-            return;
-        }
+        if (this.selectedType === type && this.selectedId === id) return;
         this.selectedType = type;
         this.selectedId = id;
         this.loading = true;
         try {
             const res = await fetch('{{ url('/parties') }}/' + type + '/' + id + '/ledger-data', { headers: { 'Accept': 'application/json' } });
             this.ledger = await res.json();
-            this.mobileView = 'detail';
         } catch (e) {
             Swal.fire({ icon: 'error', title: 'Something went wrong', text: 'Could not load party ledger.' });
         } finally {
@@ -84,6 +64,11 @@
         }
     },
 
+    // Maps each transaction type to the route for the record actually
+    // behind it, reusing each module's existing delete endpoint (with its
+    // own balance/accounting reversal already built in) rather than
+    // duplicating that logic here. Payment/Sale/Purchase routes differ by
+    // party type since customers and suppliers use separate models.
     deleteTransaction(txn) {
         const isSupplier = this.ledger.party.type === 'supplier';
         let url = null;
@@ -104,7 +89,7 @@
 
         deleteRecordWithPassword(url, txn.type, {
             title: 'Delete Transaction?',
-            text: 'Are you sure you want to delete this ' + txn.type.toLowerCase() + '? This action cannot be undone.',
+            text: `Are you sure you want to delete this ${txn.type.toLowerCase()}? This action cannot be undone.`,
             onSuccess: () => this.refreshLedger()
         });
     },
@@ -122,225 +107,161 @@
         link.href = URL.createObjectURL(blob);
         link.download = (this.ledger.party.name || 'party') + '-transactions.csv';
         link.click();
-    },
-
-    statusBadgeClass(status) {
-        const s = (status || '').toLowerCase();
-        if (s === 'unpaid') return 'bg-amber-100 text-amber-700';
-        if (s === 'paid') return 'bg-emerald-100 text-emerald-700';
-        if (s === 'partial') return 'bg-orange-100 text-orange-600';
-        if (s === 'unused') return 'bg-blue-100 text-blue-600';
-        if (s === 'draft') return 'bg-gray-100 text-gray-500';
-        return 'bg-gray-100 text-gray-600';
-    },
-
-    isPayment(type) {
-        return type === 'Payment-In' || type === 'Payment-Out';
-    },
-
-    // wa.me links need the full international number. Party phone numbers
-    // are usually saved locally (e.g. "612040858") without the +252 country
-    // code, which makes WhatsApp/iOS reject the link outright. Assume the
-    // Somalia country code for short, code-less numbers.
-    normalizePhone(raw) {
-        let digits = (raw || '').replace(/[^0-9]/g, '');
-        if (!digits || digits.startsWith('252')) return digits;
-        const trimmed = digits.replace(/^0+/, '');
-        return trimmed.length <= 9 ? '252' + trimmed : digits;
-    },
-
-    sendReminder() {
-        if (!this.ledger) return;
-        const phone = this.normalizePhone(this.ledger.party.phone);
-        if (!phone) {
-            Swal.fire({ icon: 'warning', title: 'No Phone Number', text: 'This party has no phone number saved. Please add one first.' });
-            return;
-        }
-        const name = this.ledger.party.name;
-        const amt  = parseFloat(this.ledger.party.amount).toFixed(2);
-        const co   = this.companyName;
-        const msg  = 'Dear ' + name + ',\n\nWe would like to kindly remind you that your outstanding balance with *' + co + '* is *$' + amt + '*.\n\nPlease arrange payment at your earliest convenience.\n\nThank you for your business!';
-        window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
-    },
-
-    sendStatement() {
-        if (!this.ledger) return;
-        const phone = this.normalizePhone(this.ledger.party.phone);
-        if (!phone) {
-            Swal.fire({ icon: 'warning', title: 'No Phone Number', text: 'This party has no phone number saved. Please add one first.' });
-            return;
-        }
-        const name = this.ledger.party.name;
-        const co   = this.companyName;
-        const url  = this.ledger.party.statement_url;
-        const msg  = 'Dear ' + name + ',\n\nPlease find your account statement with *' + co + '* at the link below:\n\n' + url + '\n\nThank you for your business!';
-        window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
     }
 }">
-
-    {{-- ═══════════════════════════ DESKTOP LAYOUT ═══════════════════════════ --}}
-    <div class="h-[calc(100vh-5rem)] bg-background flex">
-
-        {{-- Left Sidebar - Party List --}}
-        <div class="w-72 shrink-0 border-r border-gray-100 bg-white flex flex-col">
-            <div class="p-4 flex items-center gap-2 border-b border-gray-100">
-                <div class="relative flex-1">
-                    <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                    <input type="text" x-model="search" placeholder="Search Party Name"
-                        class="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-[0.5rem] text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+    <!-- Left Sidebar - Party List -->
+    <div class="w-72 shrink-0 border-r border-gray-100 bg-white flex flex-col">
+        <div class="p-4 flex items-center gap-2 border-b border-gray-100">
+            <div class="relative flex-1">
+                <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                <input type="text" x-model="search" placeholder="Search Party Name"
+                    class="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-[0.5rem] text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+            </div>
+            <div x-data="{ open: false }" class="relative">
+                <button @click="open = !open" @click.away="open = false"
+                    class="px-3 py-2 bg-accent text-primary font-bold rounded-[0.5rem] text-[12px] uppercase tracking-wide whitespace-nowrap hover:bg-accent/90 transition-all">
+                    <i class="bi bi-plus-lg"></i> Add Party
+                </button>
+                <div x-show="open" x-cloak x-transition class="absolute right-0 mt-1 w-44 bg-white rounded-lg shadow-lg border border-gray-100 z-20 overflow-hidden">
+                    <a href="{{ route('customer.index') }}" class="block px-4 py-2.5 text-[13px] font-semibold text-primary-dark hover:bg-gray-50">New Customer</a>
+                    <a href="{{ route('supplier.index') }}" class="block px-4 py-2.5 text-[13px] font-semibold text-primary-dark hover:bg-gray-50 border-t border-gray-50">New Supplier</a>
                 </div>
-                <div x-data="{ open: false }" class="relative">
-                    <button @click="open = !open" @click.away="open = false"
-                        class="px-3 py-2 bg-accent text-primary font-bold rounded-[0.5rem] text-[12px] uppercase tracking-wide whitespace-nowrap hover:bg-accent/90 transition-all">
-                        <i class="bi bi-plus-lg"></i> Add Party
-                    </button>
-                    <div x-show="open" x-cloak x-transition class="absolute right-0 mt-1 w-44 bg-white rounded-lg shadow-lg border border-gray-100 z-20 overflow-hidden">
-                        <a href="{{ route('customer.index') }}" class="block px-4 py-2.5 text-[13px] font-semibold text-primary-dark hover:bg-gray-50">New Customer</a>
-                        <a href="{{ route('supplier.index') }}" class="block px-4 py-2.5 text-[13px] font-semibold text-primary-dark hover:bg-gray-50 border-t border-gray-50">New Supplier</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-1.5 px-4 py-2.5 border-b border-gray-100 bg-background/50">
-                <button @click="typeFilter = 'all'" class="px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide transition-all" :class="typeFilter === 'all' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-500'">All</button>
-                <button @click="typeFilter = 'customer'" class="px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide transition-all" :class="typeFilter === 'customer' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-500'">Customers</button>
-                <button @click="typeFilter = 'supplier'" class="px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide transition-all" :class="typeFilter === 'supplier' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-500'">Suppliers</button>
-            </div>
-
-            <div class="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 bg-background/50">
-                <span class="text-[11px] font-black text-primary-dark uppercase tracking-wider">Party Name</span>
-                <span class="text-[11px] font-black text-primary-dark uppercase tracking-wider">Amount</span>
-            </div>
-
-            <div class="flex-1 overflow-y-auto custom-scrollbar">
-                <template x-for="party in filteredParties" :key="party.type + '-' + party.id">
-                    <div @click="selectParty(party.type, party.id)"
-                        class="flex items-center justify-between px-4 py-3 cursor-pointer border-b border-gray-50 hover:bg-gray-50 transition-colors"
-                        :class="selectedType === party.type && selectedId === party.id ? 'bg-primary/5 border-l-[3px] border-l-primary' : ''">
-                        <span class="text-[13px] font-semibold text-primary-dark truncate" :class="selectedType === party.type && selectedId === party.id ? 'font-bold' : ''" x-text="party.name"></span>
-                        <span class="text-[13px] font-bold" :class="party.type === 'supplier' ? 'text-red-500' : 'text-accent'" x-text="parseFloat(party.amount).toFixed(2)"></span>
-                    </div>
-                </template>
-                <template x-if="!filteredParties.length">
-                    <p class="px-4 py-6 text-center text-[12px] text-gray-400">No parties found.</p>
-                </template>
             </div>
         </div>
 
-        {{-- Right Panel - Party Detail & Transactions --}}
-        <div class="flex-1 flex flex-col overflow-hidden">
-            <template x-if="loading">
-                <div class="flex-1 flex items-center justify-center text-gray-400">
-                    <i class="bi bi-arrow-repeat animate-spin text-2xl"></i>
+        <div class="flex items-center gap-1.5 px-4 py-2.5 border-b border-gray-100 bg-background/50">
+            <button @click="typeFilter = 'all'" class="px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide transition-all" :class="typeFilter === 'all' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-500'">All</button>
+            <button @click="typeFilter = 'customer'" class="px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide transition-all" :class="typeFilter === 'customer' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-500'">Customers</button>
+            <button @click="typeFilter = 'supplier'" class="px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide transition-all" :class="typeFilter === 'supplier' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-500'">Suppliers</button>
+        </div>
+
+        <div class="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 bg-background/50">
+            <span class="text-[11px] font-black text-primary-dark uppercase tracking-wider">Party Name</span>
+            <span class="text-[11px] font-black text-primary-dark uppercase tracking-wider">Amount</span>
+        </div>
+
+        <div class="flex-1 overflow-y-auto custom-scrollbar">
+            <template x-for="party in filteredParties" :key="party.type + '-' + party.id">
+                <div @click="selectParty(party.type, party.id)"
+                    class="flex items-center justify-between px-4 py-3 cursor-pointer border-b border-gray-50 hover:bg-gray-50 transition-colors"
+                    :class="selectedType === party.type && selectedId === party.id ? 'bg-primary/5 border-l-[3px] border-l-primary' : ''">
+                    <span class="text-[13px] font-semibold text-primary-dark truncate" :class="selectedType === party.type && selectedId === party.id ? 'font-bold' : ''" x-text="party.name"></span>
+                    <span class="text-[13px] font-bold" :class="party.type === 'supplier' ? 'text-red-500' : 'text-accent'" x-text="parseFloat(party.amount).toFixed(2)"></span>
                 </div>
             </template>
-
-            <template x-if="!loading && !ledger">
-                <div class="flex-1 flex items-center justify-center text-gray-400 flex-col gap-2">
-                    <i class="bi bi-people text-3xl"></i>
-                    <p class="text-[13px] font-semibold">No parties found. Add a customer or supplier to get started.</p>
-                </div>
-            </template>
-
-            <template x-if="!loading && ledger">
-                <div class="flex-1 flex flex-col overflow-hidden">
-                    <!-- Party Header -->
-                    <div class="p-6 border-b border-gray-100 bg-white flex items-start justify-between flex-wrap gap-4">
-                        <div>
-                            <h1 class="text-[18px] font-bold text-primary-dark flex items-center gap-2">
-                                <span x-text="ledger.party.name"></span>
-                                <a :href="ledger.party.type === 'supplier' ? '{{ route('supplier.index') }}' : '{{ route('customer.index') }}'" title="Manage Parties" class="text-gray-300 hover:text-primary transition-colors">
-                                    <i class="bi bi-pencil-square text-[14px]"></i>
-                                </a>
-                            </h1>
-                            <p class="text-[12px] text-gray-400 mt-2">Phone Number</p>
-                            <p class="text-[14px] font-semibold text-primary-dark" x-text="ledger.party.phone || '-'"></p>
-                        </div>
-
-                        <div class="flex items-center gap-2">
-                            <a :href="'https://wa.me/' + normalizePhone(ledger.party.phone)" target="_blank" title="WhatsApp"
-                                x-show="ledger.party.phone"
-                                class="w-9 h-9 flex items-center justify-center bg-green-50 text-green-600 rounded-full hover:bg-green-100 transition-all">
-                                <i class="bi bi-whatsapp"></i>
-                            </a>
-                            <a :href="ledger.party.type === 'supplier' ? '{{ url('/suppliers') }}/' + ledger.party.id + '/statement' : '{{ url('/customers') }}/' + ledger.party.id + '/statement'" title="View Full Statement"
-                                class="w-9 h-9 flex items-center justify-center bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-all">
-                                <i class="bi bi-file-earmark-text"></i>
-                            </a>
-                            <a :href="ledger.party.type === 'supplier' ? '{{ route('view_payment_out') }}?vendor_id=' + ledger.party.id : '{{ route('view_payment_in') }}?customer_id=' + ledger.party.id" title="Payout"
-                                class="w-9 h-9 flex items-center justify-center bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-all">
-                                <i class="bi bi-cash-coin"></i>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Transactions -->
-                    <div class="flex-1 overflow-y-auto custom-scrollbar p-6">
-                        <div class="flex items-center justify-between mb-3">
-                            <h2 class="text-[13px] font-bold text-primary-dark uppercase tracking-wider">Transactions</h2>
-                            <div class="flex items-center gap-2">
-                                <div class="relative">
-                                    <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                                    <input type="text" x-model="txnSearch" placeholder="Search transactions..."
-                                        class="pl-9 pr-3 py-2 w-64 bg-white border border-gray-200 rounded-[0.5rem] text-[13px] font-medium text-gray-700 focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
-                                </div>
-                                <button @click="window.print()" title="Print"
-                                    class="w-9 h-9 flex items-center justify-center bg-white border border-gray-200 text-gray-600 rounded-[0.5rem] hover:bg-gray-50 transition-all">
-                                    <i class="bi bi-printer"></i>
-                                </button>
-                                <button @click="exportCsv()" title="Export to CSV"
-                                    class="w-9 h-9 flex items-center justify-center bg-primary text-white rounded-[0.5rem] hover:bg-primary/90 transition-all">
-                                    <i class="bi bi-file-earmark-excel"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="bg-white rounded-[1rem] border border-gray-200/80 shadow-sm overflow-hidden">
-                            <table class="w-full text-left">
-                                <thead>
-                                    <tr class="bg-background/60 border-b border-gray-100">
-                                        <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider">Type</th>
-                                        <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider">Number</th>
-                                        <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider">Date</th>
-                                        <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right">Total</th>
-                                        <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right">Balance</th>
-                                        <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider">Status</th>
-                                        <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-50">
-                                    <template x-for="txn in filteredTransactions" :key="txn.type + txn.number + txn.date">
-                                        <tr class="hover:bg-gray-50/60 transition-colors">
-                                            <td class="px-5 py-3.5 text-[13px] font-semibold text-primary-dark">
-                                                <span class="w-2 h-2 rounded-full inline-block mr-2" :class="txn.type_color"></span>
-                                                <span x-text="txn.type"></span>
-                                            </td>
-                                            <td class="px-5 py-3.5 text-[13px] text-gray-500" x-text="txn.number ?? ''"></td>
-                                            <td class="px-5 py-3.5 text-[13px] text-gray-500" x-text="txn.date"></td>
-                                            <td class="px-5 py-3.5 text-[13px] font-semibold text-primary-dark text-right" x-text="'{{ $symbol }} ' + parseFloat(txn.total).toFixed(2)"></td>
-                                            <td class="px-5 py-3.5 text-[13px] text-gray-700 text-right" x-text="'{{ $symbol }} ' + parseFloat(txn.balance).toFixed(2)"></td>
-                                            <td class="px-5 py-3.5 text-[13px] text-gray-700" x-text="txn.status ?? ''"></td>
-                                            <td class="px-5 py-3.5 text-right">
-                                                <button @click="deleteTransaction(txn)" title="Delete Transaction"
-                                                    class="text-primary hover:text-red-500 transition-colors">
-                                                    <i class="bi bi-trash3"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    </template>
-                                    <template x-if="!filteredTransactions.length">
-                                        <tr><td colspan="7" class="px-5 py-10 text-center text-[13px] text-gray-400">No transactions found for this party.</td></tr>
-                                    </template>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+            <template x-if="!filteredParties.length">
+                <p class="px-4 py-6 text-center text-[12px] text-gray-400">No parties found.</p>
             </template>
         </div>
     </div>
 
-</div>
+    <!-- Right Panel - Party Detail & Transactions -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <template x-if="loading">
+            <div class="flex-1 flex items-center justify-center text-gray-400">
+                <i class="bi bi-arrow-repeat animate-spin text-2xl"></i>
+            </div>
+        </template>
 
+        <template x-if="!loading && !ledger">
+            <div class="flex-1 flex items-center justify-center text-gray-400 flex-col gap-2">
+                <i class="bi bi-people text-3xl"></i>
+                <p class="text-[13px] font-semibold">No parties found. Add a customer or supplier to get started.</p>
+            </div>
+        </template>
+
+        <template x-if="!loading && ledger">
+            <div class="flex-1 flex flex-col overflow-hidden">
+                <!-- Party Header -->
+                <div class="p-6 border-b border-gray-100 bg-white flex items-start justify-between flex-wrap gap-4">
+                    <div>
+                        <h1 class="text-[18px] font-bold text-primary-dark flex items-center gap-2">
+                            <span x-text="ledger.party.name"></span>
+                            <a :href="ledger.party.type === 'supplier' ? '{{ route('supplier.index') }}' : '{{ route('customer.index') }}'" title="Manage Parties" class="text-gray-300 hover:text-primary transition-colors">
+                                <i class="bi bi-pencil-square text-[14px]"></i>
+                            </a>
+                        </h1>
+                        <p class="text-[12px] text-gray-400 mt-2">Phone Number</p>
+                        <p class="text-[14px] font-semibold text-primary-dark" x-text="ledger.party.phone || '-'"></p>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <a :href="'https://wa.me/' + (ledger.party.phone || '').replace(/[^0-9]/g, '')" target="_blank" title="WhatsApp"
+                            x-show="ledger.party.phone"
+                            class="w-9 h-9 flex items-center justify-center bg-green-50 text-green-600 rounded-full hover:bg-green-100 transition-all">
+                            <i class="bi bi-whatsapp"></i>
+                        </a>
+                        <a :href="ledger.party.type === 'supplier' ? '{{ url('/suppliers') }}/' + ledger.party.id + '/statement' : '{{ url('/customers') }}/' + ledger.party.id + '/statement'" title="View Full Statement"
+                            class="w-9 h-9 flex items-center justify-center bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-all">
+                            <i class="bi bi-file-earmark-text"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Transactions -->
+                <div class="flex-1 overflow-y-auto custom-scrollbar p-6">
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="text-[13px] font-bold text-primary-dark uppercase tracking-wider">Transactions</h2>
+                        <div class="flex items-center gap-2">
+                            <div class="relative">
+                                <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                                <input type="text" x-model="txnSearch" placeholder="Search transactions..."
+                                    class="pl-9 pr-3 py-2 w-64 bg-white border border-gray-200 rounded-[0.5rem] text-[13px] font-medium text-gray-700 focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                            </div>
+                            <button @click="window.print()" title="Print"
+                                class="w-9 h-9 flex items-center justify-center bg-white border border-gray-200 text-gray-600 rounded-[0.5rem] hover:bg-gray-50 transition-all">
+                                <i class="bi bi-printer"></i>
+                            </button>
+                            <button @click="exportCsv()" title="Export to CSV"
+                                class="w-9 h-9 flex items-center justify-center bg-primary text-white rounded-[0.5rem] hover:bg-primary/90 transition-all">
+                                <i class="bi bi-file-earmark-excel"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-[1rem] border border-gray-200/80 shadow-sm overflow-hidden">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="bg-background/60 border-b border-gray-100">
+                                    <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider">Type</th>
+                                    <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider">Number</th>
+                                    <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider">Date</th>
+                                    <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right">Total</th>
+                                    <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right">Balance</th>
+                                    <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider">Status</th>
+                                    <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-50">
+                                <template x-for="txn in filteredTransactions" :key="txn.type + txn.number + txn.date">
+                                    <tr class="hover:bg-gray-50/60 transition-colors">
+                                        <td class="px-5 py-3.5 text-[13px] font-semibold text-primary-dark">
+                                            <span class="w-2 h-2 rounded-full inline-block mr-2" :class="txn.type_color"></span>
+                                            <span x-text="txn.type"></span>
+                                        </td>
+                                        <td class="px-5 py-3.5 text-[13px] text-gray-500" x-text="txn.number ?? ''"></td>
+                                        <td class="px-5 py-3.5 text-[13px] text-gray-500" x-text="txn.date"></td>
+                                        <td class="px-5 py-3.5 text-[13px] font-semibold text-primary-dark text-right" x-text="'{{ $symbol }} ' + parseFloat(txn.total).toFixed(2)"></td>
+                                        <td class="px-5 py-3.5 text-[13px] text-gray-700 text-right" x-text="'{{ $symbol }} ' + parseFloat(txn.balance).toFixed(2)"></td>
+                                        <td class="px-5 py-3.5 text-[13px] text-gray-700" x-text="txn.status ?? ''"></td>
+                                        <td class="px-5 py-3.5 text-right">
+                                            <button @click="deleteTransaction(txn)" title="Delete Transaction"
+                                                class="text-primary hover:text-red-500 transition-colors">
+                                                <i class="bi bi-trash3"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </template>
+                                <template x-if="!filteredTransactions.length">
+                                    <tr><td colspan="7" class="px-5 py-10 text-center text-[13px] text-gray-400">No transactions found for this party.</td></tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+</div>
 
 @endsection
