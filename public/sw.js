@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'waafibook-v2';
+const CACHE_VERSION = 'waafibook-v1';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 const IMAGE_CACHE   = `${CACHE_VERSION}-images`;
@@ -104,15 +104,16 @@ async function networkFirst(request, cacheName) {
 }
 
 async function networkFirstWithOfflineFallback(request) {
-  // Pages here are authenticated, per-account, and change constantly (party
-  // ledgers, invoices, etc.) — caching and replaying them on a network blip
-  // (e.g. the brief connectivity hiccup when switching back from another
-  // app) can serve stale or even a different account's data. Only ever
-  // fall back to the dedicated offline page, never a cached copy of the
-  // real page.
   try {
-    return await fetch(request);
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(DYNAMIC_CACHE);
+      cache.put(request, response.clone());
+    }
+    return response;
   } catch {
+    const cached = await caches.match(request);
+    if (cached) return cached;
     return caches.match('/offline');
   }
 }
