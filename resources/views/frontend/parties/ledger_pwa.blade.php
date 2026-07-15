@@ -96,6 +96,7 @@
         this.loading = true;
         try {
             const res = await fetch('{{ url('/parties') }}/' + type + '/' + id + '/ledger-data', { headers: { 'Accept': 'application/json' } });
+            if (!res.ok) throw new Error('Party not found');
             this.ledger = await res.json();
             this.mobileView = 'detail';
         } catch (e) {

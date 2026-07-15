@@ -25,7 +25,18 @@ class PartiesController extends Controller
         $selectedType = $request->input('type', $parties->first()['type'] ?? null);
         $selectedId   = $request->input('id', $parties->first()['id'] ?? null);
 
-        $ledger = ($selectedType && $selectedId) ? $this->buildPartyLedger($selectedType, $selectedId) : null;
+        // A stale/foreign/mistyped id (e.g. one belonging to another company,
+        // filtered out by TenantScope) throws ModelNotFoundException. Rather
+        // than surface the framework's raw 404 page, fall back to the party
+        // list so the user lands somewhere useful.
+        $ledger = null;
+        if ($selectedType && $selectedId) {
+            try {
+                $ledger = $this->buildPartyLedger($selectedType, $selectedId);
+            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+                $selectedType = $selectedId = null;
+            }
+        }
 
         $isMobile = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $request->userAgent() ?? '');
         $view = $isMobile ? 'frontend.parties.ledger_pwa' : 'frontend.parties.ledger';
@@ -35,7 +46,11 @@ class PartiesController extends Controller
 
     public function ledgerData($type, $id)
     {
-        return response()->json($this->buildPartyLedger($type, $id));
+        try {
+            return response()->json($this->buildPartyLedger($type, $id));
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'This party could not be found.'], 404);
+        }
     }
 
     // Deletes a party's Opening Balance entry from the ledger: removes the
