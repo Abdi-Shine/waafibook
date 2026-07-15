@@ -20,25 +20,6 @@
     };
 </script>
 
-{{-- TEMPORARY diagnostic banner — remove once the blank-party-list issue is
-     found. Shows any uncaught JS error directly on the page since the
-     reporter can't reach browser DevTools on their phone. --}}
-<div id="__debugErrorBanner" style="display:none; position:fixed; top:0; left:0; right:0; z-index:99999; background:#dc2626; color:#fff; padding:10px; font-size:12px; word-break:break-all;"></div>
-<script>
-    window.addEventListener('error', function (e) {
-        var el = document.getElementById('__debugErrorBanner');
-        if (!el) return;
-        el.style.display = 'block';
-        el.textContent = 'JS ERROR: ' + e.message + ' (' + (e.filename || '?') + ':' + (e.lineno || '?') + ':' + (e.colno || '?') + ')';
-    });
-    window.addEventListener('unhandledrejection', function (e) {
-        var el = document.getElementById('__debugErrorBanner');
-        if (!el) return;
-        el.style.display = 'block';
-        el.textContent = 'PROMISE ERROR: ' + (e.reason && e.reason.message ? e.reason.message : e.reason);
-    });
-</script>
-
 <div class="min-h-screen bg-gray-100" x-data="{
     companyName: window.__ledger.companyName,
     parties:     window.__ledger.parties,
