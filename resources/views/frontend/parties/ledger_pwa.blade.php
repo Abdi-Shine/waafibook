@@ -53,6 +53,14 @@
     },
 
     async selectParty(type, id) {
+        // Keep the URL in sync with the open party. selectParty() only
+        // flips client-side state, so without this the address bar stays on
+        // whatever was last loaded — if Android reclaims the WebView while
+        // it's backgrounded (e.g. handing off to WhatsApp) and restores it
+        // later, the restore reloads that stale URL and land back on the
+        // list/default party instead of the one actually being viewed.
+        history.replaceState(null, '', '{{ url('/parties/ledger') }}?type=' + type + '&id=' + id);
+
         if (this.selectedType === type && this.selectedId === id && this.ledger) {
             this.mobileView = 'detail';
             return;
@@ -308,7 +316,7 @@
             <div>
                 {{-- Header --}}
                 <div class="sticky top-0 z-20 bg-white border-b border-gray-100 shadow-sm px-4 py-3 flex items-center gap-2">
-                    <button @click="mobileView = 'list'"
+                    <button @click="mobileView = 'list'; history.replaceState(null, '', '{{ url('/parties/ledger') }}')"
                         class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors shrink-0">
                         <i class="bi bi-arrow-left text-primary-dark text-lg"></i>
                     </button>
