@@ -156,7 +156,7 @@
     },
 
     // wa.me links need the full international number. Party phone numbers
-    // are usually saved locally (e.g. "612040858") without the +252 country
+    // are usually saved locally (e.g. 612040858) without the +252 country
     // code, which makes WhatsApp/iOS reject the link outright. Assume the
     // Somalia country code for short, code-less numbers.
     normalizePhone(raw) {
