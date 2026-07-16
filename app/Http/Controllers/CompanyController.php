@@ -485,9 +485,11 @@ class CompanyController extends Controller
 
         $company = Company::find(auth()->user()->company_id);
 
-        // Approximate DB size
-        $dbName = config('database.connections.mysql.database');
-        $dbSize = DB::select("SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS size FROM information_schema.TABLES WHERE table_schema = ?", [$dbName])[0]->size ?? 0;
+        // This company's total backup storage footprint. Previously measured
+        // via information_schema.TABLES, which sums every table in the whole
+        // shared database across every tenant — nothing to do with this
+        // company's own backups, and inconsistent with the ledger below it.
+        $dbSize = round($backups->sum('size') / 1024 / 1024, 2);
         
         $settings = [
             'backup_retention' => $company->backup_retention ?? 30,
