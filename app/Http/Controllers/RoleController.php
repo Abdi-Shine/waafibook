@@ -6,6 +6,7 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Validation\Rule;
 
 class RoleController extends Controller
 {
@@ -46,7 +47,7 @@ class RoleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|unique:roles,name',
+            'name' => ['required', 'string', Rule::unique('roles', 'name')->where('company_id', auth()->user()->company_id)],
             'description' => 'nullable|string',
             'permissions' => 'required|array',
         ]);
@@ -65,7 +66,7 @@ class RoleController extends Controller
         $role = Role::query()->findOrFail($id);
 
         $request->validate([
-            'name' => 'required|string|unique:roles,name,' . $id,
+            'name' => ['required', 'string', Rule::unique('roles', 'name')->where('company_id', auth()->user()->company_id)->ignore($id)],
             'description' => 'nullable|string',
             'permissions' => 'required|array',
         ]);
