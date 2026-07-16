@@ -144,7 +144,7 @@
                                 </td>
                                 <td class="px-5 py-4">
                                     <div class="text-xs font-bold text-primary-dark leading-tight italic">
-                                        {{ $backup->size ?? '1.2 MB' }}
+                                        {{ $backup->size ? number_format($backup->size / 1024 / 1024, 2) . ' MB' : '—' }}
                                     </div>
                                 </td>
                                 <td class="px-5 py-4">

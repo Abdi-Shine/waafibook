@@ -559,14 +559,12 @@ class CompanyController extends Controller
                 throw new \Exception("Backup failed with error code $returnVar. Please check database permissions.");
             }
 
-            $size = round(filesize($path) / 1024 / 1024, 2) . " MB";
-
             $company = auth()->user()->company;
             Backup::query()->create([
                 'company_id' => $company ? $company->id : null,
                 'filename' => $filename,
                 'path' => 'backups/' . $filename,
-                'size' => $size,
+                'size' => filesize($path),
                 'type' => 'manual',
                 'status' => 'success'
             ]);
@@ -737,7 +735,7 @@ class CompanyController extends Controller
             Backup::query()->create([
                 'filename' => $filename,
                 'path' => 'backups/' . $filename,
-                'size' => round(filesize($path) / 1024 / 1024, 2) . " MB",
+                'size' => filesize($path),
                 'type' => 'gmail',
                 'status' => 'success'
             ]);

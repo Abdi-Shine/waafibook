@@ -70,16 +70,17 @@ class SystemBackup extends Command
             exec($command, $output, $returnVar);
 
             if ($returnVar === 0 && file_exists($path) && filesize($path) > 0) {
-                $size = round(filesize($path) / 1024 / 1024, 2) . " MB";
+                $bytes = filesize($path);
+                $sizeLabel = round($bytes / 1024 / 1024, 2) . " MB";
                 \App\Models\Backup::create([
                     'company_id' => $company->id,
                     'filename' => $filename,
                     'path' => 'backups/' . $filename,
-                    'size' => $size,
+                    'size' => $bytes,
                     'type' => $this->option('type'),
                     'status' => 'success'
                 ]);
-                $this->info("Snapshot successfully archived: {$filename} ({$size})");
+                $this->info("Snapshot successfully archived: {$filename} ({$sizeLabel})");
 
                 // Enforce Retention Policy
                 $retentionDays = $company->backup_retention ?? 30;
