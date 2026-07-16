@@ -54,14 +54,13 @@ class EmployeeController extends Controller
             'designation' => 'nullable|string',
             'salary' => 'nullable|numeric',
             'companyName' => 'required|string',
-            'branch' => 'required_without:store|nullable|string',
-            'store' => 'required_without:branch|nullable|string',
+            'branch' => 'nullable|string',
         ]);
 
         DB::beginTransaction();
         try {
             $fullName = $request->fullName;
-            
+
             // Handle Photo
             $photoPath = null;
             if ($request->hasFile('photo')) {
@@ -99,7 +98,6 @@ class EmployeeController extends Controller
                 'designation' => $request->designation,
                 'department' => $request->department,
                 'branch' => $request->branch,
-                'store' => $request->store,
                 'salary' => $request->salary,
                 'status' => 'active',
             ]);
@@ -132,8 +130,7 @@ class EmployeeController extends Controller
             'designation' => 'nullable|string',
             'salary' => 'nullable|numeric',
             'companyName' => 'required|string',
-            'branch' => 'required_without:store|nullable|string',
-            'store' => 'required_without:branch|nullable|string',
+            'branch' => 'nullable|string',
         ]);
 
         DB::beginTransaction();
@@ -176,7 +173,6 @@ class EmployeeController extends Controller
                 'designation' => $request->designation,
                 'department' => $request->department,
                 'branch' => $request->branch,
-                'store' => $request->store,
                 'salary' => $request->salary,
             ]);
 
