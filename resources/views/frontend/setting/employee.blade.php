@@ -179,10 +179,12 @@
                     <thead>
                         <tr class="bg-white border-b border-gray-100">
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center w-12">#</th>
-                            <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Employee Name</th>
+                            <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Full Name</th>
+                            <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Phone Number</th>
+                            <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Gender</th>
                             <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider">Position</th>
-                            <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Unit/Branch</th>
-                            <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Duty Status</th>
+                            <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Basic Salary</th>
+                            <th class="px-5 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Active</th>
                             <th class="px-6 py-4 text-[12px] font-black text-primary-dark uppercase tracking-wider text-center">Actions</th>
                         </tr>
                     </thead>
@@ -194,25 +196,30 @@
                             <td class="px-5 py-4 text-center">
                                 <span class="text-xs font-bold text-primary-dark leading-tight">{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
                             </td>
-                            <!-- Personnel Profile -->
+                            <!-- Full Name -->
                             <td class="px-5 py-4">
                                 <div class="text-xs font-bold text-primary-dark leading-tight">{{ $employee->full_name }}</div>
                             </td>
-                            <!-- Designation -->
+                            <!-- Phone Number -->
+                            <td class="px-5 py-3">
+                                <div class="text-xs font-bold text-primary-dark leading-tight">{{ $employee->phone ?? '—' }}</div>
+                            </td>
+                            <!-- Gender -->
+                            <td class="px-5 py-3 text-center">
+                                <div class="text-xs font-bold text-primary-dark leading-tight">{{ $employee->gender ?? '—' }}</div>
+                            </td>
+                            <!-- Position -->
                             <td class="px-5 py-3">
                                 <div class="text-xs font-bold text-primary-dark leading-tight">{{ $employee->designation }}</div>
                             </td>
-
-                            <!-- Branch/Store -->
+                            <!-- Basic Salary -->
                             <td class="px-5 py-3 text-center">
-                                <div class="text-xs font-bold text-primary-dark leading-tight">
-                                    {{ $employee->store ?? $employee->branch ?? 'Main HQ' }}
-                                </div>
+                                <div class="text-xs font-bold text-primary-dark leading-tight">${{ number_format($employee->salary ?? 0, 2) }}</div>
                             </td>
-                            <!-- Status -->
+                            <!-- Active -->
                             <td class="px-5 py-3 text-center">
-                                <span class="text-xs font-bold text-primary-dark leading-tight">
-                                    {{ $employee->status }}
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-black {{ strtolower($employee->status) === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-500' }}">
+                                    {{ strtolower($employee->status) === 'active' ? 'Active' : 'Inactive' }}
                                 </span>
                             </td>
                             <!-- Actions -->
