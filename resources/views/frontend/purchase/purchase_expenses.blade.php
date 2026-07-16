@@ -327,16 +327,11 @@
                         </div>
                         <div class="space-y-1.5">
                             <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Category <span class="text-primary">*</span></label>
-                            <div class="relative">
-                                @php $cogsAccount = $expenseAccounts->first(fn($a) => $a->code === '5110'); @endphp
-                                <select required name="expense_account_id"
-                                        class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
-                                    <option value="">-- SELECT CATEGORY --</option>
-                                    @foreach ($expenseAccounts as $account)
-                                        <option value="{{ $account->id }}" {{ $cogsAccount && $cogsAccount->id === $account->id ? 'selected' : '' }}>{{ $account->code }} - {{ $account->name }}</option>
-                                    @endforeach
-                                </select>
-                                <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+                            @php $cogsAccount = $expenseAccounts->first(fn($a) => $a->code === '5110'); @endphp
+                            <input type="hidden" name="expense_account_id" value="{{ $cogsAccount?->id }}">
+                            <div class="w-full pl-4 pr-4 py-2.5 bg-gray-100 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700">
+                                <i class="bi bi-tag text-primary mr-1"></i>
+                                {{ $cogsAccount ? $cogsAccount->code . ' - ' . $cogsAccount->name : 'Product Cost (COGS)' }}
                             </div>
                         </div>
                     </div>
