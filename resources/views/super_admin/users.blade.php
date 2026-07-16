@@ -27,7 +27,7 @@
             </select>
             <select name="role" class="form-select flex-fill" style="min-width:110px;" onchange="this.form.submit()">
                 <option value="">All Roles</option>
-                @foreach(['admin','Manager','Cashier','Accountant'] as $r)
+                @foreach(['admin','Manager','Cashier'] as $r)
                     <option value="{{ $r }}" {{ request('role') === $r ? 'selected' : '' }}>{{ $r }}</option>
                 @endforeach
             </select>

@@ -233,7 +233,6 @@ class RegisteredUserController extends Controller
         $defaultRoles = [
             ['name' => 'Manager',   'description' => 'Full access to all modules',       'permissions' => $fullPermissions],
             ['name' => 'Cashier',   'description' => 'Sales and POS access',              'permissions' => array_fill_keys(['Dashboard', 'Sales & POS', 'Customers', 'Products'], $allActions)],
-            ['name' => 'Accountant','description' => 'Accounting and reports access',     'permissions' => array_fill_keys(['Dashboard', 'Accounting', 'Reports'], $allActions)],
             ['name' => 'Staff',     'description' => 'View-only access to all modules',   'permissions' => $viewOnlyPermissions],
         ];
 
