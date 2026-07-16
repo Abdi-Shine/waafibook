@@ -36,7 +36,6 @@
                 form.fullName.value = employee.full_name || '';
                 form.phone.value = employee.phone || '';
                 form.gender.value = employee.gender || '';
-                form.employeeId.value = employee.employee_id || '';
                 form.companyName.value = employee.company || '';
                 form.department.value = employee.department || '';
                 form.designation.value = employee.designation || '';
