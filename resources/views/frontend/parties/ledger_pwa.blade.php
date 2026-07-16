@@ -163,7 +163,7 @@
         let digits = (raw || '').replace(/[^0-9]/g, '');
         if (!digits || digits.startsWith('252')) return digits;
         const trimmed = digits.replace(/^0+/, '');
-        return trimmed.length <= 9 ? '252' + trimmed : digits;
+        return trimmed.length <= 9 ? '252' + trimmed : trimmed;
     },
 
     // window.open('_blank') silently no-ops in a standalone/installed PWA (no
