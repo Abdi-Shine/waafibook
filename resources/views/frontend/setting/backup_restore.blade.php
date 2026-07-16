@@ -171,9 +171,6 @@
                                         <a href="{{ route('backup.download', $backup->id) }}" class="w-7 h-7 rounded-md bg-white border border-gray-200 text-gray-400 hover:text-primary hover:border-primary/20 transition-all flex items-center justify-center shadow-sm" title="Download">
                                             <i class="bi bi-download"></i>
                                         </a>
-                                        <button @click="deleteBackup('{{ $backup->id }}')" class="w-7 h-7 rounded-md bg-white border border-gray-200 text-gray-400 hover:text-primary hover:border-primary/20 transition-all flex items-center justify-center shadow-sm" title="Delete">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -203,11 +200,8 @@
                             <div class="w-8 h-8 rounded-full border-2 border-white bg-primary/10 flex items-center justify-center text-primary text-xs shadow-sm">
                                 <i class="bi bi-google"></i>
                             </div>
-                            <div class="w-8 h-8 rounded-full border-2 border-white bg-primary/10 flex items-center justify-center text-primary text-xs shadow-sm">
-                                <i class="bi bi-box"></i>
-                            </div>
                         </div>
-                        <button @click="backupToGmail()" class="px-4 py-1.5 bg-accent text-primary-dark text-[10px] font-black uppercase tracking-widest rounded-lg shadow-sm hover:opacity-90 transition-all">Configure</button>
+                        <button @click="backupToGmail()" class="px-4 py-1.5 bg-accent text-primary-dark text-[10px] font-black uppercase tracking-widest rounded-lg shadow-sm hover:opacity-90 transition-all">Backup Now</button>
                     </div>
                 </div>
             </div>
