@@ -38,7 +38,21 @@ class PartiesController extends Controller
             }
         }
 
-        $isMobile = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $request->userAgent() ?? '');
+        // User-Agent sniffing alone misclassifies real devices: iPadOS Safari
+        // reports a desktop-style UA by default, and Android/Chrome's "Desktop
+        // site" toggle strips the "Mobile"/"Android" tokens entirely. Both
+        // ledger.blade.php and ledger_pwa.blade.php carry a small script that
+        // compares the guess below against the actual window width and
+        // corrects it via this cookie if they disagree, so prefer that
+        // signal once it exists.
+        $viewportHint = $request->cookie('viewport_hint');
+        if ($viewportHint === 'mobile') {
+            $isMobile = true;
+        } elseif ($viewportHint === 'desktop') {
+            $isMobile = false;
+        } else {
+            $isMobile = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $request->userAgent() ?? '');
+        }
         $view = $isMobile ? 'frontend.parties.ledger_pwa' : 'frontend.parties.ledger';
 
         return view($view, compact('parties', 'selectedType', 'selectedId', 'ledger'));

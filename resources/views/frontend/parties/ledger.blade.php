@@ -6,6 +6,23 @@
     $symbol = '$';
 @endphp
 
+<script>
+    // This page assumes a desktop-width screen. If the actual viewport says
+    // otherwise (e.g. iPadOS's default desktop-style User-Agent, or Android
+    // Chrome's "Desktop site" toggle stripping the mobile UA tokens the
+    // server relies on), correct it once via a cookie and reload into the
+    // mobile page instead.
+    (function () {
+        try {
+            if (window.innerWidth < 1024 && !sessionStorage.getItem('viewport_corrected')) {
+                sessionStorage.setItem('viewport_corrected', '1');
+                document.cookie = 'viewport_hint=mobile;path=/;max-age=2592000';
+                location.reload();
+            }
+        } catch (e) {}
+    })();
+</script>
+
 <div class="h-[calc(100vh-5rem)] flex bg-background" x-data="{
     parties: @js($parties),
     search: '',

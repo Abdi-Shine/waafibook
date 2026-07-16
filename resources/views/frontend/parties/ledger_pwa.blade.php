@@ -10,6 +10,22 @@
 @endphp
 
 <script>
+    // This page assumes a narrow/mobile-width screen. If the actual viewport
+    // says otherwise (a resized desktop window, DevTools device emulation
+    // reporting a wide width, etc.), correct it once via a cookie and reload
+    // into the desktop page instead.
+    (function () {
+        try {
+            if (window.innerWidth >= 1024 && !sessionStorage.getItem('viewport_corrected')) {
+                sessionStorage.setItem('viewport_corrected', '1');
+                document.cookie = 'viewport_hint=desktop;path=/;max-age=2592000';
+                location.reload();
+            }
+        } catch (e) {}
+    })();
+</script>
+
+<script>
     window.__ledger = {
         companyName:  @js($ledgerCompany->name ?? 'us'),
         parties:      @js($parties),
