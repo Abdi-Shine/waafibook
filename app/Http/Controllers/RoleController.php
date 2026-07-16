@@ -18,6 +18,7 @@ class RoleController extends Controller
         'Purchase' => ['view', 'create', 'edit', 'delete'],
         'Sales & POS' => ['view', 'create', 'edit', 'delete'],
         'Accounting' => ['view', 'create', 'edit', 'delete'],
+        'Expenses' => ['view', 'create', 'edit', 'delete'],
         'Reports' => ['view', 'export'],
         'Users' => ['view', 'create', 'edit', 'delete'],
         'System Admin' => ['view', 'create', 'edit', 'delete'],

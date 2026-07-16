@@ -220,19 +220,21 @@ class RegisteredUserController extends Controller
             \Illuminate\Support\Facades\Log::error('Signup email failed for ' . $user->email . ': ' . $e->getMessage());
         }
 
-        // Seed default roles for this company so the admin can assign them to staff
+        // Seed default roles for this company so the admin can assign them to staff.
+        // Module names here must match RoleController::MODULES exactly — that's
+        // what hasPermission() and every route's permission:<module> middleware
+        // actually check against. A hand-maintained duplicate list previously
+        // drifted out of sync (e.g. 'Customers'/'Products'/'Settings' vs. the
+        // real 'Parties'/'Product'/'System Admin' keys), so every new company's
+        // default roles granted permissions that no route ever looked up.
         $allActions = ['view', 'create', 'edit', 'delete'];
-        $modules = [
-            'Dashboard', 'Sales & POS', 'Customers', 'Suppliers',
-            'Products', 'Purchases', 'Accounting', 'HR',
-            'Reports', 'Settings',
-        ];
+        $modules = array_keys(\App\Http\Controllers\RoleController::MODULES);
         $fullPermissions = array_fill_keys($modules, $allActions);
         $viewOnlyPermissions = array_fill_keys($modules, ['view']);
 
         $defaultRoles = [
             ['name' => 'Manager',   'description' => 'Full access to all modules',       'permissions' => $fullPermissions],
-            ['name' => 'Cashier',   'description' => 'Sales and POS access',              'permissions' => array_fill_keys(['Dashboard', 'Sales & POS', 'Customers', 'Products'], $allActions)],
+            ['name' => 'Cashier',   'description' => 'Sales and POS access',              'permissions' => array_fill_keys(['Dashboard', 'Sales & POS', 'Parties', 'Product'], $allActions)],
             ['name' => 'Staff',     'description' => 'View-only access to all modules',   'permissions' => $viewOnlyPermissions],
         ];
 
