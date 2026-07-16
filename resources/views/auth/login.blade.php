@@ -132,6 +132,7 @@
                                 <i class="bi bi-telephone input-icon"></i>
                                 <input type="text" name="company_phone"
                                        class="form-control"
+                                       inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                        placeholder="+252 61 00000000"
                                        value="{{ old('company_phone') }}">
                             </div>

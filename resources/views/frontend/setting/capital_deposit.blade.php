@@ -257,7 +257,8 @@
                         </div>
                         <div class="space-y-1.5">
                             <label class="text-[9px] font-black text-gray-500 uppercase tracking-[0.12em]">Phone</label>
-                            <input type="text" name="phone" id="sh-phone" placeholder="Phone Number" 
+                            <input type="text" name="phone" id="sh-phone" placeholder="Phone Number"
+                                inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                 class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[12px] font-semibold text-gray-700 focus:bg-white outline-none focus:border-primary transition-all">
                         </div>
                         <div class="space-y-1.5">

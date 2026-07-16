@@ -134,6 +134,7 @@
                                 <div class="col-12">
                                     <label class="form-label">Phone <span class="required">*</span></label>
                                     <input type="tel" name="phone" class="form-control @error('phone') is-invalid @enderror"
+                                           inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                            placeholder="+966 50 123 4567" value="{{ $prefill['phone'] }}" required>
                                 </div>
                             </div>

@@ -341,7 +341,7 @@
                         </div>
                         <div>
                             <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Phone Number</label>
-                            <input type="tel" name="phone" class="w-full pl-3 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all" placeholder="+252 XXX XXX XXX">
+                            <input type="tel" name="phone" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full pl-3 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all" placeholder="+252 XXX XXX XXX">
                         </div>
                         <div>
                             <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Gender</label>

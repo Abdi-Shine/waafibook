@@ -180,7 +180,7 @@
                         </div>
                         <div>
                             <label class="cs-label">Manager Phone</label>
-                            <input type="text" name="manager_phone" id="b_phone" class="cs-input">
+                            <input type="text" name="manager_phone" id="b_phone" class="cs-input" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                         </div>
                         <div>
                             <label class="cs-label">District</label>

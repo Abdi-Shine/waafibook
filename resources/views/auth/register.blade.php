@@ -369,6 +369,7 @@
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-telephone"></i></span>
                                 <input type="text" name="company_phone" class="form-control"
+                                       inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                        placeholder="+252 61 234 5678" value="{{ old('company_phone') }}">
                             </div>
                         </div>

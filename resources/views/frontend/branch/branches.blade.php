@@ -341,6 +341,7 @@
                                 <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Phone Line</label>
                                 <div class="relative">
                                     <input type="text" name="phone" x-model="branchData.phone" placeholder="+966 11 XXX XXXX"
+                                        inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                         class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
                                     <i class="bi bi-telephone absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
                                 </div>

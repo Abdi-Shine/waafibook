@@ -185,7 +185,7 @@
                         <div class="mb-3"><label class="form-label fw-bold">Company Name</label><input type="text" name="name" id="editName" class="form-control" required></div>
                         <div class="row g-3 mb-3">
                             <div class="col-md-6"><label class="form-label fw-bold">Owner Email</label><input type="email" name="email" id="editEmail" class="form-control"></div>
-                            <div class="col-md-6"><label class="form-label fw-bold">Phone Number</label><input type="text" name="phone" id="editPhone" class="form-control"></div>
+                            <div class="col-md-6"><label class="form-label fw-bold">Phone Number</label><input type="text" name="phone" id="editPhone" class="form-control" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"></div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold">Subscription Plan</label>
@@ -288,7 +288,7 @@
                         <div class="mb-3"><label class="form-label fw-bold">Company Name *</label><input type="text" name="name" class="form-control" required></div>
                         <div class="mb-3"><label class="form-label fw-bold">Owner Full Name *</label><input type="text" name="owner_name" class="form-control" required></div>
                         <div class="mb-3"><label class="form-label fw-bold">Owner Email *</label><input type="email" name="owner_email" class="form-control" required></div>
-                        <div class="mb-3"><label class="form-label fw-bold">Phone</label><input type="text" name="phone" class="form-control"></div>
+                        <div class="mb-3"><label class="form-label fw-bold">Phone</label><input type="text" name="phone" class="form-control" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"></div>
                         <div class="mb-3"><label class="form-label fw-bold">Country</label><input type="text" name="country" class="form-control" value="Somalia"></div>
                         <div class="mb-3">
                             <label class="form-label fw-bold">Subscription Plan</label>

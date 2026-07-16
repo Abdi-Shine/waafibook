@@ -310,6 +310,7 @@
                             <div class="space-y-1.5">
                                 <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Phone Number</label>
                                 <input type="text" name="phone" x-model="loanData.phone"
+                                    inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                     placeholder="e.g. +252 61 234 5678"
                                     class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
                             </div>

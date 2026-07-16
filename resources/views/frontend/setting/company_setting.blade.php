@@ -115,6 +115,7 @@
                     <div class="space-y-1.5">
                         <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Phone <span class="text-primary">*</span></label>
                         <input type="tel" name="phone" value="{{ $company->phone ?? '' }}" required placeholder="+252 6X XXX XXXX"
+                            inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                             class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
                     </div>
                     <div class="space-y-1.5">

@@ -119,6 +119,7 @@
                         <div>
                             <label class="block text-xs font-bold text-primary mb-1.5">Your EVC Phone Number</label>
                             <input type="text" name="phone" value="{{ old('phone', $company->phone ?? '') }}"
+                                   inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                    placeholder="e.g. 0615 123 456"
                                    class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm font-medium text-primary focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition">
                         </div>
