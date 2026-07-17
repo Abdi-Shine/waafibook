@@ -69,13 +69,6 @@
             transition: opacity .15s;
         }
         .btn:hover { opacity: .9; }
-        .code {
-            margin-top: 20px;
-            font-size: 12px;
-            color: #9ca3af;
-            font-weight: 600;
-            letter-spacing: .05em;
-        }
     </style>
 </head>
 <body>
@@ -99,8 +92,6 @@
             <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 3.5 2 8.5V14a1 1 0 0 0 1 1h3.5v-4A1.5 1.5 0 0 1 8 9.5h0A1.5 1.5 0 0 1 9.5 11v4H13a1 1 0 0 0 1-1V8.5L8 3.5Z"/></svg>
             Back to Dashboard
         </a>
-
-        <p class="code">ERROR 403 · UNAUTHORIZED</p>
     </div>
 </body>
 </html>
