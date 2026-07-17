@@ -148,7 +148,7 @@
                             <i class="bi bi-envelope input-icon"></i>
                             <input type="email" name="email"
                                    class="form-control @error('email') border-red-400 @enderror"
-                                   placeholder="admin@company.com"
+                                   placeholder="Enter your email"
                                    value="{{ old('email') }}" required autocomplete="username">
                         </div>
                         @error('email')
