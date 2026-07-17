@@ -462,7 +462,7 @@
         
         <div class="bg-white rounded-[1.25rem] w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col relative">
 
-            <div class="px-6 py-6 bg-primary relative overflow-hidden shrink-0">
+            <div class="px-6 py-4 bg-primary relative overflow-hidden shrink-0">
                 <div class="flex items-center justify-between relative z-10">
                     <div class="flex items-center gap-4 text-white">
                         <div class="w-12 h-12 bg-white/10 border border-white/10 rounded-xl flex items-center justify-center text-xl shadow-inner backdrop-blur-md">
