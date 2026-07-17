@@ -657,6 +657,8 @@
 .btn-pos { padding: 0.75rem; border-radius: 10px; font-weight: 700; font-size: 0.875rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; }
 .btn-complete { grid-column: 1 / -1; background: #99CC33; color: #004161; border: none; padding: 1rem; font-size: 1rem; }
 .btn-complete:hover { background: #88bb22; transform: scale(1.02); }
+.btn-clear-order { grid-column: 1 / -1; background: transparent; color: #004161; border: 1.5px solid #004161; }
+.btn-clear-order:hover { background: #004161; color: #fff; }
 .empty-cart { text-align: center; padding: 2rem 1rem; color: #9ca3af; }
 .empty-cart i { font-size: 3rem; margin-bottom: 1rem; display: block; }
 @media (max-width: 1400px) { .pos-container { grid-template-columns: 1fr 350px; } }

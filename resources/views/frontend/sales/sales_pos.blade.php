@@ -97,7 +97,7 @@
                     <button class="btn btn-pos btn-complete" onclick="processPayment()">
                         <i class="bi bi-check-circle"></i> COMPLETE SALE
                     </button>
-                    <button class="btn btn-sm btn-outline-danger mt-2 pos-clear-btn" onclick="clearCart()">
+                    <button class="btn btn-pos btn-clear-order pos-clear-btn" onclick="clearCart()">
                         <i class="bi bi-trash"></i> Clear Order
                     </button>
                 </div>
