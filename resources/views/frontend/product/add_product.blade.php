@@ -522,9 +522,9 @@
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <!-- Row 1 -->
                                 <div class="space-y-1.5">
-                                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Product Name <span class="text-primary">*</span></label>
+                                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider"><span x-text="productData.product_type === 'service' ? 'Service Name' : 'Product Name'"></span> <span class="text-primary">*</span></label>
                                     <div class="relative group">
-                                        <input type="text" name="product_name" x-model="productData.product_name" required placeholder="Enter product name"
+                                        <input type="text" name="product_name" x-model="productData.product_name" required :placeholder="productData.product_type === 'service' ? 'Enter service name' : 'Enter product name'"
                                             :class="formErrors.product_name ? 'border-red-400' : 'border-gray-200'"
                                             class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
                                         <i class="bi bi-tag absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
@@ -557,7 +557,7 @@
                                 </div>
                                 <!-- Product Image Upload -->
                             <div class="w-64 shrink-0">
-                                <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Product Photo</label>
+                                <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block" x-text="productData.product_type === 'service' ? 'Service Photo' : 'Product Photo'"></label>
                                 <label for="image_upload" class="flex items-center justify-center w-full px-4 py-2.5 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50/50 cursor-pointer hover:bg-white hover:border-primary/30 transition-all group overflow-hidden">
                                     <div x-ref="previewPlaceholder" class="flex items-center gap-3">
                                         <i class="bi bi-cloud-arrow-up text-xl text-primary/60 group-hover:scale-110 transition-transform"></i>
@@ -596,7 +596,7 @@
                                     </div>
                                 </div>
                                 <div class="space-y-1.5">
-                                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Selling Price <span class="text-primary">*</span></label>
+                                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider"><span x-text="productData.product_type === 'service' ? 'Service Price' : 'Selling Price'"></span> <span class="text-primary">*</span></label>
                                     <div class="relative group">
                                         <input type="number" step="0.01" name="selling_price" x-model="productData.selling_price" required placeholder="0.00"
                                             :class="formErrors.selling_price ? 'border-red-400' : 'border-gray-200'"
@@ -619,7 +619,7 @@
                                 <!-- Row 3 -->
                                 <div class="space-y-1.5 md:col-span-2">
                                     <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Description</label>
-                                    <textarea name="description" x-model="productData.description" placeholder="Enter product details..." rows="1"
+                                    <textarea name="description" x-model="productData.description" :placeholder="productData.product_type === 'service' ? 'Enter service details...' : 'Enter product details...'" rows="1"
                                         class="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all min-h-[44px] resize-none overflow-hidden"
                                         @input="$el.style.height = 'auto'; $el.style.height = $el.scrollHeight + 'px'"></textarea>
                                 </div>
