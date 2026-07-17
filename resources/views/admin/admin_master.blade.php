@@ -196,6 +196,7 @@
          class="fixed inset-0 bg-black/40 z-40 hidden lg:hidden transition-opacity duration-300"
          onclick="document.getElementById('sidebar').classList.add('-translate-x-full'); this.classList.add('hidden');"></div>
     @include('admin.body.header')
+    <div class="h-20" aria-hidden="true"></div>
 @endauth
 
 @auth

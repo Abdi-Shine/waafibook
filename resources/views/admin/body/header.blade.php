@@ -14,7 +14,7 @@
     }
 @endphp
 
-<header class="bg-white border-b border-border h-20 sticky top-0 z-40 lg:ml-[260px]">
+<header class="bg-white border-b border-border h-20 fixed top-0 left-0 right-0 z-40 lg:ml-[260px]">
     <div class="flex items-center justify-between h-full px-4 md:px-8">
         <!-- Left Section: Hamburger + Company Name -->
         <div class="flex items-center gap-3">
