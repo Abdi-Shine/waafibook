@@ -80,6 +80,23 @@ class CheckSubscriptionStatus
         $path = '/' . ltrim($request->path(), '/');
         $isGet = \in_array($request->method(), ['GET', 'HEAD'], true);
 
+        // Mobile plan: restrict desktop/web access entirely, regardless of the
+        // broader always-allowed-routes list below (that list exists for
+        // trial/suspension messaging, not device gating). Only
+        // login/logout/password-reset stay open so a desktop browser isn't
+        // completely locked out with no way to sign out.
+        if ($plan && strtolower(trim($plan->name)) === 'mobile'
+            && !$request->routeIs(['login', 'logout', 'password.*'])
+            && !$this->isMobileRequest($request)) {
+            if ($isGet) {
+                return $this->lockPage(null, $currentPlanName,
+                    'Mobile Access Only',
+                    'Your plan only works on a mobile device. Please open WaafiBook on your phone to continue.'
+                );
+            }
+            return $this->denyWrite($request, 'Your plan only works on a mobile device.');
+        }
+
         // Always-allowed named routes (read-only pages, settings, reports)
         if ($request->routeIs(self::ALWAYS_ALLOWED_ROUTES)) {
             return $next($request);
@@ -142,6 +159,11 @@ class CheckSubscriptionStatus
             return 'trial_expired';
         }
         return null;
+    }
+
+    private function isMobileRequest(Request $request): bool
+    {
+        return (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $request->userAgent() ?? '');
     }
 
     private function isTransactionPath(string $path): bool
