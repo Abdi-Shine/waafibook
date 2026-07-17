@@ -7,6 +7,7 @@ use App\Models\JournalItem;
 use App\Models\Branch;
 use App\Models\Account;
 use App\Models\Company;
+use App\Models\SalesOrder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -403,7 +404,7 @@ class AccountController extends Controller
         };
 
         return match (true) {
-            str_starts_with($ref, 'JE-SALE-')   => ['Sale', $afterPrefix('Sale to ') ?? 'Cash Sale'],
+            str_starts_with($ref, 'JE-SALE-')   => [$this->cashSaleType($ref), $afterPrefix('Sale to ') ?? 'Cash Sale'],
             str_starts_with($ref, 'EN-PAY-')    => ['Purchase', $afterPrefix('Payment to ') ?? '-'],
             str_starts_with($ref, 'EN-PB-')     => ['Purchase', $afterPrefix('Purchase Bill from ') ?? '-'],
             str_starts_with($ref, 'EN-PR-')     => ['Purchase Return', $desc ?: '-'],
@@ -420,6 +421,24 @@ class AccountController extends Controller
             str_starts_with($ref, 'ADJ-')       => ['Adjustment', $afterPrefix('Balance Adjustment : ') ?? 'Balance Adjustment'],
             default                             => ['Journal Entry', $desc ?: ($entry->reference ?: '-')],
         };
+    }
+
+    // A sale's entry_number is "JE-SALE-{order_id}-{suffix}" — trace it back to the
+    // order so a cart of only service items shows as "Service" instead of "Sale".
+    private function cashSaleType(string $ref): string
+    {
+        if (!preg_match('/^JE-SALE-(\d+)-/', $ref, $m)) {
+            return 'Sale';
+        }
+
+        $order = SalesOrder::with('items.product')->find($m[1]);
+        if (!$order || $order->items->isEmpty()) {
+            return 'Sale';
+        }
+
+        $allServices = $order->items->every(fn ($item) => $item->product?->product_type === 'service');
+
+        return $allServices ? 'Service' : 'Sale';
     }
 
     public function trialBalance()
