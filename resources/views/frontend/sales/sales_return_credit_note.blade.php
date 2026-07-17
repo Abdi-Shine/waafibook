@@ -360,12 +360,14 @@
                                             class="w-8 h-8 flex items-center justify-center rounded-lg bg-accent/10 text-primary hover:bg-accent hover:text-white transition-all text-xs" title="Edit">
                                         <i class="bi bi-pencil"></i>
                                     </button>
+                                    @if(auth()->user()->hasPermission('Sales & POS', 'delete'))
                                     <button onclick="confirmDeleteReturn({{ $return->id }})" class="btn-action-delete" title="Delete">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                     <form id="delete-return-{{ $return->id }}" action="{{ route('sales.return.destroy', $return->id) }}" method="POST" class="hidden">
                                         @csrf @method('DELETE')
                                     </form>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
