@@ -158,9 +158,16 @@
 
     <!-- Right Panel - Item Detail & Transactions -->
     <div class="flex-1 flex flex-col overflow-hidden">
-        <template x-if="loading || !ledger">
+        <template x-if="loading">
             <div class="flex-1 flex items-center justify-center text-gray-400">
                 <i class="bi bi-arrow-repeat animate-spin text-2xl"></i>
+            </div>
+        </template>
+
+        <template x-if="!loading && !ledger">
+            <div class="flex-1 flex flex-col items-center justify-center text-gray-400 gap-3 px-6 text-center">
+                <i class="bi bi-inboxes text-4xl text-gray-300"></i>
+                <p class="text-[13px] font-semibold" x-text="products.length ? 'Select an item to view its ledger' : 'No items yet — add one to get started'"></p>
             </div>
         </template>
 
