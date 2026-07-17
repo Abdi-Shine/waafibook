@@ -143,7 +143,7 @@
         x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
         x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
         class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-        <div class="bg-white rounded-[1.25rem] w-full max-w-md overflow-hidden shadow-2xl flex flex-col" @click.away="openModal = false">
+        <div class="bg-white rounded-[1.25rem] w-full max-w-lg overflow-hidden shadow-2xl flex flex-col" @click.away="openModal = false">
 
             <div class="px-6 py-6 bg-primary relative overflow-hidden shrink-0">
                 <div class="flex items-center justify-between relative z-10">
@@ -184,40 +184,42 @@
                 </div>
                 <input type="hidden" name="method" :value="method">
 
-                <div class="space-y-1.5">
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Adjustment Date <span class="text-primary">*</span></label>
-                    <input type="date" name="date" x-model="date" required
-                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
-                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Adjustment Date <span class="text-primary">*</span></label>
+                        <input type="date" name="date" x-model="date" required
+                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                    </div>
 
-                <div class="space-y-1.5">
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Product <span class="text-primary">*</span></label>
-                    <select name="product_id" x-model="productId" required
-                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
-                        <option value="">-- Select Product --</option>
-                        @foreach($products as $product)
-                            <option value="{{ $product->id }}">{{ $product->product_name }}</option>
-                        @endforeach
-                    </select>
-                </div>
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Product <span class="text-primary">*</span></label>
+                        <select name="product_id" x-model="productId" required
+                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                            <option value="">-- Select Product --</option>
+                            @foreach($products as $product)
+                                <option value="{{ $product->id }}">{{ $product->product_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
 
-                <div class="space-y-1.5">
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Branch <span class="text-primary">*</span></label>
-                    <select name="branch_id" x-model="branchId" required
-                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
-                        <option value="">-- Select Branch --</option>
-                        @foreach($branches as $branch)
-                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Branch <span class="text-primary">*</span></label>
+                        <select name="branch_id" x-model="branchId" required
+                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                            <option value="">-- Select Branch --</option>
+                            @foreach($branches as $branch)
+                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
 
-                <div class="space-y-1.5">
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">
-                        <span x-text="method === 'physical' ? 'New Quantity' : 'Quantity'"></span> <span class="text-primary">*</span>
-                    </label>
-                    <input type="number" name="quantity" x-model="quantity" step="0.01" min="0" required
-                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">
+                            <span x-text="method === 'physical' ? 'New Quantity' : 'Quantity'"></span> <span class="text-primary">*</span>
+                        </label>
+                        <input type="number" name="quantity" x-model="quantity" step="0.01" min="0" required
+                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                    </div>
                 </div>
 
                 <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
