@@ -375,7 +375,7 @@
         display: grid;
         grid-template-columns: 1fr 420px;
         grid-template-rows: minmax(0, 1fr);
-        height: 100vh;
+        height: calc(100vh - 60px);
         background: theme('colors.background');
         overflow: hidden;
     }
@@ -604,6 +604,21 @@
 .pos-product-image-img   { width: 100%; height: 100%; object-fit: cover; }
 
 /* ── Legacy POS (sales_pos.blade.php) ─────────────────── */
+.pos-topbar { height: 60px; flex-shrink: 0; background: #004161; color: #fff; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0 1.5rem; }
+.pos-topbar-brand { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+.pos-topbar-icon { width: 38px; height: 38px; border-radius: 10px; background: #99CC33; color: #004161; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; flex-shrink: 0; }
+.pos-topbar-title { font-weight: 800; font-size: 1.05rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pos-topbar-right { display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; }
+.pos-topbar-pill { display: flex; align-items: center; gap: 0.4rem; background: rgba(255,255,255,0.1); border-radius: 8px; padding: 0.4rem 0.75rem; font-size: 0.8rem; font-weight: 600; color: #fff; white-space: nowrap; }
+.pos-topbar-user { display: flex; align-items: center; gap: 0.6rem; }
+.pos-topbar-avatar { width: 34px; height: 34px; border-radius: 50%; background: #99CC33; color: #004161; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; text-transform: uppercase; flex-shrink: 0; }
+.pos-topbar-user-text { display: flex; flex-direction: column; line-height: 1.25; }
+.pos-topbar-user-name { font-weight: 700; font-size: 0.85rem; color: #fff; }
+.pos-topbar-user-role { font-size: 0.72rem; color: rgba(255,255,255,0.65); }
+@media (max-width: 640px) {
+    .pos-topbar-pill.pos-topbar-date, .pos-topbar-user-text { display: none; }
+}
+
 .products-section { background: white; display: flex; flex-direction: column; overflow: hidden; border-right: 1px solid #e9ecef; min-height: 0; }
 .search-bar { padding: 1rem 1.5rem; border-bottom: 2px solid #e9ecef; background: #f8f9fa; display: flex; align-items: center; gap: 0.75rem; }
 .pos-back-btn { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; background: #004161; color: #fff; font-size: 1rem; text-decoration: none; transition: background 0.2s; }
@@ -669,7 +684,7 @@
     .pos-container {
         display: flex !important;
         flex-direction: column !important;
-        height: 100dvh !important;
+        height: calc(100dvh - 60px) !important;
         overflow: hidden;
     }
 

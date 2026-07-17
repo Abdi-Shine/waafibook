@@ -2,6 +2,23 @@
 
 
 @section('admin')
+    <div class="pos-topbar">
+        <div class="pos-topbar-brand">
+            <div class="pos-topbar-icon"><i class="bi bi-shop"></i></div>
+            <span class="pos-topbar-title">{{ $company->name ?? 'Waafibook' }} POS</span>
+        </div>
+        <div class="pos-topbar-right">
+            <div class="pos-topbar-pill pos-topbar-date"><i class="bi bi-calendar3"></i> <span id="posTopbarDate">{{ now()->format('M j, Y') }}</span></div>
+            <div class="pos-topbar-pill"><i class="bi bi-clock"></i> <span id="posTopbarTime">{{ now()->format('g:i A') }}</span></div>
+            <div class="pos-topbar-user">
+                <div class="pos-topbar-avatar">{{ substr(Auth::user()->name, 0, 2) }}</div>
+                <div class="pos-topbar-user-text">
+                    <span class="pos-topbar-user-name">{{ Auth::user()->name }}</span>
+                    <span class="pos-topbar-user-role">{{ Auth::user()->role ?? 'Cashier' }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="pos-container">
 
         {{-- ── MOBILE TAB BAR (hidden on desktop) ── --}}
@@ -120,6 +137,17 @@
 
 @push('scripts')
     <script>
+        // Live clock in the POS topbar
+        function updatePosTopbarClock() {
+            const now = new Date();
+            const dateEl = document.getElementById('posTopbarDate');
+            const timeEl = document.getElementById('posTopbarTime');
+            if (dateEl) dateEl.textContent = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            if (timeEl) timeEl.textContent = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        }
+        updatePosTopbarClock();
+        setInterval(updatePosTopbarClock, 1000);
+
         const CSRF_TOKEN = '{{ csrf_token() }}';
         const CURRENCY = '{{ $company->currency ?? "SAR" }}';
         const products = @json($products);
