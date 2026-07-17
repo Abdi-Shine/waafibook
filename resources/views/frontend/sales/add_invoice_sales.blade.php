@@ -882,7 +882,7 @@ const items = [];
         customer_id:    customerId,
         branch_id:      branchId,
         payment_account_id: payAccId,
-        invoice_date:   invDateEl ? invDateEl.value : new Date().toISOString().split('T')[0],
+        invoice_date:   invDateEl ? invDateEl.value : (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(),
         payment_method: document.getElementById('paymentMethodInput')?.value || (_saleType === 'cash' ? 'Cash' : 'Bank Transfer'),
         discount:       parseFloat(document.getElementById('discountInput')?.value) || 0,
         tax:            parseFloat(document.getElementById('taxVal')?.value) || 0,

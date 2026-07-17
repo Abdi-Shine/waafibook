@@ -148,6 +148,18 @@
         updatePosTopbarClock();
         setInterval(updatePosTopbarClock, 1000);
 
+        // Local (business) date as YYYY-MM-DD — new Date().toISOString() converts to
+        // UTC first, which silently shifts the sale onto the wrong calendar day
+        // whenever local time and UTC fall on different dates (e.g. any evening in a
+        // UTC+ timezone, or any early morning in a UTC- timezone).
+        function todayLocalDate() {
+            const d = new Date();
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
         const CSRF_TOKEN = '{{ csrf_token() }}';
         const CURRENCY = '{{ $company->currency ?? "SAR" }}';
         const products = @json($products);
@@ -337,8 +349,8 @@
                         branch_id: document.getElementById('branch_id').value,
                         payment_account_id: document.getElementById('account_id').value,
                         payment_method: 'Cash',
-                        invoice_date: new Date().toISOString().split('T')[0],
-                        due_date: new Date().toISOString().split('T')[0],
+                        invoice_date: todayLocalDate(),
+                        due_date: todayLocalDate(),
                         paid_amount: total,
                         tax: 0,
                         items: cart.map(i => ({
