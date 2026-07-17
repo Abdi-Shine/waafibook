@@ -10,7 +10,6 @@ use App\Models\Account;
 use App\Models\Company;
 use App\Models\JournalEntry;
 use App\Models\JournalItem;
-use App\Models\AuditLog;
 
 class CustomerController extends Controller
 {
@@ -286,7 +285,6 @@ class CustomerController extends Controller
     {
         $customer = Customer::query()->findOrFail($id);
         $customer->update(['status' => 'inactive']);
-        AuditLog::log('Parties', "Deactivated customer: {$customer->name}", 'UPDATE');
         return response()->json(['success' => true]);
     }
 

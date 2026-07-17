@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\AuditLog;
 
 use App\Models\SalesOrder;
 use App\Models\SalesOrderItem;
@@ -367,8 +366,6 @@ class SalesController extends Controller
 
             // Accounting journal entry
             $this->createAccountingEntry($order);
-
-            AuditLog::log('Sales', "Created sales invoice #{$order->invoice_no} for total $" . number_format($order->total_amount, 2), 'CREATE');
 
             return $order->id;
         });

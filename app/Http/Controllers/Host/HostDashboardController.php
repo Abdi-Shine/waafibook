@@ -51,8 +51,6 @@ class HostDashboardController extends Controller
                                     ->where('expiry_date', '<', now()->toDateString()))
                             )->count();
 
-        $recentActivity = \App\Models\AuditLog::with('user')->orderByDesc('created_at')->take(10)->get();
-
         $newSignupsThisWeek = Company::with(['subscription.plan'])
             ->where('created_at', '>=', now()->subDays(7))
             ->orderByDesc('created_at')
@@ -61,7 +59,7 @@ class HostDashboardController extends Controller
         return view('super_admin.dashboard', compact(
             'totalCompanies', 'activeCompanies', 'suspendedCompanies', 'totalUsers',
             'monthlyRevenue', 'newThisMonth', 'revenueCollected', 'pendingApprovals',
-            'overdueAccounts', 'expiredCompanies', 'recentActivity', 'newSignupsThisWeek'
+            'overdueAccounts', 'expiredCompanies', 'newSignupsThisWeek'
         ));
     }
 
@@ -159,8 +157,6 @@ class HostDashboardController extends Controller
             return $company;
         });
 
-        \App\Models\AuditLog::log('Company', "Created new company: {$company->name}", 'CREATE');
-
         // Mail delivery is best-effort — a bad/unreachable address shouldn't
         // undo the company that was already created above.
         $emailSent = true;
@@ -199,10 +195,7 @@ class HostDashboardController extends Controller
                 'transaction_id'  => $request->transaction_id,
                 'status'          => 'completed',
             ]);
-            \App\Models\AuditLog::log('Billing', "Recorded payment of {$request->payment_amount} for {$company->name} ({$plan->name})", 'CREATE');
         }
-
-        \App\Models\AuditLog::log('Company', "Moved {$company->name} onto the {$plan->name} plan and marked the subscription active", 'UPDATE');
 
         return redirect()->route('host.companies')->with('success', "{$company->name} is now on the {$plan->name} plan." . ($request->filled('payment_amount') ? ' Payment recorded.' : ''));
     }
@@ -212,8 +205,6 @@ class HostDashboardController extends Controller
         $company = Company::findOrFail($id);
         $company->status = $company->status === 'suspended' ? 'active' : 'suspended';
         $company->save();
-
-        \App\Models\AuditLog::log('Company', ucfirst($company->status) . " company: {$company->name}", 'UPDATE');
 
         return redirect()->route('host.companies')->with('success', "{$company->name} is now {$company->status}.");
     }
@@ -251,10 +242,7 @@ class HostDashboardController extends Controller
 
         if ($request->filled('subscription_plan_id')) {
             $plan = $this->applyCompanyPlan($company, $request->subscription_plan_id);
-            \App\Models\AuditLog::log('Company', "Moved {$company->name} onto the {$plan->name} plan and marked the subscription active", 'UPDATE');
         }
-
-        \App\Models\AuditLog::log('Company', "Updated company details: {$company->name}", 'UPDATE');
 
         return redirect()->route('host.companies')->with('success', "{$company->name}'s details have been updated.");
     }
@@ -316,8 +304,6 @@ class HostDashboardController extends Controller
 
         \Illuminate\Support\Facades\DB::transaction(fn () => $company->delete());
 
-        \App\Models\AuditLog::log('Company', "Deleted company: {$name}", 'DELETE');
-
         return redirect()->route('host.companies')->with('success', "{$name} has been permanently deleted.");
     }
 
@@ -346,8 +332,6 @@ class HostDashboardController extends Controller
             if ($request->action === 'reactivate') $company->update(['status' => 'active']);
             if ($request->action === 'delete') \Illuminate\Support\Facades\DB::transaction(fn () => $company->delete());
         }
-
-        \App\Models\AuditLog::log('Company', "Bulk {$request->action} applied to " . $companies->count() . ' companies', 'UPDATE');
 
         return redirect()->route('host.companies')->with('success', ucfirst($request->action) . ' applied to ' . $companies->count() . ' ' . \Illuminate\Support\Str::plural('company', $companies->count()) . '.');
     }
@@ -390,8 +374,6 @@ class HostDashboardController extends Controller
         $tempPassword = \Illuminate\Support\Str::random(10);
         $user->update(['password' => \Illuminate\Support\Facades\Hash::make($tempPassword)]);
 
-        \App\Models\AuditLog::log('User', "Reset password for: {$user->name}", 'UPDATE');
-
         return redirect()->route('host.users')->with('success',
             "Password for <strong>{$user->name}</strong> has been reset. Temporary password: <code style='background:#f1f5f9;padding:2px 8px;border-radius:4px;font-size:14px;'><strong>{$tempPassword}</strong></code> — share this with the user and ask them to change it after login.");
     }
@@ -402,8 +384,6 @@ class HostDashboardController extends Controller
         $user->status = $user->status === 'suspended' ? 'active' : 'suspended';
         $user->save();
 
-        \App\Models\AuditLog::log('User', ucfirst($user->status) . " user account: {$user->name}", 'UPDATE');
-
         return redirect()->route('host.users')->with('success', "{$user->name} is now {$user->status}.");
     }
 
@@ -412,8 +392,6 @@ class HostDashboardController extends Controller
         $user = User::withoutGlobalScopes()->findOrFail($id);
         $name = $user->name;
         $user->delete();
-
-        \App\Models\AuditLog::log('User', "Deleted user account: {$name}", 'DELETE');
 
         return redirect()->route('host.users')->with('success', "{$name} has been removed.");
     }
@@ -469,8 +447,6 @@ class HostDashboardController extends Controller
             'subscription_id', 'amount', 'payment_date', 'payment_method', 'transaction_id', 'status'
         ));
 
-        \App\Models\AuditLog::log('Billing', "Recorded manual payment of {$payment->amount} for: {$subscription->company->name}", 'CREATE');
-
         return redirect()->route('host.payments')->with('success', 'Payment recorded successfully.');
     }
 
@@ -481,8 +457,6 @@ class HostDashboardController extends Controller
         $amount = $payment->amount;
 
         $payment->delete();
-
-        \App\Models\AuditLog::log('Billing', "Deleted payment record of {$amount} for: {$companyName}", 'DELETE', 'warning');
 
         return redirect()->route('host.payments')->with('success', 'Payment record deleted.');
     }
@@ -510,8 +484,6 @@ class HostDashboardController extends Controller
             ]);
         }
 
-        \App\Models\AuditLog::log('Billing', "Approved payment & activated {$plan?->name} plan for: {$subscription?->company?->name}", 'UPDATE');
-
         return redirect()->route('host.payments')->with('success', 'Payment approved — subscription is now active.');
     }
 
@@ -520,16 +492,12 @@ class HostDashboardController extends Controller
         $subscription = Subscription::with('company')->findOrFail($id);
         $subscription->update(['status' => 'cancelled']);
 
-        \App\Models\AuditLog::log('Billing', "Cancelled subscription for: {$subscription->company->name}", 'UPDATE');
-
         return redirect()->route('host.subscriptions')->with('success', "Subscription for {$subscription->company->name} has been cancelled.");
     }
 
     public function sendInvoice($id)
     {
         $subscription = Subscription::with('company')->findOrFail($id);
-
-        \App\Models\AuditLog::log('Billing', "Sent invoice to: {$subscription->company->name}", 'UPDATE');
 
         return redirect()->back()->with('success', "Invoice logged for {$subscription->company->name}.");
     }
@@ -668,8 +636,6 @@ class HostDashboardController extends Controller
             'end_time'          => $request->end_time ?: null,
         ]);
 
-        \App\Models\AuditLog::log('Announcement', ($request->submit_as === 'Sent' ? 'Sent' : 'Saved draft') . " announcement: {$announcement->title}", 'CREATE');
-
         return redirect()->route('host.announcements')->with('success', $request->submit_as === 'Sent' ? 'Announcement sent.' : 'Draft saved.');
     }
 
@@ -696,8 +662,6 @@ class HostDashboardController extends Controller
             'end_time'          => $request->end_time ?: null,
         ]);
 
-        \App\Models\AuditLog::log('Announcement', "Updated announcement: {$announcement->title}", 'UPDATE');
-
         return redirect()->route('host.announcements')->with('success', 'Announcement updated.');
     }
 
@@ -707,8 +671,6 @@ class HostDashboardController extends Controller
         $title = $announcement->title;
         $announcement->delete();
 
-        \App\Models\AuditLog::log('Announcement', "Deleted announcement: {$title}", 'DELETE');
-
         return redirect()->route('host.announcements')->with('success', 'Announcement deleted.');
     }
 
@@ -717,63 +679,23 @@ class HostDashboardController extends Controller
         $announcement = \App\Models\Announcement::findOrFail($id);
         $announcement->update(['status' => 'Sent', 'sent_at' => now()]);
 
-        \App\Models\AuditLog::log('Announcement', "Sent announcement: {$announcement->title}", 'UPDATE');
-
         return redirect()->route('host.announcements')->with('success', 'Announcement sent.');
     }
 
     public function security(Request $request)
     {
-        $logs = \App\Models\AuditLog::query()->with('user')
-            ->when($request->filled('module'), fn ($q) => $q->where('module', $request->module))
-            ->when($request->filled('from'), fn ($q) => $q->whereDate('created_at', '>=', $request->from))
-            ->when($request->filled('to'), fn ($q) => $q->whereDate('created_at', '<=', $request->to))
-            ->orderByDesc('created_at')
-            ->paginate(25)
-            ->withQueryString();
-
-        $modules = \App\Models\AuditLog::query()->distinct()->orderBy('module')->pluck('module');
-
         $sessions = \Illuminate\Support\Facades\DB::table('sessions')
             ->leftJoin('users', 'sessions.user_id', '=', 'users.id')
             ->select('sessions.id', 'sessions.ip_address', 'sessions.user_agent', 'sessions.last_activity', 'users.name', 'users.email')
             ->orderByDesc('sessions.last_activity')
             ->get();
 
-        return view('super_admin.security', compact('logs', 'modules', 'sessions'));
-    }
-
-    public function exportAuditLog(Request $request)
-    {
-        $logs = \App\Models\AuditLog::query()->with('user')
-            ->when($request->filled('module'), fn ($q) => $q->where('module', $request->module))
-            ->when($request->filled('from'), fn ($q) => $q->whereDate('created_at', '>=', $request->from))
-            ->when($request->filled('to'), fn ($q) => $q->whereDate('created_at', '<=', $request->to))
-            ->orderByDesc('created_at')
-            ->get();
-
-        return response()->streamDownload(function () use ($logs) {
-            $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['Timestamp', 'Module', 'Action', 'Description', 'User', 'IP Address']);
-            foreach ($logs as $log) {
-                fputcsv($handle, [
-                    $log->created_at->format('d M Y, H:i'),
-                    $log->module,
-                    $log->action,
-                    $log->description,
-                    $log->user->name ?? '—',
-                    $log->ip_address,
-                ]);
-            }
-            fclose($handle);
-        }, 'audit-log-' . now()->format('Y-m-d') . '.csv');
+        return view('super_admin.security', compact('sessions'));
     }
 
     public function forceLogoutSession($sessionId)
     {
         \Illuminate\Support\Facades\DB::table('sessions')->where('id', $sessionId)->delete();
-
-        \App\Models\AuditLog::log('Security', 'Forced logout of an active session', 'DELETE');
 
         return redirect()->route('host.security')->with('success', 'Session has been terminated.');
     }
@@ -819,8 +741,6 @@ class HostDashboardController extends Controller
     {
         $enabled = SystemSetting::get('maintenance_mode', '0') === '1';
         SystemSetting::set('maintenance_mode', $enabled ? '0' : '1');
-
-        \App\Models\AuditLog::log('Settings', ($enabled ? 'Disabled' : 'Enabled') . ' maintenance mode', 'UPDATE');
 
         return redirect()->route('host.settings')->with('success', 'Maintenance mode is now ' . ($enabled ? 'OFF' : 'ON') . '.');
     }

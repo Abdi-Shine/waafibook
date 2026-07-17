@@ -5,7 +5,6 @@ $rNav = [
     ['route'=>'host.reports.subscriptions', 'label'=>'Subscriptions', 'icon'=>'bi-credit-card'],
     ['route'=>'host.reports.revenue',       'label'=>'Revenue',       'icon'=>'bi-currency-dollar'],
     ['route'=>'host.reports.users',         'label'=>'Users',         'icon'=>'bi-people'],
-    ['route'=>'host.reports.activity',      'label'=>'Activity',      'icon'=>'bi-activity'],
 ];
 @endphp
 <div class="d-flex flex-wrap gap-1 mb-4 p-1 rounded-3" style="background:rgba(0,65,97,.06);border:1px solid rgba(0,65,97,.1);">

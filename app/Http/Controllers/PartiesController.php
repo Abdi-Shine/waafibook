@@ -11,7 +11,6 @@ use App\Models\PurchaseBill;
 use App\Models\SupplierPayment;
 use App\Models\PurchaseReturn;
 use App\Models\JournalEntry;
-use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -102,8 +101,6 @@ class PartiesController extends Controller
                 $party->save();
             }
         });
-
-        AuditLog::log('Parties', "Deleted opening balance for: {$party->name}", 'DELETE', 'warning');
 
         return redirect()->back()->with('success', 'Opening balance transaction deleted successfully.');
     }

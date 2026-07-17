@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Customer;
 use App\Models\Product;
-use App\Models\AuditLog;
 use App\Models\Account;
 
 use App\Models\Company;
@@ -372,39 +371,18 @@ class CompanyController extends Controller
     }
 
 
-    public function auditLogs()
-    {
-        $logs = AuditLog::query()->with('user')->latest()->paginate(50);
-        
-        $stats = [
-            'total' => AuditLog::query()->count(),
-            'success' => AuditLog::query()->where('status', 'success')->count(),
-            'warning' => AuditLog::query()->where('status', 'warning')->count(),
-            'failed' => AuditLog::query()->where('status', 'failed')->count(),
-        ];
-
-        return view('frontend.setting.audit_logs', compact('logs', 'stats'));
-    }
-
     public function profileUser()
     {
         $user = auth()->user();
-        
+
         // Fetch real stats for the user
         $stats = [
             'transactions' => SalesOrder::query()->where('created_by', $user->id)->count(),
             'products'     => Product::query()->where('created_by', $user->id)->count(),
             'customers'    => Customer::query()->count(), // Customers are shared, but we can count total
-            'logs_count'   => AuditLog::query()->where('user_id', $user->id)->count(),
         ];
 
-        // Fetch recent user activity from Audit Logs
-        $activities = AuditLog::query()->where('user_id', $user->id)
-            ->latest()
-            ->take(5)
-            ->get();
-
-        return view('frontend.setting.profile_user', compact('stats', 'activities'));
+        return view('frontend.setting.profile_user', compact('stats'));
     }
 
     public function branchesView()

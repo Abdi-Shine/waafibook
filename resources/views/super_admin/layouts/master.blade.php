@@ -1,12 +1,5 @@
 @php
-    // Second-most-recent LOGIN entry — the most recent one is the current
-    // session itself, so "last login" means the one before it.
-    $lastLogin = \App\Models\AuditLog::where('user_id', auth()->id())
-        ->where('module', 'Authentication')
-        ->where('action', 'LOGIN')
-        ->orderByDesc('created_at')
-        ->skip(1)
-        ->first()?->created_at;
+    $lastLogin = null;
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -265,11 +258,6 @@
                        class="flex items-center gap-3 pl-12 pr-4 py-2 text-[13px] font-medium transition-all duration-200 no-underline
                               {{ request()->routeIs('host.reports.users') ? 'text-white' : 'text-white/50 hover:text-white' }}">
                         <i class="bi bi-plus text-lg"></i> Users
-                    </a>
-                    <a href="{{ route('host.reports.activity') }}"
-                       class="flex items-center gap-3 pl-12 pr-4 py-2 text-[13px] font-medium transition-all duration-200 no-underline
-                              {{ request()->routeIs('host.reports.activity') ? 'text-white' : 'text-white/50 hover:text-white' }}">
-                        <i class="bi bi-plus text-lg"></i> System Activity
                     </a>
                 </div>
             </div>

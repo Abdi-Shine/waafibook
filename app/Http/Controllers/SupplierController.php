@@ -7,7 +7,6 @@ use App\Models\Supplier;
 use App\Models\Account;
 use App\Models\JournalEntry;
 use App\Models\JournalItem;
-use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -310,7 +309,6 @@ class SupplierController extends Controller
     {
         $supplier = Supplier::query()->findOrFail($id);
         $supplier->update(['status' => 'inactive']);
-        AuditLog::log('Parties', "Deactivated supplier: {$supplier->name}", 'UPDATE');
         return response()->json(['success' => true]);
     }
 

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Host;
 
 use App\Http\Controllers\Controller;
-use App\Models\AuditLog;
 use App\Models\Company;
 use App\Models\Subscription;
 use App\Models\SubscriptionPayment;
@@ -284,67 +283,6 @@ class HostReportsController extends Controller
 
         return view('super_admin.reports.users',
             compact('users', 'byRole', 'byStatus', 'topCompanies', 'monthlyNew', 'roles'));
-    }
-
-    // ── Activity / Audit Report ───────────────────────────────────────────────
-
-    public function activity(Request $request)
-    {
-        $query = AuditLog::with('user')
-            ->withoutGlobalScopes()
-            ->orderByDesc('created_at');
-
-        if ($request->filled('module'))     $query->where('module', $request->module);
-        if ($request->filled('action'))     $query->where('action', $request->action);
-        if ($request->filled('company_id')) $query->where('company_id', $request->company_id);
-        if ($request->filled('date_from'))  $query->whereDate('created_at', '>=', $request->date_from);
-        if ($request->filled('date_to'))    $query->whereDate('created_at', '<=', $request->date_to);
-        if ($request->filled('search')) {
-            $q = $request->search;
-            $query->where(fn($w) => $w->where('description', 'like', "%{$q}%")
-                ->orWhere('ip_address', 'like', "%{$q}%"));
-        }
-
-        $logs = $query->paginate(40)->withQueryString();
-
-        $byModule = AuditLog::withoutGlobalScopes()
-            ->selectRaw('module, COUNT(*) as total')
-            ->groupBy('module')->orderByDesc('total')->limit(10)->pluck('total', 'module');
-
-        $byAction = AuditLog::withoutGlobalScopes()
-            ->selectRaw('action, COUNT(*) as total')
-            ->groupBy('action')->orderByDesc('total')->limit(10)->pluck('total', 'action');
-
-        $dailyActivity = collect($this->monthRange(14))->map(fn($d) => [
-            'label' => $d->format('d M'),
-            'count' => AuditLog::withoutGlobalScopes()
-                ->whereDate('created_at', $d->toDateString())->count(),
-        ]);
-
-        $topCompanies = AuditLog::withoutGlobalScopes()
-            ->join('companies', 'audit_logs.company_id', '=', 'companies.id')
-            ->selectRaw('companies.name, COUNT(*) as total')
-            ->groupBy('companies.id', 'companies.name')
-            ->orderByDesc('total')->limit(10)->get();
-
-        $modules   = AuditLog::withoutGlobalScopes()->select('module')->distinct()->orderBy('module')->pluck('module');
-        $actions   = AuditLog::withoutGlobalScopes()->select('action')->distinct()->orderBy('action')->pluck('action');
-        $companies = Company::orderBy('name')->get(['id', 'name']);
-
-        if ($request->input('export') === 'csv') {
-            $all = AuditLog::withoutGlobalScopes()->with('user')
-                ->orderByDesc('created_at')->limit(5000)->get();
-            return $this->exportCsv('activity-report-' . now()->format('Y-m-d') . '.csv',
-                ['#', 'User', 'Module', 'Action', 'Description', 'IP', 'Country', 'Created At'],
-                $all->map(fn($l, $i) => [
-                    $i + 1, $l->user?->name ?? 'System', $l->module, $l->action,
-                    $l->description, $l->ip_address, $l->country, $l->created_at->format('Y-m-d H:i'),
-                ])->toArray()
-            );
-        }
-
-        return view('super_admin.reports.activity',
-            compact('logs', 'byModule', 'byAction', 'dailyActivity', 'topCompanies', 'modules', 'actions', 'companies'));
     }
 
 }

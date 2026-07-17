@@ -512,7 +512,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/reports/expense-item/pdf', [App\Http\Controllers\ReportController::class, 'exportExpenseItemPdf'])->name('reports.expense_item_report.pdf');
         Route::get('/reports/expense-item/excel', [App\Http\Controllers\ReportController::class, 'exportExpenseItemExcel'])->name('reports.expense_item_report.excel');
 
-        Route::get('/audit-logs', [App\Http\Controllers\CompanyController::class, 'auditLogs'])->name('audit-logs');
     });
 
     // Subscription Management — admin-only, same as every other module
@@ -567,7 +566,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/announcements/{id}', [App\Http\Controllers\Host\HostDashboardController::class, 'destroyAnnouncement'])->name('host.announcements.destroy');
 
         Route::get('/security', [App\Http\Controllers\Host\HostDashboardController::class, 'security'])->name('host.security');
-        Route::get('/security/export', [App\Http\Controllers\Host\HostDashboardController::class, 'exportAuditLog'])->name('host.security.export');
         Route::delete('/security/sessions/{id}', [App\Http\Controllers\Host\HostDashboardController::class, 'forceLogoutSession'])->name('host.security.force-logout');
 
         // Reports module
@@ -576,7 +574,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/reports/subscriptions',    [App\Http\Controllers\Host\HostReportsController::class, 'subscriptions'])->name('host.reports.subscriptions');
         Route::get('/reports/revenue',          [App\Http\Controllers\Host\HostReportsController::class, 'revenue'])->name('host.reports.revenue');
         Route::get('/reports/users',            [App\Http\Controllers\Host\HostReportsController::class, 'users'])->name('host.reports.users');
-        Route::get('/reports/activity',         [App\Http\Controllers\Host\HostReportsController::class, 'activity'])->name('host.reports.activity');
         Route::get('/settings', [App\Http\Controllers\Host\HostDashboardController::class, 'settings'])->name('host.settings');
         Route::post('/settings', [App\Http\Controllers\Host\HostDashboardController::class, 'updateSettings'])->name('host.settings.update');
         Route::post('/settings/maintenance', [App\Http\Controllers\Host\HostDashboardController::class, 'toggleMaintenanceMode'])->name('host.settings.maintenance');

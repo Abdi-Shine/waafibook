@@ -45,16 +45,6 @@
                 <i class="bi bi-graph-up-arrow text-lg"></i>
             </div>
         </div>
-        <div class="bg-white p-5 rounded-[1rem] border border-gray-100 shadow-sm flex items-start justify-between">
-            <div>
-                <p class="text-[12px] text-gray-400 font-medium mb-1">Audit Trails</p>
-                <h3 class="text-[18px] font-black text-primary">{{ number_format($reportsCount) }}</h3>
-                <p class="text-xs font-bold text-primary-dark mt-1.5">Compliance logs</p>
-            </div>
-            <div class="w-11 h-11 bg-primary/10 rounded-[0.6rem] flex items-center justify-center text-primary flex-shrink-0">
-                <i class="bi bi-shield-lock text-lg"></i>
-            </div>
-        </div>
     </div>
 
     {{-- ── FINANCIAL REPORTS ────────────────────────────────── --}}

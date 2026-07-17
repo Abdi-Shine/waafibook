@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use App\Models\SalesOrder;
 use App\Models\PurchaseBill;
 use App\Models\Expense;
-use App\Models\AuditLog;
 use App\Models\Customer;
 use App\Models\Supplier;
 use App\Models\Product;
@@ -44,10 +43,9 @@ class ReportController extends Controller
 
         $totalExpenses  = Expense::query()->where('company_id', $cid)->sum('amount');
         $netProfit      = $totalSales - $totalCogs - $totalExpenses;
-        $reportsCount   = AuditLog::query()->where('module', 'Reports')->count() ?: 0;
 
         return view('frontend.report.all_reports', compact(
-            'totalSales', 'totalPurchases', 'netProfit', 'reportsCount'
+            'totalSales', 'totalPurchases', 'netProfit'
         ));
     }
 

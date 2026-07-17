@@ -12,7 +12,6 @@ use App\Models\Branch;
 use App\Models\ProductStock;
 use App\Models\JournalEntry;
 use App\Models\JournalItem;
-use App\Models\AuditLog;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -168,8 +167,6 @@ class ProductController extends Controller
             // product has an Opening Stock transaction to show in its ledger,
             // rather than appearing to have no history at all.
             $this->createInitialInventoryEntry($product, $stockQuantity);
-
-            AuditLog::log('Products', "Created new product: {$product->product_name}", 'CREATE');
 
             if ($request->wantsJson()) {
                 return response()->json(['success' => true, 'product' => $product]);
@@ -379,8 +376,6 @@ class ProductController extends Controller
         // for the Dashboard/Product Inventory "Total Value" cards.
         $this->syncInitialInventoryEntry($product);
 
-        AuditLog::log('Products', "Updated product details: {$product->product_name}", 'UPDATE');
-
         if ($request->wantsJson()) {
             return response()->json(['success' => true, 'product' => $product]);
         }
@@ -423,8 +418,6 @@ class ProductController extends Controller
                 }
             }
         });
-
-        AuditLog::log('Products', "Deleted opening stock for product: {$product->product_name}", 'DELETE', 'warning');
 
         return redirect()->back()->with('success', 'Opening stock transaction deleted successfully.');
     }
@@ -477,8 +470,6 @@ class ProductController extends Controller
         } catch (\Illuminate\Database\QueryException $e) {
             return redirect()->back()->with('error', 'This product can\'t be deleted because it\'s still referenced by other records.');
         }
-
-        AuditLog::log('Products', "Deleted product: {$product->product_name}", 'DELETE', 'warning');
 
         return redirect()->back()->with('success', 'Product deleted successfully.');
     }

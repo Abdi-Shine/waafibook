@@ -96,7 +96,6 @@
         ['route'=>'host.reports.subscriptions', 'label'=>'View Subscription Report', 'icon'=>'bi-credit-card',      'color'=>'#6366f1'],
         ['route'=>'host.reports.revenue',       'label'=>'View Revenue Report',      'icon'=>'bi-currency-dollar',  'color'=>'#10b981'],
         ['route'=>'host.reports.users',         'label'=>'View User Report',         'icon'=>'bi-people',           'color'=>'#8b5cf6'],
-        ['route'=>'host.reports.activity',      'label'=>'View Activity Log',        'icon'=>'bi-activity',         'color'=>'#f97316'],
     ] as $ql)
     <div class="col-6 col-md-4 col-lg-2">
         <a href="{{ route($ql['route']) }}" class="sa-card p-3 d-flex flex-column align-items-center text-center text-decoration-none h-100"

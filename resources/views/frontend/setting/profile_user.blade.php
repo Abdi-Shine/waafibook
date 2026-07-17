@@ -38,7 +38,7 @@
         <div class="lg:col-span-8 space-y-6">
 
             <!-- Stats Grid -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="bg-white rounded-2xl p-5 shadow-sm border border-border">
                     <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary mb-3">
                         <i class="bi bi-receipt"></i>
@@ -60,39 +60,6 @@
                     <p class="text-[20px] font-black text-primary-dark">{{ $stats['customers'] }}</p>
                     <p class="text-[11px] text-gray-400 font-medium">Total Customers</p>
                 </div>
-                <div class="bg-white rounded-2xl p-5 shadow-sm border border-border">
-                    <div class="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center text-accent mb-3">
-                        <i class="bi bi-clock-history"></i>
-                    </div>
-                    <p class="text-[20px] font-black text-primary-dark">{{ $stats['logs_count'] }}</p>
-                    <p class="text-[11px] text-gray-400 font-medium">Activity Logs</p>
-                </div>
-            </div>
-
-            <!-- Recent Activity -->
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-border">
-                <div class="flex items-center justify-between mb-5">
-                    <h3 class="text-sm font-bold text-text-primary">Recent Activity</h3>
-                    <a href="{{ route('audit-logs') }}" class="text-[11px] font-bold text-primary opacity-50 hover:opacity-100">VIEW ALL</a>
-                </div>
-                @forelse($activities as $activity)
-                    <div class="flex items-start gap-3 py-2.5 border-b border-gray-50 last:border-0">
-                        <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                            <i class="bi bi-pencil-square text-sm"></i>
-                        </div>
-                        <div class="min-w-0">
-                            <p class="text-[13px] font-semibold text-primary-dark">
-                                {{ ucfirst($activity->action) }} <span class="text-text-secondary font-normal">in {{ $activity->module }}</span>
-                            </p>
-                            @if($activity->description)
-                                <p class="text-[12px] text-text-secondary truncate">{{ $activity->description }}</p>
-                            @endif
-                            <p class="text-[11px] text-gray-400 mt-0.5">{{ $activity->created_at->diffForHumans() }}</p>
-                        </div>
-                    </div>
-                @empty
-                    <p class="text-[13px] text-text-secondary text-center py-6">No activity recorded yet.</p>
-                @endforelse
             </div>
         </div>
     </div>

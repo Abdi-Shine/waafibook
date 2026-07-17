@@ -7,7 +7,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
-use App\Models\AuditLog;
 
 class HostLoginController extends Controller
 {
@@ -51,16 +50,12 @@ class HostLoginController extends Controller
 
         $request->session()->regenerate();
 
-        AuditLog::log('Authentication', 'Super Admin logged into the host portal', 'LOGIN');
-
         return redirect()->route('host.dashboard');
     }
 
     /** Logout from super-admin session. */
     public function destroy(Request $request): RedirectResponse
     {
-        AuditLog::log('Authentication', 'Super Admin logged out', 'LOGOUT');
-
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
