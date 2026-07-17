@@ -26,7 +26,7 @@
                     @include('partials.logo_svg', ['width' => 44, 'height' => 44])
                 </div>
             </div>
-            <h1 class="text-2xl font-black tracking-tighter mb-0">Waafi Book</h1>
+            <h1 class="text-2xl font-black tracking-tighter mb-0">Welcome to Waafi Book</h1>
             <div id="header-subtitle-login" style="{{ $activeTab === 'register' ? 'display:none' : '' }}">
                 <p class="text-white/60 text-sm mt-1 mb-3">Smart ERP &amp; POS for Modern Businesses</p>
             </div>
