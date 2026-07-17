@@ -337,12 +337,12 @@ class SalesController extends Controller
                     'total_price'    => ($item['quantity'] * $item['unit_price']) - ($item['discount'] ?? 0),
                 ]);
 
-                // Reduce Stock from Branch
-                if (!empty($item['product_id'])) {
+                // Reduce Stock from Branch — services aren't stocked, so skip entirely
+                if (!empty($item['product_id']) && optional(Product::find($item['product_id']))->product_type !== 'service') {
                     $stock = ProductStock::query()->where('product_id', $item['product_id'])
                         ->where('branch_id', $order->branch_id)
                         ->first();
-                    
+
                     if ($stock) {
                         $stock->decrement('quantity', $item['quantity']);
                     } else {

@@ -201,14 +201,15 @@
 
         function addToCart(pid) {
             const p = products.find(prod => prod.id === pid);
-            const stock = p.stocks_sum_quantity || 0;
-            if (stock <= 0) {
+            const isService = p.product_type === 'service';
+            const stock = isService ? Infinity : (p.stocks_sum_quantity || 0);
+            if (!isService && stock <= 0) {
                 Swal.fire('Out of Stock', 'Cannot add unavailable items', 'error');
                 return;
             }
             const existing = cart.find(i => i.id === pid);
             if (existing) {
-                if (existing.quantity < stock) {
+                if (isService || existing.quantity < stock) {
                     existing.quantity++;
                 } else {
                     Swal.fire('Stock Limit', 'No more units available', 'warning');
