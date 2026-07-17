@@ -476,7 +476,7 @@
 
                     <div class="flex items-center gap-6">
                         <div class="flex items-center gap-3">
-                            <span class="text-sm font-semibold transition-colors" :class="productData.product_type === 'product' ? 'text-white' : 'text-white/50'">Product</span>
+                            <span class="text-sm font-semibold transition-colors cursor-pointer" @click="productData.product_type = 'product'" :class="productData.product_type === 'product' ? 'text-white' : 'text-white/50'">Product</span>
                             <button type="button" role="switch" :aria-checked="productData.product_type === 'service'"
                                 @click="productData.product_type = productData.product_type === 'product' ? 'service' : 'product'"
                                 class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0"
@@ -484,7 +484,7 @@
                                 <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform"
                                     :class="productData.product_type === 'service' ? 'translate-x-6' : 'translate-x-1'"></span>
                             </button>
-                            <span class="text-sm font-semibold transition-colors" :class="productData.product_type === 'service' ? 'text-white' : 'text-white/50'">Service</span>
+                            <span class="text-sm font-semibold transition-colors cursor-pointer" @click="productData.product_type = 'service'" :class="productData.product_type === 'service' ? 'text-white' : 'text-white/50'">Service</span>
                         </div>
 
                         <button @click="activeModal = null" class="w-8 h-8 bg-white/10 border border-white/10 text-white rounded-lg hover:bg-white/20 transition-all flex items-center justify-center shadow-sm">
