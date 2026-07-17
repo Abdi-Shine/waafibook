@@ -27,7 +27,13 @@
                 </div>
             </div>
             <h1 class="text-2xl font-black tracking-tighter mb-0">Waafi Book</h1>
-            <p class="text-white/60 text-sm mt-1 mb-3">Accounting SaaS for modern teams</p>
+            <div id="header-subtitle-login" style="{{ $activeTab === 'register' ? 'display:none' : '' }}">
+                <p class="text-white/60 text-sm mt-1 mb-3">Accounting SaaS for modern teams</p>
+            </div>
+            <div id="header-subtitle-register" style="{{ $activeTab === 'login' ? 'display:none' : '' }}">
+                <p class="text-white font-black text-base mt-1 mb-0">Create your account</p>
+                <p class="text-white/60 text-sm mt-1 mb-3">7 days free &middot; no card required</p>
+            </div>
         </div>
 
         <!-- Body -->
@@ -216,6 +222,8 @@
         const isLogin = tab === 'login';
         document.getElementById('form-login').style.display    = isLogin ? '' : 'none';
         document.getElementById('form-register').style.display = isLogin ? 'none' : '';
+        document.getElementById('header-subtitle-login').style.display    = isLogin ? '' : 'none';
+        document.getElementById('header-subtitle-register').style.display = isLogin ? 'none' : '';
 
         if (pushState) {
             const url = new URL(window.location);
