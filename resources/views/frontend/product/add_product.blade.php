@@ -628,7 +628,7 @@
                             <!-- SERVICE layout: Photo / Name+Category / Price+Description -->
                             <template x-if="productData.product_type === 'service'">
                                 <div>
-                                    <div class="mb-6 w-64 shrink-0">
+                                    <div class="mb-6">
                                         <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Service Photo</label>
                                         <label for="image_upload" class="flex items-center justify-center w-full px-4 py-2.5 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50/50 cursor-pointer hover:bg-white hover:border-primary/30 transition-all group overflow-hidden">
                                             <div x-ref="previewPlaceholder" class="flex items-center gap-3">
