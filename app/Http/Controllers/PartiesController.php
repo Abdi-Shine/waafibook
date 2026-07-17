@@ -173,8 +173,12 @@ class PartiesController extends Controller
             ];
         });
 
+        // Only the unpaid (due) portion of each sale ever gets added to
+        // amount_balance (see SalesController::store()) — subtracting the
+        // full total here would hide a real opening balance whenever a sale
+        // was partially paid.
         $openingBalance = (float) $customer->amount_balance
-            - $sales->sum('total') + $payments->sum('total') + $returns->sum('total');
+            - $sales->sum('balance') + $payments->sum('total') + $returns->sum('total');
 
         $opening = collect();
         if (abs($openingBalance) > 0.01) {
@@ -261,8 +265,10 @@ class PartiesController extends Controller
             ];
         });
 
+        // Same reasoning as buildCustomerLedger(): amount_balance only ever
+        // gains the unpaid (due) portion of a bill, not its full total.
         $openingBalance = (float) $supplier->amount_balance
-            - $purchases->sum('total') + $payments->sum('total') + $returns->sum('total');
+            - $purchases->sum('balance') + $payments->sum('total') + $returns->sum('total');
 
         $opening = collect();
         if (abs($openingBalance) > 0.01) {
