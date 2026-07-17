@@ -17,11 +17,11 @@
 <header class="bg-white border-b border-border h-20 fixed top-0 left-0 right-0 z-40 lg:ml-[260px]">
     <div class="flex items-center justify-between h-full px-4 md:px-8">
         <!-- Left Section: Hamburger + Company Name -->
-        <div class="flex items-center gap-3">
-            <button id="menuToggle" class="lg:hidden p-2 text-text-secondary hover:text-primary transition-colors">
+        <div class="flex items-center gap-3 flex-1 min-w-0 mr-4">
+            <button id="menuToggle" class="lg:hidden p-2 text-text-secondary hover:text-primary transition-colors shrink-0">
                 <i class="bi bi-list text-2xl"></i>
             </button>
-            <span class="text-[14px] font-black text-primary-dark uppercase tracking-wide max-w-[160px] truncate">{{ $headerCompany->name ?? 'Waafibook' }}</span>
+            <span class="text-[14px] font-black text-primary-dark uppercase tracking-wide truncate">{{ $headerCompany->name ?? 'Waafibook' }}</span>
         </div>
 
         <!-- Right Section -->
