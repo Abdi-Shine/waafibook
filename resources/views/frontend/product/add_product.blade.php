@@ -21,7 +21,7 @@
         this.$watch('categoryFilter', () => this.applyServerFilters());
         this.$watch('statusFilter', () => this.applyServerFilters());
         if ('{{ request('action') }}' === 'create') {
-            this.openCreateModal();
+            this.openCreateModal('{{ request('type') === 'service' ? 'service' : 'product' }}');
         }
     },
 
@@ -61,7 +61,7 @@
         product_type: 'product'
     },
 
-    openCreateModal() {
+    openCreateModal(type = 'product') {
         this.editMode = false;
         this.savedProduct = null;
         this.formErrors = {};
@@ -69,7 +69,7 @@
             id: '', product_name: '', product_code: '', category_id: '',
             unit: 'Piece', purchase_price: '', selling_price: '',
             stock_products: '', description: '', account_code: '', branch_id: '',
-            product_type: 'product'
+            product_type: type === 'service' ? 'service' : 'product'
         };
         this.activeModal = 'product-modal';
         document.getElementById('productForm').reset();

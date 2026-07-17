@@ -124,9 +124,9 @@
                 <input type="text" x-model="search" placeholder="Search items..."
                     class="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-[0.5rem] text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
             </div>
-            <a href="{{ route('product.index', ['action' => 'create']) }}" title="Add Product"
+            <a href="{{ route('product.index', ['action' => 'create', 'type' => ($type ?? 'product') === 'service' ? 'service' : 'product']) }}" title="{{ ($type ?? 'product') === 'service' ? 'Add Service' : 'Add Product' }}"
                 class="px-3 py-2 bg-accent text-primary font-bold rounded-[0.5rem] text-[12px] uppercase tracking-wide whitespace-nowrap hover:bg-accent/90 transition-all">
-                <i class="bi bi-plus-lg"></i> Add Product
+                <i class="bi bi-plus-lg"></i> {{ ($type ?? 'product') === 'service' ? 'Add Service' : 'Add Product' }}
             </a>
         </div>
 
