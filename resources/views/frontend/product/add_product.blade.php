@@ -587,7 +587,7 @@
                                         <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                                     </div>
                                 </div>
-                                <div class="space-y-1.5">
+                                <div class="space-y-1.5" x-show="productData.product_type === 'product'" x-transition>
                                     <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Purchase Price</label>
                                     <div class="relative group">
                                         <input type="number" step="0.01" name="purchase_price" x-model="productData.purchase_price" placeholder="0.00"
