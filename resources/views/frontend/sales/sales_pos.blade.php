@@ -66,11 +66,7 @@
                     @endforeach
                 </select>
                 <div class="d-flex gap-2">
-                    <select class="customer-input" id="branch_id">
-                        @foreach($branches as $branch)
-                            <option value="{{ $branch->id }}" {{ Auth::user()->getAssignedBranchId() == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>
-                        @endforeach
-                    </select>
+                    <input type="hidden" id="branch_id" value="{{ Auth::user()->getAssignedBranchId() ?? ($branches->first()->id ?? '') }}">
                     <select class="customer-input" id="account_id">
                         @foreach($accounts as $account)
                             <option value="{{ $account->id }}" {{ $account->id == $defaultPaymentAccountId ? 'selected' : '' }}>
