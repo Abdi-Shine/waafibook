@@ -494,7 +494,7 @@
                 </div>
             </div>
 
-            <div class="px-6 py-6 overflow-y-auto custom-scrollbar flex-grow bg-white">
+            <div class="px-6 pt-4 pb-6 overflow-y-auto custom-scrollbar flex-grow bg-white">
 
                 <!-- Saved Confirmation Banner -->
                 <div x-show="savedProduct" x-cloak x-transition
@@ -518,7 +518,7 @@
 
                          <!-- Bottom: Form Fields (3-Column Grid) -->
                          <!-- Bottom: Form Fields (3-Column Grid) -->
-                        <div class="space-y-6 pt-5 border-t border-dashed border-slate-100">
+                        <div class="space-y-6 pt-2 border-t border-dashed border-slate-100">
                             <input type="hidden" name="product_code" x-model="productData.product_code">
 
                             <!-- PRODUCT layout: original 3-column grid -->
