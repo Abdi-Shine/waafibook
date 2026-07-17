@@ -10,7 +10,11 @@ use App\Models\SubscriptionPayment;
 use App\Models\SubscriptionPlan;
 use App\Models\SystemSetting;
 use App\Models\User;
+use App\Mail\SubscriptionExpiryReminderMail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class HostDashboardController extends Controller
 {
@@ -61,6 +65,83 @@ class HostDashboardController extends Controller
             'monthlyRevenue', 'newThisMonth', 'revenueCollected', 'pendingApprovals',
             'overdueAccounts', 'expiredCompanies', 'newSignupsThisWeek'
         ));
+    }
+
+    public function sendTrialReminder($id)
+    {
+        $company      = Company::with('subscription.plan')->findOrFail($id);
+        $subscription = $company->subscription;
+
+        if (!$subscription || !$subscription->expiry_date) {
+            return redirect()->back()->with('error', "{$company->name} has no active trial to remind.");
+        }
+
+        $recipient = User::withoutGlobalScopes()->where('company_id', $company->id)->where('role', 'admin')->first();
+        $email     = $recipient->email ?? $company->email;
+
+        if (!$email) {
+            return redirect()->back()->with('error', "{$company->name} has no email address on file.");
+        }
+
+        $expiry   = Carbon::parse($subscription->expiry_date)->startOfDay();
+        $daysLeft = (int) Carbon::today()->diffInDays($expiry, false);
+        $userName = $recipient->name ?? $company->name;
+
+        try {
+            Mail::to($email)->send(new SubscriptionExpiryReminderMail(
+                $company->name, $userName, $daysLeft, $expiry, $subscription->status === 'trial'
+            ));
+        } catch (\Exception $e) {
+            Log::error("Manual trial reminder failed for company #{$company->id} ({$email}): " . $e->getMessage());
+
+            return redirect()->back()->with('error', "Failed to send reminder to {$company->name}.");
+        }
+
+        $subscription->update(['last_reminder_sent_at' => now()]);
+
+        return redirect()->back()->with('success', "Reminder email sent to {$company->name}.");
+    }
+
+    public function sendTrialRemindersBulk()
+    {
+        $companies = Company::with('subscription.plan')
+            ->where('created_at', '>=', now()->subDays(7))
+            ->whereHas('subscription', fn ($q) => $q->where('status', 'trial')->whereNotNull('expiry_date'))
+            ->get();
+
+        $sent    = 0;
+        $skipped = 0;
+
+        foreach ($companies as $company) {
+            $subscription = $company->subscription;
+            $recipient    = User::withoutGlobalScopes()->where('company_id', $company->id)->where('role', 'admin')->first();
+            $email        = $recipient->email ?? $company->email;
+
+            if (!$email) {
+                $skipped++;
+                continue;
+            }
+
+            $expiry   = Carbon::parse($subscription->expiry_date)->startOfDay();
+            $daysLeft = (int) Carbon::today()->diffInDays($expiry, false);
+            $userName = $recipient->name ?? $company->name;
+
+            try {
+                Mail::to($email)->send(new SubscriptionExpiryReminderMail(
+                    $company->name, $userName, $daysLeft, $expiry, true
+                ));
+                $subscription->update(['last_reminder_sent_at' => now()]);
+                $sent++;
+            } catch (\Exception $e) {
+                Log::error("Bulk trial reminder failed for company #{$company->id} ({$email}): " . $e->getMessage());
+                $skipped++;
+            }
+        }
+
+        $message = "Sent {$sent} reminder email" . ($sent === 1 ? '' : 's') . '.'
+            . ($skipped ? " {$skipped} skipped (no email on file)." : '');
+
+        return redirect()->back()->with('success', $message);
     }
 
     public function expiredCompanies(Request $request)

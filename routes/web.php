@@ -529,6 +529,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Host / Service Provider Management
     Route::middleware(['role:Super Admin'])->prefix('super_admin')->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\Host\HostDashboardController::class, 'dashboard'])->name('host.dashboard');
+        Route::post('/companies/{id}/send-reminder', [App\Http\Controllers\Host\HostDashboardController::class, 'sendTrialReminder'])->name('host.companies.send-reminder');
+        Route::post('/companies/send-reminders-bulk', [App\Http\Controllers\Host\HostDashboardController::class, 'sendTrialRemindersBulk'])->name('host.companies.send-reminders-bulk');
         Route::get('/companies', [App\Http\Controllers\Host\HostDashboardController::class, 'manageCompanies'])->name('host.companies');
         Route::get('/companies/expired', [App\Http\Controllers\Host\HostDashboardController::class, 'expiredCompanies'])->name('host.companies.expired');
         Route::post('/companies', [App\Http\Controllers\Host\HostDashboardController::class, 'storeCompany'])->name('host.companies.store');

@@ -62,7 +62,7 @@ class SendSubscriptionExpiryReminders extends Command
                         $company->name, $userName, $daysLeft, $expiry, $isTrial
                     ));
 
-                    $subscription->update(['expiry_notice_sent_at' => now()]);
+                    $subscription->update(['expiry_notice_sent_at' => now(), 'last_reminder_sent_at' => now()]);
                     $sent++;
 
                     continue;
@@ -76,7 +76,7 @@ class SendSubscriptionExpiryReminders extends Command
                     ));
 
                     $reminderDaysSent[] = $daysLeft;
-                    $subscription->update(['reminder_days_sent' => $reminderDaysSent]);
+                    $subscription->update(['reminder_days_sent' => $reminderDaysSent, 'last_reminder_sent_at' => now()]);
                     $sent++;
                 }
             } catch (\Exception $e) {

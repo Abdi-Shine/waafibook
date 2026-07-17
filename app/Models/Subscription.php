@@ -38,12 +38,14 @@ class Subscription extends Model
 {
     protected $fillable = [
         'company_id', 'subscription_plan_id', 'start_date', 'expiry_date',
-        'status', 'payment_method', 'auto_renew', 'reminder_days_sent', 'expiry_notice_sent_at'
+        'status', 'payment_method', 'auto_renew', 'reminder_days_sent', 'expiry_notice_sent_at',
+        'last_reminder_sent_at'
     ];
 
     protected $casts = [
         'reminder_days_sent'     => 'array',
         'expiry_notice_sent_at'  => 'datetime',
+        'last_reminder_sent_at'  => 'datetime',
     ];
 
     public function company()

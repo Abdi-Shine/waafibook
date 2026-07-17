@@ -85,11 +85,21 @@
     {{-- New Signups This Week --}}
     <div class="mt-3">
         <div class="sa-card">
-            <div class="sa-card-head"><h6>New Signups This Week</h6></div>
+            <div class="sa-card-head">
+                <h6>New Signups This Week</h6>
+                @if($newSignupsThisWeek->contains(fn ($c) => $c->subscription?->status === 'trial'))
+                    <form method="POST" action="{{ route('host.companies.send-reminders-bulk') }}" id="bulkReminderForm">
+                        @csrf
+                        <button type="button" class="sa-btn-sm" onclick="confirmBulkReminder(this.closest('form'))">
+                            <i class="bi bi-envelope-paper"></i> Send All Reminders
+                        </button>
+                    </form>
+                @endif
+            </div>
             <div class="table-responsive">
                 <table class="sa-table">
                     <thead>
-                        <tr><th>Company</th><th>Plan</th><th>Joined</th></tr>
+                        <tr><th>Company</th><th>Plan</th><th>Joined</th><th>Last Email Sent</th><th>Email Action</th></tr>
                     </thead>
                     <tbody>
                         @forelse($newSignupsThisWeek as $company)
@@ -103,9 +113,24 @@
                                 @endif
                             </td>
                             <td style="color:#6b7280;font-size:.8rem;">{{ $company->created_at->format('d M Y') }}</td>
+                            <td style="color:#6b7280;font-size:.8rem;">
+                                {{ $company->subscription?->last_reminder_sent_at?->format('d M Y, g:ia') ?? '—' }}
+                            </td>
+                            <td>
+                                @if($company->subscription?->status === 'trial')
+                                    <form method="POST" action="{{ route('host.companies.send-reminder', $company->id) }}" class="d-inline">
+                                        @csrf
+                                        <button type="button" class="sa-btn-sm" onclick="confirmSingleReminder(this.closest('form'), '{{ addslashes($company->name) }}')">
+                                            <i class="bi bi-envelope"></i> Send Reminder
+                                        </button>
+                                    </form>
+                                @else
+                                    <span style="color:#9ca3af;">—</span>
+                                @endif
+                            </td>
                         </tr>
                         @empty
-                        <tr><td colspan="3" class="text-center py-4" style="color:#9ca3af;">No new signups this week.</td></tr>
+                        <tr><td colspan="5" class="text-center py-4" style="color:#9ca3af;">No new signups this week.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -114,3 +139,29 @@
     </div>
 
 @endsection
+
+@push('js')
+<script>
+function confirmSingleReminder(form, name) {
+    Swal.fire({
+        title: 'Send reminder to ' + name + '?',
+        text: 'A trial reminder email will be sent to the company admin.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Send',
+        confirmButtonColor: '#004161',
+    }).then((result) => { if (result.isConfirmed) form.submit(); });
+}
+
+function confirmBulkReminder(form) {
+    Swal.fire({
+        title: 'Send reminders to all eligible companies?',
+        text: 'A trial reminder email will be sent to every trial company shown in this list.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Send All',
+        confirmButtonColor: '#004161',
+    }).then((result) => { if (result.isConfirmed) form.submit(); });
+}
+</script>
+@endpush

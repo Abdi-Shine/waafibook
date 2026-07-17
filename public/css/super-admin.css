@@ -291,6 +291,12 @@ body { font-family: 'Inter', sans-serif; background: #f0f4f8; overflow-x: hidden
 .sa-btn-icon.warn:hover { background:#d97706; border-color:#d97706; color:#fff; }
 .sa-btn-icon.ok:hover { background:var(--accent); border-color:var(--accent); color:var(--primary-dark); }
 .sa-row-actions { display:flex; gap:.35rem; }
+.sa-btn-sm {
+    display:inline-flex; align-items:center; gap:.35rem; border-radius:6px; border:1px solid #e5e7eb;
+    background:#f9fafb; cursor:pointer; color:var(--primary); font-size:.75rem; font-weight:600;
+    padding:.4rem .75rem; transition:all .2s; white-space:nowrap;
+}
+.sa-btn-sm:hover { background:var(--primary); color:#fff; border-color:var(--primary); }
 
 /* ── Pill badge ── */
 .sa-pill {
