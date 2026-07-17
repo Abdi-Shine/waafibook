@@ -75,6 +75,11 @@
             <h2 class="text-[15px] font-bold text-primary-dark">Transactions</h2>
             <div class="flex items-center gap-2">
                 <div class="relative">
+                    <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                    <input type="text" x-model="txnSearch" placeholder="Search transactions..."
+                        class="pl-9 pr-3 py-2 w-64 bg-white border border-gray-200 rounded-[0.5rem] text-[13px] font-medium text-gray-700 focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                </div>
+                <div class="relative">
                     <select x-model="typeFilter"
                         class="pl-3 pr-8 py-2 bg-white border border-gray-200 rounded-[0.5rem] text-[13px] font-medium text-gray-700 focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none appearance-none transition-all">
                         <option value="all">All Types</option>
@@ -83,11 +88,6 @@
                         </template>
                     </select>
                     <i class="bi bi-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
-                </div>
-                <div class="relative">
-                    <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                    <input type="text" x-model="txnSearch" placeholder="Search transactions..."
-                        class="pl-9 pr-3 py-2 w-64 bg-white border border-gray-200 rounded-[0.5rem] text-[13px] font-medium text-gray-700 focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
                 </div>
             </div>
         </div>
