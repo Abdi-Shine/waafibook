@@ -519,10 +519,8 @@
                          <!-- Bottom: Form Fields (3-Column Grid) -->
                          <!-- Bottom: Form Fields (3-Column Grid) -->
                         <div class="space-y-6 pt-5 border-t border-dashed border-slate-100">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <!-- Row 1 -->
-                                <!-- Product Image Upload -->
-                            <div class="w-64 shrink-0">
+                            <!-- Row 1: Photo -->
+                            <div class="mb-6 w-64 shrink-0">
                                 <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block" x-text="productData.product_type === 'service' ? 'Service Photo' : 'Product Photo'"></label>
                                 <label for="image_upload" class="flex items-center justify-center w-full px-4 py-2.5 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50/50 cursor-pointer hover:bg-white hover:border-primary/30 transition-all group overflow-hidden">
                                     <div x-ref="previewPlaceholder" class="flex items-center gap-3">
@@ -540,7 +538,10 @@
                                     " />
                                 </label>
                             </div>
+                            <input type="hidden" name="product_code" x-model="productData.product_code">
 
+                            <!-- Row 2: Name + Category -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                 <div class="space-y-1.5">
                                     <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider"><span x-text="productData.product_type === 'service' ? 'Service Name' : 'Product Name'"></span> <span class="text-primary">*</span></label>
                                     <div class="relative group">
@@ -551,8 +552,6 @@
                                     </div>
                                     <p x-show="formErrors.product_name" x-text="formErrors.product_name?.[0]" class="text-red-500 font-bold text-[11px]"></p>
                                 </div>
-
-                                <input type="hidden" name="product_code" x-model="productData.product_code">
 
                                 <div class="space-y-1.5 flex flex-col justify-end">
                                     <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Category</label>
@@ -575,8 +574,11 @@
                                     </div>
                                     <p x-show="formErrors.category_id" x-text="formErrors.category_id?.[0]" class="text-red-500 font-bold text-[11px]"></p>
                                 </div>
-                              <!-- Row 2 -->
-                                <div class="space-y-1.5" x-show="productData.product_type === 'product'" x-transition>
+                            </div>
+
+                            <!-- Product-only row: Base Unit + Purchase Price -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6" x-show="productData.product_type === 'product'" x-transition>
+                                <div class="space-y-1.5">
                                     <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider text-[#00A5DF]">BASE UNIT</label>
                                     <div class="relative">
                                         <select name="unit" x-model="productData.unit" :required="productData.product_type === 'product'"
@@ -588,7 +590,7 @@
                                         <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                                     </div>
                                 </div>
-                                <div class="space-y-1.5" x-show="productData.product_type === 'product'" x-transition>
+                                <div class="space-y-1.5">
                                     <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Purchase Price</label>
                                     <div class="relative group">
                                         <input type="number" step="0.01" name="purchase_price" x-model="productData.purchase_price" placeholder="0.00"
@@ -596,6 +598,22 @@
                                         <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[13px]">{{ $symbol }}</span>
                                     </div>
                                 </div>
+                            </div>
+
+                            <!-- Product-only row: Initial Stock -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6" x-show="productData.product_type === 'product'" x-transition>
+                                <div class="space-y-1.5">
+                                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider" x-text="editMode ? 'Quantity' : 'Initial Stock'"></label>
+                                    <div class="relative group">
+                                        <input type="number" step="1" name="stock_products" x-model="productData.stock_products" placeholder="Opening quantity"
+                                            class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                                        <i class="bi bi-box absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Row 3: Price + Description -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="space-y-1.5">
                                     <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider"><span x-text="productData.product_type === 'service' ? 'Service Price' : 'Selling Price'"></span> <span class="text-primary">*</span></label>
                                     <div class="relative group">
@@ -607,27 +625,15 @@
                                     <p x-show="formErrors.selling_price" x-text="formErrors.selling_price?.[0]" class="text-red-500 font-bold text-[11px]"></p>
                                 </div>
 
-                                <div class="space-y-1.5" x-show="productData.product_type === 'product'" x-transition>
-                                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider" x-text="editMode ? 'Quantity' : 'Initial Stock'"></label>
-                                    <div class="relative group">
-                                        <input type="number" step="1" name="stock_products" x-model="productData.stock_products" placeholder="Opening quantity"
-                                            class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
-                                        <i class="bi bi-box absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                                    </div>
-                                </div>
-
-
-                                <!-- Row 3 -->
-                                <div class="space-y-1.5 md:col-span-2">
+                                <div class="space-y-1.5">
                                     <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Description</label>
                                     <textarea name="description" x-model="productData.description" :placeholder="productData.product_type === 'service' ? 'Enter service details...' : 'Enter product details...'" rows="1"
                                         class="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all min-h-[44px] resize-none overflow-hidden"
                                         @input="$el.style.height = 'auto'; $el.style.height = $el.scrollHeight + 'px'"></textarea>
                                 </div>
+                            </div>
 
                                 <input type="hidden" name="location_type" value="branch">
-
-                            </div>
                         </div><!-- end space-y-5 -->
                     </div><!-- end flex flex-col gap-4 -->
                 </form>
