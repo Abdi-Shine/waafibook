@@ -8,12 +8,14 @@
     productId: '',
     branchId: '',
     quantity: '',
+    date: new Date().toISOString().slice(0, 10),
 
     openFor(productId, branchId) {
         this.method = 'addition';
         this.productId = productId ?? '';
         this.branchId = branchId ?? '';
         this.quantity = '';
+        this.date = new Date().toISOString().slice(0, 10);
         this.openModal = true;
     }
 }">
@@ -181,6 +183,12 @@
                     </button>
                 </div>
                 <input type="hidden" name="method" :value="method">
+
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Adjustment Date <span class="text-primary">*</span></label>
+                    <input type="date" name="date" x-model="date" required
+                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                </div>
 
                 <div class="space-y-1.5">
                     <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Product <span class="text-primary">*</span></label>

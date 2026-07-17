@@ -1074,7 +1074,12 @@ class ProductController extends Controller
             'branch_id'  => 'required|exists:branches,id',
             'method'     => 'required|in:addition,deduction,physical',
             'quantity'   => 'required|numeric|min:0',
+            'date'       => 'nullable|date',
         ]);
+
+        $adjustmentDate = $request->filled('date')
+            ? \Carbon\Carbon::parse($request->date)->setTimeFrom(now())
+            : now();
 
         DB::beginTransaction();
         try {
@@ -1111,7 +1116,7 @@ class ProductController extends Controller
             // any future reconciliation: it changed the number with no record
             // of who/when/why/by-how-much, indistinguishable from a real
             // purchase/sale movement.
-            StockMovement::query()->create([
+            $movement = StockMovement::query()->create([
                 'product_id'     => $request->product_id,
                 'branch_id'      => $request->branch_id,
                 'quantity'       => $stock->quantity - $before,
@@ -1121,6 +1126,7 @@ class ProductController extends Controller
                 'balance_after'  => $stock->quantity,
                 'created_by'     => Auth::id(),
             ]);
+            $movement->forceFill(['created_at' => $adjustmentDate])->save();
 
             DB::commit();
 
