@@ -57,6 +57,7 @@ class HostDashboardController extends Controller
 
         $newSignupsThisWeek = Company::with(['subscription.plan'])
             ->where('created_at', '>=', now()->subDays(7))
+            ->whereHas('subscription', fn ($q) => $q->where('status', 'trial'))
             ->orderByDesc('created_at')
             ->get();
 
