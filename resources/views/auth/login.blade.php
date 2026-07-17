@@ -127,15 +127,18 @@
                             @enderror
                         </div>
                         <div>
-                            <label class="block text-[11px] font-black text-primary uppercase tracking-wider mb-1.5">Company Telephone</label>
+                            <label class="block text-[11px] font-black text-primary uppercase tracking-wider mb-1.5">Company Telephone <span class="text-red-500">*</span></label>
                             <div class="relative">
                                 <i class="bi bi-telephone input-icon"></i>
                                 <input type="text" name="company_phone"
-                                       class="form-control"
+                                       class="form-control @error('company_phone') border-red-400 @enderror"
                                        inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                        placeholder="+252 61 00000000"
-                                       value="{{ old('company_phone') }}">
+                                       value="{{ old('company_phone') }}" required>
                             </div>
+                            @error('company_phone')
+                                <p class="text-red-500 font-bold mt-1.5 uppercase text-[0.7rem]">{{ $message }}</p>
+                            @enderror
                         </div>
                     </div>
 

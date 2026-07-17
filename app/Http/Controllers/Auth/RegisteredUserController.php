@@ -45,6 +45,7 @@ class RegisteredUserController extends Controller
             'password'      => ['required', 'confirmed', Rules\Password::defaults()],
             'company_name'  => ['required', 'string', 'max:255', 'unique:companies,name'],
             'company_email' => ['nullable', 'email', 'max:255'],
+            'company_phone' => ['required', 'string', 'max:30'],
         ]);
 
         $pending = [
@@ -55,7 +56,7 @@ class RegisteredUserController extends Controller
             'company_email'  => $validated['company_email'] ?? null,
             'industry'       => $request->industry,
             'cr_number'      => $request->cr_number,
-            'company_phone'  => $request->company_phone,
+            'company_phone'  => $validated['company_phone'],
             'address'        => $request->address,
             'city'           => $request->city,
             'country'        => $request->country,
