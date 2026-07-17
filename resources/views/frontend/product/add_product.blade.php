@@ -521,6 +521,26 @@
                         <div class="space-y-6 pt-5 border-t border-dashed border-slate-100">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <!-- Row 1 -->
+                                <!-- Product Image Upload -->
+                            <div class="w-64 shrink-0">
+                                <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block" x-text="productData.product_type === 'service' ? 'Service Photo' : 'Product Photo'"></label>
+                                <label for="image_upload" class="flex items-center justify-center w-full px-4 py-2.5 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50/50 cursor-pointer hover:bg-white hover:border-primary/30 transition-all group overflow-hidden">
+                                    <div x-ref="previewPlaceholder" class="flex items-center gap-3">
+                                        <i class="bi bi-cloud-arrow-up text-xl text-primary/60 group-hover:scale-110 transition-transform"></i>
+                                        <span class="text-[11px] font-black text-gray-500 uppercase tracking-widest">Upload Image</span>
+                                    </div>
+                                    <img x-ref="previewImg" class="hidden w-full h-8 object-contain">
+                                    <input id="image_upload" type="file" name="image" class="hidden" accept="image/*" @change="
+                                        const file = $event.target.files[0];
+                                        if(file) {
+                                            const reader = new FileReader();
+                                            reader.onload = (e) => { $refs.previewImg.src = e.target.result; $refs.previewPlaceholder.classList.add('hidden'); $refs.previewImg.classList.remove('hidden'); }
+                                            reader.readAsDataURL(file);
+                                        }
+                                    " />
+                                </label>
+                            </div>
+
                                 <div class="space-y-1.5">
                                     <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider"><span x-text="productData.product_type === 'service' ? 'Service Name' : 'Product Name'"></span> <span class="text-primary">*</span></label>
                                     <div class="relative group">
@@ -555,25 +575,6 @@
                                     </div>
                                     <p x-show="formErrors.category_id" x-text="formErrors.category_id?.[0]" class="text-red-500 font-bold text-[11px]"></p>
                                 </div>
-                                <!-- Product Image Upload -->
-                            <div class="w-64 shrink-0">
-                                <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block" x-text="productData.product_type === 'service' ? 'Service Photo' : 'Product Photo'"></label>
-                                <label for="image_upload" class="flex items-center justify-center w-full px-4 py-2.5 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50/50 cursor-pointer hover:bg-white hover:border-primary/30 transition-all group overflow-hidden">
-                                    <div x-ref="previewPlaceholder" class="flex items-center gap-3">
-                                        <i class="bi bi-cloud-arrow-up text-xl text-primary/60 group-hover:scale-110 transition-transform"></i>
-                                        <span class="text-[11px] font-black text-gray-500 uppercase tracking-widest">Upload Image</span>
-                                    </div>
-                                    <img x-ref="previewImg" class="hidden w-full h-8 object-contain">
-                                    <input id="image_upload" type="file" name="image" class="hidden" accept="image/*" @change="
-                                        const file = $event.target.files[0];
-                                        if(file) {
-                                            const reader = new FileReader();
-                                            reader.onload = (e) => { $refs.previewImg.src = e.target.result; $refs.previewPlaceholder.classList.add('hidden'); $refs.previewImg.classList.remove('hidden'); }
-                                            reader.readAsDataURL(file);
-                                        }
-                                    " />
-                                </label>
-                            </div>
                               <!-- Row 2 -->
                                 <div class="space-y-1.5" x-show="productData.product_type === 'product'" x-transition>
                                     <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider text-[#00A5DF]">BASE UNIT</label>
