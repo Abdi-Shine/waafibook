@@ -5,8 +5,44 @@
 <div class="px-4 py-8 md:px-8 md:py-10 bg-background min-h-screen" x-data="{
     activeModal: null,
     txnSearch: '',
+    typeFilter: 'all',
+    sortField: 'date',
+    sortDirection: 'desc',
     adjustType: 'increase',
     saving: false,
+    transactions: @js($transactions),
+
+    get types() {
+        return [...new Set(this.transactions.map(t => t.type))].sort();
+    },
+
+    get filteredTransactions() {
+        let list = this.transactions;
+        if (this.typeFilter !== 'all') list = list.filter(t => t.type === this.typeFilter);
+        if (this.txnSearch) {
+            const term = this.txnSearch.toLowerCase();
+            list = list.filter(t => (t.type + ' ' + t.name).toLowerCase().includes(term));
+        }
+        const field = this.sortField;
+        const dir = this.sortDirection === 'asc' ? 1 : -1;
+        return [...list].sort((a, b) => {
+            let av = field === 'date' ? a.sort_date : a[field];
+            let bv = field === 'date' ? b.sort_date : b[field];
+            if (typeof av === 'string') { av = av.toLowerCase(); bv = bv.toLowerCase(); }
+            if (av < bv) return -1 * dir;
+            if (av > bv) return 1 * dir;
+            return 0;
+        });
+    },
+
+    toggleSort(field) {
+        if (this.sortField === field) {
+            this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            this.sortField = field;
+            this.sortDirection = 'asc';
+        }
+    },
 
     openAdjustModal() {
         this.adjustType = 'increase';
@@ -35,12 +71,24 @@
         </div>
     @else
     <div class="bg-white rounded-[1rem] border border-gray-200/80 shadow-sm overflow-hidden">
-        <div class="px-5 py-4 flex items-center justify-between border-b border-gray-100">
+        <div class="px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-gray-100">
             <h2 class="text-[15px] font-bold text-primary-dark">Transactions</h2>
-            <div class="relative">
-                <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                <input type="text" x-model="txnSearch" placeholder="Search transactions..."
-                    class="pl-9 pr-3 py-2 w-64 bg-white border border-gray-200 rounded-[0.5rem] text-[13px] font-medium text-gray-700 focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+            <div class="flex items-center gap-2">
+                <div class="relative">
+                    <select x-model="typeFilter"
+                        class="pl-3 pr-8 py-2 bg-white border border-gray-200 rounded-[0.5rem] text-[13px] font-medium text-gray-700 focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none appearance-none transition-all">
+                        <option value="all">All Types</option>
+                        <template x-for="t in types" :key="t">
+                            <option :value="t" x-text="t"></option>
+                        </template>
+                    </select>
+                    <i class="bi bi-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
+                </div>
+                <div class="relative">
+                    <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                    <input type="text" x-model="txnSearch" placeholder="Search transactions..."
+                        class="pl-9 pr-3 py-2 w-64 bg-white border border-gray-200 rounded-[0.5rem] text-[13px] font-medium text-gray-700 focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                </div>
             </div>
         </div>
 
@@ -48,26 +96,38 @@
             <table class="w-full text-left">
                 <thead>
                     <tr class="bg-background/60 border-b border-gray-100">
-                        <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider">Type</th>
-                        <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider">Name</th>
-                        <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider">Date</th>
-                        <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right">Amount</th>
+                        <th @click="toggleSort('type')" class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider cursor-pointer select-none hover:text-primary transition-colors">
+                            Type
+                            <i class="bi ms-1" :class="sortField === 'type' ? (sortDirection === 'asc' ? 'bi-caret-up-fill' : 'bi-caret-down-fill') : 'bi-caret-down text-gray-300'"></i>
+                        </th>
+                        <th @click="toggleSort('name')" class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider cursor-pointer select-none hover:text-primary transition-colors">
+                            Name
+                            <i class="bi ms-1" :class="sortField === 'name' ? (sortDirection === 'asc' ? 'bi-caret-up-fill' : 'bi-caret-down-fill') : 'bi-caret-down text-gray-300'"></i>
+                        </th>
+                        <th @click="toggleSort('date')" class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider cursor-pointer select-none hover:text-primary transition-colors">
+                            Date
+                            <i class="bi ms-1" :class="sortField === 'date' ? (sortDirection === 'asc' ? 'bi-caret-up-fill' : 'bi-caret-down-fill') : 'bi-caret-down text-gray-300'"></i>
+                        </th>
+                        <th @click="toggleSort('amount')" class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right cursor-pointer select-none hover:text-primary transition-colors">
+                            Amount
+                            <i class="bi ms-1" :class="sortField === 'amount' ? (sortDirection === 'asc' ? 'bi-caret-up-fill' : 'bi-caret-down-fill') : 'bi-caret-down text-gray-300'"></i>
+                        </th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
-                    @forelse($transactions as $txn)
-                    <tr class="hover:bg-gray-50/60 transition-colors"
-                        x-show="!txnSearch || {{ \Illuminate\Support\Js::from(strtolower($txn['type'].' '.$txn['name'])) }}.includes(txnSearch.toLowerCase())">
-                        <td class="px-5 py-3.5 text-[13px] font-bold text-primary-dark">{{ $txn['type'] }}</td>
-                        <td class="px-5 py-3.5 text-[13px] text-gray-700">{{ $txn['name'] }}</td>
-                        <td class="px-5 py-3.5 text-[13px] text-gray-500">{{ $txn['date'] }}</td>
-                        <td class="px-5 py-3.5 text-[13px] font-bold text-right {{ $txn['direction'] === 'in' ? 'text-accent' : 'text-red-500' }}">
-                            {{ $companyCurrency }} {{ number_format($txn['amount'], 0) }}
-                        </td>
-                    </tr>
-                    @empty
-                    <tr><td colspan="4" class="px-5 py-10 text-center text-[13px] text-gray-400">No transactions found.</td></tr>
-                    @endforelse
+                    <template x-for="txn in filteredTransactions" :key="txn.sort_id">
+                        <tr class="hover:bg-gray-50/60 transition-colors">
+                            <td class="px-5 py-3.5 text-[13px] font-bold text-primary-dark" x-text="txn.type"></td>
+                            <td class="px-5 py-3.5 text-[13px] text-gray-700" x-text="txn.name"></td>
+                            <td class="px-5 py-3.5 text-[13px] text-gray-500" x-text="txn.date"></td>
+                            <td class="px-5 py-3.5 text-[13px] font-bold text-right"
+                                :class="txn.direction === 'in' ? 'text-accent' : 'text-red-500'"
+                                x-text="'{{ $companyCurrency }} ' + Math.round(txn.amount)"></td>
+                        </tr>
+                    </template>
+                    <template x-if="!filteredTransactions.length">
+                        <tr><td colspan="4" class="px-5 py-10 text-center text-[13px] text-gray-400">No transactions found.</td></tr>
+                    </template>
                 </tbody>
             </table>
         </div>
