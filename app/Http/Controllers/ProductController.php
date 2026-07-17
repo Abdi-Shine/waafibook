@@ -635,6 +635,12 @@ class ProductController extends Controller
                 ];
             });
 
+        // Services aren't stocked, so an "Opening Stock: 0" entry is just
+        // clutter — every service would otherwise show one from creation.
+        if ($product->product_type === 'service') {
+            $openingEntries = collect();
+        }
+
         $transactions = $sales->concat($purchases)->concat($openingEntries)
             ->sortByDesc('sort_date')
             ->values();
@@ -648,6 +654,7 @@ class ProductController extends Controller
                 'id'             => $product->id,
                 'name'           => $product->product_name,
                 'unit'           => $product->unit ?? 'pcs',
+                'product_type'   => $product->product_type ?? 'product',
                 'selling_price'  => (float) $product->selling_price,
                 'purchase_price' => (float) $product->purchase_price,
                 'stock_quantity' => $stockQuantity,

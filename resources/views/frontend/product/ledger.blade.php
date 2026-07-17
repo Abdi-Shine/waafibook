@@ -11,7 +11,7 @@
 </div>
 
 <div class="h-[calc(100vh-9.5rem)] flex bg-background" x-data="{
-    products: @js($products->map(fn($p) => ['id' => $p->id, 'name' => $p->product_name, 'quantity' => $p->stocks_sum_quantity ?? 0])),
+    products: @js($products->map(fn($p) => ['id' => $p->id, 'name' => $p->product_name, 'quantity' => $p->stocks_sum_quantity ?? 0, 'price' => (float) $p->selling_price])),
     search: '',
     txnSearch: '',
     selectedId: {{ $selectedId ?? 'null' }},
@@ -132,7 +132,7 @@
 
         <div class="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 bg-background/50">
             <span class="text-[11px] font-black text-primary-dark uppercase tracking-wider">Item</span>
-            <span class="text-[11px] font-black text-primary-dark uppercase tracking-wider">Quantity</span>
+            <span class="text-[11px] font-black text-primary-dark uppercase tracking-wider">{{ ($type ?? 'product') === 'service' ? 'Price' : 'Quantity' }}</span>
         </div>
 
         <div class="flex-1 overflow-y-auto custom-scrollbar">
@@ -142,7 +142,11 @@
                     :class="selectedId === product.id ? 'bg-primary/5 border-l-[3px] border-l-primary' : ''">
                     <span class="text-[13px] font-semibold text-primary-dark truncate" :class="selectedId === product.id ? 'font-bold' : ''" x-text="product.name"></span>
                     <div class="flex items-center gap-2 shrink-0">
-                        <span class="text-[13px] font-bold text-accent" x-text="product.quantity"></span>
+                        @if(($type ?? 'product') === 'service')
+                            <span class="text-[13px] font-bold text-accent" x-text="'{{ $symbol }} ' + parseFloat(product.price).toFixed(2)"></span>
+                        @else
+                            <span class="text-[13px] font-bold text-accent" x-text="product.quantity"></span>
+                        @endif
                         <button @click.stop="deleteProductItem(product.id, product.name)" title="Delete Item"
                             class="opacity-0 group-hover:opacity-100 text-primary hover:text-red-500 transition-all">
                             <i class="bi bi-trash3"></i>
@@ -183,16 +187,17 @@
                             </a>
                         </h1>
                         <div class="flex items-center gap-6 mt-3">
-                            <p class="text-[13px] text-gray-500">SALE PRICE:
+                            <p class="text-[13px] text-gray-500">
+                                <span x-text="ledger.product.product_type === 'service' ? 'SERVICE PRICE:' : 'SALE PRICE:'"></span>
                                 <span class="text-accent font-bold" x-text="'{{ $symbol }} ' + parseFloat(ledger.product.selling_price).toFixed(2)"></span>
                             </p>
-                            <p class="text-[13px] text-gray-500">PURCHASE PRICE:
+                            <p class="text-[13px] text-gray-500" x-show="ledger.product.product_type !== 'service'">PURCHASE PRICE:
                                 <span class="text-accent font-bold" x-text="'{{ $symbol }} ' + parseFloat(ledger.product.purchase_price).toFixed(2)"></span>
                             </p>
                         </div>
                     </div>
 
-                    <div class="flex flex-col items-end gap-3">
+                    <div class="flex flex-col items-end gap-3" x-show="ledger.product.product_type !== 'service'">
                         <a href="{{ route('stock-adjustment.view') }}"
                             class="flex items-center gap-2 px-4 py-2.5 bg-primary text-white font-bold rounded-[0.5rem] text-[12px] uppercase tracking-wide hover:bg-primary/90 transition-all">
                             <i class="bi bi-sliders"></i> Adjust Item
