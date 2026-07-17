@@ -102,6 +102,7 @@
                         <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider">Product</th>
                         <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider">Branch</th>
                         <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right">Quantity</th>
+                        <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider">Date</th>
                         <th class="px-5 py-3.5 text-[11px] font-black text-primary-dark uppercase tracking-wider text-right">Actions</th>
                     </tr>
                 </thead>
@@ -113,6 +114,7 @@
                         <td class="px-5 py-3.5 text-[13px] font-bold text-right {{ $stock->quantity <= 10 ? 'text-red-500' : 'text-primary-dark' }}">
                             {{ number_format($stock->quantity) }}
                         </td>
+                        <td class="px-5 py-3.5 text-[13px] text-gray-500">{{ $stock->updated_at?->format('d/m/Y') ?? '—' }}</td>
                         <td class="px-5 py-3.5 text-right">
                             <button @click="openFor({{ $stock->product_id }}, {{ $stock->branch_id ?? 'null' }})"
                                 class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-gray-400 hover:text-primary hover:border-primary transition-all inline-flex items-center justify-center text-sm shadow-sm" title="Adjust">
@@ -121,7 +123,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="4" class="px-5 py-10 text-center text-[13px] text-gray-400">No stock records found.</td></tr>
+                    <tr><td colspan="5" class="px-5 py-10 text-center text-[13px] text-gray-400">No stock records found.</td></tr>
                     @endforelse
                 </tbody>
             </table>
