@@ -80,8 +80,8 @@
                         class="pl-9 pr-3 py-2 w-64 bg-white border border-gray-200 rounded-[0.5rem] text-[13px] font-medium text-gray-700 focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
                 </div>
                 <div class="relative">
-                    <select x-model="typeFilter"
-                        class="pl-3 pr-8 py-2 bg-white border border-gray-200 rounded-[0.5rem] text-[13px] font-medium text-gray-700 focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none appearance-none transition-all">
+                    <select x-model="typeFilter" style="appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: none;"
+                        class="pl-3 pr-8 py-2 bg-white border border-gray-200 rounded-[0.5rem] text-[13px] font-medium text-gray-700 focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
                         <option value="all">All Types</option>
                         <template x-for="t in types" :key="t">
                             <option :value="t" x-text="t"></option>
