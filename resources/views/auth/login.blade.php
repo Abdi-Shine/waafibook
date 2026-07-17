@@ -28,8 +28,7 @@
             </div>
             <h1 class="text-2xl font-black tracking-tighter mb-0">Waafi Book</h1>
             <div id="header-subtitle-login" style="{{ $activeTab === 'register' ? 'display:none' : '' }}">
-                <p class="text-white font-black text-base mt-1 mb-0">Welcome back</p>
-                <p class="text-white/60 text-sm mt-1 mb-3">Sign in to keep your books in order.</p>
+                <p class="text-white/60 text-sm mt-1 mb-3">Smart ERP &amp; POS for Modern Businesses</p>
             </div>
             <div id="header-subtitle-register" style="{{ $activeTab === 'login' ? 'display:none' : '' }}">
                 <p class="text-white font-black text-base mt-1 mb-0">Create your account</p>
