@@ -7,7 +7,7 @@
     showAddModal: false,
     saving: false,
     formErrors: {},
-    form: { name: '', phone: '', supplier_type: 'individual', email: '', address: '', amount_balance: '' },
+    form: { name: '', phone: '', supplier_type: 'company', email: '', address: '', amount_balance: '' },
     suppliers: @js($suppliers->map(fn($s) => [
         'id'      => $s->id,
         'name'    => $s->name,
@@ -23,7 +23,7 @@
         return this.suppliers.filter(s => s.name.toLowerCase().includes(q));
     },
     openAddModal() {
-        this.form = { name: '', phone: '', supplier_type: 'individual', email: '', address: '', amount_balance: '' };
+        this.form = { name: '', phone: '', supplier_type: 'company', email: '', address: '', amount_balance: '' };
         this.formErrors = {};
         this.showAddModal = true;
     },
