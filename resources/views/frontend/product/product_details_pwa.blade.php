@@ -263,30 +263,32 @@
                     <p x-show="formErrors.product_name" x-text="formErrors.product_name?.[0]" class="text-red-500 font-bold text-[11px] mt-1"></p>
                 </div>
 
-                <div>
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Category</label>
-                    <div class="relative">
-                        <select name="category_id" x-model="productData.category_id"
-                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none appearance-none">
-                            <option value="">Select Category</option>
-                            <template x-for="cat in categories" :key="cat.id">
-                                <option :value="cat.id" x-text="cat.name"></option>
-                            </template>
-                        </select>
-                        <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Category</label>
+                        <div class="relative">
+                            <select name="category_id" x-model="productData.category_id"
+                                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none appearance-none">
+                                <option value="">Select Category</option>
+                                <template x-for="cat in categories" :key="cat.id">
+                                    <option :value="cat.id" x-text="cat.name"></option>
+                                </template>
+                            </select>
+                            <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+                        </div>
                     </div>
-                </div>
 
-                <div x-show="productData.product_type === 'product'" x-transition>
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Base Unit</label>
-                    <div class="relative">
-                        <select name="unit" x-model="productData.unit" :required="productData.product_type === 'product'"
-                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none appearance-none">
-                            <template x-for="u in units" :key="u">
-                                <option :value="u" x-text="u"></option>
-                            </template>
-                        </select>
-                        <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+                    <div x-show="productData.product_type === 'product'" x-transition>
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Base Unit</label>
+                        <div class="relative">
+                            <select name="unit" x-model="productData.unit" :required="productData.product_type === 'product'"
+                                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none appearance-none">
+                                <template x-for="u in units" :key="u">
+                                    <option :value="u" x-text="u"></option>
+                                </template>
+                            </select>
+                            <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+                        </div>
                     </div>
                 </div>
 
