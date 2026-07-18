@@ -4,10 +4,6 @@
 @section('admin')
 <div class="pb-28 bg-background min-h-screen" x-data="{
     search: '',
-    showAddModal: false,
-    saving: false,
-    formErrors: {},
-    form: { name: '', phone: '', supplier_type: 'individual', email: '', address: '', amount_balance: '' },
     suppliers: @js($suppliers->map(fn($s) => [
         'id'      => $s->id,
         'name'    => $s->name,
@@ -21,48 +17,6 @@
         if (!this.search) return this.suppliers;
         const q = this.search.toLowerCase();
         return this.suppliers.filter(s => s.name.toLowerCase().includes(q));
-    },
-    openAddModal() {
-        this.form = { name: '', phone: '', supplier_type: 'individual', email: '', address: '', amount_balance: '' };
-        this.formErrors = {};
-        this.showAddModal = true;
-    },
-    async submitSupplier() {
-        this.saving = true;
-        this.formErrors = {};
-        try {
-            const payload = {
-                ...this.form,
-                email: this.form.email || null,
-                address: this.form.address || null,
-                amount_balance: this.form.amount_balance === '' ? 0 : this.form.amount_balance,
-            };
-            const response = await fetch('{{ route('supplier.store') }}', {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').content,
-                },
-                body: JSON.stringify(payload),
-            });
-            const data = await response.json();
-            if (response.status === 422) {
-                this.formErrors = data.errors || {};
-                return;
-            }
-            if (!response.ok) {
-                Swal.fire({ icon: 'error', title: 'Something went wrong', text: data.message || 'Please try again.' });
-                return;
-            }
-            this.showAddModal = false;
-            Swal.fire({ icon: 'success', title: 'Supplier Added', text: (data.name || 'Supplier') + ' has been registered.', timer: 1500, showConfirmButton: false })
-                .then(() => window.location.reload());
-        } catch (e) {
-            Swal.fire({ icon: 'error', title: 'Network error', text: 'Could not save supplier. Please try again.' });
-        } finally {
-            this.saving = false;
-        }
     }
 }">
     <div class="flex items-center gap-2 px-5 pt-4 mb-2">
@@ -75,10 +29,10 @@
                 <i class="bi bi-x text-base"></i>
             </button>
         </div>
-        <button @click="openAddModal()"
+        <a href="{{ route('supplier.index') }}?reopen_create=1"
            class="flex items-center gap-1 px-3 py-2.5 bg-accent text-primary font-bold rounded-xl text-[13px] shrink-0 whitespace-nowrap">
             <i class="bi bi-plus-lg text-base"></i> New Party
-        </button>
+        </a>
     </div>
 
     <div class="bg-white border-t border-b border-gray-100">
@@ -101,81 +55,6 @@
                 <p class="text-sm text-text-secondary mt-2 font-semibold" x-text="search ? 'No suppliers match your search' : 'No suppliers yet'"></p>
             </div>
         </template>
-    </div>
-
-    {{-- Add Supplier — mobile bottom sheet --}}
-    <div x-show="showAddModal" x-cloak x-transition.opacity
-        class="fixed inset-0 z-[70] bg-slate-900/40" @click.self="showAddModal = false">
-        <div x-show="showAddModal" x-transition:enter="transition ease-out duration-250"
-            x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0"
-            x-transition:leave="transition ease-in duration-200"
-            x-transition:leave-start="translate-y-0" x-transition:leave-end="translate-y-full"
-            class="absolute bottom-0 left-0 right-0 bg-white rounded-t-[1.5rem] max-h-[90vh] overflow-y-auto">
-
-            <div class="px-5 py-4 bg-primary flex items-center justify-between sticky top-0 z-10">
-                <h2 class="text-white font-bold text-[16px]">Register Supplier</h2>
-                <button @click="showAddModal = false" class="w-8 h-8 bg-white/10 rounded-lg text-white flex items-center justify-center">
-                    <i class="bi bi-x-lg text-xs"></i>
-                </button>
-            </div>
-
-            <form @submit.prevent="submitSupplier()" class="p-5 flex flex-col gap-4">
-                <div>
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Full Name <span class="text-primary">*</span></label>
-                    <input type="text" x-model="form.name" required placeholder="Enter supplier name"
-                        :class="formErrors.name ? 'border-red-400' : 'border-gray-200'"
-                        class="w-full px-4 py-2.5 bg-gray-50 border rounded-lg text-[14px] font-medium text-gray-700 outline-none">
-                    <p x-show="formErrors.name" x-text="formErrors.name?.[0]" class="text-red-500 font-bold text-[11px] mt-1"></p>
-                </div>
-
-                <div>
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Phone Number <span class="text-primary">*</span></label>
-                    <input type="text" x-model="form.phone" required inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="e.g. 252612345678"
-                        :class="formErrors.phone ? 'border-red-400' : 'border-gray-200'"
-                        class="w-full px-4 py-2.5 bg-gray-50 border rounded-lg text-[14px] font-medium text-gray-700 outline-none">
-                    <p x-show="formErrors.phone" x-text="formErrors.phone?.[0]" class="text-red-500 font-bold text-[11px] mt-1"></p>
-                </div>
-
-                <div>
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Supplier Type</label>
-                    <div class="flex gap-2">
-                        <button type="button" @click="form.supplier_type = 'individual'"
-                            class="flex-1 py-2.5 rounded-lg text-[13px] font-bold border"
-                            :class="form.supplier_type === 'individual' ? 'bg-primary text-white border-primary' : 'bg-gray-50 text-gray-500 border-gray-200'">Individual</button>
-                        <button type="button" @click="form.supplier_type = 'company'"
-                            class="flex-1 py-2.5 rounded-lg text-[13px] font-bold border"
-                            :class="form.supplier_type === 'company' ? 'bg-primary text-white border-primary' : 'bg-gray-50 text-gray-500 border-gray-200'">Company</button>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Email</label>
-                    <input type="email" x-model="form.email" placeholder="Optional"
-                        :class="formErrors.email ? 'border-red-400' : 'border-gray-200'"
-                        class="w-full px-4 py-2.5 bg-gray-50 border rounded-lg text-[14px] font-medium text-gray-700 outline-none">
-                    <p x-show="formErrors.email" x-text="formErrors.email?.[0]" class="text-red-500 font-bold text-[11px] mt-1"></p>
-                </div>
-
-                <div>
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Address</label>
-                    <input type="text" x-model="form.address" placeholder="Optional"
-                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
-                </div>
-
-                <div>
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Opening Balance</label>
-                    <input type="number" step="0.01" x-model="form.amount_balance" placeholder="0.00"
-                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
-                </div>
-
-                <button type="submit" :disabled="saving"
-                    class="w-full py-3.5 bg-accent text-primary font-bold rounded-xl text-[14px] uppercase tracking-wide flex items-center justify-center gap-2 mt-2"
-                    :class="saving ? 'opacity-60' : ''">
-                    <i class="bi" :class="saving ? 'bi-arrow-repeat animate-spin' : 'bi-check2-circle'"></i>
-                    <span x-text="saving ? 'Saving...' : 'Register Supplier'"></span>
-                </button>
-            </form>
-        </div>
     </div>
 </div>
 @endsection
