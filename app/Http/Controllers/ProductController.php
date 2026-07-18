@@ -60,6 +60,41 @@ class ProductController extends Controller
 
         $totalProducts = (clone $query)->count();
 
+        // Editing a product needs the full Add/Edit modal (photo, product/service
+        // toggle, unit, etc.) which only exists on the desktop page — the mobile
+        // list links "Add Product" back here with ?desktop=1 to intentionally
+        // bypass its own mobile branch rather than reimplement that form twice.
+        $isMobile = !$request->boolean('desktop')
+            && ((bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $request->userAgent() ?? '')
+                || $request->header('Sec-CH-UA-Mobile') === '?1'
+                || $request->boolean('mobile'));
+
+        if ($isMobile) {
+            $lowStockCount = DB::table('products')
+                ->when($userBranchId, fn($q) => $q->join('product_stocks', fn($j) => $j->on('products.id', '=', 'product_stocks.product_id')->where('product_stocks.branch_id', $userBranchId)),
+                                      fn($q) => $q->leftJoin('product_stocks', 'products.id', '=', 'product_stocks.product_id'))
+                ->select('products.id', 'products.low_stock_threshold')
+                ->groupBy('products.id', 'products.low_stock_threshold')
+                ->havingRaw('COALESCE(SUM(product_stocks.quantity), 0) <= products.low_stock_threshold')
+                ->get()->count();
+
+            $outOfStockCount = DB::table('products')
+                ->when($userBranchId, fn($q) => $q->join('product_stocks', fn($j) => $j->on('products.id', '=', 'product_stocks.product_id')->where('product_stocks.branch_id', $userBranchId)),
+                                      fn($q) => $q->leftJoin('product_stocks', 'products.id', '=', 'product_stocks.product_id'))
+                ->select('products.id')
+                ->groupBy('products.id')
+                ->havingRaw('COALESCE(SUM(product_stocks.quantity), 0) <= 0')
+                ->get()->count();
+
+            $stats = [
+                'total'         => (clone $query)->count(),
+                'low_stock'     => $lowStockCount,
+                'out_of_stock'  => $outOfStockCount,
+            ];
+
+            return view('frontend.product.product_details_pwa', compact('products', 'stats'));
+        }
+
         // Pulled from the Inventory GL account itself (same source the Balance
         // Sheet/Trial Balance use) rather than recalculated as qty * today's
         // purchase_price. A product's purchase_price reflects the cost of its
