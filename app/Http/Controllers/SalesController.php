@@ -109,7 +109,7 @@ class SalesController extends Controller
         /** @var Company|null $company */
         $company    = Company::find(auth()->user()->company_id);
 
-        $invoiceNo = 'INV-' . str_pad(SalesOrder::query()->count() + 1, 5, '0', STR_PAD_LEFT);
+        $invoiceNo = $this->nextInvoiceNumber();
 
         $accounts = Account::query()
             ->whereIn('type', ['cash', 'bank'])
@@ -145,7 +145,7 @@ class SalesController extends Controller
         /** @var Company|null $company */
         $company    = Company::find(auth()->user()->company_id);
 
-        $invoiceNo = 'INV-' . str_pad(SalesOrder::query()->count() + 1, 5, '0', STR_PAD_LEFT);
+        $invoiceNo = $this->nextInvoiceNumber();
 
         $accounts = Account::query()
             ->where(function($q) {
@@ -264,6 +264,20 @@ class SalesController extends Controller
         }
     }
 
+    // count()+1 breaks the moment any sales order is ever deleted (the count
+    // drops but the highest invoice_no already issued doesn't), producing a
+    // number that collides with an existing invoice and crashing the whole
+    // sale with a raw duplicate-key SQL error. Base it on the highest number
+    // actually used instead, which survives gaps from deletions.
+    private function nextInvoiceNumber(): string
+    {
+        $lastNumber = (int) SalesOrder::query()
+            ->selectRaw("MAX(CAST(SUBSTRING(invoice_no, 5) AS UNSIGNED)) as n")
+            ->value('n');
+
+        return 'INV-' . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
+    }
+
     public function store(Request $request)
     {
         $cid = auth()->user()->company_id;
@@ -300,7 +314,7 @@ class SalesController extends Controller
                 $status = 'partial';
             }
 
-            $invoiceNo = 'INV-' . str_pad(SalesOrder::query()->count() + 1, 5, '0', STR_PAD_LEFT);
+            $invoiceNo = $this->nextInvoiceNumber();
 
             // Resolve payment account — JS sends correct ID for both cash and credit mode
             $paymentAccountId = $request->payment_account_id ?: null;
