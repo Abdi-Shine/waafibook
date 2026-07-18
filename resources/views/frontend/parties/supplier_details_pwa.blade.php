@@ -74,27 +74,34 @@
         }
     }
 }">
-    <div class="px-5 pt-4">
-        <div class="dash-kpi-strip">
-            <div class="dash-kpi-item">
-                <span class="dash-kpi-label">Total</span>
-                <span class="dash-kpi-value">{{ number_format($stats['total']) }}</span>
+    <div class="grid grid-cols-2 gap-3 px-5 pt-4">
+        <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+            <div class="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center text-accent mb-2">
+                <i class="bi bi-truck text-sm"></i>
             </div>
-            <div class="dash-kpi-divider"></div>
-            <div class="dash-kpi-item">
-                <span class="dash-kpi-label">Active</span>
-                <span class="dash-kpi-value">{{ number_format($stats['active']) }}</span>
+            <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Total Suppliers</p>
+            <p class="text-[18px] font-black text-primary">{{ number_format($stats['total']) }}</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+            <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-2">
+                <i class="bi bi-building-check text-sm"></i>
             </div>
-            <div class="dash-kpi-divider"></div>
-            <div class="dash-kpi-item">
-                <span class="dash-kpi-label">Payables</span>
-                <span class="dash-kpi-value">${{ number_format($stats['payables'], 0) }}</span>
+            <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Active</p>
+            <p class="text-[18px] font-black text-primary">{{ number_format($stats['active']) }}</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+            <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-2">
+                <i class="bi bi-cash-stack text-sm"></i>
             </div>
-            <div class="dash-kpi-divider"></div>
-            <div class="dash-kpi-item">
-                <span class="dash-kpi-label">Company</span>
-                <span class="dash-kpi-value">{{ number_format($stats['company_suppliers']) }}</span>
+            <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Total Payables</p>
+            <p class="text-[18px] font-black text-primary">${{ number_format($stats['payables'], 0) }}</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+            <div class="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center text-accent mb-2">
+                <i class="bi bi-building text-sm"></i>
             </div>
+            <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Company</p>
+            <p class="text-[18px] font-black text-primary">{{ number_format($stats['company_suppliers']) }}</p>
         </div>
     </div>
 
