@@ -191,7 +191,7 @@
         const name = this.ledger.party.name;
         const amt  = parseFloat(this.ledger.party.amount).toFixed(2);
         const co   = this.companyName;
-        const msg  = 'Dear ' + name + ',\n\nWe would like to kindly remind you that your outstanding balance with *' + co + '* is *$' + amt + '*.\n\nPlease arrange payment at your earliest convenience.\n\nThank you for your business!';
+        const msg  = 'Salaan ' + name + ',\n\nWaxaan si edeb leh kuu xasuusineynaa in haraagga lacageed ee aad kula leedahay *' + co + '* uu yahay *$' + amt + '*.\n\nFadlan lacagta ku bixi wakhti dhow.\n\nMahadsanid ganacsigaaga!';
         this.openWhatsApp('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg));
     },
 
