@@ -44,11 +44,8 @@
 
         <!-- Left Section - Products -->
         <div class="products-section" id="posPanelProducts">
-            {{-- Desktop back button (hidden on mobile — mobile tab bar handles it) --}}
+            {{-- Desktop back button removed — the topbar's Exit POS button covers this now --}}
             <div class="search-bar">
-                <a href="{{ route('sales.invoice.view') }}" class="pos-back-btn pos-back-desktop" title="Back to Sales">
-                    <i class="bi bi-arrow-left"></i>
-                </a>
                 <div class="search-input-group">
                     <i class="bi bi-search search-icon"></i>
                     <input type="text" class="search-input" id="searchInput"
