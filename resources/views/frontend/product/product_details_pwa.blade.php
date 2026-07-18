@@ -132,6 +132,20 @@
         }
     }
 }">
+    <div class="flex items-center justify-between gap-3 px-5 pt-4">
+        <h1 class="text-[16px] font-black text-primary-dark">Product Management</h1>
+        <div class="flex items-center gap-2">
+            <a href="{{ route('product.index', ['action' => 'import', 'desktop' => 1]) }}"
+                class="w-8 h-8 rounded-lg bg-accent/15 text-accent flex items-center justify-center" title="Import CSV">
+                <i class="bi bi-download text-sm"></i>
+            </a>
+            <a href="{{ route('product.export') }}"
+                class="w-8 h-8 rounded-lg bg-accent/15 text-accent flex items-center justify-center" title="Export">
+                <i class="bi bi-file-earmark-excel text-sm"></i>
+            </a>
+        </div>
+    </div>
+
     <div class="flex gap-3 px-5 pt-4 overflow-x-auto no-scrollbar">
         <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm shrink-0 w-[120px]">
             <div class="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent mb-2">

@@ -22,6 +22,8 @@
         this.$watch('statusFilter', () => this.applyServerFilters());
         if ('{{ request('action') }}' === 'create') {
             this.openCreateModal('{{ request('type') === 'service' ? 'service' : 'product' }}');
+        } else if ('{{ request('action') }}' === 'import') {
+            this.openImportModal();
         }
     },
 
