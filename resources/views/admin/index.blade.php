@@ -31,10 +31,10 @@
         @php $fmt = fn($v) => ($v < 0 ? '-$' : '$') . number_format(abs($v), 2); @endphp
         <div class="px-5 py-4">
             <div class="dash-kpi-strip">
-                <div class="dash-kpi-item">
-                    <span class="dash-kpi-label">Cash on Hand</span>
+                <a href="{{ route('cash_in_hand.index') }}" class="dash-kpi-item dash-kpi-item-link">
+                    <span class="dash-kpi-label">Cash on Hand <i class="bi bi-chevron-right"></i></span>
                     <span class="dash-kpi-value {{ $stats['cash_on_hand'] < 0 ? 'text-red-500' : '' }}">{{ $fmt($stats['cash_on_hand']) }}</span>
-                </div>
+                </a>
                 <div class="dash-kpi-divider"></div>
                 <div class="dash-kpi-item">
                     <span class="dash-kpi-label">Receivable</span>

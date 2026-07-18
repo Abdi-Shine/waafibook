@@ -884,6 +884,11 @@
 .dash-kpi-label { font-size: 9px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.04em; text-align: center; }
 .dash-kpi-value { font-size: 13px; font-weight: 800; color: #1F2937; }
 .dash-kpi-divider { width: 1px; height: 32px; background: #E5E7EB; flex-shrink: 0; }
+.dash-kpi-item-link { text-decoration: none; background: rgba(153,204,51,0.08); transition: background 0.15s; cursor: pointer; }
+.dash-kpi-item-link:active { background: rgba(153,204,51,0.18); }
+.dash-kpi-item-link .dash-kpi-label { color: #5a7a1a; display: flex; align-items: center; justify-content: center; gap: 2px; }
+.dash-kpi-item-link .dash-kpi-label i { font-size: 8px; }
+.dash-kpi-item-link .dash-kpi-value { color: #004161; }
 
 /* Invoice status badges */
 .dash-badge { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: 0.04em; border-radius: 6px; padding: 2px 7px; margin-top: 3px; }
