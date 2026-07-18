@@ -4,6 +4,7 @@
 @section('admin')
 <div class="pb-28 bg-background min-h-screen" x-data="{
     search: '',
+    paymentFilter: '',
     showAddModal: false,
     saving: false,
     editingId: null,
@@ -24,9 +25,14 @@
         'url'     => route('parties.ledger', ['type' => 'supplier', 'id' => $s->id]),
     ])),
     get filtered() {
-        if (!this.search) return this.suppliers;
-        const q = this.search.toLowerCase();
-        return this.suppliers.filter(s => s.name.toLowerCase().includes(q));
+        let list = this.suppliers;
+        if (this.paymentFilter === 'paid') list = list.filter(s => s.balance === 0);
+        if (this.paymentFilter === 'unpaid') list = list.filter(s => s.balance !== 0);
+        if (this.search) {
+            const q = this.search.toLowerCase();
+            list = list.filter(s => s.name.toLowerCase().includes(q));
+        }
+        return list;
     },
     openAddModal() {
         this.editingId = null;
@@ -111,6 +117,14 @@
         }
     }
 }">
+    <div class="flex items-center justify-between gap-3 px-5 pt-4">
+        <h1 class="text-[16px] font-black text-primary-dark">Supplier Management</h1>
+        <button @click="openAddModal()"
+           class="flex items-center gap-1 px-3 py-2 bg-accent text-primary font-bold rounded-xl text-[13px] shrink-0 whitespace-nowrap">
+            <i class="bi bi-plus-lg text-base"></i> Add Supplier
+        </button>
+    </div>
+
     <div class="flex gap-3 px-5 pt-4 overflow-x-auto no-scrollbar">
         <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm shrink-0 w-[120px]">
             <div class="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent mb-2">
@@ -145,10 +159,15 @@
                 <i class="bi bi-x text-base"></i>
             </button>
         </div>
-        <button @click="openAddModal()"
-           class="flex items-center gap-1 px-3 py-2.5 bg-accent text-primary font-bold rounded-xl text-[13px] shrink-0 whitespace-nowrap">
-            <i class="bi bi-plus-lg text-base"></i> New Party
-        </button>
+        <div class="relative shrink-0">
+            <select x-model="paymentFilter"
+                class="pl-3 pr-8 py-2.5 bg-gray-100 border-none rounded-xl text-[13px] font-medium text-gray-700 outline-none appearance-none max-w-[110px]">
+                <option value="">All</option>
+                <option value="paid">Paid</option>
+                <option value="unpaid">Unpaid</option>
+            </select>
+            <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+        </div>
     </div>
 
     <div class="bg-white border-t border-b border-gray-100">
