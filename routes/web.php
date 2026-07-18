@@ -37,11 +37,19 @@ Route::get('/dashboard', function () {
     $revenue = $accounts->where('category', 'revenue')->sum('balance');
     $expenses = $accounts->where('category', 'expenses')->sum('balance');
     $netProfit = $revenue - $expenses;
-    $cashOnHand = $accounts->where('category', 'assets')
-        ->filter(function($account) {
+    // Match the Cash On Hand page's own definition: the single best "cash" type
+    // account for the user's branch, not every asset whose name contains "cash"/"bank"
+    // (that previously double-counted Petty Cash/bank accounts and ignored branch scoping).
+    $userBranchId = Auth::user()->getAssignedBranchId();
+    $cashAccount = $accounts->where('category', 'assets')
+        ->where('type', 'cash')
+        ->when($userBranchId, fn($col) => $col->where('branch_id', $userBranchId))
+        ->sortBy(function ($account) {
             $name = strtolower($account->name);
-            return str_contains($name, 'cash') || str_contains($name, 'bank');
-        })->sum('balance');
+            return (str_contains($name, 'cash on hand') || str_contains($name, 'cash in hand')) ? 0 : 1;
+        })
+        ->first();
+    $cashOnHand = (float) ($cashAccount->balance ?? 0);
 
     // Read from the Inventory GL account itself rather than recalculated as
     // qty * today's purchase_price, so this stays consistent with the
