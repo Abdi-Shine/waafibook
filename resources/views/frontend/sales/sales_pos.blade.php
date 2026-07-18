@@ -4,8 +4,9 @@
 @section('admin')
     <div class="pos-topbar">
         <div class="pos-topbar-brand">
-            <div class="pos-topbar-icon"><i class="bi bi-shop"></i></div>
-            <span class="pos-topbar-title">{{ $company->name ?? 'Waafibook' }} POS</span>
+            <div class="pos-topbar-icon"><i class="bi bi-bar-chart-fill"></i></div>
+            <span class="pos-topbar-title">Quick Sale</span>
+            <span class="pos-topbar-company">{{ strtoupper($company->name ?? 'Waafibook') }}</span>
         </div>
         <div class="pos-topbar-right">
             <div class="pos-topbar-pill pos-topbar-date"><i class="bi bi-calendar3"></i> <span id="posTopbarDate">{{ now()->format('M j, Y') }}</span></div>
