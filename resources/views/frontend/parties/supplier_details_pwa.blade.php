@@ -74,6 +74,30 @@
         }
     }
 }">
+    <div class="px-5 pt-4">
+        <div class="dash-kpi-strip">
+            <div class="dash-kpi-item">
+                <span class="dash-kpi-label">Total</span>
+                <span class="dash-kpi-value">{{ number_format($stats['total']) }}</span>
+            </div>
+            <div class="dash-kpi-divider"></div>
+            <div class="dash-kpi-item">
+                <span class="dash-kpi-label">Active</span>
+                <span class="dash-kpi-value">{{ number_format($stats['active']) }}</span>
+            </div>
+            <div class="dash-kpi-divider"></div>
+            <div class="dash-kpi-item">
+                <span class="dash-kpi-label">Payables</span>
+                <span class="dash-kpi-value">${{ number_format($stats['payables'], 0) }}</span>
+            </div>
+            <div class="dash-kpi-divider"></div>
+            <div class="dash-kpi-item">
+                <span class="dash-kpi-label">Company</span>
+                <span class="dash-kpi-value">{{ number_format($stats['company_suppliers']) }}</span>
+            </div>
+        </div>
+    </div>
+
     <div class="flex items-center gap-2 px-5 pt-4 mb-2">
         <div class="flex-1 flex items-center gap-2 px-3 py-2.5 bg-gray-100 rounded-xl">
             <i class="bi bi-search text-gray-400 text-sm"></i>

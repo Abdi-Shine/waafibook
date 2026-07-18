@@ -48,7 +48,14 @@ class SupplierController extends Controller
                 'latest_date'    => $s->latest_txn_date ?? optional($s->created_at)->toDateString(),
             ]);
 
-            return view('frontend.parties.supplier_details_pwa', compact('suppliers'));
+            $stats = [
+                'total'              => Supplier::query()->count(),
+                'active'             => Supplier::query()->where('status', 'active')->count(),
+                'payables'           => Supplier::query()->sum('amount_balance'),
+                'company_suppliers'  => Supplier::query()->where('supplier_type', 'company')->count(),
+            ];
+
+            return view('frontend.parties.supplier_details_pwa', compact('suppliers', 'stats'));
         }
 
         $suppliers = $query->get();
