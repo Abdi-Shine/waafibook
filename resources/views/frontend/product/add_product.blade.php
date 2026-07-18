@@ -469,7 +469,8 @@
                             <i :class="editMode ? 'bi bi-pencil-square' : 'bi bi-box-seam'"></i>
                         </div>
                         <div class="flex flex-col">
-                            <h2 class="text-xl font-bold tracking-tight" x-text="editMode ? 'Edit Product' : 'Add Product'"></h2>
+                            <h2 class="text-xl font-bold tracking-tight" x-text="editMode ? 'Edit Product' : 'Add New Product'"></h2>
+                            <p class="text-xs text-white/60 font-medium mt-0.5">Fill in the required product details below</p>
                         </div>
                     </div>
 
