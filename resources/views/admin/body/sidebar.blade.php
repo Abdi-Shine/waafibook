@@ -124,7 +124,6 @@
                         x-transition:leave-start="opacity-100 max-h-[500px]" x-transition:leave-end="opacity-0 max-h-0"
                         class="space-y-1 overflow-hidden transition-all duration-300">
                         <a href="{{ route('product.index') }}"
-                           onclick="if(window.innerWidth<1024){event.preventDefault();window.location='{{ route('product.ledger') }}?mobile=1';}"
                             class="flex items-center gap-3 pl-12 pr-4 py-2 text-white/50 hover:text-white text-[13px] font-medium transition-all duration-200 {{ Route::is('product.index') ? 'text-white bg-white/5' : '' }}">
                             <i class="bi bi-plus text-lg"></i> Product List
                         </a>
