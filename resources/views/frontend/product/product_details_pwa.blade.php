@@ -8,6 +8,7 @@
 @section('admin')
 <div class="pb-28 bg-background min-h-screen" x-data="{
     search: '',
+    categoryFilter: '',
     showAddModal: false,
     saving: false,
     editMode: false,
@@ -31,9 +32,13 @@
         'url'         => route('product.ledger', ['type' => $p->product_type, 'product_id' => $p->id]),
     ])),
     get filtered() {
-        if (!this.search) return this.products;
-        const q = this.search.toLowerCase();
-        return this.products.filter(p => p.name.toLowerCase().includes(q) || (p.code || '').toLowerCase().includes(q));
+        let list = this.products;
+        if (this.categoryFilter) list = list.filter(p => String(p.category_id) === String(this.categoryFilter));
+        if (this.search) {
+            const q = this.search.toLowerCase();
+            list = list.filter(p => p.name.toLowerCase().includes(q) || (p.code || '').toLowerCase().includes(q));
+        }
+        return list;
     },
     openAddModal() {
         this.editMode = false;
@@ -134,16 +139,10 @@
 }">
     <div class="flex items-center justify-between gap-3 px-5 pt-4">
         <h1 class="text-[16px] font-black text-primary-dark">Product Management</h1>
-        <div class="flex items-center gap-2">
-            <a href="{{ route('product.index', ['action' => 'import', 'desktop' => 1]) }}"
-                class="w-8 h-8 rounded-lg bg-accent/15 text-accent flex items-center justify-center" title="Import CSV">
-                <i class="bi bi-download text-sm"></i>
-            </a>
-            <a href="{{ route('product.export') }}"
-                class="w-8 h-8 rounded-lg bg-accent/15 text-accent flex items-center justify-center" title="Export">
-                <i class="bi bi-file-earmark-excel text-sm"></i>
-            </a>
-        </div>
+        <button @click="openAddModal()"
+           class="flex items-center gap-1 px-3 py-2 bg-accent text-primary font-bold rounded-xl text-[13px] shrink-0 whitespace-nowrap">
+            <i class="bi bi-plus-lg text-base"></i> Add Product
+        </button>
     </div>
 
     <div class="flex gap-3 px-5 pt-4 overflow-x-auto no-scrollbar">
@@ -180,10 +179,16 @@
                 <i class="bi bi-x text-base"></i>
             </button>
         </div>
-        <button @click="openAddModal()"
-           class="flex items-center gap-1 px-3 py-2.5 bg-accent text-primary font-bold rounded-xl text-[13px] shrink-0 whitespace-nowrap">
-            <i class="bi bi-plus-lg text-base"></i> Add Product
-        </button>
+        <div class="relative shrink-0">
+            <select x-model="categoryFilter"
+                class="pl-3 pr-8 py-2.5 bg-gray-100 border-none rounded-xl text-[13px] font-medium text-gray-700 outline-none appearance-none max-w-[110px]">
+                <option value="">All Categories</option>
+                <template x-for="cat in categories" :key="cat.id">
+                    <option :value="cat.id" x-text="cat.name"></option>
+                </template>
+            </select>
+            <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+        </div>
     </div>
 
     <div class="bg-white border-t border-b border-gray-100">
