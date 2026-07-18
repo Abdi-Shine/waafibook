@@ -30,17 +30,17 @@
         </div>
         <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm shrink-0 w-[120px]">
             <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-2">
-                <i class="bi bi-exclamation-triangle text-xs"></i>
-            </div>
-            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1 whitespace-nowrap">Low Stock</p>
-            <p class="text-[16px] font-black text-primary">{{ number_format($stats['low_stock']) }}</p>
-        </div>
-        <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm shrink-0 w-[120px]">
-            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-2">
                 <i class="bi bi-x-circle text-xs"></i>
             </div>
             <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1 whitespace-nowrap">Out of Stock</p>
             <p class="text-[16px] font-black text-primary">{{ number_format($stats['out_of_stock']) }}</p>
+        </div>
+        <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm shrink-0 w-[120px]">
+            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-2">
+                <i class="bi bi-cash-stack text-xs"></i>
+            </div>
+            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1 whitespace-nowrap">Stock Values</p>
+            <p class="text-[16px] font-black text-primary">${{ number_format($stats['stock_value'], 0) }}</p>
         </div>
     </div>
 
