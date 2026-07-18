@@ -20,7 +20,7 @@
             </div>
             <a href="{{ route('sales.invoice.view') }}" title="Exit POS"
                 class="pos-topbar-exit-btn">
-                <i class="bi bi-x-lg"></i>
+                Exit POS
             </a>
         </div>
     </div>
