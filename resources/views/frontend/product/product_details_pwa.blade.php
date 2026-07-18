@@ -222,9 +222,6 @@
                         </button>
                         <span class="text-xs font-semibold cursor-pointer" @click="productData.product_type = 'service'" :class="productData.product_type === 'service' ? 'text-white' : 'text-white/50'">Service</span>
                     </div>
-                    <button @click="showAddModal = false" class="w-8 h-8 bg-white/10 rounded-lg text-white flex items-center justify-center shrink-0">
-                        <i class="bi bi-x-lg text-xs"></i>
-                    </button>
                 </div>
             </div>
 
