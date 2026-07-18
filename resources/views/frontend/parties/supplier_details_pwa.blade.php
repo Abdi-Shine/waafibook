@@ -138,13 +138,13 @@
 
                 <div>
                     <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Supplier Type</label>
-                    <div class="flex gap-2">
-                        <button type="button" @click="form.supplier_type = 'individual'"
-                            class="flex-1 py-2.5 rounded-lg text-[13px] font-bold border"
-                            :class="form.supplier_type === 'individual' ? 'bg-primary text-white border-primary' : 'bg-gray-50 text-gray-500 border-gray-200'">Individual</button>
-                        <button type="button" @click="form.supplier_type = 'company'"
-                            class="flex-1 py-2.5 rounded-lg text-[13px] font-bold border"
-                            :class="form.supplier_type === 'company' ? 'bg-primary text-white border-primary' : 'bg-gray-50 text-gray-500 border-gray-200'">Company</button>
+                    <div class="relative">
+                        <select x-model="form.supplier_type"
+                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none appearance-none">
+                            <option value="individual">Individual</option>
+                            <option value="company">Company</option>
+                        </select>
+                        <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
                     </div>
                 </div>
 
