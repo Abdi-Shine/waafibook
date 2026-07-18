@@ -4,7 +4,7 @@
 @section('admin')
     <div class="pos-topbar">
         <div class="pos-topbar-brand">
-            <div class="pos-topbar-icon"><i class="bi bi-bar-chart-fill"></i></div>
+            <div class="pos-topbar-icon">@include('partials.logo_svg', ['width' => 22, 'height' => 22])</div>
             <span class="pos-topbar-title">Quick Sale</span>
             <span class="pos-topbar-company">{{ strtoupper($company->name ?? 'Waafibook') }}</span>
         </div>
