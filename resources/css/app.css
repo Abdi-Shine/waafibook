@@ -747,7 +747,7 @@
     .pos-mobile-footer-val   { font-size: 26px; font-weight: 900; color: #004161; line-height: 1.1; }
     .pos-mobile-pay-btn {
         flex-shrink: 0; width: 140px; padding: 12px 10px; border-radius: 14px; border: none;
-        background: #99CC33; color: #fff; font-size: 13px; font-weight: 900;
+        background: #004161; color: #fff; font-size: 13px; font-weight: 900;
         cursor: pointer; display: flex; align-items: center;
         justify-content: center; gap: 6px; letter-spacing: 0.02em;
         transition: opacity 0.2s; margin-left: auto;
