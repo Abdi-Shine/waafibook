@@ -55,7 +55,7 @@ class SupplierController extends Controller
             $stats = [
                 'total'              => Supplier::query()->count(),
                 'active'             => Supplier::query()->where('status', 'active')->count(),
-                'payables'           => Supplier::query()->sum('amount_balance'),
+                'payables'           => Supplier::query()->where('amount_balance', '>', 0)->sum('amount_balance'),
                 'company_suppliers'  => Supplier::query()->where('supplier_type', 'company')->count(),
             ];
 
@@ -67,7 +67,7 @@ class SupplierController extends Controller
         $stats = [
             'total'              => Supplier::query()->count(),
             'active'             => Supplier::query()->where('status', 'active')->count(),
-            'payables'           => Supplier::query()->sum('amount_balance'),
+            'payables'           => Supplier::query()->where('amount_balance', '>', 0)->sum('amount_balance'),
             'company_suppliers'  => Supplier::query()->where('supplier_type', 'company')->count(),
         ];
 

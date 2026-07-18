@@ -55,7 +55,7 @@ class CustomerController extends Controller
             $stats = [
                 'total'       => Customer::query()->count(),
                 'active'      => Customer::query()->where('status', 'active')->count(),
-                'receivables' => Customer::query()->sum('amount_balance'),
+                'receivables' => Customer::query()->where('amount_balance', '>', 0)->sum('amount_balance'),
             ];
 
             return view('frontend.parties.customer_details_pwa', compact('customers', 'stats'));
@@ -71,7 +71,7 @@ class CustomerController extends Controller
         $stats = [
             'total'          => Customer::query()->count(),
             'active'         => Customer::query()->where('status', 'active')->count(),
-            'receivables'    => Customer::query()->sum('amount_balance'),
+            'receivables'    => Customer::query()->where('amount_balance', '>', 0)->sum('amount_balance'),
             'new_this_month' => Customer::query()->where('created_at', '>=', now()->startOfMonth())->count(),
         ];
 
