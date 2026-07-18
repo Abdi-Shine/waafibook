@@ -55,9 +55,18 @@
                 Swal.fire({ icon: 'error', title: 'Something went wrong', text: data.message || 'Please try again.' });
                 return;
             }
-            this.showAddModal = false;
-            Swal.fire({ icon: 'success', title: 'Supplier Added', text: (data.name || 'Supplier') + ' has been registered.', timer: 1500, showConfirmButton: false })
-                .then(() => window.location.reload());
+            const balance = parseFloat(data.amount_balance) || 0;
+            this.suppliers.unshift({
+                id: data.id,
+                name: data.name,
+                amount: Math.abs(balance),
+                date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+                label: balance > 0 ? 'You\'ll Pay' : (balance < 0 ? 'You\'ll Get' : 'Settled'),
+                labelColor: balance > 0 ? 'text-red-500' : (balance < 0 ? 'text-accent' : 'text-gray-400'),
+                url: '{{ url('/parties/ledger') }}?type=supplier&id=' + data.id,
+            });
+            this.form = { name: '', phone: '', supplier_type: 'company', email: '', address: '', amount_balance: '' };
+            Swal.fire({ toast: true, position: 'top', icon: 'success', title: data.name + ' registered', timer: 1500, showConfirmButton: false });
         } catch (e) {
             Swal.fire({ icon: 'error', title: 'Network error', text: 'Could not save supplier. Please try again.' });
         } finally {
@@ -168,12 +177,18 @@
                         class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
                 </div>
 
-                <button type="submit" :disabled="saving"
-                    class="w-full py-3.5 bg-accent text-primary font-bold rounded-xl text-[14px] uppercase tracking-wide flex items-center justify-center gap-2 mt-2"
-                    :class="saving ? 'opacity-60' : ''">
-                    <i class="bi" :class="saving ? 'bi-arrow-repeat animate-spin' : 'bi-check2-circle'"></i>
-                    <span x-text="saving ? 'Saving...' : 'Register Supplier'"></span>
-                </button>
+                <div class="flex gap-3 mt-2">
+                    <button type="button" @click="showAddModal = false"
+                        class="flex-1 py-3.5 bg-accent text-primary font-bold rounded-xl text-[13px] uppercase tracking-wide">
+                        Cancel
+                    </button>
+                    <button type="submit" :disabled="saving"
+                        class="flex-1 py-3.5 bg-primary text-white font-bold rounded-xl text-[13px] uppercase tracking-wide flex items-center justify-center gap-2"
+                        :class="saving ? 'opacity-60' : ''">
+                        <i class="bi" :class="saving ? 'bi-arrow-repeat animate-spin' : 'bi-check2-circle'"></i>
+                        <span x-text="saving ? 'Saving...' : 'Save & New'"></span>
+                    </button>
+                </div>
             </form>
         </div>
     </div>
