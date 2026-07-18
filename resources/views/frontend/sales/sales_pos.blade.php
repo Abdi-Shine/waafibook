@@ -28,9 +28,6 @@
 
         {{-- ── MOBILE TAB BAR (hidden on desktop) ── --}}
         <div class="pos-mobile-tabbar">
-            <a href="{{ route('sales.invoice.view') }}" class="pos-mobile-back-btn">
-                <i class="bi bi-arrow-left"></i>
-            </a>
             <div class="pos-mobile-tabs">
                 <button class="pos-mobile-tab pos-tab-active" id="tabProducts" onclick="switchPosTab('products')">
                     <i class="bi bi-grid-3x3-gap"></i> Products
