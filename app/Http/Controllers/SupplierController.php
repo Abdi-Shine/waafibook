@@ -31,6 +31,26 @@ class SupplierController extends Controller
             $query->where('supplier_type', $request->type);
         }
 
+        $isMobile = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $request->userAgent() ?? '')
+            || $request->header('Sec-CH-UA-Mobile') === '?1'
+            || $request->boolean('mobile');
+
+        if ($isMobile) {
+            $suppliers = $query->addSelect([
+                'latest_txn_date' => \App\Models\PurchaseBill::select('bill_date')
+                    ->whereColumn('supplier_id', 'suppliers.id')
+                    ->latest('bill_date')
+                    ->limit(1),
+            ])->get()->map(fn ($s) => (object) [
+                'id'             => $s->id,
+                'name'           => $s->name,
+                'amount_balance' => (float) $s->amount_balance,
+                'latest_date'    => $s->latest_txn_date ?? optional($s->created_at)->toDateString(),
+            ]);
+
+            return view('frontend.parties.supplier_details_pwa', compact('suppliers'));
+        }
+
         $suppliers = $query->get();
 
         $stats = [
