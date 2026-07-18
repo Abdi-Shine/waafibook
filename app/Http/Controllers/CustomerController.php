@@ -31,6 +31,36 @@ class CustomerController extends Controller
             $query->where('customer_type', $request->type);
         }
 
+        $isMobile = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $request->userAgent() ?? '')
+            || $request->header('Sec-CH-UA-Mobile') === '?1'
+            || $request->boolean('mobile');
+
+        if ($isMobile) {
+            $customers = $query->addSelect([
+                'latest_txn_date' => \App\Models\SalesOrder::select('invoice_date')
+                    ->whereColumn('customer_id', 'customers.id')
+                    ->latest('invoice_date')
+                    ->limit(1),
+            ])->get()->map(fn ($c) => (object) [
+                'id'             => $c->id,
+                'name'           => $c->name,
+                'phone'          => $c->phone,
+                'email'          => $c->email,
+                'address'        => $c->address,
+                'customer_type'  => $c->customer_type,
+                'amount_balance' => (float) $c->amount_balance,
+                'latest_date'    => $c->latest_txn_date ?? optional($c->created_at)->toDateString(),
+            ]);
+
+            $stats = [
+                'total'       => Customer::query()->count(),
+                'active'      => Customer::query()->where('status', 'active')->count(),
+                'receivables' => Customer::query()->sum('amount_balance'),
+            ];
+
+            return view('frontend.parties.customer_details_pwa', compact('customers', 'stats'));
+        }
+
         $customers = $query->addSelect([
             'latest_invoice_date' => \App\Models\SalesOrder::select('invoice_date')
                 ->whereColumn('customer_id', 'customers.id')
@@ -265,6 +295,10 @@ class CustomerController extends Controller
 
             $customer->update($validated);
         });
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'customer' => $customer->fresh()]);
+        }
 
         return redirect()->back()->with('success', 'Customer updated successfully');
     }
