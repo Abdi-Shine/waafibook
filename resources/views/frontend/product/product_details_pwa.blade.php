@@ -290,24 +290,26 @@
                     </div>
                 </div>
 
-                <div x-show="productData.product_type === 'product'" x-transition>
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Purchase Price</label>
-                    <div class="relative">
-                        <input type="number" step="0.01" name="purchase_price" x-model="productData.purchase_price" placeholder="0.00"
-                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
-                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[13px]">{{ $symbol }}</span>
+                <div class="grid grid-cols-2 gap-3">
+                    <div x-show="productData.product_type === 'product'" x-transition>
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Purchase Price</label>
+                        <div class="relative">
+                            <input type="number" step="0.01" name="purchase_price" x-model="productData.purchase_price" placeholder="0.00"
+                                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
+                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[13px]">{{ $symbol }}</span>
+                        </div>
                     </div>
-                </div>
 
-                <div>
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block"><span x-text="productData.product_type === 'service' ? 'Service Price' : 'Selling Price'"></span> <span class="text-primary">*</span></label>
-                    <div class="relative">
-                        <input type="number" step="0.01" name="selling_price" x-model="productData.selling_price" required placeholder="0.00"
-                            :class="formErrors.selling_price ? 'border-red-400' : 'border-gray-200'"
-                            class="w-full px-4 py-2.5 bg-gray-50 border rounded-lg text-[14px] font-medium text-gray-700 outline-none">
-                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[13px]">{{ $symbol }}</span>
+                    <div>
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block"><span x-text="productData.product_type === 'service' ? 'Service Price' : 'Selling Price'"></span> <span class="text-primary">*</span></label>
+                        <div class="relative">
+                            <input type="number" step="0.01" name="selling_price" x-model="productData.selling_price" required placeholder="0.00"
+                                :class="formErrors.selling_price ? 'border-red-400' : 'border-gray-200'"
+                                class="w-full px-4 py-2.5 bg-gray-50 border rounded-lg text-[14px] font-medium text-gray-700 outline-none">
+                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[13px]">{{ $symbol }}</span>
+                        </div>
+                        <p x-show="formErrors.selling_price" x-text="formErrors.selling_price?.[0]" class="text-red-500 font-bold text-[11px] mt-1"></p>
                     </div>
-                    <p x-show="formErrors.selling_price" x-text="formErrors.selling_price?.[0]" class="text-red-500 font-bold text-[11px] mt-1"></p>
                 </div>
 
                 <div x-show="productData.product_type === 'product'" x-transition>
