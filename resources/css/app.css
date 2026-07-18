@@ -66,6 +66,9 @@
     .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,65,97,0.15); border-radius: 10px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0,65,97,0.3); }
 
+    .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+
     .no-print { @media print { display: none !important; } }
 
     .premium-card {

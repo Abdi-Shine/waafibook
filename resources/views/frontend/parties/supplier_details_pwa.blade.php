@@ -74,34 +74,34 @@
         }
     }
 }">
-    <div class="grid grid-cols-2 gap-3 px-5 pt-4">
-        <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-            <div class="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center text-accent mb-2">
-                <i class="bi bi-truck text-sm"></i>
+    <div class="flex gap-3 px-5 pt-4 overflow-x-auto no-scrollbar">
+        <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm shrink-0 w-[120px]">
+            <div class="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent mb-2">
+                <i class="bi bi-truck text-xs"></i>
             </div>
-            <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Total Suppliers</p>
-            <p class="text-[18px] font-black text-primary">{{ number_format($stats['total']) }}</p>
+            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1 whitespace-nowrap">Total Suppliers</p>
+            <p class="text-[16px] font-black text-primary">{{ number_format($stats['total']) }}</p>
         </div>
-        <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-            <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-2">
-                <i class="bi bi-building-check text-sm"></i>
+        <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm shrink-0 w-[120px]">
+            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-2">
+                <i class="bi bi-building-check text-xs"></i>
             </div>
-            <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Active</p>
-            <p class="text-[18px] font-black text-primary">{{ number_format($stats['active']) }}</p>
+            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Active</p>
+            <p class="text-[16px] font-black text-primary">{{ number_format($stats['active']) }}</p>
         </div>
-        <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-            <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-2">
-                <i class="bi bi-cash-stack text-sm"></i>
+        <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm shrink-0 w-[120px]">
+            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-2">
+                <i class="bi bi-cash-stack text-xs"></i>
             </div>
-            <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Total Payables</p>
-            <p class="text-[18px] font-black text-primary">${{ number_format($stats['payables'], 0) }}</p>
+            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1 whitespace-nowrap">Total Payables</p>
+            <p class="text-[16px] font-black text-primary">${{ number_format($stats['payables'], 0) }}</p>
         </div>
-        <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-            <div class="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center text-accent mb-2">
-                <i class="bi bi-building text-sm"></i>
+        <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm shrink-0 w-[120px]">
+            <div class="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent mb-2">
+                <i class="bi bi-building text-xs"></i>
             </div>
-            <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Company</p>
-            <p class="text-[18px] font-black text-primary">{{ number_format($stats['company_suppliers']) }}</p>
+            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Company</p>
+            <p class="text-[16px] font-black text-primary">{{ number_format($stats['company_suppliers']) }}</p>
         </div>
     </div>
 
