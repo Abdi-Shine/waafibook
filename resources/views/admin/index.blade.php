@@ -36,20 +36,20 @@
                     <span class="dash-kpi-value {{ $stats['cash_on_hand'] < 0 ? 'text-red-500' : '' }}">{{ $fmt($stats['cash_on_hand']) }}</span>
                 </a>
                 <div class="dash-kpi-divider"></div>
-                <div class="dash-kpi-item">
-                    <span class="dash-kpi-label">Receivable</span>
+                <a href="{{ route('customer.index') }}" class="dash-kpi-item dash-kpi-item-link">
+                    <span class="dash-kpi-label">Receivable <i class="bi bi-chevron-right"></i></span>
                     <span class="dash-kpi-value">{{ $fmt($stats['accounts_receivable']) }}</span>
-                </div>
+                </a>
                 <div class="dash-kpi-divider"></div>
-                <div class="dash-kpi-item">
-                    <span class="dash-kpi-label">Payable</span>
+                <a href="{{ route('supplier.index') }}" class="dash-kpi-item dash-kpi-item-link">
+                    <span class="dash-kpi-label">Payable <i class="bi bi-chevron-right"></i></span>
                     <span class="dash-kpi-value">{{ $fmt($stats['liabilities']) }}</span>
-                </div>
+                </a>
                 <div class="dash-kpi-divider"></div>
-                <div class="dash-kpi-item">
-                    <span class="dash-kpi-label">Stock</span>
+                <a href="{{ route('product.index') }}" class="dash-kpi-item dash-kpi-item-link">
+                    <span class="dash-kpi-label">Stock <i class="bi bi-chevron-right"></i></span>
                     <span class="dash-kpi-value">{{ $fmt($stats['stock_value']) }}</span>
-                </div>
+                </a>
             </div>
         </div>
 
