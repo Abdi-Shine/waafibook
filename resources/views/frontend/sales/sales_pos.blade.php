@@ -18,6 +18,10 @@
                     <span class="pos-topbar-user-role">{{ Auth::user()->role ?? 'Cashier' }}</span>
                 </div>
             </div>
+            <a href="{{ route('sales.invoice.view') }}" title="Exit POS"
+                class="pos-topbar-exit-btn">
+                <i class="bi bi-x-lg"></i>
+            </a>
         </div>
     </div>
     <div class="pos-container">

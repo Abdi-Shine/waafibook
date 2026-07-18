@@ -616,6 +616,8 @@
 .pos-topbar-user-text { display: flex; flex-direction: column; line-height: 1.25; }
 .pos-topbar-user-name { font-weight: 700; font-size: 0.85rem; color: #fff; }
 .pos-topbar-user-role { font-size: 0.72rem; color: rgba(255,255,255,0.65); }
+.pos-topbar-exit-btn { width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; transition: background 0.2s; }
+.pos-topbar-exit-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
 @media (max-width: 640px) {
     .pos-topbar-pill.pos-topbar-date, .pos-topbar-user-text { display: none; }
 }
