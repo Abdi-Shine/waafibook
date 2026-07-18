@@ -44,6 +44,10 @@ class SupplierController extends Controller
             ])->get()->map(fn ($s) => (object) [
                 'id'             => $s->id,
                 'name'           => $s->name,
+                'phone'          => $s->phone,
+                'email'          => $s->email,
+                'address'        => $s->address,
+                'supplier_type'  => $s->supplier_type,
                 'amount_balance' => (float) $s->amount_balance,
                 'latest_date'    => $s->latest_txn_date ?? optional($s->created_at)->toDateString(),
             ]);
@@ -235,6 +239,10 @@ class SupplierController extends Controller
 
             $supplier->update($validated);
         });
+
+        if ($request->expectsJson()) {
+            return response()->json($supplier->fresh());
+        }
 
         return redirect()->back()->with('success', 'Supplier updated successfully');
     }

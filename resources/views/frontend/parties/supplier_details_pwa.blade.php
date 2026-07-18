@@ -6,12 +6,18 @@
     search: '',
     showAddModal: false,
     saving: false,
+    editingId: null,
     formErrors: {},
     form: { name: '', phone: '', supplier_type: 'company', email: '', address: '', amount_balance: '' },
     suppliers: @js($suppliers->map(fn($s) => [
         'id'      => $s->id,
         'name'    => $s->name,
+        'phone'   => $s->phone,
+        'email'   => $s->email,
+        'address' => $s->address,
+        'supplier_type' => $s->supplier_type,
         'amount'  => abs($s->amount_balance),
+        'balance' => (float) $s->amount_balance,
         'date'    => $s->latest_date ? \Carbon\Carbon::parse($s->latest_date)->format('d M Y') : '—',
         'label'   => $s->amount_balance > 0 ? 'You\'ll Pay' : ($s->amount_balance < 0 ? 'You\'ll Get' : 'Settled'),
         'labelColor' => $s->amount_balance > 0 ? 'text-red-500' : ($s->amount_balance < 0 ? 'text-accent' : 'text-gray-400'),
@@ -23,7 +29,21 @@
         return this.suppliers.filter(s => s.name.toLowerCase().includes(q));
     },
     openAddModal() {
+        this.editingId = null;
         this.form = { name: '', phone: '', supplier_type: 'company', email: '', address: '', amount_balance: '' };
+        this.formErrors = {};
+        this.showAddModal = true;
+    },
+    openEditModal(supplier) {
+        this.editingId = supplier.id;
+        this.form = {
+            name: supplier.name,
+            phone: supplier.phone || '',
+            supplier_type: supplier.supplier_type || 'company',
+            email: supplier.email || '',
+            address: supplier.address || '',
+            amount_balance: supplier.balance ?? 0,
+        };
         this.formErrors = {};
         this.showAddModal = true;
     },
@@ -37,8 +57,11 @@
                 address: this.form.address || null,
                 amount_balance: this.form.amount_balance === '' ? 0 : this.form.amount_balance,
             };
-            const response = await fetch('{{ route('supplier.store') }}', {
-                method: 'POST',
+            const url = this.editingId
+                ? '{{ url('/suppliers') }}/' + this.editingId
+                : '{{ route('supplier.store') }}';
+            const response = await fetch(url, {
+                method: this.editingId ? 'PUT' : 'POST',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
@@ -56,17 +79,31 @@
                 return;
             }
             const balance = parseFloat(data.amount_balance) || 0;
-            this.suppliers.unshift({
+            const row = {
                 id: data.id,
                 name: data.name,
+                phone: data.phone,
+                email: data.email,
+                address: data.address,
+                supplier_type: data.supplier_type,
                 amount: Math.abs(balance),
-                date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+                balance: balance,
                 label: balance > 0 ? 'You\'ll Pay' : (balance < 0 ? 'You\'ll Get' : 'Settled'),
                 labelColor: balance > 0 ? 'text-red-500' : (balance < 0 ? 'text-accent' : 'text-gray-400'),
                 url: '{{ url('/parties/ledger') }}?type=supplier&id=' + data.id,
-            });
-            this.form = { name: '', phone: '', supplier_type: 'company', email: '', address: '', amount_balance: '' };
-            Swal.fire({ toast: true, position: 'top', icon: 'success', title: data.name + ' registered', timer: 1500, showConfirmButton: false });
+            };
+            if (this.editingId) {
+                row.date = this.suppliers.find(s => s.id === this.editingId)?.date ?? '—';
+                const idx = this.suppliers.findIndex(s => s.id === this.editingId);
+                if (idx !== -1) this.suppliers[idx] = row;
+                this.showAddModal = false;
+                Swal.fire({ toast: true, position: 'top', icon: 'success', title: data.name + ' updated', timer: 1500, showConfirmButton: false });
+            } else {
+                row.date = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                this.suppliers.unshift(row);
+                this.form = { name: '', phone: '', supplier_type: 'company', email: '', address: '', amount_balance: '' };
+                Swal.fire({ toast: true, position: 'top', icon: 'success', title: data.name + ' registered', timer: 1500, showConfirmButton: false });
+            }
         } catch (e) {
             Swal.fire({ icon: 'error', title: 'Network error', text: 'Could not save supplier. Please try again.' });
         } finally {
@@ -129,9 +166,15 @@
                     <p class="text-[15px] font-black text-text-primary leading-tight truncate" x-text="supplier.name.toUpperCase()"></p>
                     <p class="text-xs text-text-secondary mt-0.5" x-text="supplier.date"></p>
                 </div>
-                <div class="text-right shrink-0">
-                    <p class="text-[15px] font-black text-text-primary" x-text="'$ ' + parseFloat(supplier.amount).toFixed(2)"></p>
-                    <p class="text-xs font-bold mt-0.5" :class="supplier.labelColor" x-text="supplier.label"></p>
+                <div class="flex items-center gap-3 shrink-0">
+                    <div class="text-right">
+                        <p class="text-[15px] font-black text-text-primary" x-text="'$ ' + parseFloat(supplier.amount).toFixed(2)"></p>
+                        <p class="text-xs font-bold mt-0.5" :class="supplier.labelColor" x-text="supplier.label"></p>
+                    </div>
+                    <button type="button" @click.stop.prevent="openEditModal(supplier)"
+                        class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 active:bg-gray-100">
+                        <i class="bi bi-pencil text-xs"></i>
+                    </button>
                 </div>
             </a>
         </template>
@@ -153,7 +196,7 @@
             class="absolute bottom-0 left-0 right-0 bg-white rounded-t-[1.5rem] max-h-[90vh] overflow-y-auto">
 
             <div class="px-5 py-4 bg-primary flex items-center justify-between sticky top-0 z-10">
-                <h2 class="text-white font-bold text-[16px]">Register Supplier</h2>
+                <h2 class="text-white font-bold text-[16px]" x-text="editingId ? 'Edit Supplier' : 'Register Supplier'"></h2>
                 <button @click="showAddModal = false" class="w-8 h-8 bg-white/10 rounded-lg text-white flex items-center justify-center">
                     <i class="bi bi-x-lg text-xs"></i>
                 </button>
@@ -217,7 +260,7 @@
                         class="flex-1 py-3.5 bg-primary text-white font-bold rounded-xl text-[13px] uppercase tracking-wide flex items-center justify-center gap-2"
                         :class="saving ? 'opacity-60' : ''">
                         <i class="bi" :class="saving ? 'bi-arrow-repeat animate-spin' : 'bi-check2-circle'"></i>
-                        <span x-text="saving ? 'Saving...' : 'Save & New'"></span>
+                        <span x-text="saving ? 'Saving...' : (editingId ? 'Save Changes' : 'Save & New')"></span>
                     </button>
                 </div>
             </form>
