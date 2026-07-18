@@ -101,7 +101,10 @@ class ProductController extends Controller
                 'stock_value'   => $totalStockValue,
             ];
 
-            return view('frontend.product.product_details_pwa', compact('products', 'stats'));
+            $categories = Category::query()->orderBy('name')->get();
+            $units      = Unit::query()->orderBy('name')->get();
+
+            return view('frontend.product.product_details_pwa', compact('products', 'stats', 'categories', 'units'));
         }
 
         $lowStockItems = DB::table('products')
