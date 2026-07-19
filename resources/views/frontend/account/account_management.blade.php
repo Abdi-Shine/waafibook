@@ -225,7 +225,7 @@
                     <label class="block text-[12px] font-semibold text-gray-600 mb-1.5">Source <span class="text-gray-400 font-normal">(where money comes from)</span></label>
                     <select name="category_id" required class="w-full pl-3 pr-8 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] text-gray-700 focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none appearance-none">
                         @foreach($depositCategories as $cat)
-                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                            <option value="{{ $cat->id }}" {{ $cat->code === '3110' ? 'selected' : '' }}>{{ $cat->name }}</option>
                         @endforeach
                     </select>
                 </div>

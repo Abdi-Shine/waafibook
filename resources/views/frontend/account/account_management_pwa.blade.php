@@ -226,7 +226,7 @@
                         <select name="category_id" required
                             class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none appearance-none">
                             @foreach($depositCategories as $cat)
-                                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                <option value="{{ $cat->id }}" {{ $cat->code === '3110' ? 'selected' : '' }}>{{ $cat->name }}</option>
                             @endforeach
                         </select>
                         <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
