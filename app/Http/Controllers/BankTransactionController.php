@@ -257,7 +257,7 @@ class BankTransactionController extends Controller
         $nextTransferRef = 'TRF-' . date('Ymd') . '-' . str_pad(JournalEntry::query()->where('reference', 'like', 'TRF-%')->count() + 1, 4, '0', STR_PAD_LEFT);
         $nextAdjustmentRef = 'ADJ-' . date('Ymd') . '-' . str_pad(JournalEntry::query()->where('reference', 'like', 'ADJ-%')->count() + 1, 4, '0', STR_PAD_LEFT);
 
-        return view('frontend.account.account_management', [
+        $viewData = [
             'bankAccounts' => $bankAccounts,
             'cashAccounts' => $cashAccounts,
             'depositCategories' => $depositCategories,
@@ -281,7 +281,17 @@ class BankTransactionController extends Controller
             'nextWithdrawRef' => $nextWithdrawRef,
             'nextTransferRef' => $nextTransferRef,
             'nextAdjustmentRef' => $nextAdjustmentRef,
-        ]);
+        ];
+
+        $isMobile = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $request->userAgent() ?? '')
+            || $request->header('Sec-CH-UA-Mobile') === '?1'
+            || $request->boolean('mobile');
+
+        if ($isMobile) {
+            return view('frontend.account.account_management_pwa', $viewData);
+        }
+
+        return view('frontend.account.account_management', $viewData);
     }
 
     public function storeDeposit(Request $request)
