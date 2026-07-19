@@ -46,7 +46,6 @@
         if (p) {
             this.items[i].product_name = p.name;
             this.items[i].product_code = p.code;
-            this.items[i].unit = p.unit || 'Piece';
             this.items[i].unit_price = p.price;
         }
     },
@@ -189,44 +188,18 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3 mb-3">
-                    <div>
-                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Qty</label>
-                        <input type="number" min="0" step="0.01" x-model="item.quantity"
-                            class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
-                    </div>
-                    <div>
-                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Unit</label>
-                        <div class="relative">
-                            <select x-model="item.unit"
-                                class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none appearance-none">
-                                <option value="Piece">Piece</option>
-                                <option value="Box">Box</option>
-                                <option value="Kg">Kg</option>
-                                <option value="Litre">Litre</option>
-                                <option value="Set">Set</option>
-                            </select>
-                            <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
-                        </div>
-                    </div>
+                <div class="mb-3">
+                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Qty</label>
+                    <input type="number" min="0" step="0.01" x-model="item.quantity"
+                        class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
                 </div>
 
-                <div class="grid grid-cols-2 gap-3 mb-3">
-                    <div>
-                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Price/Unit</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[13px] font-bold">{{ $curr }}</span>
-                            <input type="number" min="0" step="0.01" x-model="item.unit_price"
-                                class="w-full pl-8 pr-2 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Discount</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[13px] font-bold">{{ $curr }}</span>
-                            <input type="number" min="0" step="0.01" x-model="item.discount"
-                                class="w-full pl-8 pr-2 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
-                        </div>
+                <div class="mb-3">
+                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Price/Unit</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[13px] font-bold">{{ $curr }}</span>
+                        <input type="number" min="0" step="0.01" x-model="item.unit_price"
+                            class="w-full pl-8 pr-2 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
                     </div>
                 </div>
 
