@@ -133,6 +133,12 @@ class HostDashboardController extends Controller
                 ));
                 $subscription->update(['last_reminder_sent_at' => now()]);
                 $sent++;
+
+                // Throttle: sending a burst of emails back-to-back trips receiving
+                // mail servers' "too much mail from this IP" rate limits (confirmed
+                // in production logs), which damages the domain's sender reputation
+                // for all mail, not just these reminders.
+                usleep(1_500_000);
             } catch (\Exception $e) {
                 Log::error("Bulk trial reminder failed for company #{$company->id} ({$email}): " . $e->getMessage());
                 $skipped++;
