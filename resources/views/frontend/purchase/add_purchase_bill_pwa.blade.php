@@ -9,7 +9,6 @@
     paymentAccountId: '',
     discountAmount: 0,
     paidAmount: 0,
-    notes: '',
     saving: false,
     products: @js($products->map(fn ($p) => [
         'id' => $p->id,
@@ -83,7 +82,7 @@
                 vat: 0,
                 total_amount: this.grandTotal,
                 paid_amount: parseFloat(this.paidAmount) || 0,
-                notes: this.notes,
+                notes: '',
                 items: validItems.map(it => ({
                     product_id: it.product_id,
                     product_name: it.product_name,
@@ -290,13 +289,6 @@
             <span class="text-[11px] font-black text-white uppercase tracking-wider">Total Amount</span>
             <span class="text-[15px] font-black text-accent" x-text="'{{ $curr }} ' + grandTotal.toFixed(2)"></span>
         </div>
-    </div>
-
-    {{-- Notes --}}
-    <div class="mx-5 mt-4 bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Notes</label>
-        <textarea x-model="notes" rows="3" placeholder="Additional notes, terms, or conditions..."
-            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none resize-none"></textarea>
     </div>
 
     {{-- Actions --}}
