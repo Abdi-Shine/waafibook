@@ -125,17 +125,12 @@ class BankTransactionController extends Controller
         // Deposit/Withdraw dropdowns: only Cash on Hand (code 1110)
         $cashAccounts = Account::query()->where('company_id', $cid)->where('code', '1110')->where('is_active', 1)->get();
 
-        // Deposit "other side": where incoming money comes FROM (credit accounts)
+        // Deposit "other side": where incoming money comes FROM (credit accounts).
+        // Restricted to Owners Capital only per business request — deposits are
+        // always owner capital injections, not sales/loan/receivable postings.
         $depositCategories = Account::query()
             ->where('company_id', $cid)
-            ->where('type', '!=', 'parent')
-            ->where(function ($q) {
-                $q->where('category', 'revenue')       // Sales Revenue, Service Income, etc.
-                  ->orWhere('category', 'equity')       // Owners Capital
-                  ->orWhere('category', 'liabilities')  // Loans Payable
-                  ->orWhereIn('code', ['1140']);         // Accounts Receivable
-            })
-            ->orderBy('category')->orderBy('code')
+            ->where('code', '3110')
             ->get();
 
         // Withdrawal "other side": what is being paid (debit accounts)
