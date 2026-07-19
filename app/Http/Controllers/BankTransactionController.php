@@ -133,14 +133,12 @@ class BankTransactionController extends Controller
             ->where('code', '3110')
             ->get();
 
-        // Withdrawal "other side": what is being paid (debit accounts)
+        // Withdrawal "other side": what is being paid (debit accounts).
+        // Restricted to Owners Capital only per business request — withdrawals are
+        // always owner draws, not expense/payable/loan postings.
         $withdrawalCategories = Account::query()
             ->where('company_id', $cid)
-            ->where('type', '!=', 'parent')
-            ->where(function ($q) {
-                $q->where('category', 'expenses')       // All expense accounts
-                  ->orWhereIn('code', ['2110', '2210']); // Accounts Payable, Loans Payable
-            })
+            ->where('code', '3110')
             ->orderBy('category')->orderBy('code')
             ->get();
 
