@@ -34,6 +34,7 @@ class RegistrationOtpMail extends Mailable
     {
         return new Content(
             view: 'emails.registration_otp',
+            text: 'emails.registration_otp_text',
         );
     }
 }
