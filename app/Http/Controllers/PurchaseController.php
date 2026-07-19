@@ -350,6 +350,14 @@ class PurchaseController extends Controller
 
         $accounts = Account::query()->where('is_active', 1)->get();
 
+        $isMobile = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', request()->userAgent() ?? '')
+            || request()->header('Sec-CH-UA-Mobile') === '?1'
+            || request()->boolean('mobile');
+
+        if ($isMobile) {
+            return view('frontend.purchase.add_purchase_bill_pwa', compact('purchase_no', 'voucher_no', 'suppliers', 'branches', 'products', 'company', 'sym', 'curr', 'accounts'));
+        }
+
         return view('frontend.purchase.add_purchase_bill', compact('purchase_no', 'voucher_no', 'purchaseBills', 'suppliers', 'branches', 'products', 'categories', 'company', 'sym', 'curr', 'accounts'));
     }
 
