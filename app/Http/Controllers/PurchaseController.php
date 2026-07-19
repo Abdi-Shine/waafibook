@@ -128,6 +128,14 @@ class PurchaseController extends Controller
         $nextVId = $lastVch ? ((int) str_replace('VCH-' . date('Y') . '-', '', $lastVch->supplier_invoice_no) + 1) : 1;
         $voucher_no = 'VCH-' . date('Y') . '-' . str_pad($nextVId, 5, '0', STR_PAD_LEFT);
 
+        $isMobile = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $request->userAgent() ?? '')
+            || $request->header('Sec-CH-UA-Mobile') === '?1'
+            || $request->boolean('mobile');
+
+        if ($isMobile) {
+            return view('frontend.purchase.purchase_bill_pwa', compact('purchaseBills', 'billStats', 'suppliers', 'sym', 'curr', 'filters'));
+        }
+
         return view('frontend.purchase.purchase_bill', compact('purchaseBills', 'billStats', 'suppliers', 'branches', 'products', 'sym', 'curr', 'purchase_no', 'voucher_no', 'categories', 'filters'));
     }
 
