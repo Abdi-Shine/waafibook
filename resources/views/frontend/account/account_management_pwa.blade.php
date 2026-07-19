@@ -239,19 +239,21 @@
                         class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
                 </div>
 
-                <div>
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Amount <span class="text-primary">*</span></label>
-                    <div class="relative">
-                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-[13px] font-bold">{{ $companyCurrency }}</span>
-                        <input type="number" step="0.01" name="amount" required placeholder="0.00"
-                            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Amount <span class="text-primary">*</span></label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[13px] font-bold">{{ $companyCurrency }}</span>
+                            <input type="number" step="0.01" name="amount" required placeholder="0.00"
+                                class="w-full pl-8 pr-2 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
+                        </div>
                     </div>
-                </div>
 
-                <div>
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Date <span class="text-primary">*</span></label>
-                    <input type="date" name="date" required value="{{ date('Y-m-d') }}"
-                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
+                    <div>
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Date <span class="text-primary">*</span></label>
+                        <input type="date" name="date" required value="{{ date('Y-m-d') }}"
+                            class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
+                    </div>
                 </div>
 
                 <div>
@@ -320,19 +322,21 @@
                     </div>
                 </div>
 
-                <div>
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Amount <span class="text-primary">*</span></label>
-                    <div class="relative">
-                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-[13px] font-bold">{{ $companyCurrency }}</span>
-                        <input type="number" step="0.01" name="amount" required placeholder="0.00"
-                            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Amount <span class="text-primary">*</span></label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[13px] font-bold">{{ $companyCurrency }}</span>
+                            <input type="number" step="0.01" name="amount" required placeholder="0.00"
+                                class="w-full pl-8 pr-2 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
+                        </div>
                     </div>
-                </div>
 
-                <div>
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Date <span class="text-primary">*</span></label>
-                    <input type="date" name="date" required value="{{ date('Y-m-d') }}"
-                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
+                    <div>
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Date <span class="text-primary">*</span></label>
+                        <input type="date" name="date" required value="{{ date('Y-m-d') }}"
+                            class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
+                    </div>
                 </div>
 
                 <div>
@@ -383,16 +387,18 @@
             <form :action="'{{ url('/account-management/transaction') }}/' + editForm.id" method="POST" class="p-5 flex flex-col gap-4">
                 @csrf
                 @method('PUT')
-                <div>
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Amount <span class="text-primary">*</span></label>
-                    <input type="number" step="0.01" name="amount" x-model="editForm.amount" required
-                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
-                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Amount <span class="text-primary">*</span></label>
+                        <input type="number" step="0.01" name="amount" x-model="editForm.amount" required
+                            class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
+                    </div>
 
-                <div>
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Date <span class="text-primary">*</span></label>
-                    <input type="date" name="date" x-model="editForm.date" required
-                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
+                    <div>
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Date <span class="text-primary">*</span></label>
+                        <input type="date" name="date" x-model="editForm.date" required
+                            class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
+                    </div>
                 </div>
 
                 <div>
