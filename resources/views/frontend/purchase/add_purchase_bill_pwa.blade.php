@@ -130,28 +130,31 @@
     <div class="mx-5 mt-4 bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
         <p class="text-[11px] font-black text-gray-400 uppercase tracking-wide mb-3">Supplier & Date</p>
 
-        <div class="mb-3">
-            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Supplier <span class="text-primary">*</span></label>
-            <div class="relative">
-                <select x-model="supplierId" @change="onSupplierSelect()" required
-                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none appearance-none">
-                    <option value="">Select supplier</option>
-                    @foreach($suppliers as $s)
-                        <option value="{{ $s->id }}">{{ $s->name }}</option>
-                    @endforeach
-                </select>
-                <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+        <div class="grid grid-cols-2 gap-3 mb-1.5">
+            <div>
+                <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Supplier <span class="text-primary">*</span></label>
+                <div class="relative">
+                    <select x-model="supplierId" @change="onSupplierSelect()" required
+                        class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none appearance-none">
+                        <option value="">Select supplier</option>
+                        @foreach($suppliers as $s)
+                            <option value="{{ $s->id }}">{{ $s->name }}</option>
+                        @endforeach
+                    </select>
+                    <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+                </div>
             </div>
-            <p class="text-[11px] font-black text-accent uppercase tracking-tight mt-1.5" x-show="supplierId">
-                BAL: <span x-text="'{{ $curr }} ' + supplierBalance.toFixed(2)"></span>
-            </p>
+
+            <div>
+                <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Bill Date <span class="text-primary">*</span></label>
+                <input type="date" x-model="purchaseDate" required
+                    class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
+            </div>
         </div>
 
-        <div>
-            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Bill Date <span class="text-primary">*</span></label>
-            <input type="date" x-model="purchaseDate" required
-                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
-        </div>
+        <p class="text-[11px] font-black text-accent uppercase tracking-tight" x-show="supplierId">
+            BAL: <span x-text="'{{ $curr }} ' + supplierBalance.toFixed(2)"></span>
+        </p>
     </div>
 
     {{-- Items --}}
