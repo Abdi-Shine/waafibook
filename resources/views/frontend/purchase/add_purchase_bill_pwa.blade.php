@@ -164,74 +164,88 @@
             <h2 class="text-[11px] font-black text-primary-dark uppercase tracking-wider">Purchase Items</h2>
         </div>
 
-        <template x-for="(item, i) in items" :key="i">
-            <div class="px-4 py-4 border-b border-gray-100">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-[11px] font-black text-gray-400 uppercase tracking-wide" x-text="'Item ' + (i + 1)"></span>
-                    <button type="button" @click="removeItem(i)" x-show="items.length > 1"
-                        class="w-6 h-6 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center text-red-500">
-                        <i class="bi bi-trash text-[10px]"></i>
-                    </button>
-                </div>
-
-                <div class="mb-3">
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Item</label>
-                    <div class="relative">
-                        <select x-model="item.product_id" @change="onProductSelect(i)"
-                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none appearance-none">
-                            <option value="">Search and select item</option>
-                            @foreach($products as $p)
-                                <option value="{{ $p->id }}">{{ $p->product_name }}</option>
-                            @endforeach
-                        </select>
-                        <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3 mb-3">
-                    <div>
-                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Qty</label>
-                        <input type="number" min="0" step="0.01" x-model="item.quantity"
-                            class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
-                    </div>
-                    <div>
-                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Unit</label>
-                        <div class="relative">
-                            <select x-model="item.unit"
-                                class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none appearance-none">
-                                <option value="">NONE</option>
-                                <option value="Piece">Piece</option>
-                                <option value="Box">Box</option>
-                                <option value="Kg">Kg</option>
-                                <option value="Litre">Litre</option>
-                                <option value="Set">Set</option>
-                            </select>
-                            <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Price/Unit</label>
-                    <div class="relative">
-                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[13px] font-bold">{{ $curr }}</span>
-                        <input type="number" min="0" step="0.01" x-model="item.unit_price"
-                            class="w-full pl-8 pr-2 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
-                    <span class="text-[11px] font-black text-primary uppercase tracking-wider">Amount</span>
-                    <span class="text-[14px] font-black text-primary-dark" x-text="'{{ $curr }} ' + lineAmount(item).toFixed(2)"></span>
-                </div>
-            </div>
-        </template>
-
-        <div class="px-4 py-3">
-            <button type="button" @click="addItem()"
-                class="flex items-center gap-1.5 text-[11px] font-black text-primary bg-accent/10 hover:bg-accent/20 border border-accent/30 rounded-[0.5rem] px-4 py-1.5 transition-all uppercase tracking-wider">
-                <i class="bi bi-plus-lg"></i> Add Row
-            </button>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left" style="min-width: 720px;">
+                <thead>
+                    <tr class="bg-white border-b border-gray-100">
+                        <th class="px-3 py-3 text-[10px] font-black text-primary-dark uppercase tracking-wider w-10 text-center border-r border-gray-100">#</th>
+                        <th class="px-3 py-3 text-[10px] font-black text-primary-dark uppercase tracking-wider border-r border-gray-100" style="min-width: 220px;">Item</th>
+                        <th class="px-3 py-3 text-[10px] font-black text-primary-dark uppercase tracking-wider w-20 text-center border-r border-gray-100">Qty</th>
+                        <th class="px-3 py-3 text-[10px] font-black text-primary-dark uppercase tracking-wider w-28 text-center border-r border-gray-100">Unit</th>
+                        <th class="px-3 py-3 text-[10px] font-black text-primary-dark uppercase tracking-wider w-24 text-center border-r border-gray-100">Price/Unit</th>
+                        <th class="px-3 py-3 text-[10px] font-black text-primary-dark uppercase tracking-wider w-24 text-right">Amount</th>
+                        <th class="w-10"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="(item, i) in items" :key="i">
+                        <tr class="border-b border-gray-100">
+                            <td class="px-3 py-2.5 text-[11px] font-black text-gray-400 text-center border-r border-gray-100" x-text="i + 1"></td>
+                            <td class="px-2 py-1.5 border-r border-gray-100">
+                                <div class="relative">
+                                    <select x-model="item.product_id" @change="onProductSelect(i)"
+                                        class="w-full pl-2 pr-6 py-1.5 bg-transparent border-none text-[13px] font-medium text-gray-700 outline-none appearance-none">
+                                        <option value="">Search and select item</option>
+                                        @foreach($products as $p)
+                                            <option value="{{ $p->id }}">{{ $p->product_name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <i class="bi bi-chevron-down absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-[10px]"></i>
+                                </div>
+                            </td>
+                            <td class="px-2 py-1.5 border-r border-gray-100">
+                                <input type="number" min="0" step="0.01" x-model="item.quantity"
+                                    class="w-full px-1 py-1.5 bg-transparent border-none text-[13px] font-medium text-gray-700 outline-none text-center">
+                            </td>
+                            <td class="px-2 py-1.5 border-r border-gray-100">
+                                <div class="relative">
+                                    <select x-model="item.unit"
+                                        class="w-full pl-1 pr-5 py-1.5 bg-transparent border-none text-[13px] font-bold text-primary-dark outline-none appearance-none text-center">
+                                        <option value="">NONE</option>
+                                        <option value="Piece">Piece</option>
+                                        <option value="Box">Box</option>
+                                        <option value="Kg">Kg</option>
+                                        <option value="Litre">Litre</option>
+                                        <option value="Set">Set</option>
+                                    </select>
+                                    <i class="bi bi-chevron-down absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-[10px]"></i>
+                                </div>
+                            </td>
+                            <td class="px-2 py-1.5 border-r border-gray-100">
+                                <input type="number" min="0" step="0.01" x-model="item.unit_price"
+                                    class="w-full px-1 py-1.5 bg-transparent border-none text-[13px] font-medium text-gray-700 outline-none text-center">
+                            </td>
+                            <td class="px-3 py-2.5 text-[13px] font-black text-primary-dark text-right" x-text="lineAmount(item).toFixed(2)"></td>
+                            <td class="px-2 py-1.5 text-center">
+                                <button type="button" @click="removeItem(i)" x-show="items.length > 1"
+                                    class="w-6 h-6 rounded-lg bg-red-50 border border-red-100 inline-flex items-center justify-center text-red-500">
+                                    <i class="bi bi-trash text-[10px]"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+                <tfoot>
+                    <tr class="border-t border-gray-200 bg-white">
+                        <td class="px-3 py-3 border-r border-gray-100"></td>
+                        <td class="px-3 py-3 border-r border-gray-100">
+                            <button type="button" @click="addItem()"
+                                class="flex items-center gap-1.5 text-[11px] font-black text-primary bg-accent/10 hover:bg-accent/20 border border-accent/30 rounded-[0.5rem] px-4 py-1.5 transition-all uppercase tracking-wider whitespace-nowrap">
+                                <i class="bi bi-plus-lg"></i> Add Row
+                            </button>
+                        </td>
+                        <td class="px-3 py-3 text-center border-r border-gray-100">
+                            <span class="text-[13px] font-black text-primary-dark" x-text="items.reduce((s, it) => s + (parseFloat(it.quantity) || 0), 0)"></span>
+                        </td>
+                        <td class="border-r border-gray-100"></td>
+                        <td class="px-2 py-3 text-[11px] font-black text-primary uppercase tracking-wider text-right border-r border-gray-100">Total</td>
+                        <td class="px-3 py-3 text-right">
+                            <span class="text-[13px] font-black text-primary-dark" x-text="subtotal.toFixed(2)"></span>
+                        </td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
         </div>
     </div>
 
