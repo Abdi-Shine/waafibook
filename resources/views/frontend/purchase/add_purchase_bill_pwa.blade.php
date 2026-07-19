@@ -6,7 +6,6 @@
     supplierId: '',
     supplierBalance: 0,
     purchaseDate: '{{ date('Y-m-d') }}',
-    paymentAccountId: '',
     discountAmount: 0,
     paidAmount: 0,
     saving: false,
@@ -70,7 +69,7 @@
             const payload = {
                 supplier_id: this.supplierId,
                 branch_id: {{ auth()->user()->getAssignedBranchId() ?? ($branches->first()->id ?? 'null') }},
-                payment_account_id: this.paymentAccountId || null,
+                payment_account_id: null,
                 purchase_type: 'Purchase',
                 purchase_no: '{{ $purchase_no }}',
                 supplier_invoice_no: '{{ $voucher_no ?? '' }}',
@@ -259,20 +258,6 @@
                     <input type="number" min="0" step="0.01" x-model="paidAmount"
                         class="w-full pl-8 pr-2 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
                 </div>
-            </div>
-        </div>
-
-        <div class="mb-3">
-            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Payment Account</label>
-            <div class="relative">
-                <select x-model="paymentAccountId"
-                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none appearance-none">
-                    <option value="">None</option>
-                    @foreach($accounts->whereIn('type', ['cash', 'bank']) as $acc)
-                        <option value="{{ $acc->id }}">{{ $acc->name }}</option>
-                    @endforeach
-                </select>
-                <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
             </div>
         </div>
 
