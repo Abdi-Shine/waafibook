@@ -70,13 +70,6 @@
             <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1 whitespace-nowrap">Balance Due</p>
             <p class="text-[16px] font-black text-primary">{{ $sym }} {{ number_format($billStats['totalAmount'] - $billStats['totalPaid'], 0) }}</p>
         </div>
-        <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm shrink-0 w-[130px]">
-            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-2">
-                <i class="bi bi-file-earmark-text text-xs"></i>
-            </div>
-            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1 whitespace-nowrap">Total Vouchers</p>
-            <p class="text-[16px] font-black text-primary">{{ number_format($billStats['vouchers']) }}</p>
-        </div>
     </div>
 
     <form method="GET" action="{{ route('purchase.bill') }}" class="flex items-center gap-2 px-5 pt-4 mb-2">
