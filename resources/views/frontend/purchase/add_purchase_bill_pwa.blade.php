@@ -21,7 +21,7 @@
         'name' => $s->name,
         'balance' => (float) ($s->amount_balance ?? 0),
     ])),
-    items: [{ product_id: '', product_name: '', product_code: '', unit: '', quantity: 1, unit_price: 0, discount: 0 }],
+    items: [{ product_id: '', product_name: '', product_code: '', unit: 'Piece', quantity: 1, unit_price: 0, discount: 0 }],
 
     get subtotal() {
         return this.items.reduce((sum, it) => sum + Math.max(0, (parseFloat(it.quantity) || 0) * (parseFloat(it.unit_price) || 0) - (parseFloat(it.discount) || 0)), 0);
@@ -36,7 +36,7 @@
         return Math.max(0, (parseFloat(it.quantity) || 0) * (parseFloat(it.unit_price) || 0) - (parseFloat(it.discount) || 0));
     },
     addItem() {
-        this.items.push({ product_id: '', product_name: '', product_code: '', unit: '', quantity: 1, unit_price: 0, discount: 0 });
+        this.items.push({ product_id: '', product_name: '', product_code: '', unit: 'Piece', quantity: 1, unit_price: 0, discount: 0 });
     },
     removeItem(i) {
         if (this.items.length > 1) this.items.splice(i, 1);
@@ -49,7 +49,7 @@
             this.items[i].unit_price = p.price;
             const unitOptions = ['Piece', 'Box', 'Kg', 'Litre', 'Set'];
             const match = unitOptions.find(u => u.toLowerCase() === (p.unit || '').toLowerCase());
-            this.items[i].unit = match || '';
+            this.items[i].unit = match || 'Piece';
         }
     },
     onSupplierSelect() {
