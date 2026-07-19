@@ -158,17 +158,14 @@
     </div>
 
     {{-- Items --}}
-    <div class="mx-5 mt-4">
-        <div class="flex items-center justify-between mb-3">
-            <p class="text-[11px] font-black text-gray-400 uppercase tracking-wide">Purchase Items</p>
-            <button type="button" @click="addItem()"
-                class="flex items-center gap-1 px-3 py-1.5 bg-accent/10 text-primary font-bold rounded-lg text-[11px] uppercase tracking-wide border border-accent/30">
-                <i class="bi bi-plus-lg"></i> Add Item
-            </button>
+    <div class="mx-5 mt-4 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="px-4 py-3 flex items-center gap-2 border-b border-gray-100 bg-background/50">
+            <i class="bi bi-box-seam text-primary-dark text-sm"></i>
+            <h2 class="text-[11px] font-black text-primary-dark uppercase tracking-wider">Purchase Items</h2>
         </div>
 
         <template x-for="(item, i) in items" :key="i">
-            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
+            <div class="px-4 py-4 border-b border-gray-100">
                 <div class="flex items-center justify-between mb-3">
                     <span class="text-[11px] font-black text-gray-400 uppercase tracking-wide" x-text="'Item ' + (i + 1)"></span>
                     <button type="button" @click="removeItem(i)" x-show="items.length > 1"
@@ -178,11 +175,11 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Product</label>
+                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Item</label>
                     <div class="relative">
                         <select x-model="item.product_id" @change="onProductSelect(i)"
                             class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none appearance-none">
-                            <option value="">Select product</option>
+                            <option value="">Search and select item</option>
                             @foreach($products as $p)
                                 <option value="{{ $p->id }}">{{ $p->product_name }}</option>
                             @endforeach
@@ -224,11 +221,18 @@
                 </div>
 
                 <div class="flex items-center justify-between pt-2 border-t border-gray-100">
-                    <span class="text-[11px] font-black text-gray-400 uppercase tracking-wide">Amount</span>
+                    <span class="text-[11px] font-black text-primary uppercase tracking-wider">Amount</span>
                     <span class="text-[14px] font-black text-primary-dark" x-text="'{{ $curr }} ' + lineAmount(item).toFixed(2)"></span>
                 </div>
             </div>
         </template>
+
+        <div class="px-4 py-3">
+            <button type="button" @click="addItem()"
+                class="flex items-center gap-1.5 text-[11px] font-black text-primary bg-accent/10 hover:bg-accent/20 border border-accent/30 rounded-[0.5rem] px-4 py-1.5 transition-all uppercase tracking-wider">
+                <i class="bi bi-plus-lg"></i> Add Row
+            </button>
+        </div>
     </div>
 
     {{-- Summary --}}
