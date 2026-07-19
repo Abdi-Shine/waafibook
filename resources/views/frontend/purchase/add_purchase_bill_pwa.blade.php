@@ -21,7 +21,7 @@
         'name' => $s->name,
         'balance' => (float) ($s->amount_balance ?? 0),
     ])),
-    items: [{ product_id: '', product_name: '', product_code: '', unit: 'Piece', quantity: 1, unit_price: 0, discount: 0 }],
+    items: [{ product_id: '', product_name: '', product_code: '', unit: '', quantity: 1, unit_price: 0, discount: 0 }],
 
     get subtotal() {
         return this.items.reduce((sum, it) => sum + Math.max(0, (parseFloat(it.quantity) || 0) * (parseFloat(it.unit_price) || 0) - (parseFloat(it.discount) || 0)), 0);
@@ -36,7 +36,7 @@
         return Math.max(0, (parseFloat(it.quantity) || 0) * (parseFloat(it.unit_price) || 0) - (parseFloat(it.discount) || 0));
     },
     addItem() {
-        this.items.push({ product_id: '', product_name: '', product_code: '', unit: 'Piece', quantity: 1, unit_price: 0, discount: 0 });
+        this.items.push({ product_id: '', product_name: '', product_code: '', unit: '', quantity: 1, unit_price: 0, discount: 0 });
     },
     removeItem(i) {
         if (this.items.length > 1) this.items.splice(i, 1);
@@ -47,6 +47,9 @@
             this.items[i].product_name = p.name;
             this.items[i].product_code = p.code;
             this.items[i].unit_price = p.price;
+            const unitOptions = ['Piece', 'Box', 'Kg', 'Litre', 'Set'];
+            const match = unitOptions.find(u => u.toLowerCase() === (p.unit || '').toLowerCase());
+            this.items[i].unit = match || '';
         }
     },
     onSupplierSelect() {
@@ -85,7 +88,7 @@
                     product_id: it.product_id,
                     product_name: it.product_name,
                     product_code: it.product_code,
-                    unit: it.unit,
+                    unit: it.unit || 'Piece',
                     quantity: parseFloat(it.quantity) || 0,
                     unit_price: parseFloat(it.unit_price) || 0,
                     discount: parseFloat(it.discount) || 0,
@@ -188,10 +191,27 @@
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Qty</label>
-                    <input type="number" min="0" step="0.01" x-model="item.quantity"
-                        class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Qty</label>
+                        <input type="number" min="0" step="0.01" x-model="item.quantity"
+                            class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Unit</label>
+                        <div class="relative">
+                            <select x-model="item.unit"
+                                class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none appearance-none">
+                                <option value="">NONE</option>
+                                <option value="Piece">Piece</option>
+                                <option value="Box">Box</option>
+                                <option value="Kg">Kg</option>
+                                <option value="Litre">Litre</option>
+                                <option value="Set">Set</option>
+                            </select>
+                            <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="mb-3">
