@@ -116,7 +116,7 @@
                 </button>
             </div>
 
-            <form id="adjustForm" action="{{ route('bank.transaction.adjustment') }}" method="POST" class="p-5 flex flex-col gap-4">
+            <form id="adjustForm" action="{{ route('bank.transaction.adjustment') }}" method="POST" class="p-5 flex flex-col gap-4" @submit="saving = true">
                 @csrf
                 <input type="hidden" name="bank_account_id" value="{{ $cashAccount->id ?? '' }}">
 
@@ -163,7 +163,7 @@
                         class="flex-1 py-3.5 bg-accent text-primary font-bold rounded-xl text-[13px] uppercase tracking-wide">
                         Cancel
                     </button>
-                    <button type="submit" :disabled="saving" @click="saving = true"
+                    <button type="submit" :disabled="saving"
                         class="flex-1 py-3.5 bg-primary text-white font-bold rounded-xl text-[13px] uppercase tracking-wide flex items-center justify-center gap-2"
                         :class="saving ? 'opacity-60' : ''">
                         <i class="bi" :class="saving ? 'bi-arrow-repeat animate-spin' : 'bi-check2-circle'"></i>

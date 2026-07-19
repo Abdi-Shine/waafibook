@@ -205,7 +205,7 @@
                 </button>
             </div>
 
-            <form action="{{ route('bank.transaction.deposit') }}" method="POST" class="p-5 flex flex-col gap-4">
+            <form action="{{ route('bank.transaction.deposit') }}" method="POST" class="p-5 flex flex-col gap-4" @submit="saving = true">
                 @csrf
                 <div>
                     <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Deposit To</label>
@@ -265,7 +265,7 @@
                         class="flex-1 py-3.5 bg-accent text-primary font-bold rounded-xl text-[13px] uppercase tracking-wide">
                         Cancel
                     </button>
-                    <button type="submit" :disabled="saving" @click="saving = true"
+                    <button type="submit" :disabled="saving"
                         class="flex-1 py-3.5 bg-primary text-white font-bold rounded-xl text-[13px] uppercase tracking-wide flex items-center justify-center gap-2"
                         :class="saving ? 'opacity-60' : ''">
                         <i class="bi" :class="saving ? 'bi-arrow-repeat animate-spin' : 'bi-check2-circle'"></i>
@@ -292,7 +292,7 @@
                 </button>
             </div>
 
-            <form action="{{ route('bank.transaction.withdraw') }}" method="POST" class="p-5 flex flex-col gap-4">
+            <form action="{{ route('bank.transaction.withdraw') }}" method="POST" class="p-5 flex flex-col gap-4" @submit="saving = true">
                 @csrf
                 <div>
                     <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Withdraw From</label>
@@ -352,7 +352,7 @@
                         class="flex-1 py-3.5 bg-accent text-primary font-bold rounded-xl text-[13px] uppercase tracking-wide">
                         Cancel
                     </button>
-                    <button type="submit" :disabled="saving" @click="saving = true"
+                    <button type="submit" :disabled="saving"
                         class="flex-1 py-3.5 bg-primary text-white font-bold rounded-xl text-[13px] uppercase tracking-wide flex items-center justify-center gap-2"
                         :class="saving ? 'opacity-60' : ''">
                         <i class="bi" :class="saving ? 'bi-arrow-repeat animate-spin' : 'bi-check2-circle'"></i>
