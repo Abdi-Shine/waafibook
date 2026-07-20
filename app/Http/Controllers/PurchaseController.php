@@ -363,7 +363,7 @@ class PurchaseController extends Controller
             || request()->boolean('mobile');
 
         if ($isMobile) {
-            return view('frontend.purchase.add_purchase_bill_pwa', compact('purchase_no', 'voucher_no', 'suppliers', 'branches', 'products', 'company', 'sym', 'curr'));
+            return view('frontend.purchase.add_purchase_bill_pwa', compact('purchase_no', 'voucher_no', 'suppliers', 'branches', 'products', 'categories', 'company', 'sym', 'curr'));
         }
 
         return view('frontend.purchase.add_purchase_bill', compact('purchase_no', 'voucher_no', 'purchaseBills', 'suppliers', 'branches', 'products', 'categories', 'company', 'sym', 'curr', 'accounts'));
