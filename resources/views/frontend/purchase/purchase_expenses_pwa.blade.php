@@ -20,7 +20,7 @@
     deleteExpense(id, name) {
         Swal.fire({
             title: 'Delete Expense?',
-            text: `Are you sure you want to delete \"${name}\"? This cannot be undone.`,
+            text: `Are you sure you want to delete '${name}'? This cannot be undone.`,
             icon: 'warning',
             input: 'password',
             inputPlaceholder: 'Enter your admin password to confirm',
