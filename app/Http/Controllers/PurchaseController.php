@@ -1323,6 +1323,14 @@ class PurchaseController extends Controller
                                            ->orderBy('name')
                                            ->get(['id', 'name', 'code', 'branch_id']);
 
+        $isMobile = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $request->userAgent() ?? '')
+            || $request->header('Sec-CH-UA-Mobile') === '?1'
+            || $request->boolean('mobile');
+
+        if ($isMobile) {
+            return view('frontend.purchase.purchase_expenses_pwa', compact('curr', 'suppliers', 'expenseAccounts', 'expenses', 'bills', 'branches', 'bankAccounts'));
+        }
+
         return view('frontend.purchase.purchase_expenses', compact('curr', 'suppliers', 'expenseAccounts', 'expenses', 'bills', 'branches', 'bankAccounts'));
     }
 
