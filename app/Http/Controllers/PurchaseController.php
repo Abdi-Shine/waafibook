@@ -57,6 +57,14 @@ class PurchaseController extends Controller
         $sym  = $currSymbols[$company->currency ?? ''] ?? ($company->currency ?? '$');
         $curr = $sym;
 
+        $isMobile = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $request->userAgent() ?? '')
+            || $request->header('Sec-CH-UA-Mobile') === '?1'
+            || $request->boolean('mobile');
+
+        if ($isMobile) {
+            return view('frontend.purchase.purchase_order_pwa', compact('purchaseOrders', 'suppliers', 'filters', 'sym', 'curr'));
+        }
+
         return view('frontend.purchase.purchase_order', compact('purchaseOrders', 'suppliers', 'filters', 'sym', 'curr'));
     }
 
