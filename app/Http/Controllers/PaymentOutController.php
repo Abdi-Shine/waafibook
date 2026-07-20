@@ -78,6 +78,18 @@ class PaymentOutController extends Controller
 
         $suggestedVoucherNo = 'PV-' . date('Ymd') . '-' . str_pad(SupplierPayment::query()->count() + 1, 4, '0', STR_PAD_LEFT);
 
+        $isMobile = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $request->userAgent() ?? '')
+            || $request->header('Sec-CH-UA-Mobile') === '?1'
+            || $request->boolean('mobile');
+
+        if ($isMobile) {
+            return view('frontend.purchase.supplier_payment_pwa', compact(
+                'payments', 'todayPayments', 'monthPayments', 'pendingPayments',
+                'totalTransactions', 'suppliers', 'company', 'suggestedVoucherNo',
+                'bankAccounts', 'billItemsBySupplier'
+            ));
+        }
+
         return view('frontend.purchase.supplier_payment', compact(
             'payments', 'todayPayments', 'monthPayments', 'pendingPayments',
             'totalTransactions', 'suppliers', 'company', 'suggestedVoucherNo',
