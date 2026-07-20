@@ -91,15 +91,17 @@
                            class="w-full border border-gray-200 rounded px-3 py-1.5 text-[12px] font-medium text-gray-600 bg-gray-50 focus:outline-none focus:border-primary">
                 </div>
                 <input type="hidden" id="walkinBlockOriginal" value="{{ $walkinBlock }}">
-                <div>
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Invoice Number</label>
-                    <div class="text-lg font-black text-primary tracking-tight">{{ $order->invoice_no }}</div>
-                </div>
-                <div>
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Invoice Date</label>
-                    <input type="date" id="invoiceDateInput" name="invoice_date"
-                           value="{{ \Carbon\Carbon::parse($order->invoice_date)->format('Y-m-d') }}"
-                           class="w-full border border-gray-200 rounded px-3 py-1.5 text-[12px] font-medium text-gray-700 focus:outline-none focus:border-primary">
+                <div class="grid grid-cols-2 gap-3 md:contents">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Invoice Number</label>
+                        <div class="text-lg font-black text-primary tracking-tight">{{ $order->invoice_no }}</div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Invoice Date</label>
+                        <input type="date" id="invoiceDateInput" name="invoice_date"
+                               value="{{ \Carbon\Carbon::parse($order->invoice_date)->format('Y-m-d') }}"
+                               class="w-full border border-gray-200 rounded px-3 py-1.5 text-[12px] font-medium text-gray-700 focus:outline-none focus:border-primary">
+                    </div>
                 </div>
             </div>
             <div id="balanceBadge" class="{{ ($order->customer->amount_balance ?? 0) > 0 ? 'flex' : 'hidden' }} mt-3 items-center gap-2 text-[11px] font-bold text-primary bg-primary/10 border border-primary/20 rounded-lg px-3 py-2">
