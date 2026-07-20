@@ -60,14 +60,14 @@
             <div class="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent mb-2">
                 <i class="bi bi-clock-history text-xs"></i>
             </div>
-            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Pending Audit</p>
+            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Pending</p>
             <p class="text-[16px] font-black text-primary">0</p>
         </div>
         <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm">
             <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-2">
                 <i class="bi bi-shield-check text-xs"></i>
             </div>
-            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Approved Payouts</p>
+            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Paid</p>
             <p class="text-[16px] font-black text-primary">$ {{ number_format($expenses->sum('amount'), 0) }}</p>
         </div>
     </div>
