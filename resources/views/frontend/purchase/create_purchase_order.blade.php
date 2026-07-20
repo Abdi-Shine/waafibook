@@ -79,18 +79,19 @@
                             <input type="hidden" name="po_number" value="{{ $poNo }}">
                         </div>
 
-                        {{-- Order Date --}}
-                        <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Order Date <span class="text-primary">*</span></label>
-                            <input type="date" name="order_date" value="{{ date('Y-m-d') }}"
-                                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
-                        </div>
+                        {{-- Order Date + Expected Delivery --}}
+                        <div class="grid grid-cols-2 gap-3 md:contents">
+                            <div class="space-y-1.5">
+                                <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Order Date <span class="text-primary">*</span></label>
+                                <input type="date" name="order_date" value="{{ date('Y-m-d') }}"
+                                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                            </div>
 
-                        {{-- Expected Delivery --}}
-                        <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Expected Delivery</label>
-                            <input type="date" name="expected_delivery"
-                                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                            <div class="space-y-1.5">
+                                <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Expected Delivery</label>
+                                <input type="date" name="expected_delivery"
+                                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
+                            </div>
                         </div>
 
                     </div>
