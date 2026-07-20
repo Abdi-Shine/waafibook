@@ -213,11 +213,19 @@ class CustomerController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-    public function statement($id)
+    public function statement(Request $request, $id)
     {
         $customer = Customer::query()->findOrFail($id);
         $customer->load(['orders.items', 'payments']);
         $company_profile = Company::find(auth()->user()->company_id);
+
+        $isMobile = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $request->userAgent() ?? '')
+            || $request->header('Sec-CH-UA-Mobile') === '?1'
+            || $request->boolean('mobile');
+
+        if ($isMobile) {
+            return view('frontend.parties.customer_statement_pwa', compact('customer', 'company_profile'));
+        }
 
         return view('frontend.parties.customer_statement', compact('customer', 'company_profile'));
     }
