@@ -79,6 +79,17 @@ class SalesController extends Controller
         /** @var Company|null $company */
         $company   = Company::find(auth()->user()->company_id);
 
+        $isMobile = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $request->userAgent() ?? '')
+            || $request->header('Sec-CH-UA-Mobile') === '?1'
+            || $request->boolean('mobile');
+
+        if ($isMobile) {
+            return view('frontend.sales.sales_invoice_pwa', compact(
+                'orders', 'totalInvoices', 'totalRevenue', 'totalOutstanding',
+                'todaySales', 'customers', 'branches', 'company'
+            ));
+        }
+
         return view('frontend.sales.sales_invoice', compact(
             'orders', 'totalInvoices', 'totalRevenue', 'totalOutstanding',
             'todaySales', 'customers', 'branches', 'company'
