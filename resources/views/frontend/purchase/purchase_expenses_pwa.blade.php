@@ -165,11 +165,8 @@
             x-transition:leave-start="translate-y-0" x-transition:leave-end="translate-y-full"
             class="absolute bottom-0 left-0 right-0 bg-white rounded-t-[1.5rem] max-h-[90vh] overflow-y-auto">
 
-            <div class="px-5 py-4 bg-primary flex items-center justify-between sticky top-0 z-10">
+            <div class="px-5 py-4 bg-primary sticky top-0 z-10">
                 <h2 class="text-white font-bold text-[16px]">Add New Expense</h2>
-                <button @click="showAddModal = false" class="w-8 h-8 bg-white/10 rounded-lg text-white flex items-center justify-center">
-                    <i class="bi bi-x-lg text-xs"></i>
-                </button>
             </div>
 
             <form action="{{ route('purchase.expense.store') }}" method="POST" class="p-5 flex flex-col gap-4" @submit="saving = true">
