@@ -8,34 +8,27 @@
         <h1 class="text-[16px] font-black text-primary-dark">Low Stock Alerts</h1>
     </div>
 
-    <div class="flex gap-3 px-5 pt-4 overflow-x-auto no-scrollbar">
-        <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm shrink-0 w-[120px]">
+    <div class="grid grid-cols-3 gap-3 px-5 pt-4">
+        <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm">
             <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-2">
                 <i class="bi bi-graph-down-arrow text-xs"></i>
             </div>
-            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1 whitespace-nowrap">Total Alerts</p>
+            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Total Alerts</p>
             <p class="text-[16px] font-black text-primary">{{ $stats['total'] }}</p>
         </div>
-        <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm shrink-0 w-[120px]">
+        <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm">
             <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-2">
                 <i class="bi bi-shield-exclamation text-xs"></i>
             </div>
-            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1 whitespace-nowrap">Critical</p>
+            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Critical</p>
             <p class="text-[16px] font-black text-primary">{{ $stats['critical'] }}</p>
         </div>
-        <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm shrink-0 w-[120px]">
+        <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm">
             <div class="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent mb-2">
                 <i class="bi bi-megaphone text-xs"></i>
             </div>
-            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1 whitespace-nowrap">Warning</p>
+            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Warning</p>
             <p class="text-[16px] font-black text-primary">{{ $stats['warning'] }}</p>
-        </div>
-        <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm shrink-0 w-[130px]">
-            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-2">
-                <i class="bi bi-building-up text-xs"></i>
-            </div>
-            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1 whitespace-nowrap">Branches</p>
-            <p class="text-[16px] font-black text-primary">{{ $stats['branches'] }}</p>
         </div>
     </div>
 
