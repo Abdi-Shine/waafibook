@@ -979,6 +979,14 @@ class ProductController extends Controller
         $branches = \App\Models\Branch::all();
         $categories = \App\Models\Category::all();
 
+        $isMobile = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $request->userAgent() ?? '')
+            || $request->header('Sec-CH-UA-Mobile') === '?1'
+            || $request->boolean('mobile');
+
+        if ($isMobile) {
+            return view('frontend.product.Low_alerts_pwa', compact('lowStockProducts', 'branches', 'categories', 'stats'));
+        }
+
         return view('frontend.product.Low_alerts', compact('lowStockProducts', 'branches', 'categories', 'stats'));
     }
 
