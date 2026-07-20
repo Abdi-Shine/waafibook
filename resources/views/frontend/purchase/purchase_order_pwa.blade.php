@@ -44,33 +44,33 @@
         </a>
     </div>
 
-    <div class="grid grid-cols-2 gap-3 px-5 pt-4">
-        <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm">
+    <div class="flex gap-3 px-5 pt-4 overflow-x-auto no-scrollbar">
+        <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm shrink-0 w-[110px]">
             <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-2">
                 <i class="bi bi-file-earmark-text text-xs"></i>
             </div>
-            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Total Orders</p>
+            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1 whitespace-nowrap">Total Orders</p>
             <p class="text-[16px] font-black text-primary">{{ $purchaseOrders->count() }}</p>
         </div>
-        <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm">
+        <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm shrink-0 w-[110px]">
             <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-2">
                 <i class="bi bi-clock-history text-xs"></i>
             </div>
-            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Pending</p>
+            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1 whitespace-nowrap">Pending</p>
             <p class="text-[16px] font-black text-primary">{{ $purchaseOrders->where('status', 'pending')->count() }}</p>
         </div>
-        <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm">
+        <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm shrink-0 w-[110px]">
             <div class="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent mb-2">
                 <i class="bi bi-check2-circle text-xs"></i>
             </div>
-            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Approved</p>
+            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1 whitespace-nowrap">Approved</p>
             <p class="text-[16px] font-black text-primary">{{ $purchaseOrders->where('status', 'approved')->count() }}</p>
         </div>
-        <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm">
+        <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm shrink-0 w-[130px]">
             <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-2">
                 <i class="bi bi-currency-dollar text-xs"></i>
             </div>
-            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Stock Investment</p>
+            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1 whitespace-nowrap">Stock Investment</p>
             <p class="text-[16px] font-black text-primary">{{ $sym }} {{ number_format($purchaseOrders->sum('total_amount'), 0) }}</p>
         </div>
     </div>
