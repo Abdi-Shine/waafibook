@@ -1,6 +1,10 @@
 @extends('admin.admin_master')
 @section('page_title', 'New Sales Invoice')
 
+@php
+    $curr = '$'; // Force Dollar — matches desktop add_invoice_sales.blade.php
+@endphp
+
 @section('admin')
 <div class="pb-28 bg-background min-h-screen" x-data="{
     saleType: 'cash',
