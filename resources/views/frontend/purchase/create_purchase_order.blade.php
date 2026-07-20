@@ -146,21 +146,11 @@
                 </div>
             </div>
 
-            {{-- ── Bottom: Notes + Summary ───────────────────────────────── --}}
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
-
-                {{-- Notes --}}
-                <div class="bg-white rounded-[1rem] border border-gray-100 shadow-sm p-6 lg:col-span-2">
-                    <label class="block text-[11px] font-bold text-primary-dark uppercase tracking-wider mb-3 pb-2 border-b border-gray-100">
-                        Notes / Terms &amp; Conditions
-                    </label>
-                    <textarea name="notes" rows="5"
-                        placeholder="Enter any additional notes, terms, or conditions for this order..."
-                        class="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all resize-none"></textarea>
-                </div>
+            {{-- ── Bottom: Summary ──────────────────────────────────────── --}}
+            <div class="grid grid-cols-1 mb-5">
 
                 {{-- Summary --}}
-                <div class="bg-white rounded-[1rem] border border-gray-100 shadow-sm p-5 lg:col-span-1">
+                <div class="bg-white rounded-[1rem] border border-gray-100 shadow-sm p-5 max-w-md lg:ml-auto w-full">
                     <p class="text-[10px] font-black text-primary-dark uppercase tracking-wider mb-4 pb-2 border-b border-gray-100">
                         Order Summary
                     </p>
@@ -575,7 +565,6 @@
                 subtotal:          parseFloat(document.getElementById('inputSubtotal').value) || 0,
                 vat:               0,
                 total_amount:      parseFloat(document.getElementById('grandTotalVal').value) || 0,
-                notes:             document.querySelector('textarea[name="notes"]').value,
                 items,
             };
 
