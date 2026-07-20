@@ -371,25 +371,27 @@
                     </div>
                 </div>
 
-                <div>
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Return Reason <span class="text-primary">*</span></label>
-                    <div class="relative">
-                        <select x-model="returnReason"
-                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none appearance-none">
-                            <option value="">Select reason...</option>
-                            <option value="Defective">Defective Product</option>
-                            <option value="Wrong">Wrong Item Delivered</option>
-                            <option value="Damaged">Damaged in Transit</option>
-                            <option value="Other">Other Reason</option>
-                        </select>
-                        <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Return Reason <span class="text-primary">*</span></label>
+                        <div class="relative">
+                            <select x-model="returnReason"
+                                class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 outline-none appearance-none">
+                                <option value="">Select reason...</option>
+                                <option value="Defective">Defective Product</option>
+                                <option value="Wrong">Wrong Item Delivered</option>
+                                <option value="Damaged">Damaged in Transit</option>
+                                <option value="Other">Other Reason</option>
+                            </select>
+                            <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+                        </div>
                     </div>
-                </div>
 
-                <div>
-                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Return Date <span class="text-primary">*</span></label>
-                    <input type="date" x-model="returnDate" required
-                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
+                    <div>
+                        <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Return Date <span class="text-primary">*</span></label>
+                        <input type="date" x-model="returnDate" required
+                            class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 outline-none">
+                    </div>
                 </div>
 
                 <div x-show="!selectedInvoiceId" x-cloak>
