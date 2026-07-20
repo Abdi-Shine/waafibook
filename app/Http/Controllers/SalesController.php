@@ -98,7 +98,7 @@ class SalesController extends Controller
 
     // ─── CREATE ──────────────────────────────────────────────────────────────
 
-    public function create()
+    public function create(Request $request)
     {
         $userBranchId = Auth::user()->getAssignedBranchId();
         $customers  = Customer::query()->orderBy('name')->get();
@@ -127,6 +127,16 @@ class SalesController extends Controller
             ->when($userBranchId, fn($q) => $q->where('branch_id', $userBranchId))
             ->orderBy('name')
             ->get();
+
+        $isMobile = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $request->userAgent() ?? '')
+            || $request->header('Sec-CH-UA-Mobile') === '?1'
+            || $request->boolean('mobile');
+
+        if ($isMobile) {
+            return view('frontend.sales.add_invoice_sales_pwa', compact(
+                'customers', 'products', 'categories', 'branches', 'company', 'invoiceNo', 'accounts'
+            ));
+        }
 
         return view('frontend.sales.add_invoice_sales', compact(
             'customers', 'products', 'categories', 'branches', 'company', 'invoiceNo', 'accounts'
