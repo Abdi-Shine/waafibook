@@ -70,13 +70,6 @@
             <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1 whitespace-nowrap">Approved Payouts</p>
             <p class="text-[16px] font-black text-primary">$ {{ number_format($expenses->sum('amount'), 0) }}</p>
         </div>
-        <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm shrink-0 w-[130px]">
-            <div class="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent mb-2">
-                <i class="bi bi-graph-up-arrow text-xs"></i>
-            </div>
-            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1 whitespace-nowrap">Avg Daily Cost</p>
-            <p class="text-[16px] font-black text-primary">$ {{ number_format($expenses->sum('amount') / max(1, date('d')), 0) }}</p>
-        </div>
     </div>
 
     <form method="GET" action="{{ route('purchase.expense') }}" class="flex items-center gap-2 px-5 pt-4 mb-2">
