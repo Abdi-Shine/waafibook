@@ -64,31 +64,33 @@
         <div class="bg-white border border-gray-200 rounded-lg p-5 mb-4">
             <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 pb-2 border-b border-gray-100">Customer Information</p>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Customer</label>
-                    <select id="customerSelect" name="customer_id" class="w-full">
-                        <option value="">Search by Name/Phone #</option>
-                        @if($walkinName)
-                            {{-- Select2 always shows the placeholder text for an
-                                 option with value="", even if it's selected — so
-                                 this needs a distinct sentinel value instead. --}}
-                            <option value="walkin" data-phone="{{ $walkinPhone }}" selected>Walk-in: {{ $walkinName }}</option>
-                        @endif
-                        @foreach($customers as $c)
-                            <option value="{{ $c->id }}"
-                                    data-phone="{{ $c->phone }}"
-                                    data-balance="{{ $c->amount_balance ?? 0 }}"
-                                    {{ $order->customer_id == $c->id ? 'selected' : '' }}>
-                                {{ $c->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Phone No.</label>
-                    <input type="text" id="customerPhone" readonly
-                           value="{{ $order->customer->phone ?? $walkinPhone ?? '' }}"
-                           class="w-full border border-gray-200 rounded px-3 py-1.5 text-[12px] font-medium text-gray-600 bg-gray-50 focus:outline-none focus:border-primary">
+                <div class="grid grid-cols-2 gap-3 md:contents">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Customer</label>
+                        <select id="customerSelect" name="customer_id" class="w-full">
+                            <option value="">Search by Name/Phone #</option>
+                            @if($walkinName)
+                                {{-- Select2 always shows the placeholder text for an
+                                     option with value="", even if it's selected — so
+                                     this needs a distinct sentinel value instead. --}}
+                                <option value="walkin" data-phone="{{ $walkinPhone }}" selected>Walk-in: {{ $walkinName }}</option>
+                            @endif
+                            @foreach($customers as $c)
+                                <option value="{{ $c->id }}"
+                                        data-phone="{{ $c->phone }}"
+                                        data-balance="{{ $c->amount_balance ?? 0 }}"
+                                        {{ $order->customer_id == $c->id ? 'selected' : '' }}>
+                                    {{ $c->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Phone No.</label>
+                        <input type="text" id="customerPhone" readonly
+                               value="{{ $order->customer->phone ?? $walkinPhone ?? '' }}"
+                               class="w-full border border-gray-200 rounded px-3 py-1.5 text-[12px] font-medium text-gray-600 bg-gray-50 focus:outline-none focus:border-primary">
+                    </div>
                 </div>
                 <input type="hidden" id="walkinBlockOriginal" value="{{ $walkinBlock }}">
                 <div class="grid grid-cols-2 gap-3 md:contents">
