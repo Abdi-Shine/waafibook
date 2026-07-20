@@ -67,8 +67,19 @@ class PaymentInController extends Controller
 
         $suggestedInvoiceNo = 'INV-' . date('Ymd') . '-' . str_pad(PaymentIn::query()->count() + 1, 4, '0', STR_PAD_LEFT);
 
+        $isMobile = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $request->userAgent() ?? '')
+            || $request->header('Sec-CH-UA-Mobile') === '?1'
+            || $request->boolean('mobile');
+
+        if ($isMobile) {
+            return view('frontend.sales.payment_in_pwa', compact(
+                'payments', 'todayReceipts', 'monthReceipts', 'pendingPayments',
+                'totalTransactions', 'customers', 'company', 'suggestedInvoiceNo', 'bankAccounts'
+            ));
+        }
+
         return view('frontend.sales.payment_in', compact(
-            'payments', 'todayReceipts', 'monthReceipts', 'pendingPayments', 
+            'payments', 'todayReceipts', 'monthReceipts', 'pendingPayments',
             'totalTransactions', 'customers', 'company', 'suggestedInvoiceNo', 'bankAccounts'
         ));
     }
