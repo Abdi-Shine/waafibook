@@ -151,21 +151,11 @@
             </div>
         </div>
 
-        {{-- Notes + Summary --}}
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
-
-            {{-- Notes --}}
-            <div class="bg-white rounded-[1rem] border border-gray-100 shadow-sm p-6 lg:col-span-2">
-                <div class="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100">
-                    <i class="bi bi-chat-left-text text-primary text-sm"></i>
-                    <span class="text-[11px] font-bold text-primary-dark uppercase tracking-wider">Notes / Terms &amp; Conditions</span>
-                </div>
-                <textarea name="notes" rows="6" placeholder="Enter any additional notes, terms, or conditions..."
-                          class="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all resize-none">{{ $cleanNotes }}</textarea>
-            </div>
+        {{-- Summary --}}
+        <div class="grid grid-cols-1 mb-5">
 
             {{-- Invoice Summary --}}
-            <div class="bg-white rounded-[1rem] border border-gray-100 shadow-sm p-5 lg:col-span-1">
+            <div class="bg-white rounded-[1rem] border border-gray-100 shadow-sm p-5 max-w-md lg:ml-auto w-full">
                 <div class="flex items-center gap-2 mb-4 pb-2 border-b border-gray-100">
                     <i class="bi bi-receipt text-primary text-sm"></i>
                     <span class="text-[11px] font-bold text-primary-dark uppercase tracking-wider">Invoice Summary</span>
@@ -679,9 +669,9 @@ function submitUpdate() {
     if (!valid) return;
     if (items.length === 0) { toastError('Please add at least one product.'); return; }
 
-    // Re-attach the walk-in name/phone block in front of the user's notes so
-    // it isn't lost on save when this is still a customer-less cash sale.
-    let notes = document.querySelector('textarea[name="notes"]').value;
+    // Re-attach the walk-in name/phone block so it isn't lost on save when
+    // this is still a customer-less cash sale (notes textarea removed).
+    let notes = '';
     if (!customerId) {
         const walkinBlock = document.getElementById('walkinBlockOriginal')?.value || '';
         if (walkinBlock) notes = walkinBlock + notes;
