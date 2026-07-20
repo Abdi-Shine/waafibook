@@ -9,6 +9,9 @@
     discountAmount: 0,
     paidAmount: 0,
     saving: false,
+    showAddSupplierModal: false,
+    savingSupplier: false,
+    newSupplierForm: { name: '', phone: '', supplier_type: 'company', email: '', address: '', amount_balance: '' },
     products: @js($products->map(fn ($p) => [
         'id' => $p->id,
         'name' => $p->product_name,
@@ -55,6 +58,50 @@
     onSupplierSelect() {
         const s = this.suppliers.find(s => s.id == this.supplierId);
         this.supplierBalance = s ? s.balance : 0;
+    },
+    openAddSupplierModal() {
+        this.newSupplierForm = { name: '', phone: '', supplier_type: 'company', email: '', address: '', amount_balance: '' };
+        this.showAddSupplierModal = true;
+    },
+    async submitNewSupplier() {
+        this.savingSupplier = true;
+        try {
+            const payload = {
+                ...this.newSupplierForm,
+                email: this.newSupplierForm.email || null,
+                address: this.newSupplierForm.address || null,
+                amount_balance: this.newSupplierForm.amount_balance === '' ? 0 : this.newSupplierForm.amount_balance,
+            };
+            const response = await fetch('{{ route('supplier.store') }}', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').content,
+                },
+                body: JSON.stringify(payload),
+            });
+            const data = await response.json();
+            if (response.status === 422) {
+                const firstError = Object.values(data.errors || {})[0]?.[0] || 'Please check the form.';
+                Swal.fire({ icon: 'error', title: 'Could not add supplier', text: firstError });
+                return;
+            }
+            if (!response.ok) {
+                Swal.fire({ icon: 'error', title: 'Something went wrong', text: data.message || 'Please try again.' });
+                return;
+            }
+            const s = data.supplier || data;
+            this.suppliers.push({ id: s.id, name: s.name, balance: parseFloat(s.amount_balance) || 0 });
+            this.supplierId = s.id;
+            this.supplierBalance = parseFloat(s.amount_balance) || 0;
+            this.showAddSupplierModal = false;
+            Swal.fire({ toast: true, position: 'top', icon: 'success', title: s.name + ' added', timer: 1500, showConfirmButton: false });
+        } catch (e) {
+            Swal.fire({ icon: 'error', title: 'Network error', text: 'Could not add supplier. Please try again.' });
+        } finally {
+            this.savingSupplier = false;
+        }
     },
     async submitBill() {
         if (!this.supplierId) {
@@ -137,9 +184,9 @@
                     <select x-model="supplierId" @change="onSupplierSelect()" required
                         class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none appearance-none">
                         <option value="">Select supplier</option>
-                        @foreach($suppliers as $s)
-                            <option value="{{ $s->id }}">{{ $s->name }}</option>
-                        @endforeach
+                        <template x-for="s in suppliers" :key="s.id">
+                            <option :value="s.id" x-text="s.name"></option>
+                        </template>
                     </select>
                     <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
                 </div>
@@ -152,9 +199,15 @@
             </div>
         </div>
 
-        <p class="text-[11px] font-black text-accent uppercase tracking-tight" x-show="supplierId">
-            BAL: <span x-text="'{{ $curr }} ' + supplierBalance.toFixed(2)"></span>
-        </p>
+        <div class="flex items-center justify-between">
+            <p class="text-[11px] font-black text-accent uppercase tracking-tight" x-show="supplierId">
+                BAL: <span x-text="'{{ $curr }} ' + supplierBalance.toFixed(2)"></span>
+            </p>
+            <button type="button" @click="openAddSupplierModal()"
+                class="text-[11px] font-bold text-primary hover:text-primary-dark ml-auto">
+                <i class="bi bi-plus-lg text-[10px]"></i> Add New
+            </button>
+        </div>
     </div>
 
     {{-- Items --}}
@@ -299,6 +352,81 @@
             <i class="bi" :class="saving ? 'bi-arrow-repeat animate-spin' : 'bi-check2-circle'"></i>
             <span x-text="saving ? 'Saving...' : 'Save Bill'"></span>
         </button>
+    </div>
+
+    {{-- Register Supplier — mobile bottom sheet --}}
+    <div x-show="showAddSupplierModal" x-cloak x-transition.opacity
+        class="fixed inset-0 z-[70] bg-slate-900/40" @click.self="showAddSupplierModal = false">
+        <div x-show="showAddSupplierModal" x-transition:enter="transition ease-out duration-250"
+            x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="translate-y-0" x-transition:leave-end="translate-y-full"
+            class="absolute bottom-0 left-0 right-0 bg-white rounded-t-[1.5rem] max-h-[90vh] overflow-y-auto">
+
+            <div class="px-5 py-4 bg-primary flex items-center justify-between sticky top-0 z-10">
+                <h2 class="text-white font-bold text-[16px]">Register Supplier</h2>
+                <button @click="showAddSupplierModal = false" class="w-8 h-8 bg-white/10 rounded-lg text-white flex items-center justify-center">
+                    <i class="bi bi-x-lg text-xs"></i>
+                </button>
+            </div>
+
+            <form @submit.prevent="submitNewSupplier()" class="p-5 flex flex-col gap-4">
+                <div>
+                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Full Name <span class="text-primary">*</span></label>
+                    <input type="text" x-model="newSupplierForm.name" required placeholder="Enter supplier name"
+                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
+                </div>
+
+                <div>
+                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Phone Number <span class="text-primary">*</span></label>
+                    <input type="text" x-model="newSupplierForm.phone" required inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="e.g. 252612345678"
+                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
+                </div>
+
+                <div>
+                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Supplier Type</label>
+                    <div class="relative">
+                        <select x-model="newSupplierForm.supplier_type"
+                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none appearance-none">
+                            <option value="company">Company</option>
+                            <option value="individual">Individual</option>
+                        </select>
+                        <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Email</label>
+                    <input type="email" x-model="newSupplierForm.email" placeholder="Optional"
+                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
+                </div>
+
+                <div>
+                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Address</label>
+                    <input type="text" x-model="newSupplierForm.address" placeholder="Optional"
+                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
+                </div>
+
+                <div>
+                    <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Opening Balance</label>
+                    <input type="number" step="0.01" x-model="newSupplierForm.amount_balance" placeholder="0.00"
+                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
+                </div>
+
+                <div class="flex gap-3 mt-2">
+                    <button type="button" @click="showAddSupplierModal = false"
+                        class="flex-1 py-3.5 bg-accent text-primary font-bold rounded-xl text-[13px] uppercase tracking-wide">
+                        Cancel
+                    </button>
+                    <button type="submit" :disabled="savingSupplier"
+                        class="flex-1 py-3.5 bg-primary text-white font-bold rounded-xl text-[13px] uppercase tracking-wide flex items-center justify-center gap-2"
+                        :class="savingSupplier ? 'opacity-60' : ''">
+                        <i class="bi" :class="savingSupplier ? 'bi-arrow-repeat animate-spin' : 'bi-check2-circle'"></i>
+                        <span x-text="savingSupplier ? 'Saving...' : 'Save Supplier'"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 @endsection
