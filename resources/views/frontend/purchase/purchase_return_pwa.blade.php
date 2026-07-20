@@ -310,35 +310,51 @@
                         class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
                 </div>
 
-                <div x-show="selectedBillId">
-                    <p class="text-[11px] font-black text-gray-400 uppercase tracking-wide mb-2">Return Items</p>
+                <div x-show="selectedBillId" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div class="px-4 py-3 flex items-center gap-2 border-b border-gray-100 bg-background/50">
+                        <i class="bi bi-box-seam text-primary-dark text-sm"></i>
+                        <h2 class="text-[11px] font-black text-primary-dark uppercase tracking-wider">Return Items</h2>
+                    </div>
+
                     <template x-if="!returnItems.length">
-                        <div class="py-8 text-center border border-dashed border-gray-200 rounded-xl">
+                        <div class="py-8 text-center">
                             <i class="bi bi-box-seam text-2xl text-gray-300"></i>
                             <p class="text-xs text-gray-400 mt-1.5 font-semibold">No returnable items on this bill.</p>
                         </div>
                     </template>
-                    <template x-for="(item, index) in returnItems" :key="index">
-                        <div class="bg-gray-50 rounded-xl p-3.5 mb-2.5 border border-gray-100">
-                            <p class="text-[13px] font-black text-primary-dark" x-text="item.name"></p>
-                            <p class="text-[10px] text-gray-400 font-semibold mt-0.5">
-                                <span x-text="'Ordered: ' + item.original_qty"></span>
-                                <span class="ml-2" x-text="'In Stock: ' + item.stock_qty"></span>
-                                <span class="ml-2 text-accent font-black" x-text="'Returnable: ' + item.remaining_qty"></span>
-                            </p>
-                            <div class="flex items-center gap-3 mt-2">
-                                <div class="flex-1">
-                                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">Return Qty</label>
-                                    <input type="number" x-model="item.return_qty" :max="item.remaining_qty" min="0"
-                                        class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-[13px] font-bold text-primary-dark text-center outline-none">
-                                </div>
-                                <div class="flex-1 text-right">
-                                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">Amount</label>
-                                    <p class="text-[14px] font-black text-primary-dark" x-text="currency + ' ' + ((parseFloat(item.return_qty||0) * parseFloat(item.rate))).toFixed(2)"></p>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
+
+                    <div class="overflow-x-auto" x-show="returnItems.length">
+                        <table class="w-full text-left" style="min-width: 560px;">
+                            <thead>
+                                <tr class="bg-white border-b border-gray-100">
+                                    <th class="px-3 py-3 text-[10px] font-black text-primary-dark uppercase tracking-wider border-r border-gray-100" style="min-width: 220px;">Item</th>
+                                    <th class="px-3 py-3 text-[10px] font-black text-primary-dark uppercase tracking-wider w-24 text-center border-r border-gray-100">Qty</th>
+                                    <th class="px-3 py-3 text-[10px] font-black text-primary-dark uppercase tracking-wider w-24 text-center border-r border-gray-100">Price/Unit</th>
+                                    <th class="px-3 py-3 text-[10px] font-black text-primary-dark uppercase tracking-wider w-24 text-right">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="(item, index) in returnItems" :key="index">
+                                    <tr class="border-b border-gray-100 last:border-0">
+                                        <td class="px-3 py-3 border-r border-gray-100">
+                                            <p class="text-[13px] font-black text-primary-dark" x-text="item.name"></p>
+                                            <p class="text-[10px] text-gray-400 font-semibold mt-0.5">
+                                                <span x-text="'Ordered: ' + item.original_qty"></span>
+                                                <span class="ml-2" x-text="'In Stock: ' + item.stock_qty"></span>
+                                                <span class="ml-2 text-accent font-black" x-text="'Returnable: ' + item.remaining_qty"></span>
+                                            </p>
+                                        </td>
+                                        <td class="px-2 py-3 border-r border-gray-100">
+                                            <input type="number" x-model="item.return_qty" :max="item.remaining_qty" min="0"
+                                                class="w-full px-1 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-bold text-primary-dark text-center outline-none">
+                                        </td>
+                                        <td class="px-3 py-3 text-[13px] font-semibold text-gray-500 text-center border-r border-gray-100" x-text="currency + ' ' + parseFloat(item.rate).toFixed(2)"></td>
+                                        <td class="px-3 py-3 text-[13px] font-black text-primary-dark text-right" x-text="currency + ' ' + (parseFloat(item.return_qty||0) * parseFloat(item.rate)).toFixed(2)"></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <div>
