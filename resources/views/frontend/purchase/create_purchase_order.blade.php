@@ -13,20 +13,20 @@
     <div class="px-4 py-8 md:px-8 md:py-10 bg-background min-h-screen font-inter">
 
         {{-- ── Top Header Bar ──────────────────────────────────────────── --}}
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm icon-gradient-primary">
-                    <i class="bi bi-cart-check text-white text-xl"></i>
+        <div class="flex flex-row justify-between items-center mb-6 gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm icon-gradient-primary">
+                    <i class="bi bi-cart-check text-white text-lg md:text-xl"></i>
                 </div>
-                <div>
-                    <h1 class="text-[20px] font-bold text-primary-dark">Create Purchase Order</h1>
+                <div class="min-w-0">
+                    <h1 class="text-[16px] md:text-[20px] font-bold text-primary-dark whitespace-nowrap">Purchase Order</h1>
                 </div>
             </div>
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 shrink-0">
                 <a href="{{ route('purchase.order.index') }}"
-                    class="flex items-center gap-2 px-5 py-2.5 bg-accent text-primary font-semibold rounded-[0.5rem] hover:bg-accent/90 transition-all shadow-sm text-sm group normal-case">
+                    class="flex items-center gap-2 px-3 md:px-5 py-2 md:py-2.5 bg-accent text-primary font-semibold rounded-[0.5rem] hover:bg-accent/90 transition-all shadow-sm text-[13px] md:text-sm group normal-case whitespace-nowrap">
                     <i class="bi bi-arrow-left group-hover:-translate-x-0.5 transition-transform duration-300"></i>
-                    <span>Back to Orders</span>
+                    <span>Back</span>
                 </a>
             </div>
         </div>
