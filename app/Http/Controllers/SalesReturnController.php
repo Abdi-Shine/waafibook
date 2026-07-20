@@ -48,6 +48,14 @@ class SalesReturnController extends Controller
 
         $company = Company::find(auth()->user()->company_id) ?? Company::first();
 
+        $isMobile = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $request->userAgent() ?? '')
+            || $request->header('Sec-CH-UA-Mobile') === '?1'
+            || $request->boolean('mobile');
+
+        if ($isMobile) {
+            return view('frontend.sales.sales_return_credit_note_pwa', compact('returns', 'customers', 'invoices', 'stats', 'company'));
+        }
+
         return view('frontend.sales.sales_return_credit_note', compact('returns', 'customers', 'invoices', 'stats', 'company'));
     }
 
