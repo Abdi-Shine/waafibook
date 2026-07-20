@@ -997,7 +997,7 @@ class PurchaseController extends Controller
         }
     }
 
-    public function returns()
+    public function returns(Request $request)
     {
         $bills = PurchaseBill::query()->with(['supplier', 'branch', 'items.product.stocks', 'items.returnItems'])->latest()->get();
         $returns = PurchaseReturn::query()->with(['bill', 'supplier', 'items.product'])->latest()->get();
@@ -1012,6 +1012,14 @@ class PurchaseController extends Controller
             ->where('is_active', 1)
             ->orderBy('name')
             ->get(['id', 'name', 'type']);
+
+        $isMobile = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $request->userAgent() ?? '')
+            || $request->header('Sec-CH-UA-Mobile') === '?1'
+            || $request->boolean('mobile');
+
+        if ($isMobile) {
+            return view('frontend.purchase.purchase_return_pwa', compact('bills', 'returns', 'currency', 'suppliers', 'branches', 'cashAccounts'));
+        }
 
         return view('frontend.purchase.purchase_return', compact('bills', 'returns', 'currency', 'suppliers', 'branches', 'cashAccounts'));
     }
