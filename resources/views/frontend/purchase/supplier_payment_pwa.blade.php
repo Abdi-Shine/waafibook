@@ -42,7 +42,7 @@
         </button>
     </div>
 
-    <div class="grid grid-cols-2 gap-3 px-5 pt-4">
+    <div class="grid grid-cols-3 gap-3 px-5 pt-4">
         <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm">
             <div class="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent mb-2">
                 <i class="bi bi-cash-stack text-xs"></i>
@@ -63,13 +63,6 @@
             </div>
             <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Pending Amount</p>
             <p class="text-[16px] font-black text-primary">{{ $symbol }} {{ number_format($pendingPayments, 0) }}</p>
-        </div>
-        <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-sm">
-            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-2">
-                <i class="bi bi-receipt-cutoff text-xs"></i>
-            </div>
-            <p class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Voucher Count</p>
-            <p class="text-[16px] font-black text-primary">{{ number_format($totalTransactions) }}</p>
         </div>
     </div>
 
