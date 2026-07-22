@@ -99,6 +99,12 @@
             const data = await response.json();
             if (response.status === 422) {
                 this.formErrors = data.errors || {};
+                const shown = ['product_name', 'selling_price'];
+                const hidden = Object.keys(this.formErrors).filter(k => !shown.includes(k));
+                if (hidden.length) {
+                    const msg = hidden.map(k => this.formErrors[k][0]).join(' ');
+                    Swal.fire({ icon: 'error', title: 'Could not save', text: msg });
+                }
                 return;
             }
             if (!response.ok) {
@@ -245,7 +251,9 @@
             </div>
 
             <form x-ref="productForm" @submit.prevent="submitProduct()" enctype="multipart/form-data" class="p-5 flex flex-col gap-4">
-                <input type="hidden" name="product_code" :value="productData.product_code">
+                <template x-if="editMode">
+                    <input type="hidden" name="product_code" :value="productData.product_code">
+                </template>
                 <input type="hidden" name="product_type" :value="productData.product_type">
                 <input type="hidden" name="location_type" value="branch">
                 <template x-if="editMode">
