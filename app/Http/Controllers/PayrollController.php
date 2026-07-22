@@ -24,7 +24,7 @@ class PayrollController extends Controller
     }
 
     // Single payroll page — shows all salary records + form to add new ones
-    public function index()
+    public function index(Request $request)
     {
         $items     = PayrollItem::with(['employee', 'payroll'])
                         ->orderBy('created_at', 'desc')
@@ -36,6 +36,17 @@ class PayrollController extends Controller
         $paidThisMonth     = $items->filter(fn($i) => optional($i->payroll)->month_year === $currentMonth)->sum('net_salary');
         $countThisMonth    = $items->filter(fn($i) => optional($i->payroll)->month_year === $currentMonth)->pluck('employee_id')->unique()->count();
         $ytdTotal          = $items->sum('net_salary');
+
+        $isMobile = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $request->userAgent() ?? '')
+            || $request->header('Sec-CH-UA-Mobile') === '?1'
+            || $request->boolean('mobile');
+
+        if ($isMobile) {
+            return view('frontend.expense.payroll_list_pwa', compact(
+                'items', 'employees', 'currency',
+                'paidThisMonth', 'countThisMonth', 'ytdTotal'
+            ));
+        }
 
         return view('frontend.expense.payroll_list', compact(
             'items', 'employees', 'currency',
