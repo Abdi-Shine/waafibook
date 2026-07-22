@@ -56,7 +56,7 @@
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = '{{ url('/loans/status') }}/' + id;
-                form.innerHTML = `@csrf<input type="hidden" name="status" value="${status}">`;
+                form.innerHTML = `@csrf<input type='hidden' name='status' value='${status}'>`;
                 document.body.appendChild(form);
                 form.submit();
             }
