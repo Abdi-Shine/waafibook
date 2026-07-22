@@ -138,21 +138,30 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'product_name'  => [
-                'required', 'string', 'max:255',
-                Rule::unique('products')->where('company_id', Auth::user()->company_id),
-            ],
-            'product_code'  => 'nullable|string|unique:products,product_code',
-            'category_id'   => 'nullable|exists:categories,id',
-            'selling_price' => 'required|numeric|min:0',
-            'purchase_price'=> 'nullable|numeric|min:0',
-            'stock_products'=> 'nullable|numeric|min:0',
-            'branch_id'     => 'nullable|exists:branches,id',
-            'product_type'  => 'required|in:product,service',
-        ], [
-            'product_name.unique' => 'A product with this name already exists.',
-        ]);
+        try {
+            $request->validate([
+                'product_name'  => [
+                    'required', 'string', 'max:255',
+                    Rule::unique('products')->where('company_id', Auth::user()->company_id),
+                ],
+                'product_code'  => 'nullable|string|unique:products,product_code',
+                'category_id'   => 'nullable|exists:categories,id',
+                'selling_price' => 'required|numeric|min:0',
+                'purchase_price'=> 'nullable|numeric|min:0',
+                'stock_products'=> 'nullable|numeric|min:0',
+                'branch_id'     => 'nullable|exists:branches,id',
+                'product_type'  => 'required|in:product,service',
+            ], [
+                'product_name.unique' => 'A product with this name already exists.',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('TEMP DIAG product.store validation failed', [
+                'errors' => $e->errors(),
+                'input'  => $request->except('image'),
+                'company_id' => Auth::user()->company_id,
+            ]);
+            throw $e;
+        }
 
         try {
             return DB::transaction(function () use ($request) {
