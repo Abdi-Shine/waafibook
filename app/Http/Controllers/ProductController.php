@@ -138,30 +138,21 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
-        try {
-            $request->validate([
-                'product_name'  => [
-                    'required', 'string', 'max:255',
-                    Rule::unique('products')->where('company_id', Auth::user()->company_id),
-                ],
-                'product_code'  => 'nullable|string|unique:products,product_code',
-                'category_id'   => 'nullable|exists:categories,id',
-                'selling_price' => 'required|numeric|min:0',
-                'purchase_price'=> 'nullable|numeric|min:0',
-                'stock_products'=> 'nullable|numeric|min:0',
-                'branch_id'     => 'nullable|exists:branches,id',
-                'product_type'  => 'required|in:product,service',
-            ], [
-                'product_name.unique' => 'A product with this name already exists.',
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::warning('TEMP DIAG product.store validation failed', [
-                'errors' => $e->errors(),
-                'input'  => $request->except('image'),
-                'company_id' => Auth::user()->company_id,
-            ]);
-            throw $e;
-        }
+        $request->validate([
+            'product_name'  => [
+                'required', 'string', 'max:255',
+                Rule::unique('products')->where('company_id', Auth::user()->company_id),
+            ],
+            'product_code'  => 'nullable|string|unique:products,product_code',
+            'category_id'   => 'nullable|exists:categories,id',
+            'selling_price' => 'required|numeric|min:0',
+            'purchase_price'=> 'nullable|numeric|min:0',
+            'stock_products'=> 'nullable|numeric|min:0',
+            'branch_id'     => 'nullable|exists:branches,id',
+            'product_type'  => 'required|in:product,service',
+        ], [
+            'product_name.unique' => 'A product with this name already exists.',
+        ]);
 
         try {
             return DB::transaction(function () use ($request) {
@@ -177,7 +168,14 @@ class ProductController extends Controller
             }
 
             unset($data['stock_products'], $data['location_type'], $data['branch_id'], $data['store_id'], $data['status'], $data['brand_id'], $data['secondary_unit'], $data['account_type']);
-            
+
+            // purchase_price is a nullable *validation* rule (services have no
+            // cost input on mobile), but the column itself is NOT NULL —
+            // ConvertEmptyStringsToNull turns a blank submitted value into an
+            // explicit null, which bypasses the column's 0.00 default and
+            // fails the insert outright. Coalesce here instead.
+            $data['purchase_price'] = $data['purchase_price'] ?? 0;
+
             $data['created_by'] = Auth::id();
             $data['company_id'] = Auth::user()->company_id;
 
@@ -380,6 +378,11 @@ class ProductController extends Controller
 
         $data = $request->all();
         unset($data['stock_products'], $data['location_type'], $data['branch_id'], $data['store_id'], $data['status'], $data['brand_id'], $data['secondary_unit'], $data['account_type']);
+
+        // Same NOT-NULL/empty-string gap as store() — see comment there.
+        if (array_key_exists('purchase_price', $data)) {
+            $data['purchase_price'] = $data['purchase_price'] ?? 0;
+        }
 
         if ($request->file('image')) {
             if ($product->image && file_exists(public_path($product->image))) {
