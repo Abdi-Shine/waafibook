@@ -21,7 +21,7 @@ class LoanController extends Controller
         return $map[$company->currency ?? ''] ?? ($company->currency ?? '$');
     }
 
-    public function viewLoan()
+    public function viewLoan(Request $request)
     {
         $company  = Company::find(auth()->user()->company_id);
         $currency = $this->currencySymbol();
@@ -45,6 +45,18 @@ class LoanController extends Controller
         $totalRecovered = $loans->whereIn('status', ['active', 'settled'])->sum('recovered');
         $totalDisbursed = $loans->whereIn('status', ['active', 'settled'])->sum('amount');
         $recoveryRate   = $totalDisbursed > 0 ? round(($totalRecovered / $totalDisbursed) * 100, 1) : 0;
+
+        $isMobile = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $request->userAgent() ?? '')
+            || $request->header('Sec-CH-UA-Mobile') === '?1'
+            || $request->boolean('mobile');
+
+        if ($isMobile) {
+            return view('frontend.expense.cash_loan_pwa', compact(
+                'employees', 'loans', 'activeLoans', 'pendingLoans', 'settledLoans',
+                'totalOutstanding', 'activeCount', 'thisMonthValue', 'thisMonthCount',
+                'pendingCount', 'pendingValue', 'totalRecovered', 'recoveryRate', 'currency'
+            ));
+        }
 
         return view('frontend.expense.cash_loan', compact(
             'employees', 'loans', 'activeLoans', 'pendingLoans', 'settledLoans',
