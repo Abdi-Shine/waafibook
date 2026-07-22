@@ -24,7 +24,7 @@ class ExpenseController extends Controller
         return $map[$company->currency ?? ''] ?? ($company->currency ?? '$');
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $company = Company::find(auth()->user()->company_id);
         $curr = $this->currencySymbol();
@@ -42,6 +42,14 @@ class ExpenseController extends Controller
                                ->where('type', '!=', 'parent')
                                ->orderBy('name')
                                ->get(['id', 'name', 'code', 'branch_id']);
+
+        $isMobile = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $request->userAgent() ?? '')
+            || $request->header('Sec-CH-UA-Mobile') === '?1'
+            || $request->boolean('mobile');
+
+        if ($isMobile) {
+            return view('frontend.expense.add_all_expenses_pwa', compact('curr', 'expenseAccounts', 'expenses', 'bills', 'branches', 'bankAccounts'));
+        }
 
         return view('frontend.expense.add_all_expenses', compact('curr', 'expenseAccounts', 'expenses', 'bills', 'branches', 'bankAccounts'));
     }
