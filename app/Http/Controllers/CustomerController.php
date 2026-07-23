@@ -131,39 +131,65 @@ class CustomerController extends Controller
         if ($request->hasFile('csv_file')) {
             $file = $request->file('csv_file');
             $handle = fopen($file->getPathname(), "r");
-            
+
             // Read header row
             $header = fgetcsv($handle, 1000, ",");
 
             $account = Account::query()->where('name', 'like', '%Receivable%')->first();
-            
+
             $totalBalance = 0;
-            $nextId = (Customer::query()->max('id') ?? 0) + 1;
+            $importedCount = 0;
+            $errors = [];
+            $rowNum = 1;
 
             while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+                $rowNum++;
                 $name = trim($data[0] ?? '');
                 if (empty($name)) continue;
 
-                $balance = isset($data[5]) ? (float) $data[5] : 0;
+                try {
+                    $balance = isset($data[5]) ? (float) $data[5] : 0;
 
-                $customer = Customer::query()->create([
-                    'name'          => $name,
-                    'email'         => $data[1] ?? null,
-                    'phone'         => $data[2] ?? null,
-                    'customer_type' => strtolower($data[3] ?? 'individual') === 'business' ? 'company' : strtolower($data[3] ?? 'individual'),
-                    'address'       => $data[4] ?? null,
-                    'amount_balance' => $balance,
-                    'account_id'    => $account?->id,
-                    'account_type'  => $account?->type,
-                    'account_code'  => $account?->code,
-                    'customer_code' => 'CUS-' . date('Y') . '-' . str_pad($nextId++, 3, '0', STR_PAD_LEFT),
-                ]);
+                    // customer_type is a strict enum('individual','company')
+                    // NOT NULL column. A blank "Type" cell in the CSV isn't
+                    // caught by `?? 'individual'` (that only covers a missing
+                    // column, not an empty string), so it used to insert ''
+                    // and violate the enum — killing the whole import with
+                    // an uncaught 500 partway through the file.
+                    $rawType = strtolower(trim($data[3] ?? ''));
+                    $customerType = $rawType === 'business' ? 'company' : ($rawType === 'company' ? 'company' : 'individual');
 
-                if ($balance != 0) {
-                    $this->postOpeningBalanceEntry($customer, $balance);
+                    $customer = Customer::query()->create([
+                        'name'          => $name,
+                        'email'         => $data[1] ?? null,
+                        'phone'         => $data[2] ?? null,
+                        'customer_type' => $customerType,
+                        'address'       => $data[4] ?? null,
+                        'amount_balance' => $balance,
+                        'account_id'    => $account?->id,
+                        'account_type'  => $account?->type,
+                        'account_code'  => $account?->code,
+                        // Placeholder satisfies the unique (company_id, customer_code)
+                        // index; replaced with a real ID-based code right after
+                        // creation, exactly like Product's product_code — a
+                        // pre-computed counter here previously risked colliding
+                        // with an existing code (gaps from deletions, concurrent
+                        // imports, etc.) and crashing the whole import.
+                        'customer_code' => 'CUS-PENDING-' . uniqid(),
+                    ]);
+                    $customer->update([
+                        'customer_code' => 'CUS-' . date('Y') . '-' . str_pad($customer->id, 3, '0', STR_PAD_LEFT),
+                    ]);
+
+                    if ($balance != 0) {
+                        $this->postOpeningBalanceEntry($customer, $balance);
+                    }
+
+                    $totalBalance += $balance;
+                    $importedCount++;
+                } catch (\Exception $rowException) {
+                    $errors[] = "Row {$rowNum}: " . $rowException->getMessage();
                 }
-
-                $totalBalance += $balance;
             }
             fclose($handle);
 
@@ -171,7 +197,13 @@ class CustomerController extends Controller
                 $account->increment('balance', $totalBalance);
             }
 
-            return redirect()->back()->with('success', 'Customers imported successfully!');
+            $message = "Imported {$importedCount} customer" . ($importedCount === 1 ? '' : 's') . '.';
+            if ($errors) {
+                $message .= ' Skipped ' . count($errors) . ': ' . implode(' ', array_slice($errors, 0, 5));
+                return redirect()->back()->with('error', $message);
+            }
+
+            return redirect()->back()->with('success', $message);
         }
 
         return redirect()->back()->with('error', 'Please upload a valid CSV file.');
