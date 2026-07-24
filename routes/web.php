@@ -20,6 +20,12 @@ Route::get('/invoice/{id}/view', [App\Http\Controllers\SalesController::class, '
     ->name('sales.invoice.public-pdf')
     ->middleware('signed');
 
+// Public, signed link to a nicer web view of the invoice (vs. the PDF above) — opens
+// instantly in-browser when shared via WhatsApp instead of triggering a download.
+Route::get('/invoice/{id}/share', [App\Http\Controllers\SalesController::class, 'publicShare'])
+    ->name('sales.invoice.public-share')
+    ->middleware('signed');
+
 // Public link so a customer can open their statement PDF from WhatsApp without logging in.
 Route::get('/statement/{id}/view', [App\Http\Controllers\CustomerController::class, 'publicStatement'])
     ->name('customer.statement.public-pdf');

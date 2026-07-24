@@ -730,6 +730,21 @@ class SalesController extends Controller
         return $pdf->stream('Invoice_' . $order->invoice_no . '.pdf');
     }
 
+    // Same public/signed access as publicPdf() above, but renders straight to a
+    // mobile-friendly web page instead of a PDF — opens instantly from a WhatsApp
+    // link rather than triggering a download.
+    public function publicShare($id)
+    {
+        /** @var SalesOrder|null $order */
+        $order   = SalesOrder::withoutGlobalScopes()->with('customer', 'items')->findOrFail($id);
+        /** @var Company|null $company */
+        $company = Company::find($order->company_id);
+
+        $pdfUrl = \App\Support\PublicUrl::temporarySigned('sales.invoice.public-pdf', now()->addDays(7), ['id' => $order->id]);
+
+        return view('frontend.parties.Customer_share_invoice_pwa', compact('order', 'company', 'pdfUrl'));
+    }
+
     // ─── UPDATE STATUS ───────────────────────────────────────────────────────
 
     public function updateStatus(Request $request, $id)

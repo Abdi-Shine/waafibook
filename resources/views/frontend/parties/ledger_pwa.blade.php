@@ -246,6 +246,13 @@
         const co    = this.companyName;
         const total = parseFloat(txn.total).toFixed(2);
 
+        if (txn.type === 'Sale' && txn.share_url) {
+            const msg = 'Dear ' + name + ',\n\nPlease find your invoice ' + (txn.number ? '(' + txn.number + ') ' : '')
+                + 'with *' + co + '* at the link below:\n\n' + txn.share_url + '\n\nThank you for your business!';
+            this.openWhatsApp('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg));
+            return;
+        }
+
         let msg = 'Dear ' + name + ',\n\nHere are the details of your ' + txn.type
             + (txn.number ? ' (' + txn.number + ')' : '') + ' with *' + co + '*:\n\n'
             + 'Date: ' + txn.date + '\nTotal: $' + total;
