@@ -26,6 +26,14 @@
             this.form.amount = this.supplierBalance.toFixed(2);
         }
     },
+    init() {
+        const deepLinkVendorId = '{{ (int) request('vendor_id') }}';
+        if (deepLinkVendorId && deepLinkVendorId !== '0') {
+            this.form.vendor_id = deepLinkVendorId;
+            this.onSupplierSelect();
+            this.showModal = true;
+        }
+    },
     deletePayment(id) {
         deleteRecordWithPassword('{{ url('/payment-out/delete') }}/' + id, 'this payment voucher', {
             title: 'Delete Payment Voucher?',

@@ -25,6 +25,14 @@
             this.form.amount = this.customerBalance.toFixed(2);
         }
     },
+    init() {
+        const deepLinkCustomerId = '{{ (int) request('customer_id') }}';
+        if (deepLinkCustomerId && deepLinkCustomerId !== '0') {
+            this.form.customer_id = deepLinkCustomerId;
+            this.onCustomerSelect();
+            this.showModal = true;
+        }
+    },
     sendWhatsApp(receiptNo, customer, phone, date, amount, companyName, companyPhone, companyEmail) {
         let message = `*${companyName}*\n\n`;
         message += `*Rasiidka Lacag Bixinta*\n`;
