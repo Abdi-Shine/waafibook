@@ -103,10 +103,39 @@
 
     printTransaction(txn) {
         const isSupplier = this.ledger.party.type === 'supplier';
+
+        // Sale and Opening Balance resolve to public, no-login links (the
+        // invoice share page and the party statement) — safe to hand
+        // straight to a customer over WhatsApp. Every other type here
+        // (Purchase, Payment-In/Out, Credit/Debit Note) only has an
+        // internal, authenticated URL, so those stay a plain "view" open
+        // instead — sharing a login-walled link with a customer would
+        // just be a dead end for them.
+        let shareUrl = null;
+        if (txn.type === 'Sale' && txn.share_url) {
+            shareUrl = txn.share_url;
+        } else if (txn.type === 'Opening Balance') {
+            shareUrl = isSupplier
+                ? '{{ url('/supplier-statement') }}/' + this.ledger.party.id + '/view'
+                : '{{ url('/statement') }}/' + this.ledger.party.id + '/view';
+        }
+
+        if (shareUrl) {
+            const phone = this.normalizePhone(this.ledger.party.phone);
+            if (!phone) {
+                Swal.fire({ icon: 'warning', title: 'No Phone Number', text: 'This party has no phone number saved. Please add one first.' });
+                return;
+            }
+            const name = this.ledger.party.name;
+            const co   = this.companyName;
+            const label = txn.type === 'Sale' ? 'invoice' : 'statement';
+            const msg = 'Dear ' + name + ',\n\nPlease find your ' + label + ' with *' + co + '* at the link below:\n\n' + shareUrl + '\n\nThank you for your business!';
+            this.openWhatsApp('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg));
+            return;
+        }
+
         let url = null;
-        if (txn.type === 'Sale' && txn.id) {
-            url = '{{ url('/sales/invoices') }}/' + txn.id + '/pdf';
-        } else if (txn.type === 'Purchase' && txn.id) {
+        if (txn.type === 'Purchase' && txn.id) {
             url = '{{ url('/purchase/bills') }}/' + txn.id;
         } else if (txn.type === 'Payment-In' && txn.id) {
             url = '{{ url('/payment-in/download') }}/' + txn.id;
@@ -116,12 +145,6 @@
             url = '{{ url('/sales-return') }}/' + txn.id + '/pdf';
         } else if (txn.type === 'Debit Note' && txn.id) {
             url = '{{ url('/purchase/returns') }}/' + txn.id + '/pdf';
-        } else if (txn.type === 'Opening Balance') {
-            // No standalone document for a balance carry-forward — the
-            // closest professional artifact is the party's own statement.
-            url = isSupplier
-                ? '{{ url('/supplier-statement') }}/' + this.ledger.party.id + '/view'
-                : '{{ url('/statement') }}/' + this.ledger.party.id + '/view';
         }
         if (!url) { window.print(); return; }
         this.openWhatsApp(url);
@@ -480,8 +503,8 @@
 
                                 <div class="ml-auto flex items-center gap-0.5">
                                     <button @click="printTransaction(txn)"
-                                        class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-primary rounded-lg transition-colors">
-                                        <i class="bi bi-file-earmark-pdf text-[16px]"></i>
+                                        class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-green-600 rounded-lg transition-colors">
+                                        <i class="bi bi-whatsapp text-[16px]"></i>
                                     </button>
                                     <button @click="shareTransaction(txn)"
                                         class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-green-600 rounded-lg transition-colors">
