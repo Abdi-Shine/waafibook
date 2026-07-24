@@ -101,36 +101,40 @@
         }
     },
 
-    printTransaction(txn) {
+    async printTransaction(txn) {
         const isSupplier = this.ledger.party.type === 'supplier';
+        const name = this.ledger.party.name;
+        const co   = this.companyName;
 
-        // Sale and Opening Balance resolve to public, no-login links (the
-        // invoice share page and the party statement) — safe to hand
-        // straight to a customer over WhatsApp. Every other type here
-        // (Purchase, Payment-In/Out, Credit/Debit Note) only has an
-        // internal, authenticated URL, so those stay a plain view open
-        // instead — sharing a login-walled link with a customer would
-        // just be a dead end for them.
-        let shareUrl = null;
-        if (txn.type === 'Sale' && txn.share_url) {
-            shareUrl = txn.share_url;
+        // Sale and Opening Balance are the only types with a real, public
+        // (no-login) PDF — the invoice and the party statement — so those
+        // are the only ones worth handing over as an actual attached
+        // document. Everything else here (Purchase, Payment-In/Out,
+        // Credit/Debit Note) only has an internal, authenticated URL, so
+        // those stay a plain view open instead — sharing a login-walled
+        // link with a customer would just be a dead end for them.
+        let pdfUrl = null, filename = null, caption = null;
+        if (txn.type === 'Sale' && txn.pdf_url) {
+            pdfUrl = txn.pdf_url;
+            filename = 'Invoice_' + (txn.number || 'invoice') + '.pdf';
+            caption = 'Dear ' + name + ',\n\nThanks for doing business with us. Below are your invoice(s) details. Please find the invoice attached for your reference.\n\n'
+                + 'Invoice Amount: $' + parseFloat(txn.total).toFixed(2) + '\n'
+                + 'Invoice Number: ' + txn.number + '\n'
+                + 'Invoice Date: ' + txn.date + '\n\n'
+                + 'Thank you,\n' + co;
         } else if (txn.type === 'Opening Balance') {
-            shareUrl = isSupplier
+            pdfUrl = isSupplier
                 ? '{{ url('/supplier-statement') }}/' + this.ledger.party.id + '/view'
                 : '{{ url('/statement') }}/' + this.ledger.party.id + '/view';
+            filename = 'Statement_' + name + '.pdf';
+            caption = 'Dear ' + name + ',\n\nThanks for doing business with us. Please find your account statement attached for your reference.\n\n'
+                + 'Statement Balance: $' + parseFloat(txn.balance).toFixed(2) + '\n'
+                + 'Statement Date: ' + txn.date + '\n\n'
+                + 'Thank you,\n' + co;
         }
 
-        if (shareUrl) {
-            const phone = this.normalizePhone(this.ledger.party.phone);
-            if (!phone) {
-                Swal.fire({ icon: 'warning', title: 'No Phone Number', text: 'This party has no phone number saved. Please add one first.' });
-                return;
-            }
-            const name = this.ledger.party.name;
-            const co   = this.companyName;
-            const label = txn.type === 'Sale' ? 'invoice' : 'statement';
-            const msg = 'Dear ' + name + ',\n\nPlease find your ' + label + ' with *' + co + '* at the link below:\n\n' + shareUrl + '\n\nThank you for your business!';
-            this.openWhatsApp('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg));
+        if (pdfUrl) {
+            await this.shareDocument(pdfUrl, filename, caption);
             return;
         }
 
@@ -148,6 +152,29 @@
         }
         if (!url) { window.print(); return; }
         this.openWhatsApp(url);
+    },
+
+    // Attaches the actual PDF to the phone's native share sheet (so
+    // WhatsApp — or any app — gets the real document, not just a link).
+    // Falls back to the old link-in-a-wa.me-message approach on browsers
+    // that don't support sharing files (desktop, older mobile browsers).
+    async shareDocument(url, filename, caption) {
+        try {
+            const res = await fetch(url);
+            const blob = await res.blob();
+            const file = new File([blob], filename, { type: 'application/pdf' });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({ files: [file], text: caption });
+                return;
+            }
+        } catch (e) { /* fall through to the link-based share below */ }
+
+        const phone = this.normalizePhone(this.ledger.party.phone);
+        if (!phone) {
+            Swal.fire({ icon: 'warning', title: 'No Phone Number', text: 'This party has no phone number saved. Please add one first.' });
+            return;
+        }
+        this.openWhatsApp('https://wa.me/' + phone + '?text=' + encodeURIComponent(caption + '\n\n' + url));
     },
 
     deleteTransaction(txn) {

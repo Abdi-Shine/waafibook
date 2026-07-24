@@ -142,6 +142,7 @@ class PartiesController extends Controller
             'balance'    => (float) $o->due_amount,
             'status'     => $statusLabels[$o->status] ?? ucfirst($o->status),
             'share_url'  => \App\Support\PublicUrl::temporarySigned('sales.invoice.public-share', now()->addDays(7), ['id' => $o->id]),
+            'pdf_url'    => \App\Support\PublicUrl::temporarySigned('sales.invoice.public-pdf', now()->addDays(7), ['id' => $o->id]),
         ]);
 
         $payments = PaymentIn::query()->where('customer_id', $id)->get()->map(function($p) use ($fmt) {
