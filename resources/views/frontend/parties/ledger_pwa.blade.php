@@ -108,7 +108,7 @@
         // invoice share page and the party statement) — safe to hand
         // straight to a customer over WhatsApp. Every other type here
         // (Purchase, Payment-In/Out, Credit/Debit Note) only has an
-        // internal, authenticated URL, so those stay a plain "view" open
+        // internal, authenticated URL, so those stay a plain view open
         // instead — sharing a login-walled link with a customer would
         // just be a dead end for them.
         let shareUrl = null;
