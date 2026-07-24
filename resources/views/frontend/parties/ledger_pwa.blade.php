@@ -101,6 +101,32 @@
         }
     },
 
+    printTransaction(txn) {
+        const isSupplier = this.ledger.party.type === 'supplier';
+        let url = null;
+        if (txn.type === 'Sale' && txn.id) {
+            url = '{{ url('/sales/invoices') }}/' + txn.id + '/pdf';
+        } else if (txn.type === 'Purchase' && txn.id) {
+            url = '{{ url('/purchase/bills') }}/' + txn.id;
+        } else if (txn.type === 'Payment-In' && txn.id) {
+            url = '{{ url('/payment-in/download') }}/' + txn.id;
+        } else if (txn.type === 'Payment-Out' && txn.id) {
+            url = '{{ url('/payment-out/download') }}/' + txn.id;
+        } else if (txn.type === 'Credit Note' && txn.id) {
+            url = '{{ url('/sales-return') }}/' + txn.id + '/pdf';
+        } else if (txn.type === 'Debit Note' && txn.id) {
+            url = '{{ url('/purchase/returns') }}/' + txn.id + '/pdf';
+        } else if (txn.type === 'Opening Balance') {
+            // No standalone document for a balance carry-forward — the
+            // closest professional artifact is the party's own statement.
+            url = isSupplier
+                ? '{{ url('/supplier-statement') }}/' + this.ledger.party.id + '/view'
+                : '{{ url('/statement') }}/' + this.ledger.party.id + '/view';
+        }
+        if (!url) { window.print(); return; }
+        this.openWhatsApp(url);
+    },
+
     deleteTransaction(txn) {
         const isSupplier = this.ledger.party.type === 'supplier';
         let url = null;
@@ -446,9 +472,9 @@
                                 </div>
 
                                 <div class="ml-auto flex items-center gap-0.5">
-                                    <button @click="window.print()"
+                                    <button @click="printTransaction(txn)"
                                         class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-primary rounded-lg transition-colors">
-                                        <i class="bi bi-printer text-[16px]"></i>
+                                        <i class="bi bi-file-earmark-pdf text-[16px]"></i>
                                     </button>
                                     <button @click="shareTransaction(txn)"
                                         class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-green-600 rounded-lg transition-colors">
