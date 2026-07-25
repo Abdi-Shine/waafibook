@@ -736,13 +736,53 @@ class SalesController extends Controller
     public function publicShare($id)
     {
         /** @var SalesOrder|null $order */
-        $order   = SalesOrder::withoutGlobalScopes()->with('customer', 'items')->findOrFail($id);
+        $order   = SalesOrder::withoutGlobalScopes()->with('customer.orders', 'customer.payments', 'items')->findOrFail($id);
         /** @var Company|null $company */
         $company = Company::find($order->company_id);
+        $customer = $order->customer;
+
+        // Previous/Current Balance are the customer's running account balance
+        // immediately before and after this specific invoice — reconstructed
+        // the same way the Customer Statement page does, since the customer's
+        // amount_balance column only reflects the balance as of *now*, not as
+        // of this invoice's own place in their history.
+        $previousBalance = 0.0;
+        $currentBalance  = (float) ($customer->amount_balance ?? 0);
+
+        if ($customer) {
+            $entries = collect();
+            foreach ($customer->orders as $o) {
+                $entries->push(['ts' => $o->created_at->timestamp, 'ref' => $o->invoice_no, 'debit' => (float) $o->total_amount, 'credit' => 0]);
+                if ($o->paid_amount > 0) {
+                    $entries->push(['ts' => $o->created_at->timestamp + 1, 'ref' => $o->invoice_no . '-PAY', 'debit' => 0, 'credit' => (float) $o->paid_amount]);
+                }
+            }
+            foreach ($customer->payments as $p) {
+                $ts = $p->created_at ? $p->created_at->timestamp : \Carbon\Carbon::parse($p->payment_date)->timestamp;
+                $entries->push(['ts' => $ts, 'ref' => $p->receipt_no, 'debit' => 0, 'credit' => (float) $p->amount]);
+            }
+
+            $sorted = $entries->sortBy('ts')->values();
+            $runningBalance = $customer->amount_balance - $sorted->sum('debit') + $sorted->sum('credit');
+
+            $matched = false;
+            foreach ($sorted as $entry) {
+                $isThisOrder = $entry['ref'] === $order->invoice_no || $entry['ref'] === $order->invoice_no . '-PAY';
+                if ($isThisOrder && !$matched) {
+                    $previousBalance = $runningBalance;
+                    $matched = true;
+                }
+                $runningBalance += $entry['debit'];
+                $runningBalance -= $entry['credit'];
+                if ($isThisOrder) {
+                    $currentBalance = $runningBalance;
+                }
+            }
+        }
 
         $pdfUrl = \App\Support\PublicUrl::temporarySigned('sales.invoice.public-pdf', now()->addDays(7), ['id' => $order->id]);
 
-        return view('frontend.parties.Customer_share_invoice_pwa', compact('order', 'company', 'pdfUrl'));
+        return view('frontend.parties.Customer_share_invoice_pwa', compact('order', 'company', 'pdfUrl', 'previousBalance', 'currentBalance'));
     }
 
     // ─── UPDATE STATUS ───────────────────────────────────────────────────────
