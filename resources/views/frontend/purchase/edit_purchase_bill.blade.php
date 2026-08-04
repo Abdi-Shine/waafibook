@@ -556,16 +556,18 @@ let rowCounter = 0;
 let discountFocus = 'amt'; // 'pct' or 'amt'
 
 // Dropdown row: name + phone stacked on the left, balance (green for
-// Customer, red for Supplier) on the right. Built with .text() (not
-// string-interpolated HTML) so a party name/phone can never inject
-// markup into the page.
+// Customer, red for Supplier) plus a direction badge (↙ receivable,
+// ↗ payable) on the right. Built with .text() (not string-interpolated
+// HTML) so a party name/phone can never inject markup into the page.
 function formatPartyOption(state) {
     if (!state.id) return state.text;
     const el = $(state.element);
     const phone = el.data('phone') || '';
     const bal = parseFloat(el.data('balance')) || 0;
     const partyType = el.data('partyType') || '';
-    const colorClass = partyType === 'customer' ? 'text-accent' : (partyType === 'supplier' ? 'text-red-600' : 'text-gray-500');
+    const isCustomer = partyType === 'customer';
+    const isSupplier = partyType === 'supplier';
+    const colorClass = isCustomer ? 'text-accent' : (isSupplier ? 'text-red-600' : 'text-gray-500');
 
     const $row = $('<div class="flex items-center justify-between gap-3 py-0.5"></div>');
     const $left = $('<div class="min-w-0"></div>');
@@ -574,10 +576,19 @@ function formatPartyOption(state) {
         $('<div class="text-[11px] text-gray-400"></div>').text(phone).appendTo($left);
     }
     $row.append($left);
-    $('<div class="text-[12px] font-bold shrink-0"></div>')
+
+    const $right = $('<div class="flex items-center gap-1.5 shrink-0"></div>');
+    $('<span class="text-[12px] font-bold"></span>')
         .addClass(colorClass)
         .text(bal.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: 2 }))
-        .appendTo($row);
+        .appendTo($right);
+    if (isCustomer || isSupplier) {
+        $('<span class="w-5 h-5 rounded flex items-center justify-center text-white"></span>')
+            .addClass(isCustomer ? 'bg-accent' : 'bg-red-500')
+            .append($('<i class="bi text-[10px]"></i>').addClass(isCustomer ? 'bi-arrow-down-left' : 'bi-arrow-up-right'))
+            .appendTo($right);
+    }
+    $row.append($right);
     return $row;
 }
 
