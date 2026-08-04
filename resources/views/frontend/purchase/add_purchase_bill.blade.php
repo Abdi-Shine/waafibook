@@ -673,14 +673,20 @@
                     const ph = el.data('phone') || '';
                     const name = el.data('name') || '';
                     const bal = parseFloat(el.data('balance')) || 0;
+                    const partyType = el.data('partyType') || '';
 
                     // Populate Phone No.
                     document.getElementById('billingName').value = ph;
 
-                    // Party Balance display
+                    // Party Balance display — green for a Customer, red for a Supplier
+                    const balWrap = document.getElementById('balDisplayWrapper');
                     const balDiv = document.getElementById('partyBalanceDisplay');
                     if (balDiv) {
                         balDiv.textContent = bal.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+                    }
+                    if (balWrap) {
+                        balWrap.classList.toggle('text-accent', partyType === 'customer');
+                        balWrap.classList.toggle('text-red-600', partyType === 'supplier');
                     }
 
                     window._customerPrevBalance = bal;
@@ -688,8 +694,13 @@
 
                 }).on('select2:clear', () => {
                     document.getElementById('billingName').value = '';
+                    const balWrap = document.getElementById('balDisplayWrapper');
                     const balDiv = document.getElementById('partyBalanceDisplay');
                     if (balDiv) balDiv.textContent = '0.00';
+                    if (balWrap) {
+                        balWrap.classList.remove('text-red-600');
+                        balWrap.classList.add('text-accent');
+                    }
                     window._customerPrevBalance = 0;
                     recalcAll();
                 });

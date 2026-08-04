@@ -495,6 +495,14 @@ $(document).ready(function() {
     // directly here from the bill's own supplier instead of relying on it.
     document.getElementById('billingName').value = {!! json_encode($bill->supplier->phone ?? '') !!};
     const partyBalanceDisplay = document.getElementById('partyBalanceDisplay');
+    const balDisplayWrapper = document.getElementById('balDisplayWrapper');
+    if (balDisplayWrapper) {
+        // A bill's supplier_id always points at a real Supplier row (even when
+        // originally picked from the Customers group), so on initial load this
+        // is always the Supplier color.
+        balDisplayWrapper.classList.remove('text-accent');
+        balDisplayWrapper.classList.add('text-red-600');
+    }
     if (partyBalanceDisplay) {
         const supplierBal = parseFloat({{ $bill->supplier->amount_balance ?? 0 }}) || 0;
         partyBalanceDisplay.textContent = supplierBal.toLocaleString('en', {minimumFractionDigits:0, maximumFractionDigits:2});
@@ -558,14 +566,20 @@ $(document).ready(function() {
         const ph   = el.data('phone')   || '';
         const name = el.data('name')    || '';
         const bal  = parseFloat(el.data('balance')) || 0;
+        const partyType = el.data('partyType') || '';
 
         // Populate Phone No.
         document.getElementById('billingName').value = ph;
 
-        // Party Balance display
+        // Party Balance display — green for a Customer, red for a Supplier
+        const balWrap = document.getElementById('balDisplayWrapper');
         const balDiv = document.getElementById('partyBalanceDisplay');
         if (balDiv) {
             balDiv.textContent = bal.toLocaleString('en', {minimumFractionDigits:0, maximumFractionDigits:2});
+        }
+        if (balWrap) {
+            balWrap.classList.toggle('text-accent', partyType === 'customer');
+            balWrap.classList.toggle('text-red-600', partyType === 'supplier');
         }
 
         window._customerPrevBalance = bal;
@@ -573,8 +587,13 @@ $(document).ready(function() {
 
     }).on('select2:clear', () => {
         document.getElementById('billingName').value = '';
+        const balWrap = document.getElementById('balDisplayWrapper');
         const balDiv = document.getElementById('partyBalanceDisplay');
         if (balDiv) balDiv.textContent = '0.00';
+        if (balWrap) {
+            balWrap.classList.remove('text-red-600');
+            balWrap.classList.add('text-accent');
+        }
         window._customerPrevBalance = 0;
         recalcAll();
     });
