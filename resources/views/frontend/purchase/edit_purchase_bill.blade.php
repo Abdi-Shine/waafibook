@@ -56,12 +56,22 @@
                             <select id="supplierSelect" name="supplier_id"
                                 class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer">
                                 <option value=""></option>
-                                @foreach($suppliers as $s)
-                                    <option value="{{ $s->id }}" data-phone="{{ $s->phone }}"
-                                        data-balance="{{ $s->amount_balance ?? 0 }}" data-name="{{ $s->name }}">
-                                        {{ $s->name }}
-                                    </option>
-                                @endforeach
+                                <optgroup label="Suppliers">
+                                    @foreach($suppliers as $s)
+                                        <option value="sup_{{ $s->id }}" data-party-type="supplier" data-phone="{{ $s->phone }}"
+                                            data-balance="{{ $s->amount_balance ?? 0 }}" data-name="{{ $s->name }}">
+                                            {{ $s->name }}
+                                        </option>
+                                    @endforeach
+                                </optgroup>
+                                <optgroup label="Customers">
+                                    @foreach($customers as $c)
+                                        <option value="cus_{{ $c->id }}" data-party-type="customer" data-phone="{{ $c->phone }}"
+                                            data-balance="{{ $c->amount_balance ?? 0 }}" data-name="{{ $c->name }}">
+                                            {{ $c->name }}
+                                        </option>
+                                    @endforeach
+                                </optgroup>
                             </select>
                         </div>
                         <div class="mt-1 px-1 flex items-center justify-between">
@@ -474,8 +484,10 @@ function handleTargetLocationItemChange() {
 
 $(document).ready(function() {
     // --- PRE-FILL DATA ---
-    // Pre-fill Supplier
-    $('#supplierSelect').val('{{ $bill->supplier_id }}').trigger('change');
+    // Pre-fill Supplier (bills are always stored against a real supplier_id,
+    // even when originally picked from the Customers group — see
+    // PurchaseController::resolveSupplierIdFromParty)
+    $('#supplierSelect').val('sup_{{ $bill->supplier_id }}').trigger('change');
 
     // The phone/balance display only updates via the supplierSelect 'change'
     // handler attached in a later $(document).ready block, which isn't
@@ -538,7 +550,7 @@ let discountFocus = 'amt'; // 'pct' or 'amt'
 /* ─────────────────────────── SELECT2 INIT ───────── */
 $(document).ready(function() {
     $('#supplierSelect').select2({
-        placeholder: 'Search supplier…',
+        placeholder: 'Search supplier or customer…',
         allowClear: true,
         width: '100%',
     }).on('select2:select change', function(e) {
@@ -936,8 +948,15 @@ function toggleRowDisc(btn, rn) {
 
 /* ─────────────────────────── SUBMIT ─────────────── */
 function collectFormData(isDraft = false) {
-    const supplierId = document.getElementById('supplierSelect').value;
-    if (!isDraft && !supplierId) { toastError('Please select a supplier.'); return null; }
+    const partyVal = document.getElementById('supplierSelect').value;
+    if (!isDraft && !partyVal) { toastError('Please select a supplier or customer.'); return null; }
+
+    let supplier_id = null, customer_id = null;
+    if (partyVal.startsWith('cus_')) {
+        customer_id = partyVal.slice(4);
+    } else if (partyVal.startsWith('sup_')) {
+        supplier_id = partyVal.slice(4);
+    }
 
     const brId = document.getElementById('branch_id').value;
     if (!isDraft && !brId) { toastError('Please select a branch.'); return null; }
@@ -987,7 +1006,8 @@ function collectFormData(isDraft = false) {
 
     return {
         _token:              CSRF,
-        supplier_id:         supplierId,
+        supplier_id:         supplier_id,
+        customer_id:         customer_id,
         branch_id:           brId || null,
         payment_account_id:  document.getElementById('paymentAccountSelect')?.value || null,
         purchase_type:       document.getElementById('purchase_type').value,
@@ -1095,7 +1115,7 @@ function saveNewSupplier() {
             toastSuccess('New supplier added successfully.');
             
             // Add to Select2 and select it
-            const newOption = new Option(name, res.id, true, true);
+            const newOption = new Option(name, 'sup_' + res.id, true, true);
             $(newOption).data('phone', phone);
             $(newOption).data('balance', balance);
             $(newOption).data('name', name);

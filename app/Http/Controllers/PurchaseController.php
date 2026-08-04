@@ -11,6 +11,7 @@ use App\Models\PurchaseOrderItem;
 use App\Models\PurchaseBill;
 use App\Models\PurchaseBillItem;
 use App\Models\Supplier;
+use App\Models\Customer;
 use App\Models\Branch;
 use App\Models\Product;
 use App\Models\Account;
@@ -350,6 +351,7 @@ class PurchaseController extends Controller
             ->get();
 
         $suppliers = Supplier::query()->where('status', 'active')->get();
+        $customers = Customer::query()->where('status', 'active')->get();
         $branches = Branch::query()->get();
         $products = Product::query()->withSum('stocks', 'quantity')->get();
         $categories = Category::query()->get();
@@ -371,10 +373,10 @@ class PurchaseController extends Controller
             || request()->boolean('mobile');
 
         if ($isMobile) {
-            return view('frontend.purchase.add_purchase_bill_pwa', compact('purchase_no', 'voucher_no', 'suppliers', 'branches', 'products', 'categories', 'company', 'sym', 'curr'));
+            return view('frontend.purchase.add_purchase_bill_pwa', compact('purchase_no', 'voucher_no', 'suppliers', 'customers', 'branches', 'products', 'categories', 'company', 'sym', 'curr'));
         }
 
-        return view('frontend.purchase.add_purchase_bill', compact('purchase_no', 'voucher_no', 'purchaseBills', 'suppliers', 'branches', 'products', 'categories', 'company', 'sym', 'curr', 'accounts'));
+        return view('frontend.purchase.add_purchase_bill', compact('purchase_no', 'voucher_no', 'purchaseBills', 'suppliers', 'customers', 'branches', 'products', 'categories', 'company', 'sym', 'curr', 'accounts'));
     }
 
     public function editBill($id)
@@ -386,10 +388,11 @@ class PurchaseController extends Controller
         $voucher_no = $bill->supplier_invoice_no;
 
         $suppliers = Supplier::query()->where('status', 'active')->get();
+        $customers = Customer::query()->where('status', 'active')->get();
         $branches = Branch::query()->get();
         $products = Product::query()->withSum('stocks', 'quantity')->get();
         $categories = Category::query()->get();
-        
+
         /** @var Company|null $company */
         $company = Company::find(auth()->user()->company_id);
         $currSymbols = ['SAR' => '﷼', 'USD' => '$', 'EUR' => '€', 'GBP' => '£', 'AED' => 'د.إ', 'KWD' => 'د.ك'];
@@ -397,11 +400,13 @@ class PurchaseController extends Controller
         $curr = $sym;
         $accounts = Account::query()->where('is_active', 1)->get();
 
-        return view('frontend.purchase.edit_purchase_bill', compact('bill', 'purchase_no', 'voucher_no', 'suppliers', 'branches', 'products', 'categories', 'company', 'sym', 'curr', 'accounts'));
+        return view('frontend.purchase.edit_purchase_bill', compact('bill', 'purchase_no', 'voucher_no', 'suppliers', 'customers', 'branches', 'products', 'categories', 'company', 'sym', 'curr', 'accounts'));
     }
 
     public function updateBill(Request $request, $id)
     {
+        $request->merge(['supplier_id' => $this->resolveSupplierIdFromParty($request)]);
+
         DB::beginTransaction();
         try {
             /** @var PurchaseBill $bill */
@@ -645,10 +650,12 @@ class PurchaseController extends Controller
     public function storeDraftBill(Request $request)
     {
         try {
+            $resolvedSupplierId = $this->resolveSupplierIdFromParty($request);
+
             $bill = PurchaseBill::query()->create([
                 'bill_number'         => $request->purchase_no ?: ('DRAFT-' . date('YmdHis')),
                 'supplier_invoice_no' => $request->supplier_invoice_no,
-                'supplier_id'         => $request->supplier_id ?: null,
+                'supplier_id'         => $resolvedSupplierId,
                 'branch_id'           => $request->branch_id ?: null,
                 'bill_date'           => $request->purchase_date ?: now()->toDateString(),
                 'due_date'            => $request->expected_delivery ?: null,
@@ -695,11 +702,12 @@ class PurchaseController extends Controller
     {
         try {
             $bill = PurchaseBill::query()->findOrFail($id);
+            $resolvedSupplierId = $this->resolveSupplierIdFromParty($request);
 
             $bill->update([
                 'bill_number'         => $request->purchase_no ?: $bill->bill_number,
                 'supplier_invoice_no' => $request->supplier_invoice_no,
-                'supplier_id'         => $request->supplier_id ?: null,
+                'supplier_id'         => $resolvedSupplierId,
                 'branch_id'           => $request->branch_id ?: null,
                 'bill_date'           => $request->purchase_date ?: now()->toDateString(),
                 'due_date'            => $request->expected_delivery ?: null,
@@ -743,8 +751,52 @@ class PurchaseController extends Controller
         }
     }
 
+    // Purchase bills are always billed against a supplier record (supplier_id
+    // has a hard FK to `suppliers`), but the Supplier & Logistics search box
+    // also lists Customers, since a business sometimes buys from someone
+    // already registered as a customer. When a customer is picked, transparently
+    // find (or create) a mirrored supplier row linked back to that customer via
+    // linked_customer_id, so downstream accounting/ledger code never has to know
+    // the difference.
+    private function resolveSupplierIdFromParty(Request $request): ?int
+    {
+        if ($request->filled('customer_id')) {
+            /** @var Customer $customer */
+            $customer = Customer::query()->findOrFail($request->customer_id);
+
+            /** @var Supplier|null $supplier */
+            $supplier = Supplier::query()->where('linked_customer_id', $customer->id)->first();
+
+            if (!$supplier) {
+                $account = Account::query()->where('name', 'like', '%Payable%')->first();
+                $lastId = Supplier::query()->max('id') ?? 0;
+
+                $supplier = Supplier::query()->create([
+                    'company_id'         => $customer->company_id,
+                    'linked_customer_id' => $customer->id,
+                    'supplier_code'      => 'SUP-' . date('Y') . '-' . str_pad($lastId + 1, 3, '0', STR_PAD_LEFT),
+                    'supplier_type'      => 'individual',
+                    'name'               => $customer->name,
+                    'email'              => $customer->email,
+                    'phone'              => $customer->phone,
+                    'address'            => $customer->address,
+                    'account_id'         => $account->id ?? null,
+                    'account_type'       => $account->type ?? null,
+                    'account_code'       => $account->code ?? null,
+                    'status'             => 'active',
+                ]);
+            }
+
+            return $supplier->id;
+        }
+
+        return $request->filled('supplier_id') ? (int) $request->supplier_id : null;
+    }
+
     public function storeBill(Request $request)
     {
+        $request->merge(['supplier_id' => $this->resolveSupplierIdFromParty($request)]);
+
         DB::beginTransaction();
         try {
             /** @var Supplier|null $supplier */
