@@ -1,5 +1,10 @@
 ﻿@extends('admin.admin_master')
 @section('page_title', 'Supplier Payments')
+
+@push('css')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+@endpush
+
 @section('admin')
 
     @php
@@ -342,7 +347,7 @@
                                                 <option value="">Search Supplier...</option>
                                                 @foreach($suppliers as $supplier)
                                                     <option value="{{ $supplier->id }}"
-                                                        data-balance="{{ $supplier->amount_balance }}" {{ request('vendor_id') == $supplier->id ? 'selected' : '' }}>{{ $supplier->name }}
+                                                        data-balance="{{ $supplier->amount_balance }}" data-phone="{{ $supplier->phone }}" data-party-type="supplier" {{ request('vendor_id') == $supplier->id ? 'selected' : '' }}>{{ $supplier->name }}
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -496,6 +501,8 @@
         </div>
     </div>
 
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         function confirmDeletePayment(url) {
             deleteRecordWithPassword(url, 'this payment voucher', {
@@ -503,6 +510,46 @@
                 text: 'This action is irreversible and will reverse the journal entries.'
             });
         }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Dropdown row: name + phone stacked on the left, balance with a
+            // direction badge on the right — same look as the Purchase Bill /
+            // Sale Invoice / Payment In party pickers. Built with .text() (not
+            // string-interpolated HTML) so a supplier's name/phone can never
+            // inject markup into the page. This list is supplier-only, so the
+            // badge is always the red "money out" arrow.
+            function formatPartyOption(state) {
+                if (!state.id) return state.text;
+                const el = $(state.element);
+                const phone = el.data('phone') || '';
+                const bal = parseFloat(el.data('balance')) || 0;
+
+                const $row = $('<div class="flex items-center justify-between gap-3 py-0.5"></div>');
+                const $left = $('<div class="min-w-0"></div>');
+                $('<div class="text-[13px] font-semibold text-primary-dark truncate"></div>').text(state.text).appendTo($left);
+                if (phone) {
+                    $('<div class="text-[11px] text-gray-400"></div>').text(phone).appendTo($left);
+                }
+                $row.append($left);
+
+                const $right = $('<div class="flex items-center gap-1.5 shrink-0"></div>');
+                $('<span class="text-[12px] font-bold text-red-600"></span>')
+                    .text(bal.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: 2 }))
+                    .appendTo($right);
+                $('<span class="w-5 h-5 rounded flex items-center justify-center text-white bg-red-500"></span>')
+                    .append('<i class="bi bi-arrow-up-right text-[10px]"></i>')
+                    .appendTo($right);
+                $row.append($right);
+                return $row;
+            }
+
+            $('#modalVendorSelect').select2({
+                placeholder: 'Search Supplier...',
+                allowClear: true,
+                width: '100%',
+                templateResult: formatPartyOption,
+            });
+        });
     </script>
 
 @endsection
