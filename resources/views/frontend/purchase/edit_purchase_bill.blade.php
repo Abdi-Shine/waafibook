@@ -555,12 +555,39 @@ $(document).ready(function() {
 let rowCounter = 0;
 let discountFocus = 'amt'; // 'pct' or 'amt'
 
+// Dropdown row: name + phone stacked on the left, balance (green for
+// Customer, red for Supplier) on the right. Built with .text() (not
+// string-interpolated HTML) so a party name/phone can never inject
+// markup into the page.
+function formatPartyOption(state) {
+    if (!state.id) return state.text;
+    const el = $(state.element);
+    const phone = el.data('phone') || '';
+    const bal = parseFloat(el.data('balance')) || 0;
+    const partyType = el.data('partyType') || '';
+    const colorClass = partyType === 'customer' ? 'text-accent' : (partyType === 'supplier' ? 'text-red-600' : 'text-gray-500');
+
+    const $row = $('<div class="flex items-center justify-between gap-3 py-0.5"></div>');
+    const $left = $('<div class="min-w-0"></div>');
+    $('<div class="text-[13px] font-semibold text-primary-dark truncate"></div>').text(state.text).appendTo($left);
+    if (phone) {
+        $('<div class="text-[11px] text-gray-400"></div>').text(phone).appendTo($left);
+    }
+    $row.append($left);
+    $('<div class="text-[12px] font-bold shrink-0"></div>')
+        .addClass(colorClass)
+        .text(bal.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: 2 }))
+        .appendTo($row);
+    return $row;
+}
+
 /* ─────────────────────────── SELECT2 INIT ───────── */
 $(document).ready(function() {
     $('#supplierSelect').select2({
         placeholder: 'Search supplier or customer…',
         allowClear: true,
         width: '100%',
+        templateResult: formatPartyOption,
     }).on('select2:select change', function(e) {
         const el   = $(this).find(':selected');
         const ph   = el.data('phone')   || '';
