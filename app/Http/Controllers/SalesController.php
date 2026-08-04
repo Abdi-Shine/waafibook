@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SalesOrder;
 use App\Models\SalesOrderItem;
 use App\Models\Customer;
+use App\Models\Supplier;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Branch;
@@ -102,7 +103,8 @@ class SalesController extends Controller
     {
         $userBranchId = Auth::user()->getAssignedBranchId();
         $customers  = Customer::query()->orderBy('name')->get();
-        
+        $suppliers  = Supplier::query()->where('status', 'active')->orderBy('name')->get();
+
         $productsQuery = Product::query()->with('category')
                                ->orderBy('product_name');
 
@@ -134,12 +136,12 @@ class SalesController extends Controller
 
         if ($isMobile) {
             return view('frontend.sales.add_invoice_sales_pwa', compact(
-                'customers', 'products', 'categories', 'branches', 'company', 'invoiceNo', 'accounts'
+                'customers', 'suppliers', 'products', 'categories', 'branches', 'company', 'invoiceNo', 'accounts'
             ));
         }
 
         return view('frontend.sales.add_invoice_sales', compact(
-            'customers', 'products', 'categories', 'branches', 'company', 'invoiceNo', 'accounts'
+            'customers', 'suppliers', 'products', 'categories', 'branches', 'company', 'invoiceNo', 'accounts'
         ));
     }
 
@@ -228,6 +230,47 @@ class SalesController extends Controller
         ]);
     }
 
+    // Sale invoices are always billed to a customer record (customer_id is a
+    // FK to `customers`), but the Customer & Sale Info search box also lists
+    // Suppliers, since a business sometimes sells to someone already
+    // registered as a supplier. When a supplier is picked, transparently find
+    // (or create) a mirrored customer row linked back to that supplier via
+    // linked_supplier_id, so downstream accounting/ledger code never has to
+    // know the difference. Mirror of PurchaseController::resolveSupplierIdFromParty.
+    private function resolveCustomerIdFromParty(Request $request): ?int
+    {
+        if ($request->filled('supplier_id')) {
+            /** @var Supplier $supplier */
+            $supplier = Supplier::query()->findOrFail($request->supplier_id);
+
+            /** @var Customer|null $customer */
+            $customer = Customer::query()->where('linked_supplier_id', $supplier->id)->first();
+
+            if (!$customer) {
+                $account = Account::query()->where('name', 'like', '%Receivable%')->first();
+                $lastId = Customer::query()->max('id') ?? 0;
+
+                $customer = Customer::query()->create([
+                    'linked_supplier_id' => $supplier->id,
+                    'customer_code'      => 'CUS-' . date('Y') . '-' . str_pad($lastId + 1, 3, '0', STR_PAD_LEFT),
+                    'customer_type'      => 'individual',
+                    'name'               => $supplier->name,
+                    'email'              => $supplier->email,
+                    'phone'              => $supplier->phone,
+                    'address'            => $supplier->address,
+                    'account_id'         => $account->id ?? null,
+                    'account_type'       => $account->type ?? null,
+                    'account_code'       => $account->code ?? null,
+                    'status'             => 'active',
+                ]);
+            }
+
+            return $customer->id;
+        }
+
+        return $request->filled('customer_id') ? (int) $request->customer_id : null;
+    }
+
     // ─── STORE ───────────────────────────────────────────────────────────────
 
     public function storeDraft(Request $request)
@@ -241,12 +284,13 @@ class SalesController extends Controller
 
             $total     = $subtotal - ($request->discount ?? 0) + ($request->tax ?? 0);
             $invoiceNo = 'DRAFT-' . date('YmdHis');
+            $resolvedCustomerId = $this->resolveCustomerIdFromParty($request);
 
             $order = SalesOrder::query()->create([
                 'invoice_no'         => $invoiceNo,
                 'invoice_date'       => $request->invoice_date ?: now()->toDateString(),
                 'due_date'           => $request->due_date ?: null,
-                'customer_id'        => $request->customer_id ?: null,
+                'customer_id'        => $resolvedCustomerId,
                 'branch_id'          => $request->branch_id ?: null,
                 'subtotal'           => $subtotal,
                 'discount'           => $request->discount ?? 0,
@@ -302,6 +346,8 @@ class SalesController extends Controller
     public function store(Request $request)
     {
         $cid = auth()->user()->company_id;
+
+        $request->merge(['customer_id' => $this->resolveCustomerIdFromParty($request)]);
 
         $request->validate([
             'customer_id'            => 'nullable|exists:customers,id',
@@ -445,7 +491,8 @@ class SalesController extends Controller
         /** @var SalesOrder|null $order */
         $order      = SalesOrder::query()->with('items')->findOrFail($id);
         $customers  = Customer::query()->orderBy('name')->get();
-        
+        $suppliers  = Supplier::query()->where('status', 'active')->orderBy('name')->get();
+
         $productsQuery = Product::query()->with('category')->orderBy('product_name');
         
         if ($userBranchId) {
@@ -463,7 +510,7 @@ class SalesController extends Controller
         /** @var Company|null $company */
         $company    = Company::find(auth()->user()->company_id);
 
-        return view('frontend.sales.sales_edit', compact('order', 'customers', 'products', 'categories', 'branches', 'company'));
+        return view('frontend.sales.sales_edit', compact('order', 'customers', 'suppliers', 'products', 'categories', 'branches', 'company'));
     }
 
     // ─── UPDATE ──────────────────────────────────────────────────────────────
@@ -472,6 +519,7 @@ class SalesController extends Controller
     {
         // ... validation ...
         $order = SalesOrder::query()->findOrFail($id);
+        $request->merge(['customer_id' => $this->resolveCustomerIdFromParty($request)]);
 
         DB::transaction(function () use ($request, $order) {
             $subtotal = 0;

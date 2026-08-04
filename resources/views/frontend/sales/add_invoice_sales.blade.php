@@ -80,14 +80,26 @@
                             <div class="relative">
                                 <select id="customerSelect" name="customer_id" class="w-full">
                                     <option value=""></option>
-                                    @foreach($customers as $c)
-                                        <option value="{{ $c->id }}"
-                                                data-phone="{{ $c->phone }}"
-                                                data-balance="{{ $c->amount_balance ?? 0 }}"
-                                                data-name="{{ $c->name }}">
-                                            {{ $c->name }}
-                                        </option>
-                                    @endforeach
+                                    <optgroup label="Customers">
+                                        @foreach($customers as $c)
+                                            <option value="cus_{{ $c->id }}" data-party-type="customer"
+                                                    data-phone="{{ $c->phone }}"
+                                                    data-balance="{{ $c->amount_balance ?? 0 }}"
+                                                    data-name="{{ $c->name }}">
+                                                {{ $c->name }}
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
+                                    <optgroup label="Suppliers">
+                                        @foreach($suppliers as $s)
+                                            <option value="sup_{{ $s->id }}" data-party-type="supplier"
+                                                    data-phone="{{ $s->phone }}"
+                                                    data-balance="{{ $s->amount_balance ?? 0 }}"
+                                                    data-name="{{ $s->name }}">
+                                                {{ $s->name }}
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
                                 </select>
                             </div>
                             <div class="mt-1 px-1 flex items-center justify-between">
@@ -456,7 +468,7 @@ let discountFocus = 'amt'; // 'pct' or 'amt'
 /* ─────────────────────────── SELECT2 INIT ───────── */
 $(document).ready(function() {
     $('#customerSelect').select2({
-        placeholder: 'Search customer…',
+        placeholder: 'Search customer or supplier…',
         allowClear: true,
         width: '100%',
     }).on('select2:select', function(e) {
@@ -464,14 +476,20 @@ $(document).ready(function() {
         const ph   = el.data('phone')   || '';
         const name = el.data('name')    || '';
         const bal  = parseFloat(el.data('balance')) || 0;
+        const partyType = el.data('partyType') || '';
 
         // Populate Phone No.
         document.getElementById('billingName').value = ph;
 
-        // Party Balance display
+        // Party Balance display — green for a Customer, red for a Supplier
+        const balWrap = document.getElementById('balDisplayWrapper');
         const balDiv = document.getElementById('partyBalanceDisplay');
         if (balDiv) {
             balDiv.textContent = bal.toLocaleString('en', {minimumFractionDigits:0, maximumFractionDigits:2});
+        }
+        if (balWrap) {
+            balWrap.classList.toggle('text-accent', partyType === 'customer');
+            balWrap.classList.toggle('text-red-600', partyType === 'supplier');
         }
 
         window._customerPrevBalance = bal;
@@ -479,8 +497,13 @@ $(document).ready(function() {
 
     }).on('select2:clear', () => {
         document.getElementById('billingName').value = '';
+        const balWrap = document.getElementById('balDisplayWrapper');
         const balDiv = document.getElementById('partyBalanceDisplay');
         if (balDiv) balDiv.textContent = '0.00';
+        if (balWrap) {
+            balWrap.classList.remove('text-red-600');
+            balWrap.classList.add('text-accent');
+        }
         window._customerPrevBalance = 0;
         recalcAll();
     });
@@ -815,9 +838,16 @@ function toggleRowDisc(btn, rn) {
 
 /* ─────────────────────────── SUBMIT ─────────────── */
 function collectFormData(isDraft = false) {
-    const customerId = document.getElementById('customerSelect').value;
-    const isCredit   = document.getElementById('saleTypeInput').value === 'credit';
-    if (!isDraft && isCredit && !customerId) { toastError('Please select a customer for credit sales.'); return null; }
+    const partyVal = document.getElementById('customerSelect').value;
+    const isCredit = document.getElementById('saleTypeInput').value === 'credit';
+    if (!isDraft && isCredit && !partyVal) { toastError('Please select a customer or supplier for credit sales.'); return null; }
+
+    let customer_id = null, supplier_id = null;
+    if (partyVal.startsWith('cus_')) {
+        customer_id = partyVal.slice(4);
+    } else if (partyVal.startsWith('sup_')) {
+        supplier_id = partyVal.slice(4);
+    }
 
     const branchId = document.getElementById('branchSelect').value;
 
@@ -879,7 +909,8 @@ const items = [];
 
     return {
         _token:         CSRF,
-        customer_id:    customerId,
+        customer_id:    customer_id,
+        supplier_id:    supplier_id,
         branch_id:      branchId,
         payment_account_id: payAccId,
         invoice_date:   invDateEl ? invDateEl.value : (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(),
@@ -1043,16 +1074,17 @@ function saveNewParty() {
             toastSuccess('New party added successfully.');
 
             // Add to Select2 and select it
-            const newOption = new Option(res.name, res.id, true, true);
+            const newOption = new Option(res.name, 'cus_' + res.id, true, true);
             $(newOption).data('phone', res.phone || '');
             $(newOption).data('balance', res.balance || 0);
             $(newOption).data('name', res.name);
+            $(newOption).data('partyType', 'customer');
             $('#customerSelect').append(newOption).trigger('change');
 
             // Trigger the select2:select logic manually since we appended/selected
             $('#customerSelect').trigger({
                 type: 'select2:select',
-                params: { data: { id: res.id, text: res.name } }
+                params: { data: { id: 'cus_' + res.id, text: res.name } }
             });
 
             closeAddPartyModal();
