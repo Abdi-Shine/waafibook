@@ -1,6 +1,9 @@
 ﻿@extends('admin.admin_master')
 @section('page_title', 'Customer Payments')
 
+@push('css')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+@endpush
 
 @php
     $currencySymbols = [
@@ -291,7 +294,7 @@
                                                     ">
                                                 <option value="">Search Customer...</option>
                                                 @foreach($customers as $customer)
-                                                    <option value="{{ $customer->id }}" data-balance="{{ $customer->amount_balance }}" {{ request('customer_id') == $customer->id ? 'selected' : '' }}>{{ $customer->name }}</option>
+                                                    <option value="{{ $customer->id }}" data-balance="{{ $customer->amount_balance }}" data-phone="{{ $customer->phone }}" data-party-type="customer" {{ request('customer_id') == $customer->id ? 'selected' : '' }}>{{ $customer->name }}</option>
                                                 @endforeach
                                             </select>
                                             <i class="bi bi-person absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
@@ -415,6 +418,7 @@
     </div>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             $(document).on('change', '.status-dropdown', function(){
@@ -430,6 +434,44 @@
                         location.reload();
                     }
                 });
+            });
+
+            // Dropdown row: name + phone stacked on the left, balance with a
+            // direction badge on the right — same look as the Purchase Bill /
+            // Sale Invoice party pickers. Built with .text() (not
+            // string-interpolated HTML) so a customer's name/phone can never
+            // inject markup into the page. This list is customer-only, so the
+            // badge is always the green "money in" arrow.
+            function formatPartyOption(state) {
+                if (!state.id) return state.text;
+                const el = $(state.element);
+                const phone = el.data('phone') || '';
+                const bal = parseFloat(el.data('balance')) || 0;
+
+                const $row = $('<div class="flex items-center justify-between gap-3 py-0.5"></div>');
+                const $left = $('<div class="min-w-0"></div>');
+                $('<div class="text-[13px] font-semibold text-primary-dark truncate"></div>').text(state.text).appendTo($left);
+                if (phone) {
+                    $('<div class="text-[11px] text-gray-400"></div>').text(phone).appendTo($left);
+                }
+                $row.append($left);
+
+                const $right = $('<div class="flex items-center gap-1.5 shrink-0"></div>');
+                $('<span class="text-[12px] font-bold text-accent"></span>')
+                    .text(bal.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: 2 }))
+                    .appendTo($right);
+                $('<span class="w-5 h-5 rounded flex items-center justify-center text-white bg-accent"></span>')
+                    .append('<i class="bi bi-arrow-down-left text-[10px]"></i>')
+                    .appendTo($right);
+                $row.append($right);
+                return $row;
+            }
+
+            $('#modalCustomerSelect').select2({
+                placeholder: 'Search Customer...',
+                allowClear: true,
+                width: '100%',
+                templateResult: formatPartyOption,
             });
         });
 
