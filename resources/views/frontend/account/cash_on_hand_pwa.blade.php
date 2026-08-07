@@ -5,6 +5,7 @@
 <div class="pb-28 bg-background min-h-screen" x-data="{
     txnSearch: '',
     typeFilter: 'all',
+    dateFilter: 'today',
     activeModal: null,
     adjustType: 'increase',
     saving: false,
@@ -14,9 +15,26 @@
         return [...new Set(this.transactions.map(t => t.type))].sort();
     },
 
+    get dateBoundary() {
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const startOfWeek = new Date(startOfToday);
+        startOfWeek.setDate(startOfToday.getDate() - startOfToday.getDay());
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        return {
+            today: startOfToday.getTime() / 1000,
+            week: startOfWeek.getTime() / 1000,
+            month: startOfMonth.getTime() / 1000,
+        };
+    },
+
     get filteredTransactions() {
         let list = this.transactions;
         if (this.typeFilter !== 'all') list = list.filter(t => t.type === this.typeFilter);
+        if (this.dateFilter !== 'all') {
+            const since = this.dateBoundary[this.dateFilter];
+            list = list.filter(t => t.sort_date >= since);
+        }
         if (this.txnSearch) {
             const term = this.txnSearch.toLowerCase();
             list = list.filter(t => (t.type + ' ' + t.name).toLowerCase().includes(term));
@@ -68,6 +86,19 @@
                 <template x-for="t in types" :key="t">
                     <option :value="t" x-text="t"></option>
                 </template>
+            </select>
+            <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+        </div>
+    </div>
+
+    <div class="px-5 mb-2">
+        <div class="relative shrink-0 inline-block w-full">
+            <select x-model="dateFilter"
+                class="w-full pl-3 pr-8 py-2.5 bg-gray-100 border-none rounded-xl text-[13px] font-medium text-gray-700 outline-none appearance-none">
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+                <option value="all">All Time</option>
             </select>
             <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
         </div>
