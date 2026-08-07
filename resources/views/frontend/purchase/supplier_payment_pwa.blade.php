@@ -9,10 +9,23 @@
 @section('admin')
 <div class="pb-28 bg-background min-h-screen" x-data="{
     showModal: false,
+    showSupplierPicker: false,
+    partySearch: '',
     saving: false,
     supplierBalance: 0,
     form: { vendor_id: '', reference: '{{ $suggestedVoucherNo }}', bank_account_id: '{{ $bankAccounts->first()->id ?? '' }}', amount: '', payment_date: '{{ date('Y-m-d') }}', notes: '' },
-    suppliers: @js($suppliers->map(fn ($s) => ['id' => $s->id, 'name' => $s->name, 'balance' => (float) ($s->amount_balance ?? 0)])),
+    suppliers: @js($suppliers->map(fn ($s) => ['id' => $s->id, 'name' => $s->name, 'phone' => $s->phone, 'balance' => (float) ($s->amount_balance ?? 0)])),
+
+    get filteredSuppliers() {
+        if (!this.partySearch) return this.suppliers;
+        const q = this.partySearch.toLowerCase();
+        return this.suppliers.filter(s => s.name.toLowerCase().includes(q) || (s.phone || '').toLowerCase().includes(q));
+    },
+    selectSupplier(s) {
+        this.form.vendor_id = s.id;
+        this.onSupplierSelect();
+        this.showSupplierPicker = false;
+    },
 
     openModal() {
         this.form = { vendor_id: '', reference: '{{ $suggestedVoucherNo }}', bank_account_id: '{{ $bankAccounts->first()->id ?? '' }}', amount: '', payment_date: '{{ date('Y-m-d') }}', notes: '' };
@@ -163,16 +176,13 @@
 
                 <div>
                     <label class="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 block">Select Supplier <span class="text-primary">*</span></label>
-                    <div class="relative">
-                        <select name="vendor_id" x-model="form.vendor_id" @change="onSupplierSelect()" required
-                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none appearance-none">
-                            <option value="">Select supplier</option>
-                            @foreach($suppliers as $supplier)
-                                <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
-                            @endforeach
-                        </select>
-                        <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
-                    </div>
+                    <input type="hidden" name="vendor_id" x-model="form.vendor_id">
+                    <button type="button" @click="showSupplierPicker = true; partySearch = ''"
+                        class="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium outline-none text-left"
+                        :class="form.vendor_id ? 'text-gray-700' : 'text-gray-400'">
+                        <span class="truncate" x-text="form.vendor_id ? (suppliers.find(s => s.id == form.vendor_id)?.name || 'Select supplier') : 'Select supplier'"></span>
+                        <i class="bi bi-chevron-down text-gray-400 text-xs shrink-0 ml-2"></i>
+                    </button>
                     <div class="mt-1.5 flex items-center justify-between bg-primary/10 px-3 py-1.5 rounded-md border border-primary/20">
                         <span class="text-[10px] font-bold text-primary uppercase tracking-tighter">Current Payable</span>
                         <span class="text-[12px] font-black text-primary">{{ $symbol }} <span x-text="supplierBalance.toFixed(2)"></span></span>
@@ -233,6 +243,57 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    {{-- Select Supplier — mobile bottom sheet --}}
+    <div x-show="showSupplierPicker" x-cloak x-transition.opacity
+        class="fixed inset-0 z-[80] bg-slate-900/40" @click.self="showSupplierPicker = false">
+        <div x-show="showSupplierPicker" x-transition:enter="transition ease-out duration-250"
+            x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="translate-y-0" x-transition:leave-end="translate-y-full"
+            class="absolute bottom-0 left-0 right-0 bg-white rounded-t-[1.5rem] max-h-[85vh] flex flex-col">
+
+            <div class="px-5 py-4 bg-primary flex items-center justify-between shrink-0">
+                <h2 class="text-white font-bold text-[16px]">Select Supplier</h2>
+                <button @click="showSupplierPicker = false" class="w-8 h-8 bg-white/10 rounded-lg text-white flex items-center justify-center">
+                    <i class="bi bi-x-lg text-xs"></i>
+                </button>
+            </div>
+
+            <div class="px-4 py-3 shrink-0">
+                <div class="flex items-center gap-2 px-3 py-2.5 bg-gray-100 rounded-xl">
+                    <i class="bi bi-search text-gray-400 text-sm"></i>
+                    <input type="text" x-model="partySearch" placeholder="Search supplier..."
+                        class="flex-1 text-[13px] text-gray-700 font-medium tracking-wide placeholder-gray-400 outline-none border-none ring-0 bg-transparent"
+                        autocomplete="off">
+                </div>
+            </div>
+
+            <div class="overflow-y-auto flex-1">
+                <template x-for="s in filteredSuppliers" :key="s.id">
+                    <button type="button" @click="selectSupplier(s)"
+                        class="w-full flex items-center justify-between gap-3 px-5 py-3.5 border-b border-gray-100 last:border-0 active:bg-gray-50 text-left">
+                        <div class="min-w-0">
+                            <p class="text-[13px] font-black text-primary-dark truncate" x-text="s.name"></p>
+                            <p class="text-[11px] text-gray-400" x-show="s.phone" x-text="s.phone"></p>
+                        </div>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <span class="text-[12px] font-bold text-red-600" x-text="s.balance.toLocaleString('en', {minimumFractionDigits: 0, maximumFractionDigits: 2})"></span>
+                            <span class="w-5 h-5 rounded flex items-center justify-center text-white bg-red-500">
+                                <i class="bi bi-arrow-up-right text-[10px]"></i>
+                            </span>
+                        </div>
+                    </button>
+                </template>
+                <template x-if="!filteredSuppliers.length">
+                    <div class="py-10 text-center">
+                        <i class="bi bi-person-x text-3xl text-gray-300"></i>
+                        <p class="text-sm text-text-secondary mt-2 font-semibold">No suppliers found.</p>
+                    </div>
+                </template>
+            </div>
         </div>
     </div>
 </div>
