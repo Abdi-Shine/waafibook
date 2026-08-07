@@ -86,7 +86,7 @@
                 </div>
                 <div class="text-right shrink-0">
                     <p class="text-[14px] font-black" :class="txn.direction === 'in' ? 'text-accent' : 'text-red-500'"
-                        x-text="'{{ $companyCurrency }} ' + Math.round(txn.amount)"></p>
+                        x-text="'{{ $companyCurrency }} ' + parseFloat(txn.amount || 0).toLocaleString(undefined,{minimumFractionDigits:2})"></p>
                     <p class="text-xs text-text-secondary mt-0.5" x-text="txn.date"></p>
                 </div>
             </div>

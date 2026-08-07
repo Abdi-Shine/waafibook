@@ -122,7 +122,7 @@
                             <td class="px-5 py-3.5 text-[13px] text-gray-500" x-text="txn.date"></td>
                             <td class="px-5 py-3.5 text-[13px] font-bold text-right"
                                 :class="txn.direction === 'in' ? 'text-accent' : 'text-red-500'"
-                                x-text="'{{ $companyCurrency }} ' + Math.round(txn.amount)"></td>
+                                x-text="'{{ $companyCurrency }} ' + parseFloat(txn.amount || 0).toLocaleString(undefined,{minimumFractionDigits:2})"></td>
                         </tr>
                     </template>
                     <template x-if="!filteredTransactions.length">
