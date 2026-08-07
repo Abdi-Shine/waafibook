@@ -285,37 +285,34 @@
         this.openWhatsApp('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg));
     },
 
+    // Opens the transaction's own document/view page — a preview, not a
+    // message to the customer. The WhatsApp icon next to it is what
+    // actually sends something; this one just shows it.
     shareTransaction(txn) {
         if (!this.ledger) return;
-        const phone = this.normalizePhone(this.ledger.party.phone);
-        if (!phone) {
-            Swal.fire({ icon: 'warning', title: 'No Phone Number', text: 'This party has no phone number saved. Please add one first.' });
-            return;
-        }
-        const name  = this.ledger.party.name;
-        const co    = this.companyName;
-        const total = parseFloat(txn.total).toFixed(2);
+        const isSupplier = this.ledger.party.type === 'supplier';
 
-        if (txn.type === 'Sale' && txn.share_url) {
-            const msg = 'Dear ' + name + ',\n\nPlease find your invoice ' + (txn.number ? '(' + txn.number + ') ' : '')
-                + 'with *' + co + '* at the link below:\n\n' + txn.share_url + '\n\nThank you for your business!';
-            this.openWhatsApp('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg));
-            return;
-        }
-
-        let msg = 'Dear ' + name + ',\n\nHere are the details of your ' + txn.type
-            + (txn.number ? ' (' + txn.number + ')' : '') + ' with *' + co + '*:\n\n'
-            + 'Date: ' + txn.date + '\nTotal: $' + total;
-
-        if (txn.balance != null) {
-            msg += '\n' + (this.isPayment(txn.type) ? 'Unused' : 'Balance') + ': $' + parseFloat(txn.balance).toFixed(2);
-        }
-        if (txn.status) {
-            msg += '\nStatus: ' + txn.status;
+        let url = null;
+        if (txn.type === 'Sale' && txn.pdf_url) {
+            url = txn.pdf_url;
+        } else if (txn.type === 'Opening Balance') {
+            url = isSupplier
+                ? '{{ url('/supplier-statement') }}/' + this.ledger.party.id + '/view'
+                : '{{ url('/statement') }}/' + this.ledger.party.id + '/view';
+        } else if (txn.type === 'Purchase' && txn.id) {
+            url = '{{ url('/purchase/bills') }}/' + txn.id;
+        } else if (txn.type === 'Payment-In' && txn.id) {
+            url = '{{ url('/payment-in/download') }}/' + txn.id;
+        } else if (txn.type === 'Payment-Out' && txn.id) {
+            url = '{{ url('/payment-out/download') }}/' + txn.id;
+        } else if (txn.type === 'Credit Note' && txn.id) {
+            url = '{{ url('/sales-return') }}/' + txn.id + '/pdf';
+        } else if (txn.type === 'Debit Note' && txn.id) {
+            url = '{{ url('/purchase/returns') }}/' + txn.id + '/pdf';
         }
 
-        msg += '\n\nThank you for your business!';
-        this.openWhatsApp('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg));
+        if (!url) { window.print(); return; }
+        this.openWhatsApp(url);
     },
 
     goToPayout() {
@@ -534,8 +531,8 @@
                                         <i class="bi bi-whatsapp text-[16px]"></i>
                                     </button>
                                     <button @click="shareTransaction(txn)"
-                                        class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-green-600 rounded-lg transition-colors">
-                                        <i class="bi bi-share text-[15px]"></i>
+                                        class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-primary-dark rounded-lg transition-colors">
+                                        <i class="bi bi-eye text-[15px]"></i>
                                     </button>
                                     <div x-data="{ open: false }" class="relative">
                                         <button @click="open = !open" @click.away="open = false"
