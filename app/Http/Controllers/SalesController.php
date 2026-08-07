@@ -357,110 +357,150 @@ class SalesController extends Controller
             'items.*.product_name'   => 'required|string',
             'items.*.quantity'       => 'required|numeric|min:0.01',
             'items.*.unit_price'     => 'required|numeric|min:0',
+            'client_request_id'      => 'nullable|string|max:100',
         ]);
 
-        $orderId = DB::transaction(function () use ($request) {
-            // Subtotal = sum of (qty × price) per line — per-item discounts already deducted in JS
-            $subtotal = 0;
-            foreach ($request->items as $item) {
-                $subtotal += ($item['quantity'] * $item['unit_price']) - ($item['discount'] ?? 0);
+        // Idempotency: a dropped connection mid-submit (or the offline queue
+        // replaying a sale that actually already landed) can send this exact
+        // checkout more than once. The client tags every attempt of the same
+        // checkout with the same client_request_id, so if we've already got
+        // an order for it, hand back that order instead of creating another.
+        $clientRequestId = $request->input('client_request_id') ?: null;
+        if ($clientRequestId) {
+            $existing = SalesOrder::query()->where('client_request_id', $clientRequestId)->first();
+            if ($existing) {
+                return $this->storeResponse($request, $existing->id, false);
             }
+        }
 
-            // Invoice-level discount (separate from per-item discounts)
-            $discount = $request->discount ?? 0;
-            $tax      = $request->tax ?? 0;
-            $total    = $subtotal - $discount + $tax;
-            $paid     = $request->paid_amount ?? 0;
-            $due      = max(0, $total - $paid);
-
-            $status = 'pending';
-            if ($paid >= $total) {
-                $status = 'completed';
-                $due    = 0;
-            } elseif ($paid > 0) {
-                $status = 'partial';
-            }
-
-            $invoiceNo = $this->nextInvoiceNumber();
-
-            // Resolve payment account — JS sends correct ID for both cash and credit mode
-            $paymentAccountId = $request->payment_account_id ?: null;
-
-            $order = SalesOrder::query()->create([
-                'invoice_no'         => $invoiceNo,
-                'invoice_date'       => $request->invoice_date,
-                'due_date'           => $request->due_date,
-                'customer_id'        => $request->customer_id,
-                'branch_id'          => $request->branch_id,
-                'subtotal'           => $subtotal,
-                'discount'           => $discount,
-                'tax'                => $tax,
-                'total_amount'       => $total,
-                'paid_amount'        => $paid,
-                'due_amount'         => $due,
-                'payment_method'     => $request->payment_method ?? 'Cash',
-                'payment_account_id' => $paymentAccountId,
-                'status'             => $status,
-                'notes'              => $request->notes,
-                'created_by'         => Auth::id(),
-            ]);
-
-            foreach ($request->items as $item) {
-                SalesOrderItem::query()->create([
-                    'sales_order_id' => $order->id,
-                    'product_id'     => $item['product_id'] ?? null,
-                    'product_name'   => $item['product_name'],
-                    'product_code'   => $item['product_code'] ?? null,
-                    'unit_price'     => $item['unit_price'],
-                    'quantity'       => $item['quantity'],
-                    'unit'           => $item['unit'] ?? 'Piece',
-                    'discount'       => $item['discount'] ?? 0,
-                    'total_price'    => ($item['quantity'] * $item['unit_price']) - ($item['discount'] ?? 0),
-                ]);
-
-                // Reduce Stock from Branch — services aren't stocked, so skip entirely
-                if (!empty($item['product_id']) && optional(Product::find($item['product_id']))->product_type !== 'service') {
-                    $stock = ProductStock::query()->where('product_id', $item['product_id'])
-                        ->where('branch_id', $order->branch_id)
-                        ->first();
-
-                    if ($stock) {
-                        $stock->decrement('quantity', $item['quantity']);
-                    } else {
-                        // Create record if none exists for this branch/product
-                        ProductStock::query()->create([
-                            'product_id' => $item['product_id'],
-                            'branch_id'  => $order->branch_id,
-                            'quantity'   => -$item['quantity']
-                        ]);
-                    }
+        try {
+            $orderId = DB::transaction(function () use ($request, $clientRequestId) {
+                return $this->createSalesOrder($request, $clientRequestId);
+            });
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Lost the race: another request with the same client_request_id
+            // committed first (e.g. a manual retry and a background-sync
+            // replay firing at once). Its unique constraint violation means
+            // the real order already exists — fetch and return that instead
+            // of surfacing a 500 or, worse, a silent duplicate.
+            if ($clientRequestId && str_contains($e->getMessage(), 'client_request_id')) {
+                $existing = SalesOrder::query()->where('client_request_id', $clientRequestId)->first();
+                if ($existing) {
+                    return $this->storeResponse($request, $existing->id, false);
                 }
             }
+            throw $e;
+        }
 
-            // Update customer balance
-            /** @var Customer|null $customer */
-            $customer = Customer::query()->find($request->customer_id);
-            if ($customer && $due > 0) {
-                $customer->amount_balance = ($customer->amount_balance ?? 0) + $due;
-                $customer->save();
-            }
+        return $this->storeResponse($request, $orderId, true);
+    }
 
-            // Accounting journal entry
-            $this->createAccountingEntry($order);
-
-            return $order->id;
-        });
-
+    private function storeResponse(Request $request, int $orderId, bool $created)
+    {
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success'  => true,
-                'message'  => 'Invoice created successfully.',
+                'message'  => $created ? 'Invoice created successfully.' : 'Invoice already recorded.',
                 'redirect' => route('sales.invoice.view'),
                 'order_id' => $orderId,
             ]);
         }
 
         return redirect()->route('sales.invoice.view')->with('success', 'Invoice created successfully.');
+    }
+
+    private function createSalesOrder(Request $request, ?string $clientRequestId)
+    {
+        // Subtotal = sum of (qty × price) per line — per-item discounts already deducted in JS
+        $subtotal = 0;
+        foreach ($request->items as $item) {
+            $subtotal += ($item['quantity'] * $item['unit_price']) - ($item['discount'] ?? 0);
+        }
+
+        // Invoice-level discount (separate from per-item discounts)
+        $discount = $request->discount ?? 0;
+        $tax      = $request->tax ?? 0;
+        $total    = $subtotal - $discount + $tax;
+        $paid     = $request->paid_amount ?? 0;
+        $due      = max(0, $total - $paid);
+
+        $status = 'pending';
+        if ($paid >= $total) {
+            $status = 'completed';
+            $due    = 0;
+        } elseif ($paid > 0) {
+            $status = 'partial';
+        }
+
+        $invoiceNo = $this->nextInvoiceNumber();
+
+        // Resolve payment account — JS sends correct ID for both cash and credit mode
+        $paymentAccountId = $request->payment_account_id ?: null;
+
+        $order = SalesOrder::query()->create([
+            'invoice_no'         => $invoiceNo,
+            'client_request_id'  => $clientRequestId,
+            'invoice_date'       => $request->invoice_date,
+            'due_date'           => $request->due_date,
+            'customer_id'        => $request->customer_id,
+            'branch_id'          => $request->branch_id,
+            'subtotal'           => $subtotal,
+            'discount'           => $discount,
+            'tax'                => $tax,
+            'total_amount'       => $total,
+            'paid_amount'        => $paid,
+            'due_amount'         => $due,
+            'payment_method'     => $request->payment_method ?? 'Cash',
+            'payment_account_id' => $paymentAccountId,
+            'status'             => $status,
+            'notes'              => $request->notes,
+            'created_by'         => Auth::id(),
+        ]);
+
+        foreach ($request->items as $item) {
+            SalesOrderItem::query()->create([
+                'sales_order_id' => $order->id,
+                'product_id'     => $item['product_id'] ?? null,
+                'product_name'   => $item['product_name'],
+                'product_code'   => $item['product_code'] ?? null,
+                'unit_price'     => $item['unit_price'],
+                'quantity'       => $item['quantity'],
+                'unit'           => $item['unit'] ?? 'Piece',
+                'discount'       => $item['discount'] ?? 0,
+                'total_price'    => ($item['quantity'] * $item['unit_price']) - ($item['discount'] ?? 0),
+            ]);
+
+            // Reduce Stock from Branch — services aren't stocked, so skip entirely
+            if (!empty($item['product_id']) && optional(Product::find($item['product_id']))->product_type !== 'service') {
+                $stock = ProductStock::query()->where('product_id', $item['product_id'])
+                    ->where('branch_id', $order->branch_id)
+                    ->first();
+
+                if ($stock) {
+                    $stock->decrement('quantity', $item['quantity']);
+                } else {
+                    // Create record if none exists for this branch/product
+                    ProductStock::query()->create([
+                        'product_id' => $item['product_id'],
+                        'branch_id'  => $order->branch_id,
+                        'quantity'   => -$item['quantity']
+                    ]);
+                }
+            }
+        }
+
+        // Update customer balance
+        /** @var Customer|null $customer */
+        $customer = Customer::query()->find($request->customer_id);
+        if ($customer && $due > 0) {
+            $customer->amount_balance = ($customer->amount_balance ?? 0) + $due;
+            $customer->save();
+        }
+
+        // Accounting journal entry
+        $this->createAccountingEntry($order);
+
+        return $order->id;
     }
 
     // ─── SHOW (Invoice Detail) ────────────────────────────────────────────────

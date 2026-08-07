@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'waafibook-v3';
+const CACHE_VERSION = 'waafibook-v4';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 const IMAGE_CACHE   = `${CACHE_VERSION}-images`;
@@ -136,14 +136,19 @@ async function replayOfflineSales() {
 
   for (const sale of sales) {
     try {
-      const res = await fetch('/sales/invoice/store', {
+      // Each sale carries its own client_request_id (see sales_pos.blade.php),
+      // so a replay of a request that actually already landed just gets back
+      // the same order instead of creating a duplicate — safe to retry blind.
+      const res = await fetch('/sales/invoices', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
         body: JSON.stringify(sale.data),
       });
       if (res.ok) {
         const delTx = db.transaction('offline_sales', 'readwrite');
         delTx.objectStore('offline_sales').delete(sale.id);
+        const clients = await self.clients.matchAll();
+        clients.forEach(client => client.postMessage({ type: 'SALE_SYNCED' }));
       }
     } catch { /* will retry on next sync */ }
   }

@@ -164,6 +164,30 @@
         const products = @json($products);
         let cart = [];
         let selectedPaymentMethod = 'Cash';
+        let posSubmitting = false;
+
+        // ── Idempotency key for the sale currently in the cart ─────────────
+        // One checkout — however many times it has to be retried after a
+        // dropped connection — must only ever create one invoice. This id is
+        // generated once per cart and persisted alongside it, so a page
+        // reload mid-interruption (before we know whether the server got the
+        // first attempt) still retries under the SAME id instead of minting
+        // a fresh one and risking a real duplicate.
+        let checkoutId = null;
+        function generateId() {
+            if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+                const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+        function getOrCreateCheckoutId() {
+            if (!checkoutId) checkoutId = generateId();
+            return checkoutId;
+        }
+        function clearCheckoutId() {
+            checkoutId = null;
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             displayProducts(products);
@@ -329,6 +353,7 @@
 
         function processPayment() {
             if (cart.length === 0) return Swal.fire('Error', 'Cart is empty', 'error');
+            if (posSubmitting) return; // already mid-submit for this cart — don't fire a second request
 
             const total = cart.reduce((s, i) => s + (i.price * i.quantity), 0);
 
@@ -342,8 +367,13 @@
             }).then(res => {
                 if (res.isConfirmed) {
                     Swal.showLoading();
+                    posSubmitting = true;
                     const data = {
                         _token: CSRF_TOKEN,
+                        // Reused across retries of this same cart so a dropped
+                        // connection can never turn into a duplicate invoice —
+                        // see getOrCreateCheckoutId() above.
+                        client_request_id: getOrCreateCheckoutId(),
                         customer_id: document.getElementById('customer_id').value,
                         branch_id: document.getElementById('branch_id').value,
                         payment_account_id: document.getElementById('account_id').value,
@@ -370,44 +400,84 @@
                         .then(r => r.json())
                         .then(res => {
                             if (res.success) {
-                                Swal.fire('Success', 'Transaction Complete', 'success').then(() => {
-                                    // Deduct sold quantities from local stock so cards refresh immediately
-                                    cart.forEach(item => {
-                                        const p = products.find(prod => prod.id === item.id);
-                                        if (p) p.stocks_sum_quantity = Math.max(0, (p.stocks_sum_quantity || 0) - item.quantity);
-                                    });
-                                    cart = [];
-                                    updateCart();
-                                    saveCartToStorage();
-                                    document.getElementById('customer_id').value = '';
-                                    displayProducts(products);
-                                    switchPosTab('products');
-                                });
+                                completeSaleUI('Success', 'Transaction Complete', 'success');
                             } else {
+                                posSubmitting = false;
                                 Swal.fire('Error', res.message, 'error');
                             }
+                        })
+                        .catch(err => {
+                            posSubmitting = false;
+                            // A network error here means we genuinely don't know
+                            // whether the server received this — the request
+                            // could have gone through and only the response got
+                            // lost. Retrying with a fresh id would risk a real
+                            // duplicate, so instead the sale is queued offline
+                            // under this SAME client_request_id: on reconnect,
+                            // the server's idempotency check either creates it
+                            // (if it never landed) or no-ops the replay (if it
+                            // already did) — either way, exactly one invoice.
+                            queueOfflineSale(data).then(() => {
+                                registerBackgroundSync();
+                                completeSaleUI('Saved Offline', 'No connection — this sale is queued and will sync automatically once you\'re back online.', 'info');
+                            });
                         });
                 }
+            });
+        }
+
+        // Shared "sale is settled" UI: clears the cart/local stock and resets
+        // to the product grid. Used both for an immediate server success and
+        // for a sale that's been safely queued offline — in both cases the
+        // sale is durably recorded (in the DB or in the offline queue under
+        // its checkout id) and it's safe to start a fresh cart.
+        function completeSaleUI(title, text, icon) {
+            Swal.fire({ title, text, icon, timer: icon === 'info' ? 3500 : undefined, showConfirmButton: icon !== 'info' }).then(() => {
+                cart.forEach(item => {
+                    const p = products.find(prod => prod.id === item.id);
+                    if (p) p.stocks_sum_quantity = Math.max(0, (p.stocks_sum_quantity || 0) - item.quantity);
+                });
+                cart = [];
+                updateCart();
+                clearCheckoutId();
+                saveCartToStorage();
+                document.getElementById('customer_id').value = '';
+                displayProducts(products);
+                switchPosTab('products');
+                posSubmitting = false;
             });
         }
 
         function clearCart() {
             if (cart.length > 0) {
                 Swal.fire({ title: 'Clear Order?', icon: 'warning', showCancelButton: true }).then(r => {
-                    if (r.isConfirmed) { cart = []; updateCart(); saveCartToStorage(); }
+                    if (r.isConfirmed) { cart = []; updateCart(); clearCheckoutId(); saveCartToStorage(); }
                 });
             }
         }
 
-        // ── PWA: IndexedDB cart persistence ──────────────────────────────
+        // ── PWA: cart persistence ──────────────────────────────────────────
+        // checkoutId travels with the cart so a page reload mid-interruption
+        // (before we know whether the server got the first attempt) retries
+        // under the SAME id instead of risking a duplicate — see
+        // getOrCreateCheckoutId() above.
         const CART_KEY = 'waafibook-pos-cart';
         function saveCartToStorage() {
-            try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch (e) { }
+            try { localStorage.setItem(CART_KEY, JSON.stringify({ cart, checkoutId })); } catch (e) { }
         }
         function loadCartFromStorage() {
             try {
                 const saved = localStorage.getItem(CART_KEY);
-                if (saved) { cart = JSON.parse(saved); updateCart(); }
+                if (!saved) return;
+                const parsed = JSON.parse(saved);
+                // Back-compat: older saves stored the cart array directly.
+                if (Array.isArray(parsed)) {
+                    cart = parsed;
+                } else {
+                    cart = parsed.cart || [];
+                    checkoutId = parsed.checkoutId || null;
+                }
+                updateCart();
             } catch (e) { }
         }
         // Patch updateCart to also persist on every change
@@ -417,28 +487,75 @@
         window.addEventListener('DOMContentLoaded', loadCartFromStorage);
 
         // ── PWA: offline sale queue with Background Sync ──────────────────
-        async function queueOfflineSale(data) {
+        function openPosDb() {
             return new Promise((resolve, reject) => {
                 const req = indexedDB.open('waafibook-pos', 1);
                 req.onupgradeneeded = e => e.target.result.createObjectStore('offline_sales', { keyPath: 'id', autoIncrement: true });
-                req.onsuccess = e => {
-                    const tx = e.target.result.transaction('offline_sales', 'readwrite');
-                    tx.objectStore('offline_sales').add({ data, queuedAt: Date.now() });
-                    tx.oncomplete = resolve;
-                    tx.onerror = reject;
-                };
-                req.onerror = reject;
+                req.onsuccess = e => resolve(e.target.result);
+                req.onerror = e => reject(e.target.error);
             });
         }
+        async function queueOfflineSale(data) {
+            const db = await openPosDb();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction('offline_sales', 'readwrite');
+                tx.objectStore('offline_sales').add({ data, queuedAt: Date.now() });
+                tx.oncomplete = resolve;
+                tx.onerror = reject;
+            });
+        }
+        async function registerBackgroundSync() {
+            if (!('serviceWorker' in navigator) || !('SyncManager' in window)) return;
+            try {
+                const reg = await navigator.serviceWorker.ready;
+                await reg.sync.register('sync-pos-sales');
+            } catch (e) { /* unsupported/denied — the 'online' listener below covers it */ }
+        }
+        // Fallback replay for browsers without Background Sync support (e.g.
+        // iOS Safari/PWA has no SyncManager at all). Runs the exact same
+        // request the service worker would, straight from the page, so a
+        // queued sale still syncs the moment connectivity returns even where
+        // background sync never fires.
+        let flushingOfflineSales = false;
+        async function flushOfflineSales() {
+            if (flushingOfflineSales || !navigator.onLine) return;
+            flushingOfflineSales = true;
+            try {
+                const db = await openPosDb();
+                const sales = await new Promise((resolve, reject) => {
+                    const req = db.transaction('offline_sales', 'readonly').objectStore('offline_sales').getAll();
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => reject(req.error);
+                });
+                for (const sale of sales) {
+                    try {
+                        const res = await fetch('{{ route("sales.invoice.store") }}', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                            body: JSON.stringify(sale.data),
+                        });
+                        if (res.ok) {
+                            db.transaction('offline_sales', 'readwrite').objectStore('offline_sales').delete(sale.id);
+                            Swal.fire({ icon: 'success', title: 'Sale Synced!', text: 'A queued offline sale has been saved to the server.', timer: 3000, showConfirmButton: false });
+                        }
+                    } catch (e) { break; /* still unreachable — retries on the next 'online' event */ }
+                }
+            } catch (e) { /* IndexedDB unavailable — nothing to flush */ }
+            finally { flushingOfflineSales = false; }
+        }
+        window.addEventListener('online', flushOfflineSales);
+        document.addEventListener('DOMContentLoaded', flushOfflineSales);
+
         // Re-initialize when browser serves page from bfcache (back/forward navigation)
         window.addEventListener('pageshow', (e) => {
             if (e.persisted) {
                 displayProducts(products);
                 loadCartFromStorage();
+                flushOfflineSales();
             }
         });
 
-        // Notify the user when a queued sale is synced
+        // Notify the user when a queued sale is synced via Background Sync
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.addEventListener('message', event => {
                 if (event.data?.type === 'SALE_SYNCED') {
