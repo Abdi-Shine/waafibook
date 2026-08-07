@@ -374,6 +374,7 @@ class AccountController extends Controller
                         'type'      => $type,
                         'name'      => $name,
                         'date'      => $item->entry->date ? $item->entry->date->format('d/m/Y') : '-',
+                        'time'      => $item->entry->created_at ? $item->entry->created_at->format('h:i A') : '-',
                         'sort_date' => $item->entry->date ? $item->entry->date->timestamp : 0,
                         'sort_id'   => $item->id,
                         'amount'    => (float) ($item->debit > 0 ? $item->debit : $item->credit),
