@@ -434,6 +434,9 @@ class AccountController extends Controller
 
     // A sale's entry_number is "JE-SALE-{order_id}-{suffix}" — trace it back to the
     // order so a cart of only service items shows as "Service" instead of "Sale".
+    // A partially-paid order only ever books the amount actually received to
+    // cash (see storeSalesJournalEntry), so that amount already IS the partial
+    // payment — it just needs its own type so it's not lumped in with full Sales.
     private function cashSaleType(string $ref): string
     {
         if (!preg_match('/^JE-SALE-(\d+)-/', $ref, $m)) {
@@ -443,6 +446,10 @@ class AccountController extends Controller
         $order = SalesOrder::with('items.product')->find($m[1]);
         if (!$order || $order->items->isEmpty()) {
             return 'Sale';
+        }
+
+        if ($order->status === 'partial') {
+            return 'Partial Payment';
         }
 
         $allServices = $order->items->every(fn ($item) => $item->product?->product_type === 'service');
