@@ -952,7 +952,7 @@ const items = [];
         branch_id:      branchId,
         payment_account_id: payAccId,
         invoice_date:   invDateEl ? invDateEl.value : (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(),
-        payment_method: document.getElementById('paymentMethodInput')?.value || (_saleType === 'cash' ? 'Cash' : 'Bank Transfer'),
+        payment_method: document.getElementById('paymentMethodInput')?.value || 'Cash',
         discount:       parseFloat(document.getElementById('discountInput')?.value) || 0,
         tax:            parseFloat(document.getElementById('taxVal')?.value) || 0,
         total_amount:   parseFloat(document.getElementById('grandTotalVal')?.value) || 0,
@@ -1059,7 +1059,10 @@ function setSaleType(type) {
         toggle.classList.add('is-active');
         lCredit.classList.replace('toggle-label-off', 'toggle-label-on');
         lCash.classList.replace('toggle-label-on', 'toggle-label-off');
-        if (pmSel) pmSel.value = 'Bank Transfer';
+        // Whatever is actually collected up front on a Credit sale is still a
+        // cash deposit, not a bank receipt — keep it posting to Cash so it
+        // shows up on Cash On Hand like any other payment received.
+        if (pmSel) pmSel.value = 'Cash';
 
         // Toggle areas
         section.classList.remove('hidden');

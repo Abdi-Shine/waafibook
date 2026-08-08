@@ -203,7 +203,10 @@
                 branch_id: {{ auth()->user()->getAssignedBranchId() ?? ($branches->first()->id ?? 'null') }},
                 payment_account_id: null,
                 invoice_date: this.invoiceDate,
-                payment_method: this.saleType === 'cash' ? 'Cash' : 'Bank Transfer',
+                // Whatever is actually collected up front — full (Cash sale) or
+                // partial deposit (Credit sale) — is cash in hand, not a bank
+                // receipt, so it always posts to the Cash account.
+                payment_method: 'Cash',
                 discount: parseFloat(this.discountAmount) || 0,
                 tax: 0,
                 total_amount: this.grandTotal,
