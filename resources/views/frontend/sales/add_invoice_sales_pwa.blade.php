@@ -416,7 +416,8 @@
                         <input type="number" min="0" step="0.01"
                             :value="paidAmountTouched ? paidAmountInput : grandTotal.toFixed(2)"
                             @input="paidAmountTouched = true; paidAmountInput = $event.target.value"
-                            class="w-full pl-8 pr-2 py-2.5 bg-accent/10 border border-accent/20 rounded-lg text-[14px] font-black text-accent outline-none">
+                            class="w-full pl-8 pr-8 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-black text-primary-dark outline-none">
+                        <i class="bi bi-pencil-fill absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 text-xs pointer-events-none"></i>
                     </div>
                 </template>
                 <template x-if="saleType === 'credit'">
@@ -426,6 +427,7 @@
                             class="w-full pl-8 pr-2 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] font-medium text-gray-700 outline-none">
                     </div>
                 </template>
+                <p class="text-[10px] text-gray-400 mt-1" x-show="saleType === 'cash'">Defaults to full amount — reduce it to record a partial payment.</p>
             </div>
         </div>
 
