@@ -449,7 +449,7 @@ class AccountController extends Controller
         }
 
         if ($order->status === 'partial') {
-            return 'Partial';
+            return 'Partial Payment';
         }
 
         $allServices = $order->items->every(fn ($item) => $item->product?->product_type === 'service');
