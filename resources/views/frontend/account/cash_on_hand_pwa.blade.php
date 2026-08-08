@@ -136,7 +136,7 @@
         <template x-for="txn in filteredTransactions" :key="txn.sort_id">
             <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 last:border-0">
                 <div class="min-w-0 pr-3">
-                    <p class="text-[14px] font-black text-text-primary leading-tight" x-text="txn.type"></p>
+                    <p class="text-[14px] font-black text-text-primary leading-tight truncate" x-text="txn.type"></p>
                     <p class="text-xs text-text-secondary mt-0.5 truncate" x-text="txn.name"></p>
                 </div>
                 <div class="text-right shrink-0">
