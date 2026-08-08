@@ -21,10 +21,12 @@
         const startOfWeek = new Date(startOfToday);
         startOfWeek.setDate(startOfToday.getDate() - startOfToday.getDay());
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const startOfYear = new Date(now.getFullYear(), 0, 1);
         return {
             today: startOfToday.getTime() / 1000,
             week: startOfWeek.getTime() / 1000,
             month: startOfMonth.getTime() / 1000,
+            year: startOfYear.getTime() / 1000,
         };
     },
 
@@ -40,6 +42,23 @@
             list = list.filter(t => (t.type + ' ' + t.name).toLowerCase().includes(term));
         }
         return list;
+    },
+
+    get subtotal() {
+        return this.filteredTransactions.reduce((sum, t) => {
+            const amount = parseFloat(t.amount || 0);
+            return sum + (t.direction === 'in' ? amount : -amount);
+        }, 0);
+    },
+
+    get dateFilterLabel() {
+        return {
+            today: 'Today',
+            week: 'This Week',
+            month: 'This Month',
+            year: 'This Year',
+            all: 'All Time',
+        }[this.dateFilter];
     },
 
     openAdjustModal() {
@@ -98,14 +117,19 @@
                 <option value="today">Today</option>
                 <option value="week">This Week</option>
                 <option value="month">This Month</option>
+                <option value="year">This Year</option>
                 <option value="all">All Time</option>
             </select>
             <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
         </div>
     </div>
 
-    <div class="px-5 pt-2">
+    <div class="flex items-center justify-between px-5 pt-2">
         <p class="text-[11px] font-black text-gray-400 uppercase tracking-wide mb-2">Transactions</p>
+        <p class="text-[13px] font-black -mt-2" :class="subtotal < 0 ? 'text-red-500' : 'text-primary'">
+            <span class="text-[11px] font-bold text-gray-400 normal-case" x-text="'Subtotal (' + dateFilterLabel + '):'"></span>
+            <span x-text="'{{ $companyCurrency }} ' + subtotal.toLocaleString(undefined,{minimumFractionDigits:2})"></span>
+        </p>
     </div>
 
     <div class="bg-white border-t border-b border-gray-100">
