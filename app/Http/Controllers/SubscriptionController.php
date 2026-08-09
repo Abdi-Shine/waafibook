@@ -44,14 +44,16 @@ class SubscriptionController extends Controller
                 ['company_id' => $company->id],
                 [
                     'subscription_plan_id' => $plan->id,
-                    'status'               => 'active',
+                    // Instant activation would bypass Super Admin approval —
+                    // route it through the same pending state as processPayment().
+                    'status'               => 'pending_payment',
                     'start_date'           => now()->toDateString(),
                     'expiry_date'          => $expiresAt->toDateString(),
                 ]
             );
 
             return redirect()->route('subscribers.subscriptions.index')
-                ->with('success', 'You are now subscribed to the ' . $plan->name . ' plan.');
+                ->with('success', 'Your request for the ' . $plan->name . ' plan has been submitted and is awaiting approval from the administrator.');
         }
 
         // Host creating a new plan definition (used from host plans page)
@@ -162,18 +164,36 @@ class SubscriptionController extends Controller
             default     => now()->addMonth(),
         };
 
-        DB::transaction(function () use ($request, $plan, $company, $expiresAt) {
-            // Create or update subscription as pending_payment — will be activated by super admin approval
-            $subscription = Subscription::updateOrCreate(
-                ['company_id' => $company->id],
-                [
-                    'subscription_plan_id' => $plan->id,
-                    'status'               => 'pending_payment',
-                    'start_date'           => now()->toDateString(),
-                    'expiry_date'          => $expiresAt->toDateString(),
-                    'payment_method'       => $request->payment_method,
-                ]
-            );
+        $currentSubscription = Subscription::where('company_id', $company->id)->latest('id')->first();
+        $keepsCurrentAccess  = $currentSubscription
+            && $currentSubscription->hasAccess()
+            && $currentSubscription->status !== 'pending_payment';
+
+        DB::transaction(function () use ($request, $plan, $company, $expiresAt, $currentSubscription, $keepsCurrentAccess) {
+            if ($keepsCurrentAccess) {
+                // Company already has valid trial/paid access — keep serving
+                // their current plan and just queue the requested plan
+                // pending approval, so they aren't locked out while it's reviewed.
+                $subscription = $currentSubscription;
+                $subscription->update([
+                    'pending_subscription_plan_id' => $plan->id,
+                    'payment_method'                => $request->payment_method,
+                ]);
+            } else {
+                // No valid current access (new/expired/cancelled/already pending) —
+                // subscription stays locked until super admin approval.
+                $subscription = Subscription::updateOrCreate(
+                    ['company_id' => $company->id],
+                    [
+                        'subscription_plan_id'         => $plan->id,
+                        'pending_subscription_plan_id' => null,
+                        'status'                        => 'pending_payment',
+                        'start_date'                    => now()->toDateString(),
+                        'expiry_date'                   => $expiresAt->toDateString(),
+                        'payment_method'                => $request->payment_method,
+                    ]
+                );
+            }
 
             // Record the payment as pending — super admin will approve/reject
             SubscriptionPayment::create([
@@ -194,7 +214,7 @@ class SubscriptionController extends Controller
     public function subscriptionsIndex()
     {
         $companyId   = auth()->user()->company_id;
-        $latestSub   = Subscription::with(['plan', 'payments'])
+        $latestSub   = Subscription::with(['plan', 'pendingPlan', 'payments'])
             ->where('company_id', $companyId)
             ->latest('id')
             ->first();

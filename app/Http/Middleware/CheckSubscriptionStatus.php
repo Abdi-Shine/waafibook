@@ -113,10 +113,11 @@ class CheckSubscriptionStatus
             return $this->denyWrite($request, 'Your account is suspended. Please contact the platform administrator.');
         }
 
-        // Trial expired / cancelled: block transaction pages
+        // Trial expired / cancelled / pending approval / no subscription: block transaction pages
         if ($isRestricted) {
+            $copy = $this->restrictionCopy($restrictionReason);
             if ($isGet && $this->isTransactionPath($path)) {
-                return $this->lockPage(null, $currentPlanName);
+                return $this->lockPage(null, $currentPlanName, $copy['title'], $copy['message']);
             }
             if (!$isGet) {
                 // Allow settings/admin writes
@@ -126,7 +127,7 @@ class CheckSubscriptionStatus
                     }
                 }
                 if ($this->isTransactionPath($path)) {
-                    return $this->denyWrite($request, 'Your trial has expired. Please subscribe to continue.');
+                    return $this->denyWrite($request, $copy['message']);
                 }
             }
             return $next($request);
@@ -150,7 +151,8 @@ class CheckSubscriptionStatus
     private function resolveRestriction(?Subscription $subscription, bool $isSuspended): ?string
     {
         if ($isSuspended) return 'suspended';
-        if (!$subscription) return null;
+        if (!$subscription) return 'no_subscription';
+        if ($subscription->status === 'pending_payment') return 'pending_approval';
         if (\in_array($subscription->status, ['expired', 'cancelled'], true)) {
             return $subscription->status === 'cancelled' ? 'cancelled' : 'trial_expired';
         }
@@ -159,6 +161,31 @@ class CheckSubscriptionStatus
             return 'trial_expired';
         }
         return null;
+    }
+
+    // Lock-page title/message shown per restriction reason. Kept in one
+    // place so the middleware's page-block and write-block paths, plus the
+    // plan_locked view, stay in sync.
+    private function restrictionCopy(string $reason): array
+    {
+        return match ($reason) {
+            'pending_approval' => [
+                'title'   => 'Pending Approval',
+                'message' => 'Your subscription request is awaiting Super Admin approval. Full access will be enabled automatically once your payment is confirmed.',
+            ],
+            'no_subscription' => [
+                'title'   => 'No Active Subscription',
+                'message' => 'You don\'t have an active subscription yet. Choose a plan to get started.',
+            ],
+            'cancelled' => [
+                'title'   => 'Subscription Cancelled',
+                'message' => 'Your subscription was cancelled. Please subscribe to a plan to continue using this feature.',
+            ],
+            default => [
+                'title'   => 'Upgrade to unlock this feature',
+                'message' => 'Your trial has expired. Please subscribe to a plan to continue using this feature. Your existing data remains safe and accessible.',
+            ],
+        };
     }
 
     private function isMobileRequest(Request $request): bool

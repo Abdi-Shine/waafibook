@@ -8,6 +8,7 @@
     $activePlanId = $sub?->subscription_plan_id;
     $activePlanPrice = (float) ($sub?->plan?->price ?? 0);
     $isPending    = $subStatus === 'pending_payment';
+    $pendingPlanRequest = $sub?->pending_subscription_plan_id ? $sub->pendingPlan : null;
     $isActive     = in_array($subStatus, ['active', 'trial']);
     $isExpired    = in_array($subStatus, ['expired', 'cancelled']);
     $pendingPmt   = $sub?->payments?->where('status', 'pending')->sortByDesc('id')->first();
@@ -50,6 +51,20 @@
                 via <strong>{{ str_replace('_', ' ', ucwords($pendingPmt->payment_method, '_')) }}</strong>
                 @if($pendingPmt->transaction_id)(Ref: <code class="bg-amber-100 px-1 rounded text-[11px]">{{ $pendingPmt->transaction_id }}</code>)@endif
                 is awaiting administrator approval. Subscription activates once approved.
+            </p>
+        </div>
+    </div>
+    @endif
+
+    {{-- Pending Plan-Change Banner (company keeps current access while reviewed) --}}
+    @if($pendingPlanRequest)
+    <div class="bg-sky-50 border border-sky-200 rounded-[1rem] px-5 py-4 mb-6 flex items-start gap-3">
+        <i class="bi bi-hourglass-split text-sky-500 text-xl mt-0.5 flex-shrink-0"></i>
+        <div>
+            <p class="text-[13px] font-black text-sky-700">Plan Change Pending Approval</p>
+            <p class="text-[12px] text-sky-600 mt-0.5">
+                You've requested to switch to the <strong>{{ $pendingPlanRequest->name }}</strong> plan.
+                It's awaiting Super Admin approval — you'll keep your current plan until then.
             </p>
         </div>
     </div>
@@ -139,6 +154,11 @@
                         <div class="w-full text-center py-2.5 px-4 font-bold rounded-lg text-[12px]"
                              style="background:#fffbeb;border:1px solid #fcd34d;color:#b45309;">
                             <i class="bi bi-hourglass-split me-1"></i> Payment Pending
+                        </div>
+                    @elseif($pendingPlanRequest && (int)$pendingPlanRequest->id === (int)$plan->id)
+                        <div class="w-full text-center py-2.5 px-4 font-bold rounded-lg text-[12px]"
+                             style="background:#f0f9ff;border:1px solid #7dd3fc;color:#0369a1;">
+                            <i class="bi bi-hourglass-split me-1"></i> Pending Approval
                         </div>
                     @elseif($__paid && $__cur)
                         <div class="w-full text-center py-2.5 px-4 font-bold rounded-lg text-[12px]"

@@ -37,15 +37,16 @@ use Illuminate\Database\Eloquent\Model;
 class Subscription extends Model
 {
     protected $fillable = [
-        'company_id', 'subscription_plan_id', 'start_date', 'expiry_date',
-        'status', 'payment_method', 'auto_renew', 'reminder_days_sent', 'expiry_notice_sent_at',
-        'last_reminder_sent_at'
+        'company_id', 'subscription_plan_id', 'pending_subscription_plan_id', 'start_date', 'expiry_date',
+        'status', 'payment_method', 'approved_by', 'approved_at', 'auto_renew', 'reminder_days_sent',
+        'expiry_notice_sent_at', 'last_reminder_sent_at'
     ];
 
     protected $casts = [
         'reminder_days_sent'     => 'array',
         'expiry_notice_sent_at'  => 'datetime',
         'last_reminder_sent_at'  => 'datetime',
+        'approved_at'            => 'datetime',
     ];
 
     public function company()
@@ -56,6 +57,18 @@ class Subscription extends Model
     public function plan()
     {
         return $this->belongsTo(SubscriptionPlan::class, 'subscription_plan_id');
+    }
+
+    // The plan a company has requested to switch to while their current
+    // plan/trial is still active — set while that request awaits approval.
+    public function pendingPlan()
+    {
+        return $this->belongsTo(SubscriptionPlan::class, 'pending_subscription_plan_id');
+    }
+
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 
     public function payments()
@@ -73,7 +86,7 @@ class Subscription extends Model
     // gate write access app-wide once a trial or paid term has actually run out.
     public function hasAccess(): bool
     {
-        if (in_array($this->status, ['cancelled', 'expired'])) {
+        if (in_array($this->status, ['cancelled', 'expired', 'pending_payment'])) {
             return false;
         }
 

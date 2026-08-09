@@ -84,7 +84,7 @@
                     $badgeClass = match($pmt->status) {
                         'completed' => 'sa-badge-green',
                         'pending'   => 'sa-badge-yellow',
-                        'failed'    => 'sa-badge-red',
+                        'failed', 'rejected' => 'sa-badge-red',
                         default     => 'sa-badge-gray',
                     };
                     $isPending = $pmt->status === 'pending';
@@ -121,6 +121,12 @@
                                     <i class="bi bi-check2-circle"></i>
                                 </button>
                             </form>
+                            <button type="button" class="sa-btn-icon danger" data-bs-toggle="modal" data-bs-target="#rejectPaymentModal"
+                                    title="Reject"
+                                    onclick="document.getElementById('rejectPaymentForm').action = '{{ route('host.payments.reject', $pmt->id) }}';
+                                             document.getElementById('rejectPaymentCompany').textContent = {{ Js::from($pmt->subscription->company->name ?? 'this company') }};">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
                             @endif
                             <form method="POST" action="{{ route('host.payments.destroy', $pmt->id) }}" class="d-inline"
                                   onsubmit="return confirm('Permanently delete this payment record?');">
@@ -209,6 +215,35 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Payment</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Reject Payment Modal --}}
+<div class="modal fade" id="rejectPaymentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="POST" id="rejectPaymentForm" action="">
+            @csrf @method('PATCH')
+            <div class="modal-content">
+                <div class="modal-header" style="background:#dc2626;color:white;">
+                    <h5 class="modal-title"><i class="bi bi-x-circle me-2"></i>Reject Payment</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p style="color:#6b7280;font-size:.875rem;">
+                        Reject this payment for <strong id="rejectPaymentCompany"></strong>?
+                        The subscription request will need to be resubmitted.
+                    </p>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Reason (optional)</label>
+                        <textarea name="reason" class="form-control" rows="3" placeholder="e.g. Transaction reference could not be verified"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Reject Payment</button>
                 </div>
             </div>
         </form>

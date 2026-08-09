@@ -551,9 +551,13 @@ class HostDashboardController extends Controller
 
     public function markPaymentPaid($id)
     {
-        $payment      = SubscriptionPayment::with(['subscription.company', 'subscription.plan'])->findOrFail($id);
+        $payment      = SubscriptionPayment::with(['subscription.company', 'subscription.plan', 'subscription.pendingPlan'])->findOrFail($id);
         $subscription = $payment->subscription;
-        $plan         = $subscription->plan;
+        // A plan requested while the company kept its current access takes
+        // priority over the plan already on the subscription.
+        $plan         = $subscription?->pending_subscription_plan_id
+            ? $subscription->pendingPlan
+            : $subscription?->plan;
 
         $payment->update(['status' => 'completed']);
 
@@ -566,13 +570,45 @@ class HostDashboardController extends Controller
                 default     => now()->addMonth(),
             };
             $subscription->update([
-                'status'      => 'active',
-                'start_date'  => now()->toDateString(),
-                'expiry_date' => $expiresAt->toDateString(),
+                'subscription_plan_id'         => $plan->id,
+                'pending_subscription_plan_id' => null,
+                'status'                        => 'active',
+                'start_date'                    => now()->toDateString(),
+                'expiry_date'                   => $expiresAt->toDateString(),
+                'approved_by'                   => auth()->id(),
+                'approved_at'                   => now(),
             ]);
         }
 
         return redirect()->route('host.payments')->with('success', 'Payment approved — subscription is now active.');
+    }
+
+    // Declines a pending payment. If it was the company's only path to
+    // access (subscription was locked awaiting this payment), the
+    // subscription reverts to cancelled so they can choose a plan again;
+    // if they kept access via an existing trial/paid plan, only the
+    // queued plan change is dropped and their current access is untouched.
+    public function rejectPayment(Request $request, $id)
+    {
+        $request->validate(['reason' => 'nullable|string|max:500']);
+
+        $payment      = SubscriptionPayment::with('subscription.company')->findOrFail($id);
+        $subscription = $payment->subscription;
+        $reason       = trim($request->reason ?? '');
+
+        $payment->update([
+            'status' => 'rejected',
+            'notes'  => trim(($payment->notes ? $payment->notes . ' | ' : '') . 'Rejected' . ($reason ? ": {$reason}" : '')),
+        ]);
+
+        if ($subscription) {
+            $subscription->update([
+                'pending_subscription_plan_id' => null,
+                'status' => $subscription->status === 'pending_payment' ? 'cancelled' : $subscription->status,
+            ]);
+        }
+
+        return redirect()->route('host.payments')->with('success', 'Payment rejected.');
     }
 
     public function cancelSubscriptionAction($id)
