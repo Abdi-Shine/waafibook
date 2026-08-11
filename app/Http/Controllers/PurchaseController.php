@@ -1470,11 +1470,47 @@ class PurchaseController extends Controller
         }
     }
 
-    public function showBill($id)
+    public function showBill(Request $request, $id)
     {
         /** @var PurchaseBill|null $bill */
-        $bill = PurchaseBill::query()->with(['supplier', 'branch', 'items.product'])->findOrFail($id);
-        return response()->json($bill);
+        $bill = PurchaseBill::query()->with(['supplier', 'branch', 'items.product', 'creator'])->findOrFail($id);
+
+        if ($request->expectsJson()) {
+            return response()->json($bill);
+        }
+
+        /** @var Company|null $company */
+        $company = Company::find(auth()->user()->company_id);
+
+        return view('frontend.purchase.purchase_bill_detail_pwa', compact('bill', 'company'));
+    }
+
+    public function pdfBill($id)
+    {
+        /** @var PurchaseBill|null $bill */
+        $bill = PurchaseBill::query()->with(['supplier', 'items.product'])->findOrFail($id);
+        /** @var Company|null $company */
+        $company = Company::find(auth()->user()->company_id);
+
+        $pdf = Pdf::loadView('frontend.purchase.purchase_bill_pdf', compact('bill', 'company'))
+                  ->setPaper('a4', 'portrait');
+
+        return $pdf->stream('PurchaseBill_' . $bill->bill_number . '.pdf');
+    }
+
+    // Same public/signed access pattern as SalesController::publicPdf() — lets a
+    // supplier open the bill PDF from a WhatsApp link without logging in.
+    public function publicPdfBill($id)
+    {
+        /** @var PurchaseBill|null $bill */
+        $bill = PurchaseBill::withoutGlobalScopes()->with(['supplier', 'items.product'])->findOrFail($id);
+        /** @var Company|null $company */
+        $company = Company::find($bill->company_id);
+
+        $pdf = Pdf::loadView('frontend.purchase.purchase_bill_pdf', compact('bill', 'company'))
+                  ->setPaper('a4', 'portrait');
+
+        return $pdf->stream('PurchaseBill_' . $bill->bill_number . '.pdf');
     }
 
     public function exportBill()

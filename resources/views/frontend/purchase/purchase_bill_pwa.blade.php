@@ -125,6 +125,10 @@
                         <span class="text-xs text-text-secondary">Bal: {{ $sym }}{{ number_format($due, 2) }}</span>
                     </div>
                     <div class="flex items-center gap-2">
+                        <a href="{{ route('purchase.bill.show', $bill->id) }}"
+                            class="w-7 h-7 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 active:bg-gray-100">
+                            <i class="bi bi-eye text-xs"></i>
+                        </a>
                         <a href="{{ route('purchase.bill.edit', $bill->id) }}"
                             class="w-7 h-7 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 active:bg-gray-100">
                             <i class="bi bi-pencil text-xs"></i>

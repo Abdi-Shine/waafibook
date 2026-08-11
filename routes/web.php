@@ -26,6 +26,11 @@ Route::get('/invoice/{id}/share', [App\Http\Controllers\SalesController::class, 
     ->name('sales.invoice.public-share')
     ->middleware('signed');
 
+// Public, signed link so a supplier can open a purchase bill PDF (e.g. from WhatsApp) without logging in.
+Route::get('/purchase-bill/{id}/view', [App\Http\Controllers\PurchaseController::class, 'publicPdfBill'])
+    ->name('purchase.bill.public-pdf')
+    ->middleware('signed');
+
 // Public link so a customer can open their statement PDF from WhatsApp without logging in.
 Route::get('/statement/{id}/view', [App\Http\Controllers\CustomerController::class, 'publicStatement'])
     ->name('customer.statement.public-pdf');
@@ -360,6 +365,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/purchase/bills/export', [App\Http\Controllers\PurchaseController::class, 'exportBill'])->name('purchase.bill.export');
         Route::get('/purchase/bills/{id}/edit', [App\Http\Controllers\PurchaseController::class, 'editBill'])->name('purchase.bill.edit')->middleware('tenant.owns:purchase_bills');
         Route::post('/purchase/bills/update/{id}', [App\Http\Controllers\PurchaseController::class, 'updateBill'])->name('purchase.bill.update')->middleware('tenant.owns:purchase_bills');
+        Route::get('/purchase/bills/{id}/pdf', [App\Http\Controllers\PurchaseController::class, 'pdfBill'])->name('purchase.bill.pdf')->middleware('tenant.owns:purchase_bills');
         Route::get('/purchase/bills/{id}', [App\Http\Controllers\PurchaseController::class, 'showBill'])->name('purchase.bill.show')->middleware('tenant.owns:purchase_bills');
         Route::delete('/purchase/bills/{id}', [App\Http\Controllers\PurchaseController::class, 'destroyBill'])->name('purchase.bill.delete')->middleware(['tenant.owns:purchase_bills', 'permission:Purchase,delete', 'delete.password']);
         Route::get('/purchase/bills', [App\Http\Controllers\PurchaseController::class, 'billIndex'])->name('purchase.bill');
