@@ -14,17 +14,35 @@
 
 @section('admin')
 <div class="pb-28 bg-background min-h-screen" x-data="{
-    sendWhatsApp(invoiceNo, customer, phone, total, pdfUrl, companyName, date, companyPhone, companyEmail) {
+    async sendWhatsApp(orderId, invoiceNo, customer, phone, total, pdfUrl, companyName, date, companyPhone, companyEmail) {
         let message = `*${companyName}*\n\n`;
         message += `*Qaansheegta Iibka*\n`;
         message += `${total}\n`;
         message += `taariikhda ${date}\n\n`;
         message += `Salaam ${customer},\n`;
-        message += `Kani waa qaansheegtaada ${invoiceNo}. Halkan ka eeg: ${pdfUrl}\n\n`;
+        message += `Kani waa qaansheegtaada ${invoiceNo}.\n\n`;
         message += `Mahadsanid,\n${companyName}`;
         if (companyPhone) message += `\n${companyPhone}`;
         if (companyEmail) message += `\n${companyEmail}`;
 
+        // Attach the actual PDF document via the share sheet (pick WhatsApp →
+        // contact), falling back to a wa.me text+link message when the
+        // browser can't share files.
+        try {
+            const resp = await fetch(`{{ url('/sales/invoices') }}/${orderId}/pdf`);
+            if (resp.ok) {
+                const blob = await resp.blob();
+                const file = new File([blob], `Invoice_${invoiceNo}.pdf`, { type: 'application/pdf' });
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({ files: [file], text: message });
+                    return;
+                }
+            }
+        } catch (e) {
+            if (e && e.name === 'AbortError') return; // user closed the share sheet
+        }
+
+        message += `\nHalkan ka eeg: ${pdfUrl}`;
         let url = '';
         if (phone) {
             const cleanPhone = phone.replace(/\D/g, '');
@@ -142,7 +160,7 @@
                             <i class="bi bi-eye text-xs"></i>
                         </a>
                         <button type="button"
-                            @click="sendWhatsApp('{{ $order->invoice_no }}', '{{ addslashes($order->customer->name ?? 'Walk-in Customer') }}', '{{ $order->customer->phone ?? '' }}', '{{ $symbol }} {{ number_format($order->total_amount, 2) }}', '{{ \App\Support\PublicUrl::temporarySigned('sales.invoice.public-pdf', now()->addDays(7), ['id' => $order->id]) }}', '{{ addslashes($company->name ?? 'Waafibook') }}', '{{ \Carbon\Carbon::parse($order->invoice_date)->format('jS F Y') }}', '{{ $company->phone ?? '' }}', '{{ $company->email ?? '' }}')"
+                            @click="sendWhatsApp({{ $order->id }}, '{{ $order->invoice_no }}', '{{ addslashes($order->customer->name ?? 'Walk-in Customer') }}', '{{ $order->customer->phone ?? '' }}', '{{ $symbol }} {{ number_format($order->total_amount, 2) }}', '{{ \App\Support\PublicUrl::temporarySigned('sales.invoice.public-pdf', now()->addDays(7), ['id' => $order->id]) }}', '{{ addslashes($company->name ?? 'Waafibook') }}', '{{ \Carbon\Carbon::parse($order->invoice_date)->format('jS F Y') }}', '{{ $company->phone ?? '' }}', '{{ $company->email ?? '' }}')"
                             class="w-7 h-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-accent active:bg-accent/20">
                             <i class="bi bi-whatsapp text-xs"></i>
                         </button>

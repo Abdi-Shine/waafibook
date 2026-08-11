@@ -50,7 +50,8 @@
             this.sharing = false;
         }
     },
-    sendWhatsApp() {
+    async sendWhatsApp() {
+        if (this.sharing) return;
         const companyName = '{{ addslashes($company->name ?? 'Waafibook') }}';
         const supplier = '{{ addslashes($bill->supplier->name ?? 'Supplier') }}';
         const phone = '{{ $bill->supplier->phone ?? '' }}';
@@ -60,13 +61,33 @@
         message += `{{ $symbol }} {{ number_format($bill->total_amount, 2) }}\n`;
         message += `taariikhda {{ \Carbon\Carbon::parse($bill->bill_date)->format('jS F Y') }}\n\n`;
         message += `Salaam ${supplier},\n`;
-        message += `Kani waa qaansheegta {{ $bill->bill_number }}. Halkan ka eeg: ${pdfUrl}\n\n`;
+        message += `Kani waa qaansheegta {{ $bill->bill_number }}.\n\n`;
         message += `Mahadsanid,\n${companyName}`;
         @if($company->phone ?? false) message += `\n{{ $company->phone }}`; @endif
         @if($company->email ?? false) message += `\n{{ $company->email }}`; @endif
+
+        // Attach the actual PDF document via the share sheet (pick WhatsApp →
+        // contact), falling back to a wa.me text+link message when the
+        // browser can't share files.
+        this.sharing = true;
+        try {
+            const resp = await fetch('{{ route('purchase.bill.pdf', $bill->id) }}');
+            if (resp.ok) {
+                const blob = await resp.blob();
+                const file = new File([blob], 'PurchaseBill_{{ $bill->bill_number }}.pdf', { type: 'application/pdf' });
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({ files: [file], text: message });
+                    return;
+                }
+            }
+        } catch (e) {
+            if (e && e.name === 'AbortError') return; // user closed the share sheet
+        } finally {
+            this.sharing = false;
+        }
         const url = phone
-            ? `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`
-            : `https://wa.me/?text=${encodeURIComponent(message)}`;
+            ? `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(message + '\nHalkan ka eeg: ' + pdfUrl)}`
+            : `https://wa.me/?text=${encodeURIComponent(message + '\nHalkan ka eeg: ' + pdfUrl)}`;
         window.open(url, '_blank');
     }
 }">
