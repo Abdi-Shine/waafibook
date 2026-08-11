@@ -261,7 +261,9 @@ class PaymentInController extends Controller
         $company = Company::find(auth()->user()->company_id);
 
         $pdf = Pdf::loadView('frontend.sales.pdf_receipt_download', compact('payment', 'company'));
-        return $pdf->download('Receipt_' . ($payment->receipt_no ?? $payment->id) . '.pdf');
+        // stream() opens the PDF in the browser/viewer (the ledger eye icon
+        // links here); the viewer still offers a download/save option.
+        return $pdf->stream('Receipt_' . ($payment->receipt_no ?? $payment->id) . '.pdf');
     }
 
     public function printReceipt($id)

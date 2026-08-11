@@ -293,18 +293,15 @@
         const isSupplier = this.ledger.party.type === 'supplier';
 
         let url = null;
-        if (txn.type === 'Sale' && txn.id) {
-            // In-app mobile invoice page (shows Amount Paid + Balance Due),
-            // same as the Purchase rows below — not the raw PDF.
-            url = '{{ url('/sales/invoices') }}/' + txn.id;
-        } else if (txn.type === 'Sale' && txn.pdf_url) {
+        if (txn.type === 'Sale' && txn.pdf_url) {
+            // Invoice PDF — shows Received (paid amount) and Balance.
             url = txn.pdf_url;
         } else if (txn.type === 'Opening Balance') {
             url = isSupplier
                 ? '{{ url('/supplier-statement') }}/' + this.ledger.party.id + '/view'
                 : '{{ url('/statement') }}/' + this.ledger.party.id + '/view';
         } else if (txn.type === 'Purchase' && txn.id) {
-            url = '{{ url('/purchase/bills') }}/' + txn.id;
+            url = '{{ url('/purchase/bills') }}/' + txn.id + '/pdf';
         } else if (txn.type === 'Payment-In' && txn.id) {
             url = '{{ url('/payment-in/download') }}/' + txn.id;
         } else if (txn.type === 'Payment-Out' && txn.id) {

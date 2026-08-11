@@ -104,6 +104,13 @@
             <td style="padding:10px 16px;text-align:center;width:10%;">:</td>
             <td style="padding:10px 16px;text-align:right;font-weight:bold;width:40%;">{{ $symbol }}&nbsp;{{ number_format($payment->amount, 2) }}</td>
         </tr>
+        @if($payment->customer)
+        <tr>
+            <td style="padding:10px 16px;width:50%;border-top:1px solid #666;">Remaining Balance</td>
+            <td style="padding:10px 16px;text-align:center;width:10%;border-top:1px solid #666;">:</td>
+            <td style="padding:10px 16px;text-align:right;font-weight:bold;width:40%;border-top:1px solid #666;">{{ $symbol }}&nbsp;{{ number_format($payment->customer->amount_balance ?? 0, 2) }}</td>
+        </tr>
+        @endif
     </table>
 
     {{-- Amount in Words label --}}
