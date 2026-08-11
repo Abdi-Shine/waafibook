@@ -22,15 +22,36 @@
 
 @section('admin')
 <div class="pb-28 bg-background min-h-screen" x-data="{
-    shareInvoice() {
+    sharing: false,
+    async shareInvoice() {
+        if (this.sharing) return;
         const url = @js($publicPdfUrl);
-        const text = 'Invoice {{ $order->invoice_no }} — {{ addslashes($company->name ?? 'Waafibook') }}\nTotal: {{ $symbol }} {{ number_format($order->total_amount, 2) }}\n' + url;
-        if (navigator.share) {
-            navigator.share({ title: 'Invoice {{ $order->invoice_no }}', text: text }).catch(() => {});
-        } else {
-            navigator.clipboard.writeText(url).then(() => {
-                Swal.fire({ icon: 'success', title: 'Link Copied', text: 'Invoice link copied to clipboard.', timer: 1600, showConfirmButton: false });
-            });
+        const title = 'Invoice {{ $order->invoice_no }}';
+        const text = 'Invoice {{ $order->invoice_no }} — {{ addslashes($company->name ?? 'Waafibook') }}\nTotal: {{ $symbol }} {{ number_format($order->total_amount, 2) }}';
+        this.sharing = true;
+        try {
+            // Share the actual PDF file (attaches as a document in WhatsApp),
+            // falling back to a link share only if file sharing is unsupported.
+            const resp = await fetch('{{ route('sales.invoice.pdf', $order->id) }}');
+            if (!resp.ok) throw new Error('pdf fetch failed');
+            const blob = await resp.blob();
+            const file = new File([blob], 'Invoice_{{ $order->invoice_no }}.pdf', { type: 'application/pdf' });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({ files: [file], title: title, text: text });
+                return;
+            }
+            throw new Error('file share unsupported');
+        } catch (e) {
+            if (e && e.name === 'AbortError') return; // user closed the share sheet
+            if (navigator.share) {
+                navigator.share({ title: title, text: text + '\n' + url }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(url).then(() => {
+                    Swal.fire({ icon: 'success', title: 'Link Copied', text: 'Invoice link copied to clipboard.', timer: 1600, showConfirmButton: false });
+                });
+            }
+        } finally {
+            this.sharing = false;
         }
     },
     sendWhatsApp() {
@@ -70,9 +91,10 @@
 
     {{-- Actions --}}
     <div class="grid grid-cols-4 gap-2 px-5 pt-3">
-        <button type="button" @click="shareInvoice()"
-            class="flex flex-col items-center justify-center gap-1 py-2.5 bg-primary text-white font-bold rounded-xl text-[10px]">
-            <i class="bi bi-share text-sm"></i> Share
+        <button type="button" @click="shareInvoice()" :disabled="sharing"
+            class="flex flex-col items-center justify-center gap-1 py-2.5 bg-primary text-white font-bold rounded-xl text-[10px] disabled:opacity-60">
+            <i class="bi text-sm" :class="sharing ? 'bi-arrow-repeat animate-spin' : 'bi-share'"></i>
+            <span x-text="sharing ? 'Preparing…' : 'Share'">Share</span>
         </button>
         <button type="button" @click="sendWhatsApp()"
             class="flex flex-col items-center justify-center gap-1 py-2.5 bg-accent/10 border border-accent/20 text-accent font-bold rounded-xl text-[10px]">
