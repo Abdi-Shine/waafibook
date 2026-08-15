@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class PaymentInController extends Controller
@@ -161,14 +162,31 @@ class PaymentInController extends Controller
 
         // Two cashiers saving at the same instant can still read the same
         // highest receipt number; the loser just takes the next one.
+        //
+        // Anything else that goes wrong is rolled back with the transaction
+        // and reported on the screen rather than as a bare 500 page: the
+        // people using this run a shop, not a server, and a "500 SERVER
+        // ERROR" tells them nothing about whether the money was recorded.
+        // The full exception still goes to the log for diagnosis.
         for ($attempt = 1; ; $attempt++) {
             try {
                 DB::transaction($save);
                 break;
             } catch (UniqueConstraintViolationException $e) {
                 if ($attempt >= 3) {
-                    throw $e;
+                    Log::error('PaymentIn store failed after ' . $attempt . ' attempts: ' . $e->getMessage());
+                    return redirect()->back()->with('error', 'Could not allocate a receipt number. Please try again.');
                 }
+            } catch (\Throwable $e) {
+                Log::error('PaymentIn store failed for customer ' . $request->customer_id . ': ' . $e->getMessage(), [
+                    'exception' => $e,
+                ]);
+                // Collapsed to one line: the layout renders flash errors
+                // inside a JS string literal, which a raw multi-line SQL
+                // message would break.
+                $reason = Str::limit(preg_replace('/\s+/', ' ', $e->getMessage()), 200);
+
+                return redirect()->back()->with('error', 'The payment was not saved: ' . $reason);
             }
         }
 
@@ -191,17 +209,43 @@ class PaymentInController extends Controller
         }
 
         $isRefund = $payment->type === 'refund';
+        $companyId = $payment->company_id ?? auth()->user()->company_id;
 
         // Accounts Receivable (normal receipt) or Customer Refunds Payable
         // (paying out a refund — see SalesReturnController, which is what
         // books money into this account in the first place).
+        //
+        // 1140 is Accounts Receivable in the chart every company is seeded
+        // with today (ChartOfAccountsService); 1030 is only kept as a
+        // fallback for companies still on the pre-2026-04 numbering.
+        // Customer Refunds Payable is not part of the seeded chart at all —
+        // SalesReturnController creates it on demand, so a company that has
+        // never booked a partial refund won't have it yet and it has to be
+        // created here too, exactly as that controller does.
         $receivableAccount = $isRefund
-            ? (Account::query()->where('code', '2160')->first() ?: Account::query()->where('name', 'Customer Refunds Payable')->first())
-            : (Account::query()->where('code', '1030')->first() ?: Account::query()->where('name', 'like', '%Receivable%')->first());
+            ? (Account::query()->where('company_id', $companyId)->where('code', '2160')->first()
+                ?: Account::query()->where('company_id', $companyId)->where('name', 'Customer Refunds Payable')->first()
+                ?: Account::query()->create([
+                       'company_id' => $companyId,
+                       'code'       => '2160',
+                       'name'       => 'Customer Refunds Payable',
+                       'category'   => 'liabilities',
+                       'type'       => 'current_liability',
+                       'balance'    => 0,
+                   ]))
+            : (Account::query()->where('company_id', $companyId)->where('code', '1140')->first()
+                ?: Account::query()->where('company_id', $companyId)->where('code', '1030')->first()
+                ?: Account::query()->where('company_id', $companyId)->where('name', 'like', '%Receivable%')->first()
+                ?: Account::query()->create([
+                       'company_id' => $companyId,
+                       'code'       => '1140',
+                       'name'       => 'Accounts Receivable',
+                       'category'   => 'assets',
+                       'type'       => 'receivable',
+                       'balance'    => 0,
+                   ]));
 
         if ($assetAccount && $receivableAccount) {
-            $companyId = $payment->company_id ?? auth()->user()->company_id;
-
             $entry = JournalEntry::query()->create([
                 'company_id'   => $companyId,
                 'entry_number' => 'JE-PAY-' . date('Ymd') . '-' . str_pad($payment->id, 4, '0', STR_PAD_LEFT),
