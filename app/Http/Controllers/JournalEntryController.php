@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Account;
 use App\Models\JournalEntry;
 use App\Models\JournalItem;
+use App\Support\DocumentNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -55,7 +56,7 @@ class JournalEntryController extends Controller
 
         DB::transaction(function () use ($request, $totalDebit, $cid) {
             $entry = JournalEntry::query()->create([
-                'entry_number' => 'JE-' . date('Ymd') . '-' . str_pad(JournalEntry::query()->count() + 1, 4, '0', STR_PAD_LEFT),
+                'entry_number' => DocumentNumber::next(JournalEntry::query(), 'entry_number', 'JE-' . date('Ymd') . '-', 4),
                 'date'         => $request->date,
                 'reference'    => $request->reference,
                 'description'  => $request->description,

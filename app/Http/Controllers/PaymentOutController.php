@@ -10,6 +10,8 @@ use App\Models\Company;
 use App\Models\Account;
 use App\Models\JournalEntry;
 use App\Models\JournalItem;
+use App\Support\DocumentNumber;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -106,9 +108,8 @@ class PaymentOutController extends Controller
             'bank_account_id' => 'required|exists:chart_of_accounts,id',
         ]);
 
-        DB::transaction(function () use ($request) {
-            $count = SupplierPayment::query()->count() + 1;
-            $voucherNo = 'PV-' . date('Y') . '-' . str_pad($count, 5, '0', STR_PAD_LEFT);
+        $save = function () use ($request) {
+            $voucherNo = DocumentNumber::next(SupplierPayment::query(), 'voucher_no', 'PV-' . date('Y') . '-');
 
             // Fetch the bank account to get the payment method (Bank or Cash)
             /** @var Account|null $bankAccount */
@@ -138,7 +139,20 @@ class PaymentOutController extends Controller
 
             // Accounting - Journal Entry
             $this->createAccountingEntry($payment);
-        });
+        };
+
+        // Same reason as PaymentInController::store() — a concurrent save can
+        // read the same highest voucher number, so retry with the next one.
+        for ($attempt = 1; ; $attempt++) {
+            try {
+                DB::transaction($save);
+                break;
+            } catch (UniqueConstraintViolationException $e) {
+                if ($attempt >= 3) {
+                    throw $e;
+                }
+            }
+        }
 
         return redirect()->back()->with('success', 'Payment processed successfully.');
     }

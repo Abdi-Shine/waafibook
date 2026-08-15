@@ -8,6 +8,8 @@ use App\Models\Company;
 use App\Models\Account;
 use App\Models\JournalEntry;
 use App\Models\JournalItem;
+use App\Support\DocumentNumber;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -122,9 +124,8 @@ class PaymentInController extends Controller
             return redirect()->back()->with('error', 'Amount ($' . number_format($request->amount, 2) . ') exceeds ' . $label . ' ($' . number_format($payable, 2) . ').');
         }
 
-        DB::transaction(function () use ($request, $isRefund) {
-            $count = PaymentIn::query()->count() + 1;
-            $receiptNo = 'RCT-' . date('Y') . '-' . str_pad($count, 5, '0', STR_PAD_LEFT);
+        $save = function () use ($request, $isRefund) {
+            $receiptNo = DocumentNumber::next(PaymentIn::query(), 'receipt_no', 'RCT-' . date('Y') . '-');
 
             /** @var Account|null $bankAccount */
             $bankAccount = Account::query()->find($request->bank_account_id);
@@ -156,7 +157,20 @@ class PaymentInController extends Controller
 
             // Accounting - Journal Entry
             $this->createAccountingEntry($payment);
-        });
+        };
+
+        // Two cashiers saving at the same instant can still read the same
+        // highest receipt number; the loser just takes the next one.
+        for ($attempt = 1; ; $attempt++) {
+            try {
+                DB::transaction($save);
+                break;
+            } catch (UniqueConstraintViolationException $e) {
+                if ($attempt >= 3) {
+                    throw $e;
+                }
+            }
+        }
 
         return redirect()->back()->with('success', $isRefund ? 'Refund paid to customer successfully.' : 'Payment received successfully.');
     }
